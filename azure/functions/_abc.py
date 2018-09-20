@@ -70,6 +70,12 @@ class HttpRequest(abc.ABC):
         """A dictionary containing request GET parameters."""
         pass
 
+    @property
+    @abc.abstractmethod
+    def route_params(self) -> typing.Mapping[str, str]:
+        """A dictionary containing request route parameters."""
+        pass
+
     @abc.abstractmethod
     def get_body(self) -> bytes:
         """Return request body as bytes."""
