@@ -1,5 +1,7 @@
 import collections.abc
+import json
 import typing
+import types
 
 from . import _abc
 
@@ -117,3 +119,66 @@ class HttpResponse(_abc.HttpResponse):
     def get_body(self) -> bytes:
         """Response body as a bytes object."""
         return self.__body
+
+
+class HttpRequest(_abc.HttpRequest):
+    """An HTTP request object.
+
+    :param str method:
+        HTTP request method name.
+
+    :param str url
+        HTTP URL.
+
+    :param dict headers:
+        An optional mapping containing HTTP request headers.
+
+    :param dict params:
+        An optional mapping containing HTTP request params.
+
+    :param dict route_params:
+        An optional mapping containing HTTP request route params.
+
+    :param bytes body:
+        HTTP request body.
+    """
+
+    def __init__(self,
+                 method: str,
+                 url: str, *,
+                 headers: typing.Optional[typing.Mapping[str, str]]=None,
+                 params: typing.Optional[typing.Mapping[str, str]]=None,
+                 route_params: typing.Optional[typing.Mapping[str, str]]=None,
+                 body: bytes) -> None:
+        self.__method = method
+        self.__url = url
+        self.__headers = HttpRequestHeaders(headers or {})
+        self.__params = types.MappingProxyType(params or {})
+        self.__route_params = types.MappingProxyType(route_params or {})
+        self.__body_bytes = body
+
+    @property
+    def url(self):
+        return self.__url
+
+    @property
+    def method(self):
+        return self.__method.upper()
+
+    @property
+    def headers(self):
+        return self.__headers
+
+    @property
+    def params(self):
+        return self.__params
+
+    @property
+    def route_params(self):
+        return self.__route_params
+
+    def get_body(self) -> bytes:
+        return self.__body_bytes
+
+    def get_json(self) -> typing.Any:
+        return json.loads(self.__body_bytes.decode())
