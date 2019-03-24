@@ -1,9 +1,14 @@
 import collections.abc
+import io
 import json
 import typing
 import types
 
 from . import _abc
+
+from ._thirdparty.werkzeug import datastructures as _wk_datastructures
+from ._thirdparty.werkzeug import formparser as _wk_parser
+from ._thirdparty.werkzeug import http as _wk_http
 
 
 class BaseHeaders(collections.abc.Mapping):
@@ -156,6 +161,9 @@ class HttpRequest(_abc.HttpRequest):
         self.__params = types.MappingProxyType(params or {})
         self.__route_params = types.MappingProxyType(route_params or {})
         self.__body_bytes = body
+        self.__form_parsed = False
+        self.__form = None
+        self.__files = None
 
     @property
     def url(self):
@@ -177,8 +185,43 @@ class HttpRequest(_abc.HttpRequest):
     def route_params(self):
         return self.__route_params
 
+    @property
+    def form(self):
+        self._parse_form_data()
+        return self.__form
+
+    @property
+    def files(self):
+        self._parse_form_data()
+        return self.__files
+
     def get_body(self) -> bytes:
         return self.__body_bytes
 
     def get_json(self) -> typing.Any:
         return json.loads(self.__body_bytes.decode())
+
+    def _parse_form_data(self):
+        if self.__form_parsed:
+            return
+
+        body = self.get_body()
+        content_type = self.headers.get('Content-Type', '')
+        content_length = len(body)
+        mimetype, options = _wk_http.parse_options_header(content_type)
+        parser = _wk_parser.FormDataParser(
+            _wk_parser.default_stream_factory,
+            options.get('charset') or 'utf-8',
+            'replace',
+            None,
+            None,
+            _wk_datastructures.ImmutableMultiDict,
+        )
+
+        body_stream = io.BytesIO(body)
+
+        _, self.__form, self.__files = parser.parse(
+            body_stream, mimetype, content_length, options
+        )
+
+        self.__form_parsed = True
