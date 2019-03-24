@@ -288,6 +288,11 @@ class EventHubEvent(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def iothub_metadata(self) -> typing.Optional[typing.Mapping[str, str]]:
+        pass
+
+    @property
+    @abc.abstractmethod
     def enqueued_time(self) -> typing.Optional[datetime.datetime]:
         pass
 

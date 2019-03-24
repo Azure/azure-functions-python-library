@@ -12,12 +12,15 @@ class EventHubEvent(funcabc.EventHubEvent):
                  enqueued_time: typing.Optional[datetime.datetime]=None,
                  partition_key: typing.Optional[str]=None,
                  sequence_number: typing.Optional[int]=None,
-                 offset: typing.Optional[str]=None) -> None:
+                 offset: typing.Optional[str]=None,
+                 iothub_metadata: typing.Optional[
+                     typing.Mapping[str, str]]=None) -> None:
         self.__body = body
         self.__enqueued_time = enqueued_time
         self.__partition_key = partition_key
         self.__sequence_number = sequence_number
         self.__offset = offset
+        self.__iothub_metadata = iothub_metadata
 
     def get_body(self) -> bytes:
         return self.__body
@@ -25,6 +28,10 @@ class EventHubEvent(funcabc.EventHubEvent):
     @property
     def partition_key(self) -> typing.Optional[str]:
         return self.__partition_key
+
+    @property
+    def iothub_metadata(self) -> typing.Optional[typing.Mapping[str, str]]:
+        return self.__iothub_metadata
 
     @property
     def sequence_number(self) -> typing.Optional[int]:
