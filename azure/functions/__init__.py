@@ -6,6 +6,7 @@ from ._http import HttpRequest  # NoQA
 from ._http import HttpResponse  # NoQA
 from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
+from ._kafka import KafkaEvent
 
 __all__ = (
     # Generics.
@@ -23,4 +24,5 @@ __all__ = (
     'QueueMessage',
     'ServiceBusMessage',
     'TimerRequest',
+    'KafkaEvent'
 )
