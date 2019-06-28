@@ -1,5 +1,11 @@
+# Azure Functions Python Library
 
-# Contributing
+| Pipeline | Status                                                                                                                                                                                                                                                  |
+| -------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|     Test | [![Build Status](https://dev.azure.com/teckert0973/res/_apis/build/status/azure-functions-python-library/test.azure-functions-python-library?branchName=master)](https://dev.azure.com/teckert0973/res/_build/latest?definitionId=1&branchName=master)  |
+|   Deploy | [![Build Status](https://dev.azure.com/teckert0973/res/_apis/build/status/azure-functions-python-library/build.azure-functions-python-library?branchName=master)](https://dev.azure.com/teckert0973/res/_build/latest?definitionId=2&branchName=master) |
+
+## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

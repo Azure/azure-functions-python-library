@@ -1,0 +1,41 @@
+# Test azure-functions-python-library on any push to remote repository.
+
+trigger:
+- '*'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+strategy:
+  matrix:
+    linux_py36:
+      image: 'ubuntu-latest'
+      python.version: '3.6'
+    macos_py36:
+      image: 'macOS-latest'
+      python.version: '3.6'
+    windows_py36:
+      image: 'windows-latest'
+      python.version: '3.6'
+    linux_py37:
+      image: 'ubuntu-latest'
+      python.version: '3.7'
+    macos_py37:
+      image: 'macOS-latest'
+      python.version: '3.7'
+    windows_py37:
+      image: 'windows-latest'
+      python.version: '3.7'
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+  displayName: 'Use Python $(python.version)'
+
+- script: |
+    pip install pytest pytest-azurepipelines
+    pytest
+  displayName: 'pytest'
+
+
