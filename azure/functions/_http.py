@@ -132,7 +132,7 @@ class HttpRequest(_abc.HttpRequest):
     :param str method:
         HTTP request method name.
 
-    :param str url
+    :param str url:
         HTTP URL.
 
     :param dict headers:
