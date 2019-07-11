@@ -1,0 +1,29 @@
+trigger:
+- master
+- dev
+
+jobs:
+- job: Tests
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    matrix:
+      Python36:
+        pythonVersion: '3.6'
+      Python37:
+        pythonVersion: '3.7'
+    maxParallel: 2
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(pythonVersion)'
+      addToPath: true 
+  - task: ShellScript@2
+    inputs:
+      disableAutoCwd: true 
+      scriptPath: .ci/build.sh
+    displayName: 'Build'
+  - bash: |
+        chmod +x .ci/run_tests.sh
+        .ci/run_tests.sh
+    displayName: 'Run Tests'
