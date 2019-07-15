@@ -19,7 +19,6 @@ class TestQueue(unittest.TestCase):
         assert expected_body == test_queue_message.get_body()
         assert expected_pop_receipt == test_queue_message.pop_receipt
 
-
     def test_QueueMessage_initialize_all_arguments(self):
         # given
         expected_id: str = "Identifier"
@@ -37,7 +36,6 @@ class TestQueue(unittest.TestCase):
         assert expected_id == test_queue_message.id
         assert expected_body == test_queue_message.get_body()
         assert expected_pop_receipt == test_queue_message.pop_receipt
-
 
     def test_QueueMessage_get_json(self):
         # given
