@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='azure-functions',
-    version='1.0.0b5',
+    version='1.0.0',
     description='Azure Functions for Python',
     author='Microsoft Corporation',
     author_email='azpysdkhelp@microsoft.com',
@@ -15,7 +15,7 @@ setup(
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
         'Environment :: Web Environment',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
     ],
     license='MIT',
     packages=['azure.functions'],
