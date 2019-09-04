@@ -105,6 +105,18 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         elif data_type == 'double':
             result = data.value
 
+        elif data_type == 'collection_bytes':
+            result = data.value
+
+        elif data_type == 'collection_string':
+            result = data.value
+
+        elif data_type == 'collection_sint64':
+            result = data.value
+
+        elif data_type is None:
+            return None
+
         else:
             raise ValueError(
                 f'unsupported type of {context}: {data_type}')
@@ -223,7 +235,7 @@ class OutConverter(_BaseConverter, binding=None):
 
     @abc.abstractclassmethod
     def encode(cls, obj: typing.Any, *,
-               expeced_type: typing.Optional[type]) -> Datum:
+               expected_type: typing.Optional[type]) -> typing.Optional[Datum]:
         raise NotImplementedError
 
 
