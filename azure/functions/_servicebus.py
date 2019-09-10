@@ -25,6 +25,12 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def delivery_count(self) -> typing.Optional[int]:
+        """Number of times delivery has been attempted."""
+        pass
+
+    @property
+    @abc.abstractmethod
     def expiration_time(self) -> typing.Optional[datetime.datetime]:
         """The date and time in UTC at which the message is set to expire."""
         pass

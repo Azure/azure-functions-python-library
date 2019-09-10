@@ -14,6 +14,7 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             body: bytes,
             content_type: typing.Optional[str]=None,
             correlation_id: typing.Optional[str]=None,
+            delivery_count: typing.Optional[int]=0,
             expiration_time: typing.Optional[datetime.datetime]=None,
             label: typing.Optional[str]=None,
             message_id: str,
@@ -29,6 +30,7 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__body = body
         self.__content_type = content_type
         self.__correlation_id = correlation_id
+        self.__delivery_count = delivery_count
         self.__expiration_time = expiration_time
         self.__label = label
         self.__message_id = message_id
@@ -51,6 +53,10 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     @property
     def correlation_id(self) -> typing.Optional[str]:
         return self.__correlation_id
+
+    @property
+    def delivery_count(self) -> typing.Optional[int]:
+        return self.__delivery_count
 
     @property
     def expiration_time(self) -> typing.Optional[datetime.datetime]:
@@ -143,6 +149,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'ContentType', python_type=str),
             correlation_id=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'CorrelationId', python_type=str),
+            delivery_count=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'DeliveryCount', python_type=int),
             expiration_time=cls._parse_datetime_metadata(
                 trigger_metadata, 'ExpirationTime'),
             label=cls._decode_trigger_metadata_field(
