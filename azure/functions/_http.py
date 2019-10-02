@@ -116,7 +116,7 @@ class HttpResponse(_abc.HttpResponse):
 
         if not isinstance(body, (bytes, bytearray)):
             raise TypeError(
-                f'reponse is expected to be either of '
+                f'response is expected to be either of '
                 f'str, bytes, or bytearray, got {type(body).__name__}')
 
         self.__body = bytes(body)
