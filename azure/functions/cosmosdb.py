@@ -20,6 +20,9 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> cdb.DocumentList:
+        if data is None or data.type is None:
+            return None
+
         data_type = data.type
 
         if data_type == 'string':
@@ -40,7 +43,8 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
             documents = [documents]
 
         return cdb.DocumentList(
-            cdb.Document.from_dict(doc) for doc in documents)
+            (None if doc is None else cdb.Document.from_dict(doc))
+            for doc in documents)
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
