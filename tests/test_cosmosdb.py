@@ -4,9 +4,11 @@ import azure.functions as func
 import azure.functions.cosmosdb as cdb
 from azure.functions.meta import Datum
 
+
 class TestCosmosdb(unittest.TestCase):
     def test_cosmosdb_convert_none(self):
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=None, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=None, trigger_metadata=None)
         self.assertIsNone(result)
 
     def test_cosmosdb_convert_string(self):
@@ -16,7 +18,8 @@ class TestCosmosdb(unittest.TestCase):
             "name": "awesome_name"
         }
         """, "string")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'awesome_name')
@@ -28,7 +31,8 @@ class TestCosmosdb(unittest.TestCase):
             "name": "awesome_name"
         }
         """.encode(), "bytes")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'awesome_name')
@@ -40,7 +44,8 @@ class TestCosmosdb(unittest.TestCase):
             "name": "awesome_name"
         }
         """, "json")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], 'awesome_name')
@@ -52,7 +57,8 @@ class TestCosmosdb(unittest.TestCase):
             "name": null
         }
         """, "json")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], None)
@@ -70,7 +76,8 @@ class TestCosmosdb(unittest.TestCase):
             }
         ]
         """, "json")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]['name'], 'awesome_name')
@@ -78,7 +85,8 @@ class TestCosmosdb(unittest.TestCase):
 
     def test_cosmosdb_convert_json_multiple_nulls(self):
         datum: Datum = Datum("[null]", "json")
-        result: func.DocumentList = cdb.CosmosDBConverter.decode(data=datum, trigger_metadata=None)
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], None)

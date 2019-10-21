@@ -43,7 +43,8 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
             documents = [documents]
 
         return cdb.DocumentList(
-            (None if doc is None else cdb.Document.from_dict(doc)) for doc in documents)
+            (None if doc is None else cdb.Document.from_dict(doc))
+            for doc in documents)
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
