@@ -13,7 +13,8 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     def check_input_type_annotation(cls, pytype: type) -> bool:
         return (
             issubclass(pytype, _eventhub.EventHubEvent)
-            or issubclass(pytype, typing.List)
+            or (issubclass(pytype, typing.List)
+                and issubclass(pytype.__args__[0], _eventhub.EventHubEvent))
         )
 
     @classmethod
