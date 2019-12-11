@@ -90,3 +90,15 @@ class TestCosmosdb(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], None)
+
+    def test_cosmosdb_input_type(self):
+        check_input_type = cdb.CosmosDBConverter.check_input_type_annotation
+        self.assertTrue(check_input_type(func.DocumentList))
+        self.assertFalse(check_input_type(func.Document))
+        self.assertFalse(check_input_type(str))
+
+    def test_cosmosdb_output_type(self):
+        check_output_type = cdb.CosmosDBConverter.check_output_type_annotation
+        self.assertTrue(check_output_type(func.DocumentList))
+        self.assertTrue(check_output_type(func.Document))
+        self.assertFalse(check_output_type(str))
