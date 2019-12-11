@@ -2,6 +2,7 @@ import json
 import unittest
 
 import azure.functions as func
+import azure.functions.queue as azf_q
 
 
 class TestQueue(unittest.TestCase):
@@ -49,3 +50,19 @@ class TestQueue(unittest.TestCase):
 
         # then
         assert expected_body == test_queue_message.get_json()
+
+    def test_QueueMessage_input_type(self):
+        check_input_type = (
+            azf_q.QueueMessageInConverter.check_input_type_annotation
+        )
+        self.assertTrue(check_input_type(func.QueueMessage))
+        self.assertFalse(check_input_type(str))
+        self.assertFalse(check_input_type(bytes))
+
+    def test_QueueMessage_output_type(self):
+        check_output_type = (
+            azf_q.QueueMessageOutConverter.check_output_type_annotation
+        )
+        self.assertTrue(check_output_type(func.QueueMessage))
+        self.assertTrue(check_output_type(str))
+        self.assertTrue(check_output_type(bytes))
