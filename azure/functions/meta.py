@@ -181,8 +181,40 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     @classmethod
     def _parse_datetime(
             cls, datetime_str: str) -> datetime.datetime:
+        too_fractional = re.match(
+            r'(.*\.\d{6})(\d+)(Z|[\+|-]\d{1,2}:\d{1,2}){0,1}', datetime_str)
+
+        if too_fractional:
+            # The supplied value contains seven digits in the
+            # fractional second part, whereas Python expects
+            # a maxium of six, so strip it.
+            # https://github.com/Azure/azure-functions-python-worker/issues/269
+            datetime_str = too_fractional.group(1) + (
+                            too_fractional.group(3) or ''
+                           )
+
+        # Try parse time
+        utc_time, utc_time_error = cls._parse_datetime_utc(datetime_str)
+        if utc_time:
+            return utc_time.replace(tzinfo=datetime.timezone.utc)
+
+        local_time, local_time_error = cls._parse_datetime_local(datetime_str)
+        if local_time:
+            return local_time.replace(tzinfo=None)
+
+        # Report error
+        if utc_time_error:
+            raise utc_time_error
+        elif local_time_error:
+            raise local_time_error
+
+    @classmethod
+    def _parse_datetime_utc(
+        cls, datetime_str: str) -> typing.Tuple[datetime.datetime, Exception]:
+
         # UTC ISO 8601 assumed
-        formats = [
+        # 2018-08-07T23:17:57.461050Z
+        utc_formats = [
             '%Y-%m-%dT%H:%M:%S+00:00',
             '%Y-%m-%dT%H:%M:%S-00:00',
             '%Y-%m-%dT%H:%M:%S.%f+00:00',
@@ -190,28 +222,37 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%SZ',
             '%Y-%m-%dT%H:%M:%S.%fZ',
         ]
+
         dt = None
-
-        too_fractional = re.match(
-            r'(.*\.\d{6})(\d+)(Z|[\+|-]\d{1,2}:\d{1,2})', datetime_str)
-
-        if too_fractional:
-            # The supplied value contains seven digits in the
-            # fractional second part, whereas Python expects
-            # a maxium of six, so strip it.
-            # https://github.com/Azure/azure-functions-python-worker/issues/269
-            datetime_str = too_fractional.group(1) + too_fractional.group(3)
-
-        for fmt in formats:
+        last_error = None
+        for utc_fmt in utc_formats:
             try:
-                dt = datetime.datetime.strptime(datetime_str, fmt)
+                dt = datetime.datetime.strptime(datetime_str, utc_fmt)
             except ValueError as e:
                 last_error = e
 
-        if dt is None:
-            raise last_error
+        return dt, last_error
 
-        return dt.replace(tzinfo=datetime.timezone.utc)
+    @classmethod
+    def _parse_datetime_local(
+        cls, datetime_str: str) -> typing.Tuple[datetime.datetime, Exception]:
+
+        # Local time assumed
+        # 2018-08-07T23:17:57.461050
+        local_formats = [
+            '%Y-%m-%dT%H:%M:%S.%f',
+            '%Y-%m-%dT%H:%M:%S',
+        ]
+
+        dt = None
+        last_error = None
+        for local_fmt in local_formats:
+            try:
+                dt = datetime.datetime.strptime(datetime_str, local_fmt)
+            except ValueError as e:
+                last_error = e
+
+        return dt, last_error
 
     @classmethod
     def _parse_timedelta(
