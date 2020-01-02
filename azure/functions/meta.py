@@ -190,8 +190,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             # a maxium of six, so strip it.
             # https://github.com/Azure/azure-functions-python-worker/issues/269
             datetime_str = too_fractional.group(1) + (
-                            too_fractional.group(3) or ''
-                           )
+                too_fractional.group(3) or '')
 
         # Try parse time
         utc_time, utc_time_error = cls._parse_datetime_utc(datetime_str)
@@ -210,7 +209,8 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime_utc(
-        cls, datetime_str: str) -> typing.Tuple[datetime.datetime, Exception]:
+        cls, datetime_str: str
+    ) -> typing.Tuple[datetime.datetime, Exception]:
 
         # UTC ISO 8601 assumed
         # 2018-08-07T23:17:57.461050Z
@@ -235,7 +235,8 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime_local(
-        cls, datetime_str: str) -> typing.Tuple[datetime.datetime, Exception]:
+        cls, datetime_str: str
+    ) -> typing.Tuple[datetime.datetime, Exception]:
 
         # Local time assumed
         # 2018-08-07T23:17:57.461050
