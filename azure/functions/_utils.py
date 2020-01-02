@@ -2,16 +2,16 @@ from typing import List, Tuple
 from datetime import datetime
 
 
-# Returns (is_matched, parsed_datetime, matched_format)
+# Returns (parsed_datetime, matched_format)
 def try_parse_datetime_with_formats(
     datetime_str: str,
     datetime_formats: List[str]
-) -> Tuple[bool, datetime, str]:
+) -> Tuple[bool, datetime, Exception]:
     for fmt in datetime_formats:
         try:
             dt = datetime.strptime(datetime_str, fmt)
-            return (True, dt, fmt)
-        except ValueError:
-            continue
+            return (dt, fmt, None)
+        except ValueError as ve:
+            last_exception = ve
 
-    return (False, None, None)
+    return (None, None, last_exception)

@@ -224,13 +224,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S.%fZ',
         ]
 
-        is_succeeded, dt, _ = try_parse_datetime_with_formats(
+        dt, _, excpt = try_parse_datetime_with_formats(
             datetime_str, utc_formats)
 
-        if not is_succeeded:
-            return None, ValueError(
-                f"Failed to parsed UTC datetime {datetime_str}")
-
+        if excpt is not None:
+            return None, excpt
         return dt, None
 
     @classmethod
@@ -245,13 +243,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S',
         ]
 
-        is_succeeded, dt, _ = try_parse_datetime_with_formats(
+        dt, _, excpt = try_parse_datetime_with_formats(
             datetime_str, local_formats)
 
-        if not is_succeeded:
-            return None, ValueError(
-                f"Failed to parsed local datetime {datetime_str}")
-
+        if excpt is not None:
+            return None, excpt
         return dt, None
 
     @classmethod
