@@ -6,6 +6,7 @@ import re
 import typing
 
 from ._thirdparty import typing_inspect
+from ._utils import try_parse_datetime_with_formats
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
@@ -223,15 +224,14 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S.%fZ',
         ]
 
-        dt = None
-        last_error = None
-        for utc_fmt in utc_formats:
-            try:
-                dt = datetime.datetime.strptime(datetime_str, utc_fmt)
-            except ValueError as e:
-                last_error = e
+        is_succeeded, dt, _ = try_parse_datetime_with_formats(
+            datetime_str, utc_formats)
 
-        return dt, last_error
+        if not is_succeeded:
+            return None, ValueError(
+                f"Failed to parsed UTC datetime {datetime_str}")
+
+        return dt, None
 
     @classmethod
     def _parse_datetime_local(
@@ -245,15 +245,14 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S',
         ]
 
-        dt = None
-        last_error = None
-        for local_fmt in local_formats:
-            try:
-                dt = datetime.datetime.strptime(datetime_str, local_fmt)
-            except ValueError as e:
-                last_error = e
+        is_succeeded, dt, _ = try_parse_datetime_with_formats(
+            datetime_str, local_formats)
 
-        return dt, last_error
+        if not is_succeeded:
+            return None, ValueError(
+                f"Failed to parsed local datetime {datetime_str}")
+
+        return dt, None
 
     @classmethod
     def _parse_timedelta(

@@ -40,5 +40,19 @@ class TestMeta(unittest.TestCase):
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999')
 
+    def test_parse_utc_datetime_failure(self):
+        malformed_utc = '2018-12-12X03:16:34.219289Z'
+        with self.assertRaises(ValueError) as context:
+            self._parse_datetime(malformed_utc)
+
+        self.assertIn(malformed_utc, str(context.exception))
+
+    def test_parse_local_datetime_failure(self):
+        malformed_local = '2018-12-12X03:16:34.219289'
+        with self.assertRaises(ValueError) as context:
+            self._parse_datetime(malformed_local)
+
+        self.assertIn(malformed_local, str(context.exception))
+
     def _parse_datetime(self, datetime_str):
         return meta._BaseConverter._parse_datetime(datetime_str)
