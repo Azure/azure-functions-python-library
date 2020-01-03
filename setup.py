@@ -21,7 +21,7 @@ setup(
     packages=['azure.functions'],
     extras_require={
         'dev': [
-            'flake8~=3.5.0',
+            'flake8~=3.7.9',
             'mypy',
             'pytest',
             'requests==2.*',
