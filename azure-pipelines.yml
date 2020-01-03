@@ -12,15 +12,17 @@ jobs:
         pythonVersion: '3.6'
       Python37:
         pythonVersion: '3.7'
-    maxParallel: 2
+      Python38:
+        pythonVersion: '3.8'
+    maxParallel: 3
   steps:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '$(pythonVersion)'
-      addToPath: true 
+      addToPath: true
   - task: ShellScript@2
     inputs:
-      disableAutoCwd: true 
+      disableAutoCwd: true
       scriptPath: .ci/build.sh
     displayName: 'Build'
   - bash: |

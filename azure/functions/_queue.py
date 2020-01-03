@@ -19,9 +19,9 @@ class QueueMessage(_abc.QueueMessage):
     """
 
     def __init__(self, *,
-                 id: typing.Optional[str]=None,
-                 body: typing.Optional[typing.Union[str, bytes]]=None,
-                 pop_receipt: typing.Optional[str]=None) -> None:
+                 id: typing.Optional[str] = None,
+                 body: typing.Optional[typing.Union[str, bytes]] = None,
+                 pop_receipt: typing.Optional[str] = None) -> None:
         self.__id = id
         self.__body = b''
         self.__pop_receipt = pop_receipt

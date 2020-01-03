@@ -9,12 +9,12 @@ class EventHubEvent(funcabc.EventHubEvent):
 
     def __init__(self, *,
                  body: bytes,
-                 enqueued_time: typing.Optional[datetime.datetime]=None,
-                 partition_key: typing.Optional[str]=None,
-                 sequence_number: typing.Optional[int]=None,
-                 offset: typing.Optional[str]=None,
+                 enqueued_time: typing.Optional[datetime.datetime] = None,
+                 partition_key: typing.Optional[str] = None,
+                 sequence_number: typing.Optional[int] = None,
+                 offset: typing.Optional[str] = None,
                  iothub_metadata: typing.Optional[
-                     typing.Mapping[str, str]]=None) -> None:
+                     typing.Mapping[str, str]] = None) -> None:
         self.__body = body
         self.__enqueued_time = enqueued_time
         self.__partition_key = partition_key

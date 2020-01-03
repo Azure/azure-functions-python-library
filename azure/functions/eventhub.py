@@ -13,16 +13,16 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     def check_input_type_annotation(cls, pytype: type) -> bool:
         valid_types = (_eventhub.EventHubEvent)
         return (
-            meta.is_iterable_type_annotation(pytype, valid_types) or
-            (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            meta.is_iterable_type_annotation(pytype, valid_types)
+            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
         )
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
         valid_types = (str, bytes)
         return (
-            meta.is_iterable_type_annotation(pytype, str) or
-            (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            meta.is_iterable_type_annotation(pytype, str)
+            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
         )
 
     @classmethod
