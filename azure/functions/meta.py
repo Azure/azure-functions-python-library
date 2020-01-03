@@ -11,9 +11,9 @@ from ._utils import try_parse_datetime_with_formats
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     is_iterable_anno = (
-        typing_inspect.is_generic_type(annotation) and
-        issubclass(typing_inspect.get_origin(annotation),
-                   collections.abc.Iterable)
+        typing_inspect.is_generic_type(annotation)
+        and issubclass(typing_inspect.get_origin(annotation),
+                       collections.abc.Iterable)
     )
 
     if not is_iterable_anno:
@@ -58,7 +58,7 @@ class _ConverterMeta(abc.ABCMeta):
 
     def __new__(mcls, name, bases, dct, *,
                 binding: typing.Optional[str],
-                trigger: typing.Optional[str]=None):
+                trigger: typing.Optional[str] = None):
         cls = super().__new__(mcls, name, bases, dct)
         cls._trigger = trigger
         if binding is None:
@@ -89,7 +89,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     def _decode_typed_data(
             cls, data: Datum, *,
             python_type: typing.Union[type, typing.Tuple[type, ...]],
-            context: str='data') -> typing.Any:
+            context: str = 'data') -> typing.Any:
         if data is None:
             return None
 

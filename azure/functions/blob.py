@@ -8,9 +8,9 @@ from . import meta
 
 class InputStream(azf_abc.InputStream):
     def __init__(self, *, data: bytes,
-                 name: typing.Optional[str]=None,
-                 uri: typing.Optional[str]=None,
-                 length: typing.Optional[int]=None) -> None:
+                 name: typing.Optional[str] = None,
+                 uri: typing.Optional[str] = None,
+                 length: typing.Optional[int] = None) -> None:
         self._io = io.BytesIO(data)
         self._name = name
         self._length = length

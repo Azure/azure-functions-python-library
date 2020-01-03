@@ -13,7 +13,7 @@ from ._thirdparty.werkzeug import http as _wk_http
 
 class BaseHeaders(collections.abc.Mapping):
 
-    def __init__(self, source: typing.Optional[typing.Mapping]=None) -> None:
+    def __init__(self, source: typing.Optional[typing.Mapping] = None) -> None:
         self.__http_headers__: typing.Dict[str, str] = {}
 
         if source is not None:
@@ -151,9 +151,10 @@ class HttpRequest(_abc.HttpRequest):
     def __init__(self,
                  method: str,
                  url: str, *,
-                 headers: typing.Optional[typing.Mapping[str, str]]=None,
-                 params: typing.Optional[typing.Mapping[str, str]]=None,
-                 route_params: typing.Optional[typing.Mapping[str, str]]=None,
+                 headers: typing.Optional[typing.Mapping[str, str]] = None,
+                 params: typing.Optional[typing.Mapping[str, str]] = None,
+                 route_params: typing.Optional[
+                     typing.Mapping[str, str]] = None,
                  body: bytes) -> None:
         self.__method = method
         self.__url = url
