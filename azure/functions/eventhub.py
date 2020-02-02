@@ -199,7 +199,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def _decode_iothub_metadata(
-        cls, trigger_metadata) -> typing.Dict[str, str]:
+            cls, trigger_metadata) -> typing.Dict[str, str]:
         # Try extracting iothub_metadata from trigger_metadata
         iothub_metadata = cls._extract_iothub_from_trigger_metadata(
             trigger_metadata)
@@ -211,27 +211,26 @@ class EventHubTriggerConverter(EventHubConverter,
 
         return iothub_metadata
 
-
     @classmethod
     def _extract_iothub_from_trigger_metadata(
-        cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
         iothub_metadata = {}
         for f in metadict:
             if f.startswith('iothub-'):
                 v = cls._decode_trigger_metadata_field(
-                    trigger_metadata, f, python_type=str)
+                    metadict, f, python_type=str)
                 iothub_metadata[f[len('iothub-'):]] = v
         return iothub_metadata
 
     @classmethod
     def _extract_iothub_from_system_properties(
-        cls, system_properties_string: str) -> typing.Dict[str, str]:
+            cls, system_properties_string: str) -> typing.Dict[str, str]:
         system_properties = json.loads(system_properties_string)
         return cls._extract_iothub_from_dict(system_properties)
 
     @classmethod
     def _extract_iothub_from_dict(
-        cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
         iothub_metadata = {}
         for f in metadict:
             if f.startswith('iothub-'):
