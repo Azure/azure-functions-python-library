@@ -32,12 +32,10 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
                       typing.List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if cls._is_cardinary_one(trigger_metadata):
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif cls._is_cardinary_many(trigger_metadata):
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -95,6 +93,14 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
 
         return data
 
+    @classmethod
+    def _is_cardinary_many(cls, trigger_metadata) -> bool:
+        return 'SystemPropertiesArray' in trigger_metadata
+
+    @classmethod
+    def _is_cardinary_one(cls, trigger_metadata) -> bool:
+        return 'SystemProperties' in trigger_metadata
+
 
 class EventHubTriggerConverter(EventHubConverter,
                                binding='eventHubTrigger', trigger=True):
@@ -105,12 +111,10 @@ class EventHubTriggerConverter(EventHubConverter,
                       typing.List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if cls._is_cardinary_one(trigger_metadata):
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif cls._is_cardinary_many(trigger_metadata):
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -129,13 +133,6 @@ class EventHubTriggerConverter(EventHubConverter,
         elif data.type == 'json':
             body = data.value.encode('utf-8')
 
-        iothub_metadata = {}
-        for f in trigger_metadata:
-            if f.startswith('iothub-'):
-                v = cls._decode_trigger_metadata_field(
-                    trigger_metadata, f, python_type=str)
-                iothub_metadata[f[len('iothub-'):]] = v
-
         return _eventhub.EventHubEvent(
             body=body,
             enqueued_time=cls._parse_datetime_metadata(
@@ -146,7 +143,7 @@ class EventHubTriggerConverter(EventHubConverter,
                 trigger_metadata, 'SequenceNumber', python_type=int),
             offset=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Offset', python_type=str),
-            iothub_metadata=iothub_metadata
+            iothub_metadata=cls._decode_iothub_metadata(trigger_metadata)
         )
 
     @classmethod
@@ -159,6 +156,10 @@ class EventHubTriggerConverter(EventHubConverter,
         elif data.type == 'collection_string':
             parsed_data = data.value.string
 
+        elif data.type == 'json':
+            # IotHub event
+            parsed_data = json.loads(data.value)
+
         sys_props = trigger_metadata.get('SystemPropertiesArray')
 
         parsed_sys_props = json.loads(sys_props.value)
@@ -168,15 +169,16 @@ class EventHubTriggerConverter(EventHubConverter,
 
         events = []
         for i in range(len(parsed_data)):
-            enqueued_time = parsed_sys_props[i].get('EnqueuedTimeUtc')
+            sys_props = parsed_sys_props[i]
+            enqueued_time = sys_props.get('EnqueuedTimeUtc')
             partition_key = cls.encode(
-                parsed_sys_props[i].get('PartitionKey'),
+                sys_props.get('PartitionKey'),
                 expected_type=str)
             sequence_number = cls.encode(
-                parsed_sys_props[i].get('SequenceNumber'),
+                sys_props.get('SequenceNumber'),
                 expected_type=int)
             offset = cls.encode(
-                parsed_sys_props[i].get('Offset'),
+                sys_props.get('Offset'),
                 expected_type=int)
 
             event = _eventhub.EventHubEvent(
@@ -188,9 +190,58 @@ class EventHubTriggerConverter(EventHubConverter,
                     sequence_number, python_type=int),
                 offset=cls._decode_typed_data(
                     offset, python_type=int),
-                iothub_metadata={}
+                iothub_metadata=cls._extract_iothub_from_dict(sys_props)
             )
 
             events.append(event)
 
         return events
+
+    @classmethod
+    def _decode_iothub_metadata(
+        cls, trigger_metadata) -> typing.Dict[str, str]:
+        # Try extracting iothub_metadata from trigger_metadata
+        iothub_metadata = cls._extract_iothub_from_trigger_metadata(
+            trigger_metadata)
+
+        # Try extracting iothub_metadata from SystemProperties
+        if not iothub_metadata and trigger_metadata.get('SystemProperties'):
+            iothub_metadata = cls._extract_iothub_from_system_properties(
+                trigger_metadata['SystemProperties'].value)
+
+        return iothub_metadata
+
+
+    @classmethod
+    def _extract_iothub_from_trigger_metadata(
+        cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+        iothub_metadata = {}
+        for f in metadict:
+            if f.startswith('iothub-'):
+                v = cls._decode_trigger_metadata_field(
+                    trigger_metadata, f, python_type=str)
+                iothub_metadata[f[len('iothub-'):]] = v
+        return iothub_metadata
+
+    @classmethod
+    def _extract_iothub_from_system_properties(
+        cls, system_properties_string: str) -> typing.Dict[str, str]:
+        system_properties = json.loads(system_properties_string)
+        return cls._extract_iothub_from_dict(system_properties)
+
+    @classmethod
+    def _extract_iothub_from_dict(
+        cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+        iothub_metadata = {}
+        for f in metadict:
+            if f.startswith('iothub-'):
+                iothub_metadata[f[len('iothub-'):]] = metadict[f]
+        return iothub_metadata
+
+    @classmethod
+    def _is_cardinary_many(cls, trigger_metadata) -> bool:
+        return 'SystemPropertiesArray' in trigger_metadata
+
+    @classmethod
+    def _is_cardinary_one(cls, trigger_metadata) -> bool:
+        return 'SystemProperties' in trigger_metadata
