@@ -156,8 +156,8 @@ class EventHubTriggerConverter(EventHubConverter,
         elif data.type == 'collection_string':
             parsed_data = data.value.string
 
+        # IotHub event
         elif data.type == 'json':
-            # IotHub event
             parsed_data = json.loads(data.value)
 
         sys_props = trigger_metadata.get('SystemPropertiesArray')
@@ -182,7 +182,7 @@ class EventHubTriggerConverter(EventHubConverter,
                 expected_type=int)
 
             event = _eventhub.EventHubEvent(
-                body=parsed_data[i],
+                body=cls._marshall_event_body(parsed_data[i], data.type),
                 enqueued_time=cls._parse_datetime(enqueued_time),
                 partition_key=cls._decode_typed_data(
                     partition_key, python_type=str),
@@ -196,6 +196,19 @@ class EventHubTriggerConverter(EventHubConverter,
             events.append(event)
 
         return events
+
+    @classmethod
+    def _marshall_event_body(self, parsed_data, data_type):
+        # In IoTHub, when setting the eventhub using cardinary = 'many'
+        # The data is wrapped inside a json (e.g. '[{ "device-id": "1" }]')
+
+        # Previously, since the IoTHub events has a 'json' datatype,
+        # it is handled as single_event by mistake and our users handle the
+        # data parsing. And we want to keep the same behavior here.
+        if data_type == 'json':
+            return json.dumps(parsed_data).encode('utf-8')
+
+        return parsed_data
 
     @classmethod
     def _decode_iothub_metadata(
