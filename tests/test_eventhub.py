@@ -48,7 +48,7 @@ class TestEventHub(unittest.TestCase):
     @patch('azure.functions.eventhub.EventHubTriggerConverter'
            '.decode_multiple_events')
     def test_eventhub_decode_single_event(self, dme_mock, dse_mock):
-        result = azf_eh.EventHubTriggerConverter.decode(
+        azf_eh.EventHubTriggerConverter.decode(
             data=self._generate_single_iothub_datum(),
             trigger_metadata=self._generate_single_trigger_metadatum()
         )
@@ -60,7 +60,7 @@ class TestEventHub(unittest.TestCase):
     @patch('azure.functions.eventhub.EventHubTriggerConverter'
            '.decode_multiple_events')
     def test_eventhub_decode_multiple_events(self, dme_mock, dse_mock):
-        result = azf_eh.EventHubTriggerConverter.decode(
+        azf_eh.EventHubTriggerConverter.decode(
             data=self._generate_multiple_iothub_data(),
             trigger_metadata=self._generate_multiple_trigger_metadata()
         )
