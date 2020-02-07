@@ -105,10 +105,10 @@ class EventHubTriggerConverter(EventHubConverter,
                       typing.List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if cls._is_cardinary_one(trigger_metadata):
+        if cls._is_cardinality_one(trigger_metadata):
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif cls._is_cardinary_many(trigger_metadata):
+        elif cls._is_cardinality_many(trigger_metadata):
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -193,7 +193,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def _marshall_event_body(self, parsed_data, data_type):
-        # In IoTHub, when setting the eventhub using cardinary = 'many'
+        # In IoTHub, when setting the eventhub using cardinality = 'many'
         # The data is wrapped inside a json (e.g. '[{ "device-id": "1" }]')
 
         # Previously, since the IoTHub events has a 'json' datatype,
@@ -245,9 +245,9 @@ class EventHubTriggerConverter(EventHubConverter,
         return iothub_metadata
 
     @classmethod
-    def _is_cardinary_many(cls, trigger_metadata) -> bool:
+    def _is_cardinality_many(cls, trigger_metadata) -> bool:
         return 'SystemPropertiesArray' in trigger_metadata
 
     @classmethod
-    def _is_cardinary_one(cls, trigger_metadata) -> bool:
+    def _is_cardinality_one(cls, trigger_metadata) -> bool:
         return 'SystemProperties' in trigger_metadata
