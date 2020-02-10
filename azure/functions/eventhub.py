@@ -105,12 +105,10 @@ class EventHubTriggerConverter(EventHubConverter,
                       typing.List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if cls._is_cardinality_one(trigger_metadata):
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif cls._is_cardinality_many(trigger_metadata):
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -129,13 +127,6 @@ class EventHubTriggerConverter(EventHubConverter,
         elif data.type == 'json':
             body = data.value.encode('utf-8')
 
-        iothub_metadata = {}
-        for f in trigger_metadata:
-            if f.startswith('iothub-'):
-                v = cls._decode_trigger_metadata_field(
-                    trigger_metadata, f, python_type=str)
-                iothub_metadata[f[len('iothub-'):]] = v
-
         return _eventhub.EventHubEvent(
             body=body,
             enqueued_time=cls._parse_datetime_metadata(
@@ -146,7 +137,7 @@ class EventHubTriggerConverter(EventHubConverter,
                 trigger_metadata, 'SequenceNumber', python_type=int),
             offset=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Offset', python_type=str),
-            iothub_metadata=iothub_metadata
+            iothub_metadata=cls._decode_iothub_metadata(trigger_metadata)
         )
 
     @classmethod
@@ -158,6 +149,10 @@ class EventHubTriggerConverter(EventHubConverter,
 
         elif data.type == 'collection_string':
             parsed_data = data.value.string
+
+        # Input Trigger IotHub Event
+        elif data.type == 'json':
+            parsed_data = json.loads(data.value)
 
         sys_props = trigger_metadata.get('SystemPropertiesArray')
 
@@ -180,7 +175,7 @@ class EventHubTriggerConverter(EventHubConverter,
                 expected_type=int)
 
             event = _eventhub.EventHubEvent(
-                body=parsed_data[i],
+                body=cls._marshall_event_body(parsed_data[i], data.type),
                 enqueued_time=cls._parse_datetime(enqueued_time),
                 partition_key=cls._decode_typed_data(
                     partition_key, python_type=str),
@@ -188,9 +183,71 @@ class EventHubTriggerConverter(EventHubConverter,
                     sequence_number, python_type=int),
                 offset=cls._decode_typed_data(
                     offset, python_type=int),
-                iothub_metadata={}
+                iothub_metadata=cls._extract_iothub_from_dict(
+                    parsed_sys_props[i])
             )
 
             events.append(event)
 
         return events
+
+    @classmethod
+    def _marshall_event_body(self, parsed_data, data_type):
+        # In IoTHub, when setting the eventhub using cardinality = 'many'
+        # The data is wrapped inside a json (e.g. '[{ "device-id": "1" }]')
+
+        # Previously, since the IoTHub events has a 'json' datatype,
+        # it is handled as single_event by mistake and our users handle the
+        # data parsing. And we want to keep the same behavior here.
+        if data_type == 'json':
+            return json.dumps(parsed_data).encode('utf-8')
+
+        return parsed_data
+
+    @classmethod
+    def _decode_iothub_metadata(
+            cls, trigger_metadata) -> typing.Dict[str, str]:
+        # Try extracting iothub_metadata from trigger_metadata
+        iothub_metadata = cls._extract_iothub_from_trigger_metadata(
+            trigger_metadata)
+
+        # Try extracting iothub_metadata from SystemProperties
+        if not iothub_metadata and trigger_metadata.get('SystemProperties'):
+            iothub_metadata = cls._extract_iothub_from_system_properties(
+                trigger_metadata['SystemProperties'].value)
+
+        return iothub_metadata
+
+    @classmethod
+    def _extract_iothub_from_trigger_metadata(
+            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+        iothub_metadata = {}
+        for f in metadict:
+            if f.startswith('iothub-'):
+                v = cls._decode_trigger_metadata_field(
+                    metadict, f, python_type=str)
+                iothub_metadata[f[len('iothub-'):]] = v
+        return iothub_metadata
+
+    @classmethod
+    def _extract_iothub_from_system_properties(
+            cls, system_properties_string: str) -> typing.Dict[str, str]:
+        system_properties = json.loads(system_properties_string)
+        return cls._extract_iothub_from_dict(system_properties)
+
+    @classmethod
+    def _extract_iothub_from_dict(
+            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+        iothub_metadata = {}
+        for f in metadict:
+            if f.startswith('iothub-'):
+                iothub_metadata[f[len('iothub-'):]] = metadict[f]
+        return iothub_metadata
+
+    @classmethod
+    def _is_cardinality_many(cls, trigger_metadata) -> bool:
+        return 'SystemPropertiesArray' in trigger_metadata
+
+    @classmethod
+    def _is_cardinality_one(cls, trigger_metadata) -> bool:
+        return 'SystemProperties' in trigger_metadata
