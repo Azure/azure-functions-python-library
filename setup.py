@@ -19,6 +19,9 @@ setup(
     ],
     license='MIT',
     packages=['azure.functions'],
+    package_data={
+        'azure.functions': ['py.typed']
+    },
     extras_require={
         'dev': [
             'flake8~=3.7.9',
