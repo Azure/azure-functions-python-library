@@ -4,6 +4,7 @@ from ._eventgrid import EventGridEvent  # NoQA
 from ._cosmosdb import Document, DocumentList  # NoQA
 from ._http import HttpRequest  # NoQA
 from ._http import HttpResponse  # NoQA
+from ._http_wsgi import WsgiMiddleware # NoQA
 from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
 from .meta import get_binding_registry  # NoQA
@@ -34,6 +35,7 @@ __all__ = (
     'EventHubEvent',
     'HttpRequest',
     'HttpResponse',
+    'WsgiMiddleware',
     'InputStream',
     'QueueMessage',
     'ServiceBusMessage',
