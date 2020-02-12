@@ -1,8 +1,8 @@
-from typing import Callable, Dict, List, Any
+from typing import Callable, Dict, List, Optional, Any
 from io import BytesIO, StringIO
 from os import linesep
 from urllib.parse import urlparse
-from wsgiref.hreads import Headers
+from wsgiref.headers import Headers
 
 from ._abc import Context
 from ._http import HttpRequest, HttpResponse
@@ -12,7 +12,9 @@ from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
 class WsgiRequest:
     _environ_cache: Dict[str, Any] = None
 
-    def __init__(self, func_req: HttpRequest, func_ctx: Context = None):
+    def __init__(self,
+                 func_req: HttpRequest,
+                 func_ctx: Optional[Context] = None):
         url = urlparse(func_req.url)
         func_req_body = func_req.get_body()
 
@@ -52,7 +54,7 @@ class WsgiRequest:
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
 
     def to_environ(self, errors_buffer: StringIO) -> Dict[str, Any]:
-        if self._environ_cache is None:
+        if self._environ_cache is not None:
             return self._environ_cache
 
         environ = {
@@ -85,11 +87,11 @@ class WsgiRequest:
 
         # Remove None values
         self._environ_cache = {
-            k: v for k, v in environ if v is not None
+            k: v for k, v in environ.items() if v is not None
         }
         return self._environ_cache
 
-    def _get_port(parsed_url, lowercased_headers: Dict[str, str]) -> int:
+    def _get_port(self, parsed_url, lowercased_headers: Dict[str, str]) -> int:
         port: int = 80
         if lowercased_headers.get('x-forwarded-port'):
             return int(lowercased_headers['x-forwarded-port'])
@@ -99,7 +101,8 @@ class WsgiRequest:
             return 443
         return port
 
-    def _get_http_headers(func_headers: Dict[str, str]) -> Dict[str, str]:
+    def _get_http_headers(self,
+                          func_headers: Dict[str, str]) -> Dict[str, str]:
         # Content-Type -> HTTP_CONTENT_TYPE
         return {f'HTTP_{k.upper().replace("-", "_")}': v for k, v in
                 func_headers.items()}
@@ -112,10 +115,6 @@ class WsgiResponse:
         self._headers = {}
         self._buffer: List[bytes] = []
 
-    @property
-    def buffer(self):
-        return self._buffer
-
     @classmethod
     def from_app(cls, app, environ) -> 'WsgiResponse':
         res = cls()
@@ -123,10 +122,10 @@ class WsgiResponse:
         return res
 
     def to_func_response(self) -> HttpResponse:
-        lowercased_headers = {k.lower(): v for k, v in self._headers}
+        lowercased_headers = {k.lower(): v for k, v in self._headers.items()}
         return HttpResponse(
             body=b''.join(self._buffer),
-            status_code=self.status_code,
+            status_code=self._status_code,
             headers=self._headers,
             mimetype=lowercased_headers.get('content-type'),
             charset=lowercased_headers.get('content-encoding')
@@ -147,20 +146,25 @@ class WsgiMiddleware:
     # Usage
     # main = func.WsgiMiddleware(app).main
     @property
-    def main(self) -> Callable[[HttpRequest, Context], HttpResponse]:
-        return self.handle
+    def main(self) -> Callable[[HttpRequest, Optional[Context]], HttpResponse]:
+        return self._handle
 
     # Usage
     # return func.WsgiMiddlewawre(app).handle(req, context)
     def handle(self,
-               req: HttpRequest, context: Context = None) -> HttpResponse:
+               req: HttpRequest,
+               context: Optional[Context] = None) -> HttpResponse:
+        return self._handle(req, context)
+
+    def _handle(self,
+                req: HttpRequest,
+                context: Context) -> HttpResponse:
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
         self._handle_errors()
         return wsgi_response.to_func_response()
 
-    @classmethod
     def _handle_errors(self):
         if self._wsgi_error_buffer.tell() > 0:
             self._wsgi_error_buffer.seek(0)
