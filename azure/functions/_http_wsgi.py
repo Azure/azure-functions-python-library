@@ -10,8 +10,7 @@ from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
 
 
 class WsgiRequest:
-
-    self._environ_cache: Dict[str, Any] = None
+    _environ_cache: Dict[str, Any] = None
 
     def __init__(self, func_req: HttpRequest, func_ctx: Context = None):
         url = urlparse(func_req.url)
@@ -19,7 +18,7 @@ class WsgiRequest:
 
         # Convert function request headers to lowercase header
         self._lowercased_headers = {
-            k.lower():v for k,v in func_req.headers.items()
+            k.lower(): v for k, v in func_req.headers.items()
         }
 
         # Implement interfaces for PEP 3333 environ
@@ -34,7 +33,9 @@ class WsgiRequest:
         self.server_protocol = 'HTTP/1.1'
 
         # Propagate http request headers into HTTP_ environ
-        self._http_environ: Dict[str, str] = self._get_http_headers(func_req.headers)
+        self._http_environ: Dict[str, str] = self._get_http_headers(
+            func_req.headers
+        )
 
         # Wsgi environ
         self.wsgi_version = (1, 0)
@@ -45,12 +46,13 @@ class WsgiRequest:
         self.wsgi_run_once = False
 
         # Azure Functions context
-        self.af_function_directory = getattr(func_ctx, 'function_directory', None)
+        self.af_function_directory = getattr(
+            func_ctx, 'function_directory', None)
         self.af_function_name = getattr(func_ctx, 'function_name', None)
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
 
     def to_environ(self, errors_buffer: StringIO) -> Dict[str, Any]:
-        if self._environ_cache is not None:
+        if self._environ_cache is None:
             return self._environ_cache
 
         environ = {
@@ -69,7 +71,7 @@ class WsgiRequest:
             'wsgi.errors': errors_buffer,
             'wsgi.multithread': self.wsgi_multithread,
             'wsgi.multiprocess': self.wsgi_multiprocess,
-            'wsgi.run_once': self.wsgi_run_once
+            'wsgi.run_once': self.wsgi_run_once,
             'azure_functions.function_directory': self.af_function_directory,
             'azure_functions.function_name': self.af_function_name,
             'azure_functions.invocation_id': self.af_invocation_id
@@ -77,13 +79,13 @@ class WsgiRequest:
         environ.update(self._http_environ)
 
         # Ensure WSGI string fits in IOS-8859-1 code points
-        for k,v in environ.items():
+        for k, v in environ.items():
             if isinstance(v, string_types):
                 environ[k] = wsgi_encoding_dance(v)
 
         # Remove None values
         self._environ_cache = {
-            k:v for k,v in environ if v is not None
+            k: v for k, v in environ if v is not None
         }
         return self._environ_cache
 
@@ -99,9 +101,8 @@ class WsgiRequest:
 
     def _get_http_headers(func_headers: Dict[str, str]) -> Dict[str, str]:
         # Content-Type -> HTTP_CONTENT_TYPE
-        return {
-            f'HTTP_{k.upper().replace('-', '_')}':v for k,v in func_headers.items()
-        }
+        return {f'HTTP_{k.upper().replace("-", "_")}': v for k, v in
+                func_headers.items()}
 
 
 class WsgiResponse:
@@ -111,14 +112,18 @@ class WsgiResponse:
         self._headers = {}
         self._buffer: List[bytes] = []
 
+    @property
+    def buffer(self):
+        return self._buffer
+
     @classmethod
-    def from_app(cls, app, environ) -> WsgiResponse:
+    def from_app(cls, app, environ) -> 'WsgiResponse':
         res = cls()
-        self._buffer = [x for x in app(environ, res._start_response)]
+        res._buffer = [x for x in app(environ, res._start_response)]
         return res
 
     def to_func_response(self) -> HttpResponse:
-        lowercased_headers = { k.lower():v for k,v in self._headers }
+        lowercased_headers = {k.lower(): v for k, v in self._headers}
         return HttpResponse(
             body=b''.join(self._buffer),
             status_code=self.status_code,
@@ -128,7 +133,7 @@ class WsgiResponse:
         )
 
     # PEP 3333 start response implementation
-    def _start_response(status: str, response_headers: List[Any]):
+    def _start_response(self, status: str, response_headers: List[Any]):
         self._status = status
         self._headers = Headers(response_headers)
         self._status_code = int(self._status.split(' ')[0])
@@ -147,7 +152,8 @@ class WsgiMiddleware:
 
     # Usage
     # return func.WsgiMiddlewawre(app).handle(req, context)
-    def handle(self, req: HttpRequest, context: Context = None) -> HttpResponse:
+    def handle(self,
+               req: HttpRequest, context: Context = None) -> HttpResponse:
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
