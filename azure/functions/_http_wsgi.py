@@ -16,7 +16,7 @@ class WsgiRequest:
                  func_req: HttpRequest,
                  func_ctx: Optional[Context] = None):
         url = urlparse(func_req.url)
-        func_req_body = func_req.get_body()
+        func_req_body = func_req.get_body() or b''
 
         # Convert function request headers to lowercase header
         self._lowercased_headers = {
@@ -48,8 +48,8 @@ class WsgiRequest:
         self.wsgi_run_once = False
 
         # Azure Functions context
-        self.af_function_directory = getattr(
-            func_ctx, 'function_directory', None)
+        self.af_function_directory = getattr(func_ctx,
+                                             'function_directory', None)
         self.af_function_name = getattr(func_ctx, 'function_name', None)
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
 
@@ -118,7 +118,7 @@ class WsgiResponse:
     @classmethod
     def from_app(cls, app, environ) -> 'WsgiResponse':
         res = cls()
-        res._buffer = [x for x in app(environ, res._start_response)]
+        res._buffer = [x or b'' for x in app(environ, res._start_response)]
         return res
 
     def to_func_response(self) -> HttpResponse:
