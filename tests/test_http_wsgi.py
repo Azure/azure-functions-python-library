@@ -219,7 +219,7 @@ class TestHttpWsgi(unittest.TestCase):
                            status='200 OK',
                            response_headers=[('Content-Type', 'text/plain')],
                            response_body=b'sample string',
-                           exception: WsgiException=None):
+                           exception: WsgiException = None):
         class MockWsgiApp:
             _status = status
             _response_headers = response_headers
