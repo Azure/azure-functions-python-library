@@ -5,6 +5,11 @@ import azure.functions as func
 from azure.functions._http_wsgi import WsgiRequest, WsgiResponse
 
 
+class WsgiException(Exception):
+    def __init__(self, message=''):
+        self.message = message
+
+
 class TestHttpWsgi(unittest.TestCase):
 
     def test_request_general_environ_conversion(self):
@@ -138,6 +143,19 @@ class TestHttpWsgi(unittest.TestCase):
         func_response: func.HttpResponse = wsgi_response.to_func_response()
         self.assertEqual(func_response.headers, {})
 
+    def test_response_with_exception(self):
+        app = self._generate_wsgi_app(
+            exception=WsgiException(message='wsgi excpt'))
+        func_request = self._generate_func_request()
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+
+        with self.assertRaises(WsgiException) as e:
+            wsgi_response = WsgiResponse.from_app(app, environ)
+            wsgi_response.to_func_response()
+
+        self.assertEqual(e.exception.message, 'wsgi excpt')
+
     def _generate_func_request(
             self,
             method="POST",
@@ -190,17 +208,22 @@ class TestHttpWsgi(unittest.TestCase):
     def _generate_wsgi_app(self,
                            status='200 OK',
                            response_headers=[('Content-Type', 'text/plain')],
-                           response_body=b'sample string'):
+                           response_body=b'sample string',
+                           exception: WsgiException=None):
         class MockWsgiApp:
             _status = status
             _response_headers = response_headers
             _response_body = response_body
+            _exception = exception
 
             def __init__(self, environ, start_response):
                 self._environ = environ
                 self._start_response = start_response
 
             def __iter__(self):
+                if self._exception is not None:
+                    raise self._exception
+
                 self._start_response(self._status, self._response_headers)
                 yield self._response_body
 
