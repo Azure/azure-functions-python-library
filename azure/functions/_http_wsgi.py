@@ -135,7 +135,7 @@ class WsgiResponse:
     def _start_response(self, status: str, response_headers: List[Any]):
         self._status = status
         self._headers = Headers(response_headers)
-        self._status_code = int(self._status.split(' ')[0])
+        self._status_code = int(self._status.split(' ')[0])  # 200 OK
 
 
 class WsgiMiddleware:

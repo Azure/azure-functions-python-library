@@ -2,7 +2,11 @@ import unittest
 from io import StringIO, BytesIO
 
 import azure.functions as func
-from azure.functions._http_wsgi import WsgiRequest, WsgiResponse
+from azure.functions._http_wsgi import (
+    WsgiRequest,
+    WsgiResponse,
+    WsgiMiddleware
+)
 
 
 class WsgiException(Exception):
@@ -155,6 +159,12 @@ class TestHttpWsgi(unittest.TestCase):
             wsgi_response.to_func_response()
 
         self.assertEqual(e.exception.message, 'wsgi excpt')
+
+    def test_middleware_handle(self):
+        app = self._generate_wsgi_app()
+        func_request = self._generate_func_request()
+        func_response = WsgiMiddleware(app).handle(func_request)
+        self.assertEqual(func_response.status_code, 200)
 
     def _generate_func_request(
             self,
