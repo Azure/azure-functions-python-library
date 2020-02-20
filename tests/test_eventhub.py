@@ -177,6 +177,41 @@ class TestEventHub(unittest.TestCase):
             result[1].iothub_metadata['connection-device-id'], 'MyTestDevice2'
         )
 
+    def test_bytes_without_system_properties(self):
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=self._generate_single_iothub_datum('bytes'),
+            trigger_metadata={}
+        )
+        self.assertEqual(
+            result.get_body().decode('utf-8'), '{"device-status": "good"}'
+        )
+
+    def test_string_without_system_properties(self):
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=self._generate_single_iothub_datum('string'),
+            trigger_metadata={}
+        )
+        self.assertEqual(
+            result.get_body().decode('utf-8'), '{"device-status": "good"}'
+        )
+
+    def test_json_without_system_properties(self):
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=self._generate_single_iothub_datum('json'),
+            trigger_metadata={}
+        )
+        self.assertEqual(
+            result.get_body().decode('utf-8'), '{"device-status": "good"}'
+        )
+
+    def test_mismatch_number_of_bodies_in_metadata(self):
+        # 2 events with no metadata
+        with self.assertRaises(AssertionError):
+            azf_eh.EventHubTriggerConverter.decode(
+                data=self._generate_multiple_iothub_data('collection_string'),
+                trigger_metadata={}
+            )
+
     def _generate_single_iothub_datum(self, datum_type='json'):
         datum = '{"device-status": "good"}'
         if datum_type == 'bytes':
