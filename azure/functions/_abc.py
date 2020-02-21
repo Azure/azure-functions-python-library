@@ -300,3 +300,10 @@ class EventHubEvent(abc.ABC):
     @abc.abstractmethod
     def offset(self) -> typing.Optional[str]:
         pass
+
+
+class OrchestrationContext(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def body(self) -> str:
+        pass

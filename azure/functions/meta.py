@@ -266,6 +266,10 @@ class InConverter(_BaseConverter, binding=None):
     def decode(cls, data: Datum, *, trigger_metadata) -> typing.Any:
         raise NotImplementedError
 
+    @abc.abstractclassmethod
+    def has_implicit_output(cls) -> bool:
+        return False
+
 
 class OutConverter(_BaseConverter, binding=None):
 
