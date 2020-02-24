@@ -10,9 +10,7 @@ class OrchestrationTriggerConverter(meta.InConverter,
                                     trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
-        return (issubclass(pytype, str)
-                or issubclass(pytype, bytes)
-                or issubclass(pytype, _durable_functions.OrchestrationContext))
+        return issubclass(pytype, str) or issubclass(pytype, bytes)
 
     @classmethod
     def decode(cls,
