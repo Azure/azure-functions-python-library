@@ -21,3 +21,6 @@ class OrchestrationContext(_abc.OrchestrationContext):
             f'<azure.OrchestrationContext '
             f'body={self.body}>'
         )
+
+    def __str__(self):
+        return self.__body
