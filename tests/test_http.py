@@ -70,3 +70,11 @@ class TestHTTP(unittest.TestCase):
         )
         self.assertTrue(check_output_type(func.HttpResponse))
         self.assertTrue(check_output_type(str))
+
+    def test_http_request_should_not_have_implicit_output(self):
+        self.assertFalse(http.HttpRequestConverter.has_implicit_output())
+
+    def test_http_response_does_not_have_explicit_output(self):
+        self.assertIsNone(
+            getattr(http.HttpResponseConverter, 'has_implicit_output', None)
+        )
