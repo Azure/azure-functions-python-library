@@ -59,13 +59,13 @@ class TestDurableFunctions(unittest.TestCase):
         self.assertEqual(content.get('name'), 'great function')
 
     def test_orchestration_trigger_check_good_annotation(self):
-        for dt in (str, bytes):
+        for dt in (OrchestrationContext,):
             self.assertTrue(
                 OrchestrationTriggerConverter.check_input_type_annotation(dt)
             )
 
     def test_orchestration_trigger_check_bad_annotation(self):
-        for dt in (int, OrchestrationContext):
+        for dt in (str, bytes, int):
             self.assertFalse(
                 OrchestrationTriggerConverter.check_input_type_annotation(dt)
             )

@@ -10,7 +10,7 @@ class OrchestrationTriggerConverter(meta.InConverter,
                                     trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
-        return issubclass(pytype, str) or issubclass(pytype, bytes)
+        return issubclass(pytype, _durable_functions.OrchestrationContext)
 
     @classmethod
     def decode(cls,
@@ -36,7 +36,10 @@ class ActivityTriggerConverter(meta.InConverter,
     def decode(cls,
                data: meta.Datum, *,
                trigger_metadata) -> Any:
-        return data.value
+        if getattr(data, 'value', None) is not None:
+            return data.value
+
+        return data
 
     @classmethod
     def has_implicit_output(cls) -> bool:
