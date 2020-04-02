@@ -75,19 +75,75 @@ class TestDurableFunctions(unittest.TestCase):
             OrchestrationTriggerConverter.has_implicit_output()
         )
 
-    def test_activity_trigger_accepts_any_types(self):
-        datum_set = {
-            Datum('string', str),
-            Datum(123, int),
-            Datum(1234.56, float),
-            Datum('string'.encode('utf-8'), bytes),
-            Datum(Datum('{ "json": true }', str), Datum)
-        }
+    def test_activity_trigger_inputs(self):
+        # Activity Trigger only accept string type from durable extensions
+        # It will be JSON deserialized into expected data type
+        data = [
+            {
+                'input': Datum('sample', 'string'),
+                'expected_value': 'sample',
+                'expected_type': str
+            },
+            {
+                'input': Datum('123', 'string'),
+                'expected_value': 123,
+                'expected_type': int
+            },
+            {
+                'input': Datum('1234.56', 'string'),
+                'expected_value': 1234.56,
+                'expected_type': float
+            },
+            {
+                'input': Datum('[ "do", "re", "mi" ]', 'string'),
+                'expected_value': [ "do", "re", "mi" ],
+                'expected_type': list
+            },
+            {
+                'input': Datum('{ "number": "42" }', 'string'),
+                'expected_value': { "number": "42" },
+                'expected_type': dict
+            }
+        ]
 
-        for datum in datum_set:
-            out = ActivityTriggerConverter.decode(datum, trigger_metadata=None)
-            self.assertEqual(out, datum.value)
-            self.assertEqual(type(out), datum.type)
+        for datum in data:
+            decoded = ActivityTriggerConverter.decode(
+                data=datum['input'],
+                trigger_metadata=None)
+            self.assertEqual(decoded, datum['expected_value'])
+            self.assertEqual(type(decoded), datum['expected_type'])
+
+    def test_activity_trigger_outputs(self):
+        # Activity Trigger allow any JSON serializable as outputs
+        # The return value will be carried back to the Orchestrator function
+        data = [
+            {
+                'output': 'sample',
+                'expected_value': Datum('"sample"', 'json'),
+            },
+            {
+                'output': int(123),
+                'expected_value': Datum('123', 'json'),
+            },
+            {
+                'output': float(1234.56),
+                'expected_value': Datum('1234.56', 'json')
+            },
+            {
+                'output': [ "do", "re", "mi" ],
+                'expected_value': Datum('["do", "re", "mi"]', 'json')
+            },
+            {
+                'output': { "number": "42" },
+                'expected_value': Datum('{"number": "42"}', 'json')
+            }
+        ]
+
+        for datum in data:
+            encoded = ActivityTriggerConverter.encode(
+                obj=datum['output'],
+                expected_type=type(datum['output']))
+            self.assertEqual(encoded, datum['expected_value'])
 
     def test_activity_trigger_has_implicit_return(self):
         self.assertTrue(

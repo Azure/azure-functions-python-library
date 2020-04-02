@@ -72,7 +72,7 @@ class ActivityTriggerConverter(meta.InConverter,
                     f'valid json serializable ({data.value})')
         else:
             raise NotImplementedError(
-                f'unsupported event grid payload type: {data_type}')
+                f'unsupported activity trigger payload type: {data_type}')
 
         return result
 
