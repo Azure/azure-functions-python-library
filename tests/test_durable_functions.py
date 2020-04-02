@@ -96,12 +96,12 @@ class TestDurableFunctions(unittest.TestCase):
             },
             {
                 'input': Datum('[ "do", "re", "mi" ]', 'string'),
-                'expected_value': [ "do", "re", "mi" ],
+                'expected_value': ["do", "re", "mi"],
                 'expected_type': list
             },
             {
                 'input': Datum('{ "number": "42" }', 'string'),
-                'expected_value': { "number": "42" },
+                'expected_value': {"number": "42"},
                 'expected_type': dict
             }
         ]
@@ -130,11 +130,11 @@ class TestDurableFunctions(unittest.TestCase):
                 'expected_value': Datum('1234.56', 'json')
             },
             {
-                'output': [ "do", "re", "mi" ],
+                'output': ["do", "re", "mi"],
                 'expected_value': Datum('["do", "re", "mi"]', 'json')
             },
             {
-                'output': { "number": "42" },
+                'output': {"number": "42"},
                 'expected_value': Datum('{"number": "42"}', 'json')
             }
         ]
