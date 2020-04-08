@@ -19,7 +19,10 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
         return issubclass(pytype, (cdb.DocumentList, cdb.Document))
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata) -> cdb.DocumentList:
+    def decode(cls,
+               data: meta.Datum,
+               *,
+               trigger_metadata) -> typing.Optional[cdb.DocumentList]:
         if data is None or data.type is None:
             return None
 

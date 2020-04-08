@@ -3,7 +3,7 @@ import collections.abc
 import datetime
 import json
 import re
-import typing
+from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
 from ._thirdparty import typing_inspect
 from ._utils import try_parse_datetime_with_formats
@@ -54,13 +54,13 @@ class Datum:
 
 class _ConverterMeta(abc.ABCMeta):
 
-    _bindings: typing.Mapping[str, type] = {}
+    _bindings: Dict[str, type] = {}
 
     def __new__(mcls, name, bases, dct, *,
-                binding: typing.Optional[str],
-                trigger: typing.Optional[str] = None):
+                binding: Optional[str],
+                trigger: Optional[str] = None):
         cls = super().__new__(mcls, name, bases, dct)
-        cls._trigger = trigger
+        cls._trigger = trigger  # type: ignore
         if binding is None:
             return cls
 
@@ -69,6 +69,7 @@ class _ConverterMeta(abc.ABCMeta):
                 f'cannot register a converter for {binding!r} binding: '
                 f'another converter for this binding has already been '
                 f'registered')
+
         mcls._bindings[binding] = cls
         if trigger is not None:
             mcls._bindings[trigger] = cls
@@ -80,7 +81,7 @@ class _ConverterMeta(abc.ABCMeta):
         return cls._bindings.get(binding_name)
 
     def has_trigger_support(cls) -> bool:
-        return cls._trigger is not None
+        return cls._trigger is not None  # type: ignore
 
 
 class _BaseConverter(metaclass=_ConverterMeta, binding=None):
@@ -88,8 +89,8 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     @classmethod
     def _decode_typed_data(
             cls, data: Datum, *,
-            python_type: typing.Union[type, typing.Tuple[type, ...]],
-            context: str = 'data') -> typing.Any:
+            python_type: Union[type, Tuple[type, ...]],
+            context: str = 'data') -> Any:
         if data is None:
             return None
 
@@ -141,10 +142,10 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _decode_trigger_metadata_field(
-            cls, trigger_metadata: typing.Mapping[str, Datum],
+            cls, trigger_metadata: Mapping[str, Datum],
             field: str, *,
-            python_type: typing.Union[type, typing.Tuple[type, ...]]) \
-            -> typing.Any:
+            python_type: Union[type, Tuple[type, ...]]) \
+            -> Any:
         data = trigger_metadata.get(field)
         if data is None:
             return None
@@ -155,8 +156,8 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime_metadata(
-            cls, trigger_metadata: typing.Mapping[str, Datum],
-            field: str) -> typing.Optional[datetime.datetime]:
+            cls, trigger_metadata: Mapping[str, Datum],
+            field: str) -> Optional[datetime.datetime]:
 
         datetime_str = cls._decode_trigger_metadata_field(
             trigger_metadata, field, python_type=str)
@@ -168,8 +169,8 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_timedelta_metadata(
-            cls, trigger_metadata: typing.Mapping[str, Datum],
-            field: str) -> typing.Optional[datetime.timedelta]:
+            cls, trigger_metadata: Mapping[str, Datum],
+            field: str) -> Optional[datetime.timedelta]:
 
         timedelta_str = cls._decode_trigger_metadata_field(
             trigger_metadata, field, python_type=str)
@@ -181,7 +182,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime(
-            cls, datetime_str: str) -> datetime.datetime:
+            cls, datetime_str: str) -> Optional[datetime.datetime]:
         too_fractional = re.match(
             r'(.*\.\d{6})(\d+)(Z|[\+|-]\d{1,2}:\d{1,2}){0,1}', datetime_str)
 
@@ -207,11 +208,13 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             raise utc_time_error
         elif local_time_error:
             raise local_time_error
+        else:
+            return None
 
     @classmethod
     def _parse_datetime_utc(
         cls, datetime_str: str
-    ) -> typing.Tuple[datetime.datetime, Exception]:
+    ) -> Tuple[Optional[datetime.datetime], Optional[Exception]]:
 
         # UTC ISO 8601 assumed
         # 2018-08-07T23:17:57.461050Z
@@ -234,7 +237,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     @classmethod
     def _parse_datetime_local(
         cls, datetime_str: str
-    ) -> typing.Tuple[datetime.datetime, Exception]:
+    ) -> Tuple[Optional[datetime.datetime], Optional[Exception]]:
 
         # Local time assumed
         # 2018-08-07T23:17:57.461050
@@ -263,7 +266,7 @@ class InConverter(_BaseConverter, binding=None):
         pass
 
     @abc.abstractclassmethod
-    def decode(cls, data: Datum, *, trigger_metadata) -> typing.Any:
+    def decode(cls, data: Datum, *, trigger_metadata) -> Any:
         raise NotImplementedError
 
     @abc.abstractclassmethod
@@ -278,8 +281,8 @@ class OutConverter(_BaseConverter, binding=None):
         pass
 
     @abc.abstractclassmethod
-    def encode(cls, obj: typing.Any, *,
-               expected_type: typing.Optional[type]) -> typing.Optional[Datum]:
+    def encode(cls, obj: Any, *,
+               expected_type: Optional[type]) -> Optional[Datum]:
         raise NotImplementedError
 
 
