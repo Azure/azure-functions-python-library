@@ -49,7 +49,7 @@ class ActivityTriggerConverter(meta.InConverter,
 
     @classmethod
     def check_output_type_annotation(cls, pytype):
-        # Implicit output should accept any return type
+        # The activity trigger should accept any JSON serializable types
         return True
 
     @classmethod
