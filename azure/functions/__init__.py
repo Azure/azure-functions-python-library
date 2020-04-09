@@ -46,3 +46,5 @@ __all__ = (
     # Middlewares
     'WsgiMiddleware',
 )
+
+__version__ = '1.2.0'

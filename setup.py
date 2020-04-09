@@ -1,9 +1,10 @@
 from setuptools import setup
+from azure.functions import __version__
 
 
 setup(
     name='azure-functions',
-    version='1.2.0',
+    version=__version__,
     description='Azure Functions for Python',
     author='Microsoft Corporation',
     author_email='azpysdkhelp@microsoft.com',
