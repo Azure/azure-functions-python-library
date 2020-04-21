@@ -10,7 +10,7 @@ from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
 
 
 class WsgiRequest:
-    _environ_cache: Dict[str, Any] = None
+    _environ_cache: Optional[Dict[str, Any]] = None
 
     def __init__(self,
                  func_req: HttpRequest,
@@ -96,7 +96,7 @@ class WsgiRequest:
         if lowercased_headers.get('x-forwarded-port'):
             return int(lowercased_headers['x-forwarded-port'])
         elif getattr(parsed_url, 'port', None):
-            return parsed_url.port
+            return int(parsed_url.port)
         elif parsed_url.scheme == 'https':
             return 443
         return port
@@ -134,7 +134,7 @@ class WsgiResponse:
     # PEP 3333 start response implementation
     def _start_response(self, status: str, response_headers: List[Any]):
         self._status = status
-        self._headers = Headers(response_headers)
+        self._headers = Headers(response_headers)  # type: ignore
         self._status_code = int(self._status.split(' ')[0])  # 200 OK
 
 
@@ -146,7 +146,7 @@ class WsgiMiddleware:
     # Usage
     # main = func.WsgiMiddleware(app).main
     @property
-    def main(self) -> Callable[[HttpRequest, Optional[Context]], HttpResponse]:
+    def main(self) -> Callable[[HttpRequest, Context], HttpResponse]:
         return self._handle
 
     # Usage
@@ -158,7 +158,7 @@ class WsgiMiddleware:
 
     def _handle(self,
                 req: HttpRequest,
-                context: Context) -> HttpResponse:
+                context: Optional[Context]) -> HttpResponse:
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
