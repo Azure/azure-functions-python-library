@@ -200,7 +200,7 @@ class HttpRequest(_abc.HttpRequest):
         return self.__body_bytes
 
     def get_json(self) -> typing.Any:
-        return json.loads(self.__body_bytes.decode())
+        return json.loads(self.__body_bytes.decode('utf-8'))
 
     def _parse_form_data(self):
         if self.__form_parsed:

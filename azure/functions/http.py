@@ -53,7 +53,7 @@ class HttpRequest(azf_http.HttpRequest):
             return json.loads(self.__body_str)
         elif self.__body_bytes is not None:
             try:
-                return json.loads(self.__body_bytes.decode())
+                return json.loads(self.__body_bytes.decode('utf-8'))
             except ValueError as e:
                 raise ValueError(
                     'HTTP request does not contain valid JSON data') from e

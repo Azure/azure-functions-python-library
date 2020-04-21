@@ -27,6 +27,20 @@ class TestHTTP(unittest.TestCase):
         self.assertEqual(request.files["rfc2231"].filename, "a b c d e f.txt")
         self.assertEqual(request.files["rfc2231"].read(), b"file contents")
 
+    def test_http_json(self):
+        data: bytes = b'{ "result": "OK" }'
+        request = func.HttpRequest(
+            method='POST',
+            url='/foo',
+            body=data,
+            headers={
+                'Content-Type': 'application/json; charset=utf-8'
+            }
+        )
+
+        self.assertEqual(request.get_body(), b'{ "result": "OK" }')
+        self.assertEqual(request.get_json().get('result'), 'OK')
+
     def test_http_form_parse_urlencoded(self):
         data = b"foo=Hello+World&bar=baz"
         req = func.HttpRequest(
