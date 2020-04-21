@@ -1,9 +1,10 @@
 from setuptools import setup
+from azure.functions import __version__
 
 
 setup(
     name='azure-functions',
-    version='1.0.8',
+    version=__version__,
     description='Azure Functions for Python',
     author='Microsoft Corporation',
     author_email='azpysdkhelp@microsoft.com',
@@ -19,6 +20,9 @@ setup(
     ],
     license='MIT',
     packages=['azure.functions'],
+    package_data={
+        'azure.functions': ['py.typed']
+    },
     extras_require={
         'dev': [
             'flake8~=3.7.9',

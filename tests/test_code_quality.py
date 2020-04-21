@@ -2,6 +2,8 @@ import pathlib
 import subprocess
 import sys
 import unittest
+import re
+import azure.functions as func
 
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent
@@ -47,3 +49,11 @@ class TestCodeQuality(unittest.TestCase):
             output = ex.output.decode()
             raise AssertionError(
                 f'flake8 validation failed:\n{output}') from None
+
+    def test_library_version(self):
+        # PEP 440 Parsing version strings with regular expressions
+        is_valid = re.match(
+            r'^([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))'
+            r'*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))'
+            r'?(\.dev(0|[1-9][0-9]*))?$', func.__version__) is not None
+        self.assertTrue(is_valid, '__version__ field must be canonical')
