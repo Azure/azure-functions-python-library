@@ -24,22 +24,22 @@ class EventGridEvent(azf_abc.EventGridEvent):
         self.__data_version = data_version
 
     @property
-    def id(self) -> str:
+    def id(self) -> typing.Optional[str]:
         return self.__id
 
     def get_json(self) -> typing.Any:
         return self.__data
 
     @property
-    def topic(self) -> str:
+    def topic(self) -> typing.Optional[str]:
         return self.__topic
 
     @property
-    def subject(self) -> str:
+    def subject(self) -> typing.Optional[str]:
         return self.__subject
 
     @property
-    def event_type(self) -> str:
+    def event_type(self) -> typing.Optional[str]:
         return self.__event_type
 
     @property
@@ -47,7 +47,7 @@ class EventGridEvent(azf_abc.EventGridEvent):
         return self.__event_time
 
     @property
-    def data_version(self) -> str:
+    def data_version(self) -> typing.Optional[str]:
         return self.__data_version
 
     def __repr__(self) -> str:
