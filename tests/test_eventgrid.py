@@ -4,19 +4,20 @@ from typing import List
 
 import azure.functions as func
 import azure.functions.eventgrid as azf_event_grid
-from azure.functions.meta import Datum
 
 
 class MyTestCase(unittest.TestCase):
     def test_eventgrid_input_type(self):
-        check_input_type = azf_event_grid.EventGridEventInConverter.check_input_type_annotation
+        check_input_type = azf_event_grid.EventGridEventInConverter.\
+            check_input_type_annotation
         self.assertTrue(check_input_type(func.EventGridEvent))
         self.assertFalse(check_input_type(List[func.EventGridEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
 
     def test_eventgrid_output_type(self):
-        check_output_type = azf_event_grid.EventGridOutConverter.check_output_type_annotation
+        check_output_type = azf_event_grid.EventGridOutConverter.\
+            check_output_type_annotation
         self.assertTrue(check_output_type(func.EventGridEvent))
         self.assertTrue(check_output_type(List[func.EventGridEvent]))
         self.assertTrue(check_output_type(str))
@@ -27,7 +28,9 @@ class MyTestCase(unittest.TestCase):
         eventGridEvent = azf_event_grid.EventGridEventInConverter.decode(
             data=self._generate_single_eventgrid_datum(), trigger_metadata=None
         )
-        self.assertEqual(eventGridEvent.id, "00010001-0001-0001-0001-000100010001")
+        self.assertEqual(
+            eventGridEvent.id,
+            "00010001-0001-0001-0001-000100010001")
         self.assertEqual(eventGridEvent.subject, "eventhubs/test")
         self.assertEqual(eventGridEvent.event_type, "captureFileCreated")
         self.assertEqual(eventGridEvent.topic, "/TestTopic/namespaces/test")
@@ -35,9 +38,11 @@ class MyTestCase(unittest.TestCase):
 
     def test_eventgrid_decode_with_null_data(self):
         eventGridEvent = azf_event_grid.EventGridEventInConverter.decode(
-            data=self._generate_single_eventgrid_datum(with_data=False), trigger_metadata=None
-        )
-        self.assertEqual(eventGridEvent.id, "00010001-0001-0001-0001-000100010001")
+            data=self._generate_single_eventgrid_datum(
+                with_data=False), trigger_metadata=None)
+        self.assertEqual(
+            eventGridEvent.id,
+            "00010001-0001-0001-0001-000100010001")
         self.assertEqual(eventGridEvent.subject, "eventhubs/test")
         self.assertEqual(eventGridEvent.event_type, "captureFileCreated")
         self.assertEqual(eventGridEvent.topic, "/TestTopic/namespaces/test")
@@ -45,19 +50,22 @@ class MyTestCase(unittest.TestCase):
 
     def test_eventgrid_encode_with_str_data(self):
         example_data = self._generate_single_eventgrid_str()
-        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(example_data, expected_type=type(example_data))
+        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(
+            example_data, expected_type=type(example_data))
         self.assertEqual(eventGridDatum.type, "string")
 
     def test_eventgrid_encode_with_bytes_data(self):
         example_data = self._generate_single_eventgrid_str(True)
-        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(example_data, expected_type=type(example_data))
+        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(
+            example_data, expected_type=type(example_data))
         self.assertEqual(eventGridDatum.type, "bytes")
 
     def test_eventgrid_encode_with_EventGridData(self):
         example_data = self._generate_single_eventgrid_event()
-        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(example_data, expected_type=type(example_data))
+        event_grid_datum = azf_event_grid.EventGridOutConverter.encode(
+            example_data, expected_type=type(example_data))
 
-        self.assertEqual(eventGridDatum.type, "json")
+        self.assertEqual(event_grid_datum.type, "json")
 
     @staticmethod
     def _generate_single_eventgrid_datum(with_data=True, datum_type='json'):
@@ -79,8 +87,8 @@ class MyTestCase(unittest.TestCase):
     "firstEnqueueTime": "0001-01-01T00:00:00",
     "lastEnqueueTime": "0001-01-01T00:00:00"
   },
-  "dataVersion": "", 
-  "metadataVersion": "1" 
+  "dataVersion": "",
+  "metadataVersion": "1"
 }
 """
         datum_without_data = """
@@ -90,8 +98,8 @@ class MyTestCase(unittest.TestCase):
   "eventType": "captureFileCreated",
   "eventTime": "2017-07-14T23:10:27.7689666Z",
   "id": "00010001-0001-0001-0001-000100010001",
-  "dataVersion": "", 
-  "metadataVersion": "1" 
+  "dataVersion": "",
+  "metadataVersion": "1"
 }"""
 
         datum = datum_with_data if with_data else datum_without_data
@@ -115,8 +123,12 @@ class MyTestCase(unittest.TestCase):
 
     @staticmethod
     def _generate_single_eventgrid_str(in_bytes=False):
-        string_representation = '{"id": "id", "subject": "subject", "dataVersion": "dataVersion", ' \
-                                '"eventType": "eventType", "data": {"tag1": "value1", "tag2": "value2"}, ' \
+        string_representation = '{"id": "id", ' \
+                                '"subject": "subject", ' \
+                                '"dataVersion": "dataVersion", ' \
+                                '"eventType": "eventType", ' \
+                                '"data": {"tag1": "value1", ' \
+                                '"tag2": "value2"}, ' \
                                 '"eventTime": "2020-04-22T18:19:19Z"}'
         return string_representation.encode('utf-8') \
             if in_bytes \
