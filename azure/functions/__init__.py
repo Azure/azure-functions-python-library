@@ -9,7 +9,6 @@ from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
 from ._durable_functions import OrchestrationContext  # NoQA
 from .meta import get_binding_registry  # NoQA
-
 # Import binding implementations to register them
 from . import blob  # NoQA
 from . import cosmosdb  # NoQA
@@ -20,6 +19,7 @@ from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
+from durable_functions import __deserialize_custom_object, __serialize_custom_object
 
 
 __all__ = (
@@ -45,6 +45,10 @@ __all__ = (
 
     # Middlewares
     'WsgiMiddleware',
+
+    # serialization
+    '__serialize_custom_object'
+    '__deserialize_custom_object'
 )
 
 __version__ = '1.2.0'
