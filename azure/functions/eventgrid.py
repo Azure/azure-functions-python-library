@@ -1,8 +1,7 @@
 import collections
 import datetime
 import json
-
-import typing
+from typing import Optional, List, Any, Dict, Union
 
 from azure.functions import _eventgrid as azf_eventgrid
 
@@ -49,15 +48,15 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
         valid_types = (str, bytes, azf_eventgrid.EventGridEvent,
-                       typing.List[azf_eventgrid.EventGridEvent])
+                       List[azf_eventgrid.EventGridEvent])
         return (meta.is_iterable_type_annotation(pytype, str) or meta.
                 is_iterable_type_annotation(pytype,
                 azf_eventgrid.EventGridEvent) or (isinstance(pytype, type)
                 and issubclass(pytype, valid_types)))
 
     @classmethod
-    def encode(cls, obj: typing.Any, *, expected_type:
-               typing.Optional[type]) -> typing.Optional[Datum]:
+    def encode(cls, obj: Any, *, expected_type:
+               Optional[type]) -> Optional[Datum]:
         if isinstance(obj, str):
             return meta.Datum(type='string', value=obj)
 
@@ -65,11 +64,6 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
             return meta.Datum(type='bytes', value=obj)
 
         elif isinstance(obj, azf_eventgrid.EventGridEvent):
-            event_time = None
-            if isinstance(obj.event_time, datetime.datetime):
-                # JSON cannot serialize datetime directly
-                event_time = obj.event_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
             return meta.Datum(
                 type='json',
                 value=json.dumps({
@@ -78,23 +72,24 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
                     'dataVersion': obj.data_version,
                     'eventType': obj.event_type,
                     'data': obj.get_json(),
-                    'eventTime': event_time if not None else obj.event_time
+                    'eventTime': cls._format_datetime(obj.event_time)
                 })
             )
 
         elif isinstance(obj, collections.abc.Iterable):
-            msgs = []
+            msgs: List[Union[str, Dict[str, Any]]] = []
             for item in obj:
                 if isinstance(item, str):
                     msgs.append(item)
                 elif isinstance(item, azf_eventgrid.EventGridEvent):
-                    msgs.append(json.dumps({'id': item.id,
-                                            'subject': item.subject,
-                                            'dataVersion': item.data_version,
-                                            'eventType': item.event_type,
-                                            'data': item.get_json(),
-                                            'eventTime': item.event_time
-                                            }))
+                    msgs.append({'id': item.id,
+                                 'subject': item.subject,
+                                 'dataVersion': item.data_version,
+                                 'eventType': item.event_type,
+                                 'data': item.get_json(),
+                                 'eventTime': cls._format_datetime(
+                                     item.event_time)
+                                 })
                 else:
                     raise NotImplementedError(
                         'invalid data type in output '
@@ -108,7 +103,7 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
         raise NotImplementedError
 
     @classmethod
-    def _format_datetime(cls, dt: typing.Optional[datetime.datetime]):
+    def _format_datetime(cls, dt: Optional[datetime.datetime]):
         if dt is None:
             return None
         else:

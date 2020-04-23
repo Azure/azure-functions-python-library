@@ -67,6 +67,13 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(event_grid_datum.type, "json")
 
+    def test_eventgrid_encode_with_multiple_EventGridData(self):
+        example_data = self._generate_multiple_eventgrid_event()
+        event_grid_datum = azf_event_grid.EventGridOutConverter.encode(
+            example_data, expected_type=type(example_data))
+
+        self.assertEqual(event_grid_datum.type, "json")
+
     @staticmethod
     def _generate_single_eventgrid_datum(with_data=True, datum_type='json'):
         datum_with_data = """
@@ -120,6 +127,26 @@ class MyTestCase(unittest.TestCase):
             data={"tag1": "value1", "tag2": "value2"} if with_date else {},
             data_version='dataVersion',
         )
+
+    @staticmethod
+    def _generate_multiple_eventgrid_event(with_date=True):
+        return [azf_event_grid.azf_eventgrid.EventGridEvent(
+            id="id1",
+            topic='topic1',
+            subject='subject1',
+            event_type='eventType1',
+            event_time=datetime.utcnow(),
+            data={"tag1": "value1", "tag2": "value2"} if with_date else {},
+            data_version='dataVersion',
+        ), azf_event_grid.azf_eventgrid.EventGridEvent(
+            id="id2",
+            topic='topic2',
+            subject='subject2',
+            event_type='eventType2',
+            event_time=datetime.utcnow(),
+            data={"tag1": "value1", "tag2": "value2"} if with_date else {},
+            data_version='dataVersion',
+        )]
 
     @staticmethod
     def _generate_single_eventgrid_str(in_bytes=False):
