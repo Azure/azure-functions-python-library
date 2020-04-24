@@ -2,8 +2,6 @@ import typing
 import json
 
 from azure.functions import _durable_functions
-from importlib import import_module
-
 from . import meta
 
 

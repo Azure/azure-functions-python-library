@@ -34,7 +34,7 @@ def _serialize_custom_object(obj):
     # Encode to json using the object's `to_json`
     obj_type = type(obj)
     dict_obj = {
-        "__class__" : obj.__class__.__name__,
+        "__class__": obj.__class__.__name__,
         "__module__": obj.__module__,
         "__data__": obj_type.to_json(obj)
     }
