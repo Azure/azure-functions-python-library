@@ -19,7 +19,7 @@ from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
-from durable_functions import __deserialize_custom_object, __serialize_custom_object
+from .durable_functions import __deserialize_custom_object, __serialize_custom_object
 
 
 __all__ = (
