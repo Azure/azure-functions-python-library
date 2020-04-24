@@ -149,7 +149,7 @@ class ActivityTriggerConverter(meta.InConverter,
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         try:
-        result = json.dumps(obj, default=__serialize_custom_object)
+            result = json.dumps(obj, default=__serialize_custom_object)
         except TypeError:
             raise ValueError(
                 f'activity trigger output must be json serializable ({obj})')
