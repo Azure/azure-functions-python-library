@@ -1,7 +1,7 @@
 import collections.abc
 import datetime
 import json
-import typing
+from typing import List, Dict, Any, Union, Optional
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _queue as azf_queue
@@ -60,7 +60,7 @@ class QueueMessageInConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
-               trigger_metadata) -> typing.Any:
+               trigger_metadata) -> Any:
         data_type = data.type
 
         if data_type == 'string':
@@ -105,8 +105,8 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
         )
 
     @classmethod
-    def encode(cls, obj: typing.Any, *,
-               expected_type: typing.Optional[type]) -> meta.Datum:
+    def encode(cls, obj: Any, *,
+               expected_type: Optional[type]) -> meta.Datum:
         if isinstance(obj, str):
             return meta.Datum(type='string', value=obj)
 
@@ -123,7 +123,7 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
             )
 
         elif isinstance(obj, collections.abc.Iterable):
-            msgs = []
+            msgs: List[Union[str, Dict]] = []
             for item in obj:
                 if isinstance(item, str):
                     msgs.append(item)
@@ -145,7 +145,7 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
         raise NotImplementedError
 
     @classmethod
-    def _format_datetime(cls, dt: typing.Optional[datetime.datetime]):
+    def _format_datetime(cls, dt: Optional[datetime.datetime]):
         if dt is None:
             return None
         else:

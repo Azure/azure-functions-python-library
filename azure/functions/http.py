@@ -21,12 +21,14 @@ class HttpRequest(azf_http.HttpRequest):
                  route_params: typing.Mapping[str, str],
                  body_type: str,
                  body: typing.Union[str, bytes]) -> None:
+
+        body_str: typing.Optional[str] = None
+        body_bytes: typing.Optional[bytes] = None
         if isinstance(body, str):
-            body_bytes = None
             body_str = body
+            body_bytes = body_str.encode('utf-8')
         elif isinstance(body, bytes):
             body_bytes = body
-            body_str = None
         else:
             raise TypeError(
                 f'unexpected HTTP request body type: {type(body).__name__}')
@@ -46,16 +48,18 @@ class HttpRequest(azf_http.HttpRequest):
         return self.__body_bytes
 
     def get_json(self) -> typing.Any:
-        if (self.__body_type == 'json'
-                or self.__body_type == 'string'):
+        if self.__body_type in ('json', 'string'):
             assert self.__body_str is not None
             return json.loads(self.__body_str)
-        else:
+        elif self.__body_bytes is not None:
             try:
-                return json.loads(self.__body_bytes.decode())
+                return json.loads(self.__body_bytes.decode('utf-8'))
             except ValueError as e:
                 raise ValueError(
                     'HTTP request does not contain valid JSON data') from e
+        else:
+            raise ValueError(
+                'Request body cannot be empty in JSON deserialization')
 
 
 class HttpResponseConverter(meta.OutConverter, binding='http'):
@@ -82,9 +86,9 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
             body = obj.get_body()
             if body is not None:
-                body = meta.Datum(type='bytes', value=body)
+                datum_body = meta.Datum(type='bytes', value=body)
             else:
-                body = meta.Datum(type='bytes', value=b'')
+                datum_body = meta.Datum(type='bytes', value=b'')
 
             return meta.Datum(
                 type='http',
@@ -94,7 +98,7 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
                         n: meta.Datum(type='string', value=h)
                         for n, h in headers.items()
                     },
-                    body=body,
+                    body=datum_body,
                 )
             )
 

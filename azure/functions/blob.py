@@ -1,5 +1,5 @@
 import io
-import typing
+from typing import Optional, Union, Any
 
 from azure.functions import _abc as azf_abc
 
@@ -7,25 +7,25 @@ from . import meta
 
 
 class InputStream(azf_abc.InputStream):
-    def __init__(self, *, data: bytes,
-                 name: typing.Optional[str] = None,
-                 uri: typing.Optional[str] = None,
-                 length: typing.Optional[int] = None) -> None:
-        self._io = io.BytesIO(data)
+    def __init__(self, *, data: Union[bytes, meta.Datum],
+                 name: Optional[str] = None,
+                 uri: Optional[str] = None,
+                 length: Optional[int] = None) -> None:
+        self._io = io.BytesIO(data)  # type: ignore
         self._name = name
         self._length = length
         self._uri = uri
 
     @property
-    def name(self) -> typing.Optional[str]:
+    def name(self) -> Optional[str]:
         return self._name
 
     @property
-    def length(self) -> typing.Optional[int]:
+    def length(self) -> Optional[int]:
         return self._length
 
     @property
-    def uri(self) -> typing.Optional[str]:
+    def uri(self) -> Optional[str]:
         return self._uri
 
     def read(self, size=-1) -> bytes:
@@ -58,8 +58,8 @@ class BlobConverter(meta.InConverter,
         )
 
     @classmethod
-    def encode(cls, obj: typing.Any, *,
-               expected_type: typing.Optional[type]) -> meta.Datum:
+    def encode(cls, obj: Any, *,
+               expected_type: Optional[type]) -> meta.Datum:
         if callable(getattr(obj, 'read', None)):
             # file-like object
             obj = obj.read()
@@ -74,7 +74,7 @@ class BlobConverter(meta.InConverter,
             raise NotImplementedError
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
+    def decode(cls, data: meta.Datum, *, trigger_metadata) -> Any:
         data_type = data.type
 
         if data_type == 'string':

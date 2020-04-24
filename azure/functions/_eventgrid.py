@@ -13,7 +13,7 @@ class EventGridEvent(azf_abc.EventGridEvent):
                  topic: str,
                  subject: str,
                  event_type: str,
-                 event_time: datetime.datetime,
+                 event_time: typing.Optional[datetime.datetime],
                  data_version: str) -> None:
         self.__id = id
         self.__data = data
@@ -43,7 +43,7 @@ class EventGridEvent(azf_abc.EventGridEvent):
         return self.__event_type
 
     @property
-    def event_time(self) -> datetime.datetime:
+    def event_time(self) -> typing.Optional[datetime.datetime]:
         return self.__event_time
 
     @property

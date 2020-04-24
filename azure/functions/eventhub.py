@@ -1,5 +1,5 @@
 import json
-import typing
+from typing import Dict, Any, List, Union, Optional, Mapping
 
 from azure.functions import _eventhub
 
@@ -28,8 +28,7 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     @classmethod
     def decode(
         cls, data: meta.Datum, *, trigger_metadata
-    ) -> typing.Union[_eventhub.EventHubEvent,
-                      typing.List[_eventhub.EventHubEvent]]:
+    ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
         if (data_type == 'string' or data_type == 'bytes'
@@ -61,7 +60,7 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     @classmethod
     def decode_multiple_events(
             cls, data, trigger_metadata
-    ) -> typing.List[_eventhub.EventHubEvent]:
+    ) -> List[_eventhub.EventHubEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
 
@@ -76,8 +75,8 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
         return events
 
     @classmethod
-    def encode(cls, obj: typing.Any, *,
-               expected_type: typing.Optional[type]
+    def encode(cls, obj: Any, *,
+               expected_type: Optional[type]
                ) -> meta.Datum:
         data = meta.Datum(type=None, value=None)
 
@@ -101,8 +100,7 @@ class EventHubTriggerConverter(EventHubConverter,
     @classmethod
     def decode(
         cls, data: meta.Datum, *, trigger_metadata
-    ) -> typing.Union[_eventhub.EventHubEvent,
-                      typing.List[_eventhub.EventHubEvent]]:
+    ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
         if cls._is_cardinality_one(trigger_metadata):
@@ -143,7 +141,7 @@ class EventHubTriggerConverter(EventHubConverter,
     @classmethod
     def decode_multiple_events(
             cls, data, trigger_metadata
-    ) -> typing.List[_eventhub.EventHubEvent]:
+    ) -> List[_eventhub.EventHubEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
 
@@ -192,7 +190,7 @@ class EventHubTriggerConverter(EventHubConverter,
         return events
 
     @classmethod
-    def _marshall_event_body(self, parsed_data, data_type):
+    def _marshall_event_body(cls, parsed_data, data_type):
         # In IoTHub, when setting the eventhub using cardinality = 'many'
         # The data is wrapped inside a json (e.g. '[{ "device-id": "1" }]')
 
@@ -206,7 +204,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def _decode_iothub_metadata(
-            cls, trigger_metadata) -> typing.Dict[str, str]:
+            cls, trigger_metadata) -> Dict[str, str]:
         # Try extracting iothub_metadata from trigger_metadata
         iothub_metadata = cls._extract_iothub_from_trigger_metadata(
             trigger_metadata)
@@ -220,7 +218,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def _extract_iothub_from_trigger_metadata(
-            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+            cls, metadict: Mapping[str, meta.Datum]) -> Dict[str, str]:
         iothub_metadata = {}
         for f in metadict:
             if f.startswith('iothub-'):
@@ -231,13 +229,13 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def _extract_iothub_from_system_properties(
-            cls, system_properties_string: str) -> typing.Dict[str, str]:
+            cls, system_properties_string: str) -> Dict[str, str]:
         system_properties = json.loads(system_properties_string)
         return cls._extract_iothub_from_dict(system_properties)
 
     @classmethod
     def _extract_iothub_from_dict(
-            cls, metadict: typing.Dict[str, str]) -> typing.Dict[str, str]:
+            cls, metadict: Dict[str, str]) -> Dict[str, str]:
         iothub_metadata = {}
         for f in metadict:
             if f.startswith('iothub-'):

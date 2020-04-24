@@ -232,7 +232,7 @@ class EventGridEvent(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def event_time(self) -> datetime.datetime:
+    def event_time(self) -> typing.Optional[datetime.datetime]:
         pass
 
     @property
