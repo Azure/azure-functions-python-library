@@ -16,10 +16,10 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(check_input_type(bytes))
 
     def test_eventgrid_output_type(self):
-        check_output_type = azf_event_grid.EventGridOutConverter.\
+        check_output_type = azf_event_grid.EventGridEventOutConverter.\
             check_output_type_annotation
-        self.assertTrue(check_output_type(func.EventGridEvent))
-        self.assertTrue(check_output_type(List[func.EventGridEvent]))
+        self.assertTrue(check_output_type(func.EventGridOutputEvent))
+        self.assertTrue(check_output_type(List[func.EventGridOutputEvent]))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(List[str]))
@@ -50,26 +50,26 @@ class MyTestCase(unittest.TestCase):
 
     def test_eventgrid_encode_with_str_data(self):
         example_data = self._generate_single_eventgrid_str()
-        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(
+        eventGridDatum = azf_event_grid.EventGridEventOutConverter.encode(
             example_data, expected_type=type(example_data))
         self.assertEqual(eventGridDatum.type, "string")
 
     def test_eventgrid_encode_with_bytes_data(self):
         example_data = self._generate_single_eventgrid_str(True)
-        eventGridDatum = azf_event_grid.EventGridOutConverter.encode(
+        eventGridDatum = azf_event_grid.EventGridEventOutConverter.encode(
             example_data, expected_type=type(example_data))
         self.assertEqual(eventGridDatum.type, "bytes")
 
     def test_eventgrid_encode_with_EventGridData(self):
         example_data = self._generate_single_eventgrid_event()
-        event_grid_datum = azf_event_grid.EventGridOutConverter.encode(
+        event_grid_datum = azf_event_grid.EventGridEventOutConverter.encode(
             example_data, expected_type=type(example_data))
 
         self.assertEqual(event_grid_datum.type, "json")
 
     def test_eventgrid_encode_with_multiple_EventGridData(self):
         example_data = self._generate_multiple_eventgrid_event()
-        event_grid_datum = azf_event_grid.EventGridOutConverter.encode(
+        event_grid_datum = azf_event_grid.EventGridEventOutConverter.encode(
             example_data, expected_type=type(example_data))
 
         self.assertEqual(event_grid_datum.type, "json")
@@ -118,9 +118,8 @@ class MyTestCase(unittest.TestCase):
 
     @staticmethod
     def _generate_single_eventgrid_event(with_date=True):
-        return azf_event_grid.azf_eventgrid.EventGridEvent(
+        return azf_event_grid.azf_eventgrid.EventGridOutputEvent(
             id="id",
-            topic='topic',
             subject='subject',
             event_type='eventType',
             event_time=datetime.utcnow(),
@@ -130,17 +129,15 @@ class MyTestCase(unittest.TestCase):
 
     @staticmethod
     def _generate_multiple_eventgrid_event(with_date=True):
-        return [azf_event_grid.azf_eventgrid.EventGridEvent(
+        return [azf_event_grid.azf_eventgrid.EventGridOutputEvent(
             id="id1",
-            topic='topic1',
             subject='subject1',
             event_type='eventType1',
             event_time=datetime.utcnow(),
             data={"tag1": "value1", "tag2": "value2"} if with_date else {},
             data_version='dataVersion',
-        ), azf_event_grid.azf_eventgrid.EventGridEvent(
+        ), azf_event_grid.azf_eventgrid.EventGridOutputEvent(
             id="id2",
-            topic='topic2',
             subject='subject2',
             event_type='eventType2',
             event_time=datetime.utcnow(),

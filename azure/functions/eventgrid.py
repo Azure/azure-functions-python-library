@@ -44,14 +44,15 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
         )
 
 
-class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
+class EventGridEventOutConverter(meta.OutConverter, binding="eventGrid"):
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        valid_types = (str, bytes, azf_eventgrid.EventGridEvent,
-                       List[azf_eventgrid.EventGridEvent])
+        valid_types = (str, bytes, azf_eventgrid.EventGridOutputEvent,
+                       List[azf_eventgrid.EventGridOutputEvent])
         return (meta.is_iterable_type_annotation(pytype, str) or meta.
                 is_iterable_type_annotation(pytype,
-                azf_eventgrid.EventGridEvent) or (isinstance(pytype, type)
+                                            azf_eventgrid.EventGridOutputEvent)
+                or (isinstance(pytype, type)
                 and issubclass(pytype, valid_types)))
 
     @classmethod
@@ -63,7 +64,7 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
         elif isinstance(obj, bytes):
             return meta.Datum(type='bytes', value=obj)
 
-        elif isinstance(obj, azf_eventgrid.EventGridEvent):
+        elif isinstance(obj, azf_eventgrid.EventGridOutputEvent):
             return meta.Datum(
                 type='json',
                 value=json.dumps({
@@ -81,7 +82,7 @@ class EventGridOutConverter(meta.OutConverter, binding="eventGrid"):
             for item in obj:
                 if isinstance(item, str):
                     msgs.append(item)
-                elif isinstance(item, azf_eventgrid.EventGridEvent):
+                elif isinstance(item, azf_eventgrid.EventGridOutputEvent):
                     msgs.append({'id': item.id,
                                  'subject': item.subject,
                                  'dataVersion': item.data_version,
