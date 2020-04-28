@@ -2,7 +2,6 @@ import typing
 import json
 
 from azure.functions import _durable_functions
-
 from . import meta
 
 
@@ -62,7 +61,8 @@ class ActivityTriggerConverter(meta.InConverter,
         # See durable functions library's call_activity_task docs
         if data_type == 'string' or data_type == 'json':
             try:
-                result = json.loads(data.value)
+                callback = _durable_functions._deserialize_custom_object
+                result = json.loads(data.value, object_hook=callback)
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
@@ -80,7 +80,8 @@ class ActivityTriggerConverter(meta.InConverter,
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         try:
-            result = json.dumps(obj)
+            callback = _durable_functions._serialize_custom_object
+            result = json.dumps(obj, default=callback)
         except TypeError:
             raise ValueError(
                 f'activity trigger output must be json serializable ({obj})')
