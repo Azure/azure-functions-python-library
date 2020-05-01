@@ -6,6 +6,11 @@ setup(
     name='azure-functions',
     version=__version__,
     description='Azure Functions for Python',
+    long_description='Python support for Azure Functions is based on '
+                     'Python3.[6|7|8], serverless hosting on Linux and the '
+                     'Functions 2.0 and 3.0 runtime. This module provides the '
+                     'rich binding definitions for Azure Functions for Python '
+                     'apps.',
     author='Microsoft Corporation',
     author_email='azpysdkhelp@microsoft.com',
     classifiers=[
