@@ -2,4 +2,6 @@
 
 set -e -x
 
-pytest tests
+coverage run --branch -m pytest tests
+coverage xml
+coverage erase

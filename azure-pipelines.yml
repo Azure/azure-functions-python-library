@@ -29,3 +29,10 @@ jobs:
         chmod +x .ci/run_tests.sh
         .ci/run_tests.sh
     displayName: 'Run Tests'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: cobertura
+      summaryFileLocation: coverage.xml
+  - bash: |
+        rm coverage.xml
+    displayName: 'Clearing coverage.xml file'
