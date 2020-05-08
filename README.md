@@ -1,4 +1,4 @@
-<img src="./docs/Azure.Functions.svg" width = "180" alt="Functions Header Image">
+<img src="https://raw.githubusercontent.com/Azure/azure-functions-python-worker/dev/docs/Azure.Functions.svg" width = "180" alt="Functions Header Image">
 
 |Branch|Status|
 |---|---|
