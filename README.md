@@ -1,3 +1,22 @@
+<img src="./docs/Azure.Functions.svg" width = "180" alt="Functions Header Image">
+
+|Branch|Status|
+|---|---|
+|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|
+|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|
+
+# Overview
+
+Python support for Azure Functions is based on Python 3.6/3.7/3.8, serverless hosting on Linux and the Functions 2.0 runtime.
+
+Here is the current status of Python in Azure Functions:
+
+What's available?
+
+- Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
+- Triggers / Bindings : HTTP, Blob, Queue, Timer, Cosmos DB, Event Grid, Event Hubs and Service Bus
+- Create a Python Function on Linux using a custom docker image
+- Triggers / Bindings : Custom binding support
 
 # Contributing
 
