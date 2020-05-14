@@ -1,9 +1,9 @@
 <img src="https://raw.githubusercontent.com/Azure/azure-functions-python-worker/dev/docs/Azure.Functions.svg" width = "180" alt="Functions Header Image">
 
-|Branch|Status|
-|---|---|
-|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|
-|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|
+|Branch|Status|Coverage|
+|---|---|---|
+|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/master)
+|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/dev)
 
 # Overview
 
