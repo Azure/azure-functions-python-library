@@ -2,6 +2,7 @@ import abc
 import collections.abc
 import datetime
 import json
+import base64
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
@@ -50,6 +51,36 @@ class Datum:
         if len(val_repr) > 10:
             val_repr = val_repr[:10] + '...'
         return '<Datum {} {}>'.format(self.type, val_repr)
+
+
+class DatumJsonEncoder(json.JSONEncoder):
+    def default(self, o: Datum):
+        if o is None or o.type is None:
+            result = None
+        elif o.type == 'json':
+            result = json.loads(o.value)
+        elif o.type == 'bytes':
+            # If the datum contains bytes, it is serialized into base64
+            result = base64.b64encode(o.value).decode('utf-8')
+        elif o.type == 'string':
+            result = o.value
+        elif o.type == 'int':
+            result = o.value
+        elif o.type == 'double':
+            result = o.value
+        elif o.type == 'collection_string':
+            result = [v for v in o.value.string]
+        elif o.type == 'collection_bytes':
+            # If the datum contains bytes, it is serialized into base64
+            result = [base64.b64encode(v).decode('utf-8')
+                      for v in o.value.bytes]
+        elif o.type == 'collection_double':
+            result = [v for v in o.value.double]
+        elif o.type == 'collection_sint64':
+            result = [v for v in o.value.sint64]
+        else:
+            result = f'<Datum type {o.type} is not json serializable>'
+        return result
 
 
 class _ConverterMeta(abc.ABCMeta):

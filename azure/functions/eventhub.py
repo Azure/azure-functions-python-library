@@ -99,7 +99,7 @@ class EventHubTriggerConverter(EventHubConverter,
                                binding='eventHubTrigger', trigger=True):
     @classmethod
     def decode(
-        cls, data: meta.Datum, *, trigger_metadata
+        cls, data: meta.Datum, *, trigger_metadata: Mapping[str, meta.Datum]
     ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
@@ -114,8 +114,9 @@ class EventHubTriggerConverter(EventHubConverter,
                 f'unsupported event data payload type: {data_type}')
 
     @classmethod
-    def decode_single_event(cls, data,
-                            trigger_metadata) -> _eventhub.EventHubEvent:
+    def decode_single_event(
+        cls, data, trigger_metadata: Mapping[str, meta.Datum]
+    ) -> _eventhub.EventHubEvent:
         if data.type == 'string':
             body = data.value.encode('utf-8')
 
@@ -127,6 +128,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
         return _eventhub.EventHubEvent(
             body=body,
+            trigger_metadata=trigger_metadata,
             enqueued_time=cls._parse_datetime_metadata(
                 trigger_metadata, 'EnqueuedTime'),
             partition_key=cls._decode_trigger_metadata_field(
@@ -174,6 +176,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
             event = _eventhub.EventHubEvent(
                 body=cls._marshall_event_body(parsed_data[i], data.type),
+                trigger_metadata=trigger_metadata,
                 enqueued_time=cls._parse_datetime(enqueued_time),
                 partition_key=cls._decode_typed_data(
                     partition_key, python_type=str),
