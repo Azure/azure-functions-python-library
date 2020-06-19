@@ -94,3 +94,9 @@ class ServiceBusMessage(abc.ABC):
     def user_properties(self) -> typing.Dict[str, object]:
         """User-defined message metadata."""
         pass
+
+    @property
+    @abc.abstractmethod
+    def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
+        """The serialized JSON string from trigger metadata"""
+        pass
