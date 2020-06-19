@@ -97,6 +97,6 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def metadata(self) -> str:
+    def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
         """The serialized JSON string from trigger metadata"""
         pass

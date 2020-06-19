@@ -1,4 +1,3 @@
-import json
 import datetime
 import typing
 
@@ -50,8 +49,9 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__to = to
         self.__user_properties = user_properties
 
-        # Cache for trigger metadata after json serialization
-        self._trigger_metadata_json: typing.Optional[str] = None
+        # Cache for trigger metadata after Python object conversion
+        self._trigger_metadata_pyobj: typing.Optional[
+            typing.Mapping[str, typing.Any]] = None
 
     def get_body(self) -> bytes:
         return self.__body
@@ -121,8 +121,8 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         return self.__user_properties
 
     @property
-    def metadata(self) -> str:
-        """Getting the raw JSON string from trigger_metadata.
+    def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
+        """Getting read-only trigger metadata in a Python dictionary.
 
         Exposing the raw trigger_metadata to our customer. For cardinality=many
         scenarios, each event points to the common metadata of all the events.
@@ -132,13 +132,19 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
 
         Returns:
         --------
-        str
-            Return the serialized JSON string of trigger metadata
+        typing.Mapping[str, object]
+            Return the Python dictionary of trigger metadata
         """
-        if self._trigger_metadata_json is None:
-            self._trigger_metadata_json = json.dumps(self.__trigger_metadata,
-                                                     cls=meta.DatumJsonEncoder)
-        return self._trigger_metadata_json
+        if self.__trigger_metadata is None:
+            return None
+
+        if self._trigger_metadata_pyobj is None:
+            # No need to do deepcopy since datum.python_value will construct
+            # new object
+            self._trigger_metadata_pyobj = {
+                k: v.python_value for (k, v) in self.__trigger_metadata.items()
+            }
+        return self._trigger_metadata_pyobj
 
     def __repr__(self) -> str:
         return (

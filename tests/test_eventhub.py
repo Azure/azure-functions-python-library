@@ -183,12 +183,11 @@ class TestEventHub(unittest.TestCase):
             trigger_metadata=self._generate_single_trigger_metadatum()
         )
 
-        # Checking the metadata field from trigger as json string
-        metadata_json = result.metadata
-        self.assertIsNotNone(metadata_json)
+        # Ensure the event enqueue_time property reflects the sys prop
+        self.assertEqual(result.enqueued_time, self.MOCKED_ENQUEUE_TIME)
 
         # System Properties should be propagated in metadata
-        metadata_dict = json.loads(metadata_json)
+        metadata_dict = result.metadata
         self.assertIsNotNone(metadata_dict.get('SystemProperties'))
 
         # EnqueuedTime should be in iso8601 string format
@@ -206,11 +205,11 @@ class TestEventHub(unittest.TestCase):
 
         # Any of the event should contain the full metadata
         event = result[0]
-        metadata_json = event.metadata
-        self.assertIsNotNone(metadata_json)
+        metadata_dict = event.metadata
+        self.assertIsNotNone(metadata_dict)
 
-        # System Properties should be propagated in metadata
-        metadata_dict = json.loads(metadata_json)
+        # Ensure the event enqueue_time property reflects the sys prop
+        self.assertEqual(event.enqueued_time, self.MOCKED_ENQUEUE_TIME)
 
         # Multiple metadata should be reflected in the list
         self.assertIsNotNone(metadata_dict.get('SystemPropertiesArray'))

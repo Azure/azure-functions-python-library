@@ -1,5 +1,4 @@
 from typing import Mapping
-import json
 import unittest
 from datetime import datetime, timezone
 
@@ -75,12 +74,8 @@ class TestServiceBus(unittest.TestCase):
             data=self._generate_servicebus_data(),
             trigger_metadata=self._generate_servicebus_metadata())
 
-        metadata_json = servicebus_msg.metadata
-        self.assertIsNotNone(metadata_json)
-
-        # Deserialize the json back to Python dictionary
         # Datetime should be in iso8601 string instead of datetime object
-        metadata_dict = json.loads(metadata_json)
+        metadata_dict = servicebus_msg.metadata
         self.assertDictEqual(metadata_dict, {
             'DeliveryCount': 1,
             'LockToken': '87931fd2-39f4-415a-9fdc-adfdcbed3148',
@@ -96,6 +91,24 @@ class TestServiceBus(unittest.TestCase):
                 'RandGuid': 'bb38deae-cc75-49f2-89f5-96ec6eb857db'
             }
         })
+
+    def test_servicebus_should_not_override_metadata(self):
+        # SystemProperties in metadata should propagate to class properties
+        servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(
+            data=self._generate_servicebus_data(),
+            trigger_metadata=self._generate_servicebus_metadata())
+
+        # The content_type trigger field should be set
+        self.assertEqual(servicebus_msg.content_type, 'application/json')
+
+        # The metadata field should also be set
+        self.assertEqual(servicebus_msg.metadata['ContentType'],
+                         'application/json')
+
+        # Now we change the metadata field
+        # The trigger property should still remain the same
+        servicebus_msg.metadata['ContentType'] = 'text/plain'
+        self.assertEqual(servicebus_msg.content_type, 'application/json')
 
     def _generate_servicebus_data(self):
         return meta.Datum(value='{ "lucky_number": 23 }', type='json')

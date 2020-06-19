@@ -142,7 +142,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def decode_multiple_events(
-            cls, data, trigger_metadata
+            cls, data, trigger_metadata: Mapping[str, meta.Datum]
     ) -> List[_eventhub.EventHubEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
@@ -156,7 +156,9 @@ class EventHubTriggerConverter(EventHubConverter,
 
         sys_props = trigger_metadata.get('SystemPropertiesArray')
 
-        parsed_sys_props = json.loads(sys_props.value)
+        parsed_sys_props: List[Any] = []
+        if sys_props is not None:
+            parsed_sys_props = json.loads(sys_props.value)
 
         if len(parsed_data) != len(parsed_sys_props):
             raise AssertionError('Number of bodies and metadata mismatched')

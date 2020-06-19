@@ -1,5 +1,4 @@
 import datetime
-import json
 import typing
 
 from azure.functions import _abc as funcabc
@@ -26,8 +25,9 @@ class EventHubEvent(funcabc.EventHubEvent):
         self.__offset = offset
         self.__iothub_metadata = iothub_metadata
 
-        # Cache for trigger metadata after json serialization
-        self._trigger_metadata_json: typing.Optional[str] = None
+        # Cache for trigger metadata after Python object conversion
+        self._trigger_metadata_pyobj: typing.Optional[
+            typing.Mapping[str, typing.Any]] = None
 
     def get_body(self) -> bytes:
         return self.__body
@@ -53,8 +53,8 @@ class EventHubEvent(funcabc.EventHubEvent):
         return self.__offset
 
     @property
-    def metadata(self) -> str:
-        """Getting the raw JSON string from trigger_metadata.
+    def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
+        """Getting read-only trigger metadata in a Python dictionary.
 
         Exposing the raw trigger_metadata to our customer. For cardinality=many
         scenarios, each event points to the common metadata of all the events.
@@ -64,13 +64,17 @@ class EventHubEvent(funcabc.EventHubEvent):
 
         Returns:
         --------
-        str
-            Return the serialized JSON string of trigger metadata
+        typing.Mapping[str, object]
+            Return the Python dictionary of trigger metadata
         """
-        if self._trigger_metadata_json is None:
-            self._trigger_metadata_json = json.dumps(self.__trigger_metadata,
-                                                     cls=meta.DatumJsonEncoder)
-        return self._trigger_metadata_json
+        if self.__trigger_metadata is None:
+            return None
+
+        if self._trigger_metadata_pyobj is None:
+            self._trigger_metadata_pyobj = {
+                k: v.python_value for (k, v) in self.__trigger_metadata.items()
+            }
+        return self._trigger_metadata_pyobj
 
     def __repr__(self) -> str:
         return (

@@ -2,7 +2,6 @@ import abc
 import collections.abc
 import datetime
 import json
-import base64
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
@@ -33,9 +32,32 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
 
 
 class Datum:
-    def __init__(self, value, type):
-        self.value = value
-        self.type = type
+    def __init__(self, value: Any, type: Optional[str]):
+        self.value: Any = value
+        self.type: Optional[str] = type
+
+    @property
+    def python_value(self) -> Any:
+        if self.value is None or self.type is None:
+            return None
+        elif self.type in ('bytes', 'string', 'int', 'double'):
+            return self.value
+        elif self.type == 'json':
+            return json.loads(self.value)
+        elif self.type == 'collection_string':
+            return [v for v in self.value.string]
+        elif self.type == 'collection_bytes':
+            return [v for v in self.value.bytes]
+        elif self.type == 'collection_double':
+            return [v for v in self.value.double]
+        elif self.type == 'collection_sint64':
+            return [v for v in self.value.sint64]
+        else:
+            return self.value
+
+    @property
+    def python_type(self) -> type:
+        return type(self.python_value)
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -51,36 +73,6 @@ class Datum:
         if len(val_repr) > 10:
             val_repr = val_repr[:10] + '...'
         return '<Datum {} {}>'.format(self.type, val_repr)
-
-
-class DatumJsonEncoder(json.JSONEncoder):
-    def default(self, o: Datum):
-        if o is None or o.type is None:
-            result = None
-        elif o.type == 'json':
-            result = json.loads(o.value)
-        elif o.type == 'bytes':
-            # If the datum contains bytes, it is serialized into base64
-            result = base64.b64encode(o.value).decode('utf-8')
-        elif o.type == 'string':
-            result = o.value
-        elif o.type == 'int':
-            result = o.value
-        elif o.type == 'double':
-            result = o.value
-        elif o.type == 'collection_string':
-            result = [v for v in o.value.string]
-        elif o.type == 'collection_bytes':
-            # If the datum contains bytes, it is serialized into base64
-            result = [base64.b64encode(v).decode('utf-8')
-                      for v in o.value.bytes]
-        elif o.type == 'collection_double':
-            result = [v for v in o.value.double]
-        elif o.type == 'collection_sint64':
-            result = [v for v in o.value.sint64]
-        else:
-            result = f'<Datum type {o.type} is not json serializable>'
-        return result
 
 
 class _ConverterMeta(abc.ABCMeta):
