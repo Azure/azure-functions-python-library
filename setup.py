@@ -34,7 +34,8 @@ setup(
             'mypy',
             'pytest',
             'requests==2.*',
-            'coverage'
+            'coverage',
+            'python-dateutil'
         ]
     },
     include_package_data=True,
