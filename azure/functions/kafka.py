@@ -1,6 +1,5 @@
 import typing
 import json
-import ast
 
 from typing import Any, List
 
@@ -206,7 +205,8 @@ class KafkaTriggerConverter(KafkaConverter,
             offset=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Offset', python_type=int),
             topic=cls._decode_trigger_metadata_field(
-                trigger_metadata, 'Topic', python_type=str)
+                trigger_metadata, 'Topic', python_type=str),
+            trigger_metadata=trigger_metadata
         )
 
     @classmethod
@@ -235,15 +235,14 @@ class KafkaTriggerConverter(KafkaConverter,
 
         parsed_offset_props: List[Any] = []
         if offset_props is not None:
-            parsed_offset_props = offset_props.value
+            parsed_offset_props = [v for v in offset_props.value.sint64]
             if len(parsed_offset_props) != len(parsed_data):
                 raise AssertionError(
                     'Number of bodies and metadata mismatched')
 
         parsed_topic_props: List[Any]
         if topic_props is not None:
-            parsed_topic_props = ast.literal_eval(
-                topic_props.value)
+            parsed_topic_props = [v for v in topic_props.value.string]
 
         events = []
 

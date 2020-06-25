@@ -18,6 +18,11 @@ class CollectionString:
         self.string = list(map(lambda x: x.encode('utf-8'), data))
 
 
+class CollectionSint64:
+    def __init__(self, data: List[int]):
+        self.sint64 = data
+
+
 class Kafka(unittest.TestCase):
     SINGLE_KAFKA_DATAUM = '{"Offset":1,"Partition":0,"Topic":"users",'\
         '"Timestamp":"2020-06-20T04:43:28.998Z","Value":"hello"}'
@@ -170,6 +175,11 @@ class Kafka(unittest.TestCase):
         # Value
         self.assertEqual(
             json.loads(result.get_body().decode('utf-8'))['Value'], "hello")
+        # Metadata
+        metadata_dict = result.metadata
+        sys = metadata_dict['sys']
+        sys_dict = json.loads(sys)
+        self.assertEqual(sys_dict['MethodName'], 'KafkaTrigger')
 
     def test_multiple_kafka_triggers_metadata_field(self):
         result = azf_ka.KafkaTriggerConverter.decode(
@@ -190,9 +200,6 @@ class Kafka(unittest.TestCase):
             result[1].timestamp,
             "2020-06-20T05:06:25.945Z")
         metadata_dict = result[0].metadata
-        print("*******")
-        print(metadata_dict)
-        print("*******")
         sys = metadata_dict['sys']
         sys_dict = json.loads(sys)
         self.assertEqual(sys_dict['MethodName'], 'KafkaTriggerMany')
@@ -258,7 +265,7 @@ class Kafka(unittest.TestCase):
                 json.dumps(key_array), 'json'
             ),
             'OffsetArray': meta.Datum(
-                [62, 63], 'collection_sint64'
+                CollectionSint64([62, 63]), 'collection_sint64'
             ),
             'PartitionArray': meta.Datum(
                 json.dumps(partition_array), 'json'
@@ -267,7 +274,7 @@ class Kafka(unittest.TestCase):
                 json.dumps(timestamp_array), 'json'
             ),
             'TopicArray': meta.Datum(
-                "['message', 'message']", "string"
+                CollectionString(['message', 'message']), "collection_string"
             ),
             'sys': meta.Datum(
                 '{"MethodName":"KafkaTriggerMany",'
