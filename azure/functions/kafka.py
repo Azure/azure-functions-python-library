@@ -2,7 +2,7 @@ import typing
 import json
 import ast
 
-from typing import Dict, Any, List, Union, Optional, Mapping
+from typing import Any, List
 
 from . import meta
 
@@ -15,11 +15,11 @@ class KafkaEvent(AbstractKafkaEvent):
     def __init__(self, *,
                  body: bytes,
                  trigger_metadata: typing.Mapping[str, meta.Datum] = None,
-                 key: typing.Optional[str]=None,
-                 offset: typing.Optional[int]=None,
-                 partition: typing.Optional[int]=None,
-                 topic: typing.Optional[str]=None,
-                 timestamp: typing.Optional[str]=None) -> None:
+                 key: typing.Optional[str] = None,
+                 offset: typing.Optional[int] = None,
+                 partition: typing.Optional[int] = None,
+                 topic: typing.Optional[str] = None,
+                 timestamp: typing.Optional[str] = None) -> None:
         self.__body = body
         self.__trigger_metadata = trigger_metadata
         self.__key = key
@@ -28,11 +28,9 @@ class KafkaEvent(AbstractKafkaEvent):
         self.__topic = topic
         self.__timestamp = timestamp
 
-
         # Cache for trigger metadata after Python object conversion
         self._trigger_metadata_pyobj: typing.Optional[
             typing.Mapping[str, typing.Any]] = None
-
 
     def get_body(self) -> bytes:
         return self.__body
@@ -68,9 +66,6 @@ class KafkaEvent(AbstractKafkaEvent):
             for k, v in self.__trigger_metadata.items():
                 self._trigger_metadata_pyobj[k] = v.value
 
-            # self._trigger_metadata_pyobj = {
-            #     k: v.python_value for (k, v) in self.__trigger_metadata.items()
-            # }
         return self._trigger_metadata_pyobj
 
     def __repr__(self) -> str:
@@ -88,7 +83,7 @@ class KafkaEvent(AbstractKafkaEvent):
 class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
     @classmethod
     def check_input_type_annotation(cls, pytype) -> bool:
-        valid_types = ( KafkaEvent )
+        valid_types = (KafkaEvent)
 
         return (
             meta.is_iterable_type_annotation(pytype, valid_types)
@@ -105,22 +100,26 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
         )
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
+    def decode(
+        cls, data: meta.Datum, *, trigger_metadata
+    ) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes' or data_type == 'json'):
+        if (data_type == 'string' or data_type == 'bytes'
+                or data_type == 'json'):
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes' or data_type == 'collection_string'):
+        elif (data_type == 'collection_bytes'
+                or data_type == 'collection_string'):
             return cls.decode_multiple_events(data, trigger_metadata)
-        
+
         else:
             raise NotImplementedError(
                 f'unsupported event data payload type: {data_type}')
 
-   
     @classmethod
-    def decode_single_event(cls, data: meta.Datum, trigger_metadata) -> KafkaEvent:
+    def decode_single_event(cls, data: meta.Datum,
+                            trigger_metadata) -> KafkaEvent:
         data_type = data.type
 
         if data_type == 'string':
@@ -139,17 +138,17 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
         return KafkaEvent(body=body)
 
     @classmethod
-    def decode_multiple_events(cls, data: meta.Datum, trigger_metadata) -> typing.List[KafkaEvent]:
+    def decode_multiple_events(cls, data: meta.Datum,
+                               trigger_metadata) -> typing.List[KafkaEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
-        
+
         elif data.type == 'collection_string':
             parsed_data = data.value.string
 
         events = [KafkaEvent(body=pd) for pd in parsed_data]
-        
-        return events
 
+        return events
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
@@ -168,19 +167,19 @@ class KafkaTriggerConverter(KafkaConverter,
 
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes' or data_type == 'json'):
+        if (data_type == 'string' or data_type == 'bytes'
+                or data_type == 'json'):
             return cls.decode_single_event(data, trigger_metadata)
-
-        elif (data_type == 'collection_bytes' or data_type == 'collection_string'):
+        elif (data_type == 'collection_bytes'
+                or data_type == 'collection_string'):
             return cls.decode_multiple_events(data, trigger_metadata)
-        
         else:
             raise NotImplementedError(
                 f'unsupported event data payload type: {data_type}')
 
-    
     @classmethod
-    def decode_single_event(cls, data: meta.Datum, trigger_metadata) -> KafkaEvent:
+    def decode_single_event(cls, data: meta.Datum,
+                            trigger_metadata) -> KafkaEvent:
         data_type = data.type
 
         if data_type == 'string':
@@ -211,10 +210,11 @@ class KafkaTriggerConverter(KafkaConverter,
         )
 
     @classmethod
-    def decode_multiple_events(cls, data: meta.Datum, trigger_metadata) -> typing.List[KafkaEvent]:  
+    def decode_multiple_events(cls, data: meta.Datum,
+                               trigger_metadata) -> typing.List[KafkaEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
-        
+
         elif data.type == 'collection_string':
             parsed_data = data.value.string
 
@@ -224,45 +224,53 @@ class KafkaTriggerConverter(KafkaConverter,
         offset_props = trigger_metadata.get('OffsetArray')
         topic_props = trigger_metadata.get('TopicArray')
 
-        parsed_timestamp_props: List[Any] = cls.get_parsed_props(timestamp_props, parsed_data)
-        parsed_key_props = cls.get_parsed_props(key_props, parsed_data)
-        parsed_partition_props = cls.get_parsed_props(partition_props, parsed_data)
-        
+        parsed_timestamp_props: List[Any] = cls.get_parsed_props(
+            timestamp_props, parsed_data)
+
+        parsed_key_props = cls.get_parsed_props(
+            key_props, parsed_data)
+
+        parsed_partition_props = cls.get_parsed_props(
+            partition_props, parsed_data)
+
         parsed_offset_props: List[Any] = []
         if offset_props is not None:
             parsed_offset_props = offset_props.value
             if len(parsed_offset_props) != len(parsed_data):
-                raise AssertionError('Number of bodies and metadata mismatched')
+                raise AssertionError(
+                    'Number of bodies and metadata mismatched')
 
         parsed_topic_props: List[Any]
         if topic_props is not None:
-            parsed_topic_props = ast.literal_eval(topic_props.value)
+            parsed_topic_props = ast.literal_eval(
+                topic_props.value)
 
         events = []
 
-        for i in range(len(parsed_data)):          
-          event = KafkaEvent(
-            body=parsed_data[i],
-            timestamp=cls._parse_datetime(parsed_timestamp_props[i]),
-            key=cls._decode_typed_data(parsed_key_props[i], python_type=str),
-            partition=parsed_partition_props[i],
-            offset=parsed_offset_props[i],
-            topic=parsed_topic_props[i],
-            trigger_metadata=trigger_metadata
-          )
-          events.append(event)
-        
-        return events
+        for i in range(len(parsed_data)):
+            event = KafkaEvent(
+                body=parsed_data[i],
+                timestamp=parsed_timestamp_props[i],
+                key=cls._decode_typed_data(
+                    parsed_key_props[i], python_type=str),
+                partition=parsed_partition_props[i],
+                offset=parsed_offset_props[i],
+                topic=parsed_topic_props[i],
+                trigger_metadata=trigger_metadata
+            )
+            events.append(event)
 
+        return events
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         raise NotImplementedError('Output bindings are not '
                                   'supported for Kafka')
-    
+
     @classmethod
-    def get_parsed_props(cls, props: meta.Datum, parsed_data) -> List[Any]:
+    def get_parsed_props(
+            cls, props: meta.Datum, parsed_data) -> List[Any]:
         parsed_props: List[Any] = []
         if props is not None:
             parsed_props = json.loads(props.value)

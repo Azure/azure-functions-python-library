@@ -3,8 +3,6 @@ import unittest
 import json
 
 from unittest.mock import patch
-from datetime import datetime
-import dateutil.parser
 import azure.functions as func
 import azure.functions.kafka as azf_ka
 import azure.functions.meta as meta
@@ -21,12 +19,15 @@ class CollectionString:
 
 
 class Kafka(unittest.TestCase):
-    SINGLE_KAFKA_DATAUM = '{"Offset":1,"Partition":0,"Topic":"users","Timestamp":"2020-06-20T04:43:28.998Z","Value":"hello"}'
+    SINGLE_KAFKA_DATAUM = '{"Offset":1,"Partition":0,"Topic":"users",'\
+        '"Timestamp":"2020-06-20T04:43:28.998Z","Value":"hello"}'
     SINGLE_KAFKA_TIMESTAMP = "2020-06-20T04:43:28.998Z"
     MULTIPLE_KAFKA_TIMESTAMP_0 = "2020-06-20T05:06:25.139Z"
     MULTIPLE_KAFKA_TIMESTAMP_1 = "2020-06-20T05:06:25.945Z"
-    MULTIPLE_KAFKA_DATA_0 = '{"Offset":62,"Partition":1,"Topic":"message","Timestamp":"2020-06-20T05:06:25.139Z","Value":"a"}'
-    MULTIPLE_KAFKA_DATA_1 = '{"Offset":63,"Partition":1,"Topic":"message","Timestamp":"2020-06-20T05:06:25.945Z","Value":"a"}'
+    MULTIPLE_KAFKA_DATA_0 = '{"Offset":62,"Partition":1,"Topic":"message",'\
+        '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a"}'
+    MULTIPLE_KAFKA_DATA_1 = '{"Offset":63,"Partition":1,"Topic":"message",'\
+        '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a"}'
 
     def test_kafka_input_type(self):
         check_input_type = (
@@ -104,7 +105,6 @@ class Kafka(unittest.TestCase):
         )
         self.assertEqual(result.timestamp, self.SINGLE_KAFKA_TIMESTAMP)
 
-
     def test_kafka_trigger_multiple_events_collection_string(self):
         result = azf_ka.KafkaTriggerConverter.decode(
             data=self._generate_multiple_kafka_data('collection_string'),
@@ -113,14 +113,20 @@ class Kafka(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
 
-        self.assertEqual(result[0].timestamp, dateutil.parser.isoparse(self.MULTIPLE_KAFKA_TIMESTAMP_0))
         self.assertEqual(
-            json.loads(result[0].get_body().decode('utf-8')), json.loads(self.MULTIPLE_KAFKA_DATA_0)
+            result[0].timestamp,
+            self.MULTIPLE_KAFKA_TIMESTAMP_0)
+        self.assertEqual(
+            json.loads(result[0].get_body().decode('utf-8')),
+            json.loads(self.MULTIPLE_KAFKA_DATA_0)
         )
 
-        self.assertEqual(result[1].timestamp, dateutil.parser.isoparse(self.MULTIPLE_KAFKA_TIMESTAMP_1))
         self.assertEqual(
-            json.loads(result[1].get_body().decode('utf-8')), json.loads(self.MULTIPLE_KAFKA_DATA_1)
+            result[1].timestamp,
+            self.MULTIPLE_KAFKA_TIMESTAMP_1)
+        self.assertEqual(
+            json.loads(result[1].get_body().decode('utf-8')),
+            json.loads(self.MULTIPLE_KAFKA_DATA_1)
         )
 
     def test_kafka_trigger_multiple_events_collection_bytes(self):
@@ -131,14 +137,20 @@ class Kafka(unittest.TestCase):
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
 
-        self.assertEqual(result[0].timestamp, dateutil.parser.isoparse(self.MULTIPLE_KAFKA_TIMESTAMP_0))
         self.assertEqual(
-            json.loads(result[0].get_body().decode('utf-8')), json.loads(self.MULTIPLE_KAFKA_DATA_0)
+            result[0].timestamp,
+            self.MULTIPLE_KAFKA_TIMESTAMP_0)
+        self.assertEqual(
+            json.loads(result[0].get_body().decode('utf-8')),
+            json.loads(self.MULTIPLE_KAFKA_DATA_0)
         )
 
-        self.assertEqual(result[1].timestamp, dateutil.parser.isoparse(self.MULTIPLE_KAFKA_TIMESTAMP_1))
         self.assertEqual(
-            json.loads(result[1].get_body().decode('utf-8')), json.loads(self.MULTIPLE_KAFKA_DATA_1)
+            result[1].timestamp,
+            self.MULTIPLE_KAFKA_TIMESTAMP_1)
+        self.assertEqual(
+            json.loads(result[1].get_body().decode('utf-8')),
+            json.loads(self.MULTIPLE_KAFKA_DATA_1)
         )
 
     def test_single_kafka_trigger_metadata_field(self):
@@ -156,8 +168,8 @@ class Kafka(unittest.TestCase):
         # Partition
         self.assertEqual(result.partition, 0)
         # Value
-        self.assertEqual(json.loads(result.get_body().decode('utf-8'))['Value'], "hello")
-
+        self.assertEqual(
+            json.loads(result.get_body().decode('utf-8'))['Value'], "hello")
 
     def test_multiple_kafka_triggers_metadata_field(self):
         result = azf_ka.KafkaTriggerConverter.decode(
@@ -165,29 +177,41 @@ class Kafka(unittest.TestCase):
             trigger_metadata=self._generate_multiple_trigger_metadata()
         )
 
-
         self.assertEqual(result[0].offset, 62)
         self.assertEqual(result[1].offset, 63)
-        
+
         self.assertEqual(result[0].partition, 1)
         self.assertEqual(result[1].partition, 2)
 
-        self.assertEqual(result[0].timestamp, dateutil.parser.isoparse("2020-06-20T05:06:25.139Z"))
-        self.assertEqual(result[1].timestamp, dateutil.parser.isoparse("2020-06-20T05:06:25.945Z"))
+        self.assertEqual(
+            result[0].timestamp,
+            "2020-06-20T05:06:25.139Z")
+        self.assertEqual(
+            result[1].timestamp,
+            "2020-06-20T05:06:25.945Z")
         metadata_dict = result[0].metadata
-        self.assertEqual(metadata_dict['MethodName'], 'KafkaTriggerMany')
+        print("*******")
+        print(metadata_dict)
+        print("*******")
+        sys = metadata_dict['sys']
+        sys_dict = json.loads(sys)
+        self.assertEqual(sys_dict['MethodName'], 'KafkaTriggerMany')
 
     def _generate_single_kafka_datum(self, datum_type='string'):
         datum = self.SINGLE_KAFKA_DATAUM
         if datum_type == 'bytes':
             datum = datum.encode('utf-8')
         return meta.Datum(datum, datum_type)
-    
+
     def _generate_multiple_kafka_data(self, data_type='json'):
-        data = '[{"Offset":62,"Partition":1,"Topic":"message","Timestamp":"2020-06-20T05:06:25.139Z","Value":"a"}, {"Offset":63,"Partition":1,"Topic":"message","Timestamp":"2020-06-20T05:06:25.945Z","Value":"a"}]'
+        data = '[{"Offset":62,"Partition":1,"Topic":"message",'\
+               '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a"},'\
+               ' {"Offset":63,"Partition":1,"Topic":"message",'\
+               '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a"}]'
         if data_type == 'collection_bytes':
             data = list(
-                map(lambda x: json.dumps(x).encode('utf-8'), json.loads(data))
+                map(lambda x: json.dumps(x).encode('utf-8'),
+                    json.loads(data))
             )
             data = CollectionBytes(data)
         elif data_type == 'collection_string':
@@ -201,7 +225,7 @@ class Kafka(unittest.TestCase):
     def _generate_single_trigger_metadatum(self):
         return {
             'Offset': meta.Datum(
-                '1','string'
+                '1', 'string'
             ),
             'Partition': meta.Datum(
                 '0', 'string'
@@ -216,19 +240,23 @@ class Kafka(unittest.TestCase):
                 'hello', 'string'
             ),
             'sys': meta.Datum(
-                '{"MethodName":"KafkaTrigger","UtcNow":"2020-06-20T04:43:30.6756278Z","RandGuid":"b0870c0c-2b7a-40dc-b4be-45224c91a49c"}', 'json'
-            ) # __len__: 6  
+                '{"MethodName":"KafkaTrigger",'
+                '"UtcNow":"2020-06-20T04:43:30.6756278Z",'
+                '"RandGuid":"b0870c0c-2b7a-40dc-b4be-45224c91a49c"}',
+                'json'
+            )  # __len__: 6
         }
 
     def _generate_multiple_trigger_metadata(self):
-        key_array = [ None, None ] 
+        key_array = [None, None]
         partition_array = [1, 2]
-        timestamp_array = ["2020-06-20T05:06:25.139Z","2020-06-20T05:06:25.945Z"]
+        timestamp_array = ["2020-06-20T05:06:25.139Z",
+                           "2020-06-20T05:06:25.945Z"]
 
         return {
             'KeyArray': meta.Datum(
                 json.dumps(key_array), 'json'
-            ), 
+            ),
             'OffsetArray': meta.Datum(
                 [62, 63], 'collection_sint64'
             ),
@@ -242,7 +270,9 @@ class Kafka(unittest.TestCase):
                 "['message', 'message']", "string"
             ),
             'sys': meta.Datum(
-                
-                '{"MethodName":"KafkaTriggerMany","UtcNow":"2020-06-20T05:06:26.5550868Z","RandGuid":"57d5eeb7-c86c-4924-a14a-160092154093"}', 'json'
+                '{"MethodName":"KafkaTriggerMany",'
+                '"UtcNow":"2020-06-20T05:06:26.5550868Z",'
+                '"RandGuid":"57d5eeb7-c86c-4924-a14a-160092154093"}',
+                'json'
             )
         }
