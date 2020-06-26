@@ -5,6 +5,7 @@ from ._cosmosdb import Document, DocumentList  # NoQA
 from ._http import HttpRequest  # NoQA
 from ._http import HttpResponse  # NoQA
 from ._http_wsgi import WsgiMiddleware # NoQA
+from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter  # NoQA
 from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
 from ._durable_functions import OrchestrationContext  # NoQA
@@ -15,6 +16,7 @@ from . import cosmosdb  # NoQA
 from . import eventgrid  # NoQA
 from . import eventhub  # NoQA
 from . import http  # NoQA
+from . import kafka # NoQA
 from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
@@ -37,6 +39,9 @@ __all__ = (
     'HttpRequest',
     'HttpResponse',
     'InputStream',
+    'KafkaEvent',
+    'KafkaConverter',
+    'KafkaTriggerConverter',
     'OrchestrationContext',
     'QueueMessage',
     'ServiceBusMessage',
