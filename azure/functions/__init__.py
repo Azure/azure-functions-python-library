@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 from ._abc import TimerRequest, InputStream, Context, Out  # NoQA
 from ._eventhub import EventHubEvent  # NoQA
 from ._eventgrid import EventGridEvent, EventGridOutputEvent  # NoQA
