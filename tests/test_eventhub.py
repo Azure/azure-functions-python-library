@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from typing import List
 import unittest
 import json
@@ -176,6 +179,50 @@ class TestEventHub(unittest.TestCase):
         self.assertEqual(
             result[1].iothub_metadata['connection-device-id'], 'MyTestDevice2'
         )
+
+    def test_single_eventhub_trigger_metadata_field(self):
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=self._generate_single_iothub_datum(),
+            trigger_metadata=self._generate_single_trigger_metadatum()
+        )
+
+        # Ensure the event enqueue_time property reflects the sys prop
+        self.assertEqual(result.enqueued_time, self.MOCKED_ENQUEUE_TIME)
+
+        # System Properties should be propagated in metadata
+        metadata_dict = result.metadata
+        self.assertIsNotNone(metadata_dict.get('SystemProperties'))
+
+        # EnqueuedTime should be in iso8601 string format
+        self.assertEqual(metadata_dict['EnqueuedTime'],
+                         self.MOCKED_ENQUEUE_TIME.isoformat())
+        self.assertEqual(metadata_dict['SystemProperties'][
+            'iothub-connection-device-id'
+        ], 'MyTestDevice')
+
+    def test_multiple_eventhub_triggers_metadata_field(self):
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=self._generate_multiple_iothub_data(),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
+
+        # Any of the event should contain the full metadata
+        event = result[0]
+        metadata_dict = event.metadata
+        self.assertIsNotNone(metadata_dict)
+
+        # Ensure the event enqueue_time property reflects the sys prop
+        self.assertEqual(event.enqueued_time, self.MOCKED_ENQUEUE_TIME)
+
+        # Multiple metadata should be reflected in the list
+        self.assertIsNotNone(metadata_dict.get('SystemPropertiesArray'))
+
+        # EnqueuedTimeUtc should be in iso8601 string format
+        self.assertEqual(metadata_dict['SystemPropertiesArray'][0][
+            'EnqueuedTimeUtc'], self.MOCKED_ENQUEUE_TIME.isoformat())
+        self.assertEqual(metadata_dict['SystemPropertiesArray'][0][
+            'iothub-connection-device-id'
+        ], 'MyTestDevice1')
 
     def _generate_single_iothub_datum(self, datum_type='json'):
         datum = '{"device-status": "good"}'

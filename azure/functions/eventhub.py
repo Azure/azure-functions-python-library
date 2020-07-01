@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import json
 from typing import Dict, Any, List, Union, Optional, Mapping
 
@@ -31,12 +34,10 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if data_type in ['string', 'bytes', 'json']:
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif data_type in ['collection_bytes', 'collection_string']:
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -46,14 +47,11 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     @classmethod
     def decode_single_event(cls, data,
                             trigger_metadata) -> _eventhub.EventHubEvent:
-        if data.type == 'string':
+        if data.type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data.type == 'bytes':
             body = data.value
-
-        elif data.type == 'json':
-            body = data.value.encode('utf-8')
 
         return _eventhub.EventHubEvent(body=body)
 
@@ -68,8 +66,8 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
             parsed_data = data.value.string
 
         events = []
-        for i in range(len(parsed_data)):
-            event = _eventhub.EventHubEvent(body=parsed_data[i])
+        for parsed_datum in parsed_data:
+            event = _eventhub.EventHubEvent(body=parsed_datum)
             events.append(event)
 
         return events
@@ -99,7 +97,7 @@ class EventHubTriggerConverter(EventHubConverter,
                                binding='eventHubTrigger', trigger=True):
     @classmethod
     def decode(
-        cls, data: meta.Datum, *, trigger_metadata
+        cls, data: meta.Datum, *, trigger_metadata: Mapping[str, meta.Datum]
     ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
@@ -114,19 +112,18 @@ class EventHubTriggerConverter(EventHubConverter,
                 f'unsupported event data payload type: {data_type}')
 
     @classmethod
-    def decode_single_event(cls, data,
-                            trigger_metadata) -> _eventhub.EventHubEvent:
-        if data.type == 'string':
+    def decode_single_event(
+        cls, data, trigger_metadata: Mapping[str, meta.Datum]
+    ) -> _eventhub.EventHubEvent:
+        if data.type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data.type == 'bytes':
             body = data.value
 
-        elif data.type == 'json':
-            body = data.value.encode('utf-8')
-
         return _eventhub.EventHubEvent(
             body=body,
+            trigger_metadata=trigger_metadata,
             enqueued_time=cls._parse_datetime_metadata(
                 trigger_metadata, 'EnqueuedTime'),
             partition_key=cls._decode_trigger_metadata_field(
@@ -140,7 +137,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
     @classmethod
     def decode_multiple_events(
-            cls, data, trigger_metadata
+            cls, data, trigger_metadata: Mapping[str, meta.Datum]
     ) -> List[_eventhub.EventHubEvent]:
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
@@ -154,7 +151,9 @@ class EventHubTriggerConverter(EventHubConverter,
 
         sys_props = trigger_metadata.get('SystemPropertiesArray')
 
-        parsed_sys_props = json.loads(sys_props.value)
+        parsed_sys_props: List[Any] = []
+        if sys_props is not None:
+            parsed_sys_props = json.loads(sys_props.value)
 
         if len(parsed_data) != len(parsed_sys_props):
             raise AssertionError('Number of bodies and metadata mismatched')
@@ -174,6 +173,7 @@ class EventHubTriggerConverter(EventHubConverter,
 
             event = _eventhub.EventHubEvent(
                 body=cls._marshall_event_body(parsed_data[i], data.type),
+                trigger_metadata=trigger_metadata,
                 enqueued_time=cls._parse_datetime(enqueued_time),
                 partition_key=cls._decode_typed_data(
                     partition_key, python_type=str),

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import collections.abc
 import datetime
 import json
@@ -63,10 +66,7 @@ class QueueMessageInConverter(meta.InConverter,
                trigger_metadata) -> Any:
         data_type = data.type
 
-        if data_type == 'string':
-            body = data.value
-
-        elif data_type == 'bytes':
+        if data_type in ['string', 'bytes']:
             body = data.value
 
         else:

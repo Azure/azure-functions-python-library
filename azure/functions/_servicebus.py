@@ -1,3 +1,5 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
 
 import abc
 import datetime
@@ -93,4 +95,10 @@ class ServiceBusMessage(abc.ABC):
     @abc.abstractmethod
     def user_properties(self) -> typing.Dict[str, object]:
         """User-defined message metadata."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
+        """The serialized JSON string from trigger metadata"""
         pass
