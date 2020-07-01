@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import collections.abc
 import json
 import typing
@@ -30,14 +31,11 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
 
         data_type = data.type
 
-        if data_type == 'string':
+        if data_type in ['string', 'json']:
             body = data.value
 
         elif data_type == 'bytes':
             body = data.value.decode('utf-8')
-
-        elif data_type == 'json':
-            body = data.value
 
         else:
             raise NotImplementedError(

@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import typing
 import json
 
@@ -90,7 +91,6 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
             meta.is_iterable_type_annotation(pytype, valid_types)
             or (isinstance(pytype, type) and issubclass(pytype, valid_types))
         )
-        return issubclass(pytype, KafkaEvent)
 
     @classmethod
     def check_output_type_annotation(cls, pytype) -> bool:
@@ -106,12 +106,10 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
     ) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if data_type in ['string', 'bytes', 'json']:
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif data_type in ['collection_bytes', 'collection_string']:
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -123,14 +121,11 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
                             trigger_metadata) -> KafkaEvent:
         data_type = data.type
 
-        if data_type == 'string':
+        if data_type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data_type == 'bytes':
             body = data.value
-
-        elif data_type == 'json':
-            body = data.value.encode('utf-8')
 
         else:
             raise NotImplementedError(
@@ -147,9 +142,7 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
         elif data.type == 'collection_string':
             parsed_data = data.value.string
 
-        events = [KafkaEvent(body=pd) for pd in parsed_data]
-
-        return events
+        return [KafkaEvent(body=pd) for pd in parsed_data]
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
@@ -168,11 +161,9 @@ class KafkaTriggerConverter(KafkaConverter,
 
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if data_type in ['string', 'bytes', 'json']:
             return cls.decode_single_event(data, trigger_metadata)
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif data_type in ['collection_bytes', 'collection_string']:
             return cls.decode_multiple_events(data, trigger_metadata)
         else:
             raise NotImplementedError(
@@ -183,14 +174,11 @@ class KafkaTriggerConverter(KafkaConverter,
                             trigger_metadata) -> KafkaEvent:
         data_type = data.type
 
-        if data_type == 'string':
+        if data_type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data_type == 'bytes':
             body = data.value
-
-        elif data_type == 'json':
-            body = data.value.encode('utf-8')
 
         else:
             raise NotImplementedError(

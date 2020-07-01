@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 from ._abc import TimerRequest, InputStream, Context, Out  # NoQA
 from ._eventhub import EventHubEvent  # NoQA
 from ._eventgrid import EventGridEvent, EventGridOutputEvent  # NoQA
@@ -12,6 +13,7 @@ from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
 from ._durable_functions import OrchestrationContext  # NoQA
 from .meta import get_binding_registry  # NoQA
+
 # Import binding implementations to register them
 from . import blob  # NoQA
 from . import cosmosdb  # NoQA

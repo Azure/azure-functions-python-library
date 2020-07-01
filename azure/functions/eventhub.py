@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import json
 from typing import Dict, Any, List, Union, Optional, Mapping
 
@@ -33,12 +34,10 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
 
-        if (data_type == 'string' or data_type == 'bytes'
-                or data_type == 'json'):
+        if data_type in ['string', 'bytes', 'json']:
             return cls.decode_single_event(data, trigger_metadata)
 
-        elif (data_type == 'collection_bytes'
-                or data_type == 'collection_string'):
+        elif data_type in ['collection_bytes', 'collection_string']:
             return cls.decode_multiple_events(data, trigger_metadata)
 
         else:
@@ -48,14 +47,11 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     @classmethod
     def decode_single_event(cls, data,
                             trigger_metadata) -> _eventhub.EventHubEvent:
-        if data.type == 'string':
+        if data.type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data.type == 'bytes':
             body = data.value
-
-        elif data.type == 'json':
-            body = data.value.encode('utf-8')
 
         return _eventhub.EventHubEvent(body=body)
 
@@ -70,8 +66,8 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
             parsed_data = data.value.string
 
         events = []
-        for i in range(len(parsed_data)):
-            event = _eventhub.EventHubEvent(body=parsed_data[i])
+        for parsed_datum in parsed_data:
+            event = _eventhub.EventHubEvent(body=parsed_datum)
             events.append(event)
 
         return events
@@ -119,14 +115,11 @@ class EventHubTriggerConverter(EventHubConverter,
     def decode_single_event(
         cls, data, trigger_metadata: Mapping[str, meta.Datum]
     ) -> _eventhub.EventHubEvent:
-        if data.type == 'string':
+        if data.type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data.type == 'bytes':
             body = data.value
-
-        elif data.type == 'json':
-            body = data.value.encode('utf-8')
 
         return _eventhub.EventHubEvent(
             body=body,
