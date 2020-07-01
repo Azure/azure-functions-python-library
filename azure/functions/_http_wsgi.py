@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 from typing import Callable, Dict, List, Optional, Any
 from io import BytesIO, StringIO
 from os import linesep

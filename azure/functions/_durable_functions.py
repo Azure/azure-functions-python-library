@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 from typing import Union
 from . import _abc
 from importlib import import_module
@@ -35,12 +36,11 @@ def _serialize_custom_object(obj):
                         "function")
     # Encode to json using the object's `to_json`
     obj_type = type(obj)
-    dict_obj = {
+    return {
         "__class__": obj.__class__.__name__,
         "__module__": obj.__module__,
         "__data__": obj_type.to_json(obj)
     }
-    return dict_obj
 
 
 def _deserialize_custom_object(obj: dict) -> object:

@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import io
 from typing import Optional, Union, Any
 
@@ -96,10 +97,7 @@ class BlobConverter(meta.InConverter,
                 trigger_metadata, 'Properties', python_type=dict)
             if properties:
                 length = properties.get('Length')
-                if length:
-                    length = int(length)
-                else:
-                    length = None
+                length = int(length) if length else None
             else:
                 length = None
 

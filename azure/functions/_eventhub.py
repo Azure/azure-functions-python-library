@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import datetime
 import typing
 
-from azure.functions import _abc as funcabc
+from azure.functions import _abc as func_abc
 from azure.functions import meta
 
 
-class EventHubEvent(funcabc.EventHubEvent):
+class EventHubEvent(func_abc.EventHubEvent):
     """A concrete implementation of Event Hub message type."""
 
     def __init__(self, *,

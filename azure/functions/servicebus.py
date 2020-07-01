@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import datetime
 import typing
 
@@ -172,14 +173,11 @@ class ServiceBusMessageInConverter(meta.InConverter,
             # See Azure/azure-functions-python-worker#330
             body = b''
 
-        elif data.type == 'string':
+        elif data.type in ['string', 'json']:
             body = data.value.encode('utf-8')
 
         elif data.type == 'bytes':
             body = data.value
-
-        elif data.type == 'json':
-            body = data.value.encode('utf-8')
 
         else:
             raise NotImplementedError(

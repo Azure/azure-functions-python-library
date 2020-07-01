@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
 import typing
 import json
 
@@ -61,7 +62,7 @@ class ActivityTriggerConverter(meta.InConverter,
 
         # Durable functions extension always returns a string of json
         # See durable functions library's call_activity_task docs
-        if data_type == 'string' or data_type == 'json':
+        if data_type in ['string', 'json']:
             try:
                 callback = _durable_functions._deserialize_custom_object
                 result = json.loads(data.value, object_hook=callback)
