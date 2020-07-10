@@ -194,7 +194,7 @@ class TestEventHub(unittest.TestCase):
         self.assertIsNotNone(metadata_dict.get('SystemProperties'))
 
         # EnqueuedTime should be in iso8601 string format
-        self.assertEqual(metadata_dict['EnqueuedTime'],
+        self.assertEqual(metadata_dict['EnqueuedTimeUtc'],
                          self.MOCKED_ENQUEUE_TIME.isoformat())
         self.assertEqual(metadata_dict['SystemProperties'][
             'iothub-connection-device-id'
@@ -248,7 +248,7 @@ class TestEventHub(unittest.TestCase):
 
     def _generate_single_trigger_metadatum(self):
         return {
-            'EnqueuedTime': meta.Datum(
+            'EnqueuedTimeUtc': meta.Datum(
                 f'"{self.MOCKED_ENQUEUE_TIME.isoformat()}"', 'json'
             ),
             'SystemProperties': meta.Datum(
