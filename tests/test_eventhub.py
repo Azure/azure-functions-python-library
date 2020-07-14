@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import List
+from typing import List, Mapping
 import unittest
 import json
 from unittest.mock import patch
@@ -223,6 +223,78 @@ class TestEventHub(unittest.TestCase):
         self.assertEqual(metadata_dict['SystemPropertiesArray'][0][
             'iothub-connection-device-id'
         ], 'MyTestDevice1')
+
+    def test_eventhub_properties(self):
+        """Test if properties from public interface _eventhub.py returns
+        the correct values from metadata"""
+
+        result = azf_eh.EventHubTriggerConverter.decode(
+            data=meta.Datum(b'body_bytes', 'bytes'),
+            trigger_metadata=self._generate_full_metadata()
+        )
+
+        self.assertEqual(result.get_body(), b'body_bytes')
+        self.assertIsNone(result.partition_key)
+        self.assertDictEqual(result.iothub_metadata,
+                             {'connection-device-id': 'awesome-device-id'})
+        self.assertEqual(result.sequence_number, 47)
+        self.assertEqual(result.enqueued_time.isoformat(),
+                         '2020-07-14T01:27:55.627000+00:00')
+        self.assertEqual(result.offset, '3696')
+
+    def _generate_full_metadata(self):
+        mocked_metadata: Mapping[str, meta.Datum] = {}
+        mocked_metadata['Offset'] = meta.Datum(type='string', value='3696')
+        mocked_metadata['EnqueuedTimeUtc'] = meta.Datum(
+            type='string', value='2020-07-14T01:27:55.627Z')
+        mocked_metadata['SequenceNumber'] = meta.Datum(type='int', value=47)
+        mocked_metadata['Properties'] = meta.Datum(type='json', value='{}')
+        mocked_metadata['sys'] = meta.Datum(type='json', value='''
+        {
+            "MethodName":"metadata_trigger",
+            "UtcNow":"2020-07-14T01:27:55.8940305Z",
+            "RandGuid":"db413fd6-8411-4e51-844c-c9b5345e537d"
+        }''')
+        mocked_metadata['SystemProperties'] = meta.Datum(type='json', value='''
+        {
+            "x-opt-sequence-number":47,
+            "x-opt-offset":"3696",
+            "x-opt-enqueued-time":"2020-07-14T01:27:55.627Z",
+            "SequenceNumber":47,
+            "Offset":"3696",
+            "PartitionKey":null,
+            "EnqueuedTimeUtc":"2020-07-14T01:27:55.627Z",
+            "iothub-connection-device-id":"awesome-device-id"
+        }''')
+        mocked_metadata['PartitionContext'] = meta.Datum(type='json', value='''
+        {
+            "CancellationToken":{
+            "IsCancellationRequested":false,
+            "CanBeCanceled":true,
+            "WaitHandle":{
+                "Handle":{
+                    "value":2472
+                },
+                "SafeWaitHandle":{
+                    "IsInvalid":false,
+                    "IsClosed":false
+                }
+            }
+            },
+            "ConsumerGroupName":"$Default",
+            "EventHubPath":"python-worker-ci-eventhub-one-metadata",
+            "PartitionId":"0",
+            "Owner":"88cec2e2-94c9-4e08-acb6-4f2b97cd888e",
+            "RuntimeInformation":{
+            "PartitionId":"0",
+            "LastSequenceNumber":0,
+            "LastEnqueuedTimeUtc":"0001-01-01T00:00:00",
+            "LastEnqueuedOffset":null,
+            "RetrievalTime":"0001-01-01T00:00:00"
+            }
+        }''')
+
+        return mocked_metadata
 
     def _generate_single_iothub_datum(self, datum_type='json'):
         datum = '{"device-status": "good"}'

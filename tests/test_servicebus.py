@@ -56,19 +56,31 @@ class TestServiceBus(unittest.TestCase):
 
     def test_servicebus_properties(self):
         # SystemProperties in metadata should propagate to class properties
-        servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(
-            data=self._generate_servicebus_data(),
+        msg = azf_sb.ServiceBusMessageInConverter.decode(
+            data=meta.Datum(b'body_bytes', 'bytes'),
             trigger_metadata=self._generate_servicebus_metadata())
 
-        self.assertEqual(servicebus_msg.content_type, 'application/json')
-        self.assertEqual(servicebus_msg.label, 'Microsoft.Azure.ServiceBus')
-        self.assertEqual(servicebus_msg.message_id,
-                         '87c66eaf88e84119b66a26278a7b4149')
-        self.assertEqual(servicebus_msg.enqueued_time_utc,
-                         self.MOCKED_ENQUEUE_TIME)
-        self.assertEqual(servicebus_msg.expires_at_utc,
+        self.assertEqual(msg.get_body(), b'body_bytes')
+        self.assertEqual(msg.content_type, 'application/json')
+        self.assertIsNone(msg.correlation_id)
+        self.assertEqual(msg.enqueued_time_utc, self.MOCKED_ENQUEUE_TIME)
+        self.assertEqual(msg.expires_at_utc,
                          datetime(2020, 7, 2, 5, 39, 12, 170000,
                                   tzinfo=timezone.utc))
+        self.assertIsNone(msg.expiration_time)
+        self.assertEqual(msg.label, 'Microsoft.Azure.ServiceBus')
+        self.assertEqual(msg.message_id, '87c66eaf88e84119b66a26278a7b4149')
+        self.assertEqual(msg.partition_key, 'sample_part')
+        self.assertIsNone(msg.reply_to)
+        self.assertIsNone(msg.reply_to_session_id)
+        self.assertIsNone(msg.scheduled_enqueue_time)
+        self.assertIsNone(msg.session_id)
+        self.assertIsNone(msg.time_to_live)
+        self.assertIsNone(msg.to)
+        self.assertDictEqual(msg.user_properties, {
+            '$AzureWebJobsParentId': '6ceef68b-0794-45dd-bb2e-630748515552',
+            'x-opt-enqueue-sequence-number': 0
+        })
 
     def test_servicebus_metadata(self):
         # Trigger metadata should contains all the essential information
@@ -79,20 +91,22 @@ class TestServiceBus(unittest.TestCase):
 
         # Datetime should be in iso8601 string instead of datetime object
         metadata_dict = servicebus_msg.metadata
-        self.assertDictEqual(metadata_dict, {
-            'DeliveryCount': 1,
-            'LockToken': '87931fd2-39f4-415a-9fdc-adfdcbed3148',
-            'ExpiresAtUtc': '2020-07-02T05:39:12.17Z',
-            'EnqueuedTimeUtc': self.MOCKED_ENQUEUE_TIME.isoformat(),
-            'MessageId': '87c66eaf88e84119b66a26278a7b4149',
-            'ContentType': 'application/json',
-            'SequenceNumber': 3,
-            'Label': 'Microsoft.Azure.ServiceBus',
-            'sys': {
-                'MethodName': 'ServiceBusSMany',
-                'UtcNow': '2020-06-18T05:39:12.2860411Z',
-                'RandGuid': 'bb38deae-cc75-49f2-89f5-96ec6eb857db'
-            }
+        self.assertEqual(metadata_dict['DeliveryCount'], 1)
+        self.assertEqual(metadata_dict['LockToken'],
+                         '87931fd2-39f4-415a-9fdc-adfdcbed3148')
+        self.assertEqual(metadata_dict['ExpiresAtUtc'],
+                         '2020-07-02T05:39:12.17Z')
+        self.assertEqual(metadata_dict['EnqueuedTimeUtc'],
+                         self.MOCKED_ENQUEUE_TIME.isoformat())
+        self.assertEqual(metadata_dict['MessageId'],
+                         '87c66eaf88e84119b66a26278a7b4149')
+        self.assertEqual(metadata_dict['ContentType'], 'application/json')
+        self.assertEqual(metadata_dict['SequenceNumber'], 3)
+        self.assertEqual(metadata_dict['Label'], 'Microsoft.Azure.ServiceBus')
+        self.assertDictEqual(metadata_dict['sys'], {
+            'MethodName': 'ServiceBusSMany',
+            'UtcNow': '2020-06-18T05:39:12.2860411Z',
+            'RandGuid': 'bb38deae-cc75-49f2-89f5-96ec6eb857db'
         })
 
     def test_servicebus_should_not_override_metadata(self):
@@ -135,14 +149,53 @@ class TestServiceBus(unittest.TestCase):
             'application/json', 'string'
         )
         mocked_metadata['SequenceNumber'] = meta.Datum(3, 'int')
+        mocked_metadata['PartitionKey'] = meta.Datum('sample_part', 'string')
         mocked_metadata['Label'] = meta.Datum(
             'Microsoft.Azure.ServiceBus', 'string'
         )
-        mocked_metadata['sys'] = meta.Datum(type='json', value='''
-            {
-                "MethodName": "ServiceBusSMany",
-                "UtcNow": "2020-06-18T05:39:12.2860411Z",
-                "RandGuid": "bb38deae-cc75-49f2-89f5-96ec6eb857db"
+        mocked_metadata['MessageReceiver'] = meta.Datum(type='json', value='''
+        {
+            "RegisteredPlugins": [],
+            "ReceiveMode": 0,
+            "PrefetchCount": 0,
+            "LastPeekedSequenceNumber": 0,
+            "Path": "testqueue",
+            "OperationTimeout": "00:01:00",
+            "ServiceBusConnection": {
+                "Endpoint": "sb://python-worker-36-sbns.servicebus.win.net",
+                "OperationTimeout": "00:01:00",
+                "RetryPolicy": {
+                    "MinimalBackoff": "00:00:00",
+                    "MaximumBackoff": "00:00:30",
+                    "DeltaBackoff": "00:00:03",
+                    "MaxRetryCount": 5,
+                    "IsServerBusy": false,
+                    "ServerBusyExceptionMessage": null
+                },
+                "TransportType": 0,
+                "TokenProvider": {}
+            },
+            "IsClosedOrClosing": false,
+            "ClientId": "MessageReceiver1testqueue",
+            "RetryPolicy": {
+                "MinimalBackoff": "00:00:00",
+                "MaximumBackoff": "00:00:30",
+                "DeltaBackoff": "00:00:03",
+                "MaxRetryCount": 5,
+                "IsServerBusy": false,
+                "ServerBusyExceptionMessage": null
             }
-            ''')
+        }''')
+        mocked_metadata['UserProperties'] = meta.Datum(type='json', value='''
+        {
+            "$AzureWebJobsParentId": "6ceef68b-0794-45dd-bb2e-630748515552",
+            "x-opt-enqueue-sequence-number": 0
+        }''')
+        mocked_metadata['sys'] = meta.Datum(type='json', value='''
+        {
+            "MethodName": "ServiceBusSMany",
+            "UtcNow": "2020-06-18T05:39:12.2860411Z",
+            "RandGuid": "bb38deae-cc75-49f2-89f5-96ec6eb857db"
+        }
+        ''')
         return mocked_metadata
