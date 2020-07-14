@@ -91,23 +91,21 @@ class TestServiceBus(unittest.TestCase):
 
         # Datetime should be in iso8601 string instead of datetime object
         metadata_dict = servicebus_msg.metadata
-        self.assertEqual(metadata_dict['DeliveryCount'], 1)
-        self.assertEqual(metadata_dict['LockToken'],
-                         '87931fd2-39f4-415a-9fdc-adfdcbed3148')
-        self.assertEqual(metadata_dict['ExpiresAtUtc'],
-                         '2020-07-02T05:39:12.17Z')
-        self.assertEqual(metadata_dict['EnqueuedTimeUtc'],
-                         self.MOCKED_ENQUEUE_TIME.isoformat())
-        self.assertEqual(metadata_dict['MessageId'],
-                         '87c66eaf88e84119b66a26278a7b4149')
-        self.assertEqual(metadata_dict['ContentType'], 'application/json')
-        self.assertEqual(metadata_dict['SequenceNumber'], 3)
-        self.assertEqual(metadata_dict['Label'], 'Microsoft.Azure.ServiceBus')
-        self.assertDictEqual(metadata_dict['sys'], {
-            'MethodName': 'ServiceBusSMany',
-            'UtcNow': '2020-06-18T05:39:12.2860411Z',
-            'RandGuid': 'bb38deae-cc75-49f2-89f5-96ec6eb857db'
-        })
+        self.assertGreaterEqual(metadata_dict.items(), {
+            'DeliveryCount': 1,
+            'LockToken': '87931fd2-39f4-415a-9fdc-adfdcbed3148',
+            'ExpiresAtUtc': '2020-07-02T05:39:12.17Z',
+            'EnqueuedTimeUtc': self.MOCKED_ENQUEUE_TIME.isoformat(),
+            'MessageId': '87c66eaf88e84119b66a26278a7b4149',
+            'ContentType': 'application/json',
+            'SequenceNumber': 3,
+            'Label': 'Microsoft.Azure.ServiceBus',
+            'sys': {
+                'MethodName': 'ServiceBusSMany',
+                'UtcNow': '2020-06-18T05:39:12.2860411Z',
+                'RandGuid': 'bb38deae-cc75-49f2-89f5-96ec6eb857db'
+            }
+        }.items())
 
     def test_servicebus_should_not_override_metadata(self):
         # SystemProperties in metadata should propagate to class properties
