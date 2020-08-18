@@ -84,6 +84,40 @@ class TestBlob(unittest.TestCase):
 
         self.assertEqual(result.read(size=3), b'blo')
 
+    def test_blob_output_custom_output_content(self):
+        class CustomOutput:
+            def read(self) -> bytes:
+                return b'custom_output_content'
+
+        # Try encoding a custom instance as an output return
+        out = CustomOutput()
+        result: Datum = afb.BlobConverter.encode(obj=out, expected_type=None)
+        self.assertEqual(result.value, b'custom_output_content')
+        self.assertEqual(result.type, 'bytes')
+
+    def test_blob_output_custom_output_without_read_method(self):
+        class CustomOutput:
+            def _read(self) -> bytes:
+                return b'should_not_be_called'
+
+        # Try encoding a custom instance without read() method
+        # This should raise an error when an unknown output is returned
+        out = CustomOutput()
+        with self.assertRaises(NotImplementedError):
+            afb.BlobConverter.encode(obj=out, expected_type=None)
+
+    def test_blob_output_string(self):
+        out: str = 'blob_output_string'
+        result: Datum = afb.BlobConverter.encode(obj=out, expected_type=None)
+        self.assertEqual(result.value, 'blob_output_string')
+        self.assertEqual(result.type, 'string')
+
+    def test_blob_output_bytes(self):
+        out: bytes = b'blob_output_bytes'
+        result: Datum = afb.BlobConverter.encode(obj=out, expected_type=None)
+        self.assertEqual(result.value, b'blob_output_bytes')
+        self.assertEqual(result.type, 'bytes')
+
     def test_blob_output_type(self):
         check_output_type = afb.BlobConverter.check_output_type_annotation
         self.assertTrue(check_output_type(str))
@@ -93,12 +127,8 @@ class TestBlob(unittest.TestCase):
 
     def test_blob_output_custom_type(self):
         class CustomOutput:
-            def read(self) -> bytes:
-                return b'custom_output_content'
+            def read(self) -> Datum:
+                return Datum(b'custom_output_content', 'types')
 
         check_output_type = afb.BlobConverter.check_output_type_annotation
         self.assertTrue(check_output_type(CustomOutput))
-
-    def test_blob_output_custom_output_content(self):
-        class CustomOutput:
-            def read(self) -> bytes:
