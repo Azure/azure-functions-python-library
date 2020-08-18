@@ -125,7 +125,7 @@ class EventHubTriggerConverter(EventHubConverter,
             body=body,
             trigger_metadata=trigger_metadata,
             enqueued_time=cls._parse_datetime_metadata(
-                trigger_metadata, 'EnqueuedTime'),
+                trigger_metadata, 'EnqueuedTimeUtc'),
             partition_key=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'PartitionKey', python_type=str),
             sequence_number=cls._decode_trigger_metadata_field(

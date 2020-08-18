@@ -33,6 +33,18 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def enqueued_time_utc(self) -> typing.Optional[datetime.datetime]:
+        """The date and time in UTC at which the message is enqueued"""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def expires_at_utc(self) -> typing.Optional[datetime.datetime]:
+        """The date and time in UTC at which the message is set to expire."""
+        pass
+
+    @property
+    @abc.abstractmethod
     def expiration_time(self) -> typing.Optional[datetime.datetime]:
         """The date and time in UTC at which the message is set to expire."""
         pass
