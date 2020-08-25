@@ -38,6 +38,34 @@ class OrchestrationTriggerConverter(meta.InConverter,
     def has_implicit_output(cls) -> bool:
         return True
 
+class EnitityTriggerConverter(meta.InConverter,
+                                    meta.OutConverter,
+                                    binding='entityTrigger',
+                                    trigger=True):
+    @classmethod
+    def check_input_type_annotation(cls, pytype):
+        return issubclass(pytype, _durable_functions.EntityContext)
+
+    @classmethod
+    def check_output_type_annotation(cls, pytype):
+        # Implicit output should accept any return type
+        return True
+
+    @classmethod
+    def decode(cls,
+               data: meta.Datum, *,
+               trigger_metadata) -> _durable_functions.EntityContext:
+        return _durable_functions.EntityContext(data.value)
+
+    @classmethod
+    def encode(cls, obj: typing.Any, *,
+               expected_type: typing.Optional[type]) -> meta.Datum:
+        # Durable function context should be a json
+        return meta.Datum(type='json', value=obj)
+
+    @classmethod
+    def has_implicit_output(cls) -> bool:
+        return True
 
 # Durable Function Activity Trigger
 class ActivityTriggerConverter(meta.InConverter,
