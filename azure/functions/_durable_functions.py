@@ -110,6 +110,7 @@ class OrchestrationContext(_abc.OrchestrationContext):
     def __str__(self):
         return self.__body
 
+
 class EntityContext(_abc.OrchestrationContext):
     """A durable function entity context.
 

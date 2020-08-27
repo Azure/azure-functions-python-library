@@ -39,9 +39,9 @@ class OrchestrationTriggerConverter(meta.InConverter,
         return True
 
 class EnitityTriggerConverter(meta.InConverter,
-                                    meta.OutConverter,
-                                    binding='entityTrigger',
-                                    trigger=True):
+                              meta.OutConverter,
+                              binding='entityTrigger',
+                              trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
         return issubclass(pytype, _durable_functions.EntityContext)
@@ -66,6 +66,7 @@ class EnitityTriggerConverter(meta.InConverter,
     @classmethod
     def has_implicit_output(cls) -> bool:
         return True
+
 
 # Durable Function Activity Trigger
 class ActivityTriggerConverter(meta.InConverter,
