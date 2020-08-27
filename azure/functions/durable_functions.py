@@ -38,6 +38,7 @@ class OrchestrationTriggerConverter(meta.InConverter,
     def has_implicit_output(cls) -> bool:
         return True
 
+
 class EnitityTriggerConverter(meta.InConverter,
                               meta.OutConverter,
                               binding='entityTrigger',
