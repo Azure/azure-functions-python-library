@@ -5,15 +5,19 @@ import unittest
 import json
 
 from azure.functions.durable_functions import (
-    OrchestrationTriggerConverter, 
+    OrchestrationTriggerConverter,
     EnitityTriggerConverter,
     ActivityTriggerConverter
 )
-from azure.functions._durable_functions import OrchestrationContext, EntityContext
+from azure.functions._durable_functions import (
+    OrchestrationContext,
+    EntityContext
+)
 from azure.functions.meta import Datum
 
 CONTEXT_CLASSES = [OrchestrationContext, EntityContext]
 CONVERTERS = [OrchestrationTriggerConverter, EnitityTriggerConverter]
+
 
 class TestDurableFunctions(unittest.TestCase):
     def test_context_string_body(self):
@@ -44,7 +48,8 @@ class TestDurableFunctions(unittest.TestCase):
             self.assertEqual(content.get('name'), 'great function')
 
     def test_context_bytes_cast(self):
-        # TODO: this is just like the test above (test_orchestration_context_bytes_body)
+        # TODO: this is just like the test above
+        # (test_orchestration_context_bytes_body)
         body = '{ "name": "great function" }'.encode('utf-8')
         for ctx in CONTEXT_CLASSES:
             context = ctx(body)
