@@ -5,78 +5,89 @@ import unittest
 import json
 
 from azure.functions.durable_functions import (
-    OrchestrationTriggerConverter,
+    OrchestrationTriggerConverter, 
+    EnitityTriggerConverter,
     ActivityTriggerConverter
 )
-from azure.functions._durable_functions import OrchestrationContext
+from azure.functions._durable_functions import OrchestrationContext, EntityContext
 from azure.functions.meta import Datum
 
+CONTEXT_CLASSES = [OrchestrationContext, EntityContext]
+CONVERTERS = [OrchestrationTriggerConverter, EnitityTriggerConverter]
 
 class TestDurableFunctions(unittest.TestCase):
-    def test_orchestration_context_string_body(self):
-        raw_string = '{ "name": "great function" }'
-        context = OrchestrationContext(raw_string)
-        self.assertIsNotNone(getattr(context, 'body', None))
+    def test_context_string_body(self):
+        body = '{ "name": "great function" }'
+        for ctx in CONTEXT_CLASSES:
+            context = ctx(body)
+            self.assertIsNotNone(getattr(context, 'body', None))
 
-        content = json.loads(context.body)
-        self.assertEqual(content.get('name'), 'great function')
+            content = json.loads(context.body)
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_context_string_cast(self):
-        raw_string = '{ "name": "great function" }'
-        context = OrchestrationContext(raw_string)
-        self.assertEqual(str(context), raw_string)
+    def test_context_string_cast(self):
+        body = '{ "name": "great function" }'
+        for ctx in CONTEXT_CLASSES:
+            context = ctx(body)
+            self.assertEqual(str(context), body)
 
-        content = json.loads(str(context))
-        self.assertEqual(content.get('name'), 'great function')
+            content = json.loads(str(context))
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_context_bytes_body(self):
-        raw_bytes = '{ "name": "great function" }'.encode('utf-8')
-        context = OrchestrationContext(raw_bytes)
-        self.assertIsNotNone(getattr(context, 'body', None))
+    def test_context_bytes_body(self):
+        body = '{ "name": "great function" }'.encode('utf-8')
+        for ctx in CONTEXT_CLASSES:
+            context = ctx(body)
+            self.assertIsNotNone(getattr(context, 'body', None))
 
-        content = json.loads(context.body)
-        self.assertEqual(content.get('name'), 'great function')
+            content = json.loads(context.body)
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_context_bytes_cast(self):
-        raw_bytes = '{ "name": "great function" }'.encode('utf-8')
-        context = OrchestrationContext(raw_bytes)
-        self.assertIsNotNone(getattr(context, 'body', None))
+    def test_context_bytes_cast(self):
+        # TODO: this is just like the test above (test_orchestration_context_bytes_body)
+        body = '{ "name": "great function" }'.encode('utf-8')
+        for ctx in CONTEXT_CLASSES:
+            context = ctx(body)
+            self.assertIsNotNone(getattr(context, 'body', None))
 
-        content = json.loads(context.body)
-        self.assertEqual(content.get('name'), 'great function')
+            content = json.loads(context.body)
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_trigger_converter(self):
+    def test_trigger_converter(self):
         datum = Datum(value='{ "name": "great function" }',
                       type=str)
-        otc = OrchestrationTriggerConverter.decode(datum,
-                                                   trigger_metadata=None)
-        content = json.loads(otc.body)
-        self.assertEqual(content.get('name'), 'great function')
+        for converter in CONVERTERS:
+            otc = converter.decode(datum, trigger_metadata=None)
+            content = json.loads(otc.body)
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_trigger_converter_type(self):
+    def test_trigger_converter_type(self):
         datum = Datum(value='{ "name": "great function" }'.encode('utf-8'),
                       type=bytes)
-        otc = OrchestrationTriggerConverter.decode(datum,
-                                                   trigger_metadata=None)
-        content = json.loads(otc.body)
-        self.assertEqual(content.get('name'), 'great function')
+        for converter in CONVERTERS:
+            otc = converter.decode(datum, trigger_metadata=None)
+            content = json.loads(otc.body)
+            self.assertEqual(content.get('name'), 'great function')
 
-    def test_orchestration_trigger_check_good_annotation(self):
-        for dt in (OrchestrationContext,):
+    def test_trigger_check_good_annotation(self):
+
+        for converter, ctx in zip(CONVERTERS, CONTEXT_CLASSES):
             self.assertTrue(
-                OrchestrationTriggerConverter.check_input_type_annotation(dt)
+                converter.check_input_type_annotation(ctx)
             )
 
-    def test_orchestration_trigger_check_bad_annotation(self):
+    def test_trigger_check_bad_annotation(self):
         for dt in (str, bytes, int):
-            self.assertFalse(
-                OrchestrationTriggerConverter.check_input_type_annotation(dt)
-            )
+            for converter in CONVERTERS:
+                self.assertFalse(
+                    converter.check_input_type_annotation(dt)
+                )
 
-    def test_orchestration_trigger_has_implicit_return(self):
-        self.assertTrue(
-            OrchestrationTriggerConverter.has_implicit_output()
-        )
+    def test_trigger_has_implicit_return(self):
+        for converter in CONVERTERS:
+            self.assertTrue(
+                converter.has_implicit_output()
+            )
 
     def test_activity_trigger_inputs(self):
         # Activity Trigger only accept string type from durable extensions

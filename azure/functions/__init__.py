@@ -11,7 +11,7 @@ from ._http_wsgi import WsgiMiddleware # NoQA
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter  # NoQA
 from ._queue import QueueMessage  # NoQA
 from ._servicebus import ServiceBusMessage  # NoQA
-from ._durable_functions import OrchestrationContext  # NoQA
+from ._durable_functions import OrchestrationContext, EntityContext  # NoQA
 from .meta import get_binding_registry  # NoQA
 
 # Import binding implementations to register them
@@ -47,6 +47,7 @@ __all__ = (
     'KafkaConverter',
     'KafkaTriggerConverter',
     'OrchestrationContext',
+    'EntityContext',
     'QueueMessage',
     'ServiceBusMessage',
     'TimerRequest',
