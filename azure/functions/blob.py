@@ -78,6 +78,9 @@ class BlobConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> Any:
+        if data is None or data.type is None:
+            return None
+
         data_type = data.type
 
         if data_type == 'string':
