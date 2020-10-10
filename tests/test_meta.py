@@ -44,6 +44,20 @@ class TestMeta(unittest.TestCase):
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999')
 
+    def test_parse_timedelta_ss(self):
+        parsed: datetime.timedelta = self._parse_timedelta('3')
+        self.assertEqual(parsed.seconds, 3)
+
+        parsed: datetime.timedelta = self._parse_timedelta('56')
+        self.assertEqual(parsed.seconds, 56)
+
+        parsed: datetime.timedelta = self._parse_timedelta('678')
+        self.assertEqual(parsed.seconds, 678)
+
+    def test_parse_timedelta_mm_ss(self):
+        parsed: datetime.timedelta = self._parse_timedelta('34:56')
+        self.assertEqual(parsed.seconds, 34 * 60 + 56)
+
     def test_parse_utc_datetime_failure(self):
         malformed_utc = '2018-12-12X03:16:34.219289Z'
         with self.assertRaises(ValueError) as context:
@@ -157,3 +171,6 @@ class TestMeta(unittest.TestCase):
 
     def _parse_datetime(self, datetime_str):
         return meta._BaseConverter._parse_datetime(datetime_str)
+
+    def _parse_timedelta(self, timedelta_str):
+        return meta._BaseConverter._parse_timedelta(timedelta_str)

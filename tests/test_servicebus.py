@@ -11,7 +11,25 @@ from azure.functions import meta
 
 
 class TestServiceBus(unittest.TestCase):
-    MOCKED_ENQUEUE_TIME = datetime.utcnow()
+    MOCKED_CONTENT_TYPE = 'application/json'
+    MOCKED_CORROLATION_ID = '87c66eaf88e84119b66a26278a7b4149'
+    MOCKED_DEADLETTER_SOURCE = 'mocked_dead_letter_source'
+    MOCKED_DELIVERY_COUNT = 571
+    MOCKED_ENQUEUED_SEQUENCE_NUMBER = 4132
+    MOCKED_ENQUEUE_TIME_UTC = datetime.utcnow()
+    MOCKED_EXPIRY_AT_UTC = datetime.utcnow()
+    MOCKED_FORCE_PERSISTENCE = True
+    MOCKED_LABEL = 'mocked_label'
+    MOCKED_LOCKED_UNTIL_UTC = datetime.utcnow()
+    MOCKED_LOCK_TOKEN = '87931fd2-39f4-415a-9fdc-adfdcbed3148'
+    MOCKED_MESSAGE_ID = 'abcee18397398d93891830a0aac89eed'
+    MOCKED_PARTITION_KEY = 'mocked_partition_key'
+    MOCKED_REPLY_TO = 'mocked_reply_to'
+    MOCKED_REPLY_TO_SESSION_ID = 'mocked_reply_to_session_id'
+    MOCKED_SCHEDULED_ENQUEUE_TIME_UTC = datetime.utcnow()
+    MOCKED_SEQUENCE_NUMBER = 38291
+    MOCKED_SESSION_ID = 'mocked_session_id'
+    MOCKED_TIME_TO_LIVE = '11:22:33'
 
     def test_servicebus_input_type(self):
         check_input_type = (
@@ -67,7 +85,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(msg.expires_at_utc,
                          datetime(2020, 7, 2, 5, 39, 12, 170000,
                                   tzinfo=timezone.utc))
-        self.assertIsNone(msg.expiration_time)
+        self.assertEqual(msg.expiration_time)
         self.assertEqual(msg.label, 'Microsoft.Azure.ServiceBus')
         self.assertEqual(msg.message_id, '87c66eaf88e84119b66a26278a7b4149')
         self.assertEqual(msg.partition_key, 'sample_part')
@@ -129,22 +147,33 @@ class TestServiceBus(unittest.TestCase):
         return meta.Datum(value='{ "lucky_number": 23 }', type='json')
 
     def _generate_servicebus_metadata(self):
+        """Generate a single ServiceBus message following
+        https://docs.microsoft.com/en-us/azure/service-bus-messaging/
+        service-bus-messages-payloads
+        """
+
         mocked_metadata: Mapping[str, meta.Datum] = {}
+        mocked_metadata['ContentType'] = meta.Datum(
+            self.MOCKED_CONTENT_TYPE, 'string'
+        )
+        mocked_metadata['CorrelationId'] = meta.Datum(
+            self.MOCKED_CORROLATION_ID, 'string'
+        )
+        mocked_metadata['DeadLetterSource'] = meta.Datum(
+            self.MOCKED_DEADLETTER_SOURCE, 'string'
+        )
         mocked_metadata['DeliveryCount'] = meta.Datum(1, 'int')
         mocked_metadata['LockToken'] = meta.Datum(
-            '87931fd2-39f4-415a-9fdc-adfdcbed3148', 'string'
+            self.MOCKED_LOCK_TOKEN, 'string'
         )
         mocked_metadata['ExpiresAtUtc'] = meta.Datum(
-            '2020-07-02T05:39:12.17Z', 'string'
+            self.MOCKED_EXPIRY_TIME.isoformat(), 'string'
         )
         mocked_metadata['EnqueuedTimeUtc'] = meta.Datum(
             self.MOCKED_ENQUEUE_TIME.isoformat(), 'string'
         )
         mocked_metadata['MessageId'] = meta.Datum(
-            '87c66eaf88e84119b66a26278a7b4149', 'string'
-        )
-        mocked_metadata['ContentType'] = meta.Datum(
-            'application/json', 'string'
+            self.MOCKED_MESSAGE_ID, 'string'
         )
         mocked_metadata['SequenceNumber'] = meta.Datum(3, 'int')
         mocked_metadata['PartitionKey'] = meta.Datum('sample_part', 'string')
