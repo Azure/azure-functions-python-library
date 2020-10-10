@@ -66,7 +66,7 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__user_properties = user_properties
 
         # Cache for trigger metadata after Python object conversion
-        self._trigger_metadata_pyobj: Optional[Mapping[str, Any]] = None
+        self._trigger_metadata_pyobj: Optional[Dict[str, Any]] = None
 
     def get_body(self) -> bytes:
         return self.__body
@@ -218,18 +218,20 @@ class ServiceBusMessageInConverter(meta.InConverter,
             returns a list of ServiceBusMessage.
         """
         if cls._is_cardinality_one(trigger_metadata):
-            return cls.decode_single_message(data,
-                    trigger_metadata=trigger_metadata)
+            return cls.decode_single_message(
+                data, trigger_metadata=trigger_metadata)
         elif cls._is_cardinality_many(trigger_metadata):
-            return cls.decode_multiple_messages(data,
-                    trigger_metadata=trigger_metadata)
+            return cls.decode_multiple_messages(
+                data, trigger_metadata=trigger_metadata)
         else:
             raise NotImplementedError(
                 f'unsupported service bus data type: {data.type}')
 
     @classmethod
-    def decode_single_message(cls, data: meta.Datum, *,
-        trigger_metadata: Mapping[str, meta.Datum]) -> ServiceBusMessage:
+    def decode_single_message(
+        cls, data: meta.Datum, *,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> ServiceBusMessage:
         if data is None:
             # ServiceBus message with no payload are possible.
             # See Azure/azure-functions-python-worker#330
@@ -297,8 +299,10 @@ class ServiceBusMessageInConverter(meta.InConverter,
         )
 
     @classmethod
-    def decode_multiple_messages(cls, data: meta.Datum, *,
-        trigger_metadata: Mapping[str, meta.Datum]) -> List[ServiceBusMessage]:
+    def decode_multiple_messages(
+        cls, data: meta.Datum, *,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> List[ServiceBusMessage]:
         """Unlike EventHub, the trigger_metadata already contains a set of
         arrays (e.g. 'ContentTypeArray', 'CorrelationidArray'...). We can
         retrieve message properties directly from those array.
@@ -313,38 +317,56 @@ class ServiceBusMessageInConverter(meta.InConverter,
         elif data.type == 'json':
             parsed_data = json.loads(data.value)
 
+        else:
+            raise NotImplementedError('unable to decode multiple messages '
+                                      f'with data type {data.type}')
+
         return cls._extract_messages(parsed_data, data.type, trigger_metadata)
 
     @classmethod
-    def _is_cardinality_many(cls, trigger_metadata) -> bool:
+    def _is_cardinality_many(
+        cls,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> bool:
         return 'UserPropertiesArray' in trigger_metadata
 
     @classmethod
-    def _is_cardinality_one(cls, trigger_metadata) -> bool:
+    def _is_cardinality_one(
+        cls,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> bool:
         return 'UserProperties' in trigger_metadata
 
     @classmethod
-    def _get_event_count(cls, trigger_metadata) -> int:
+    def _get_event_count(
+        cls,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> int:
         datum = trigger_metadata['UserPropertiesArray']
         user_props = json.loads(datum.value)
         return len(user_props)
 
     @classmethod
-    def _marshall_message_body(cls, parsed_data, data_type) -> bytes:
-        if data_type == 'str':
-            return parsed_data.encode('utf-8')
-
-        if data_type == 'json':
-            return json.dumps(parsed_data).encode('utf-8')
-
-        return parsed_data
+    def _marshall_message_body(
+        cls,
+        message_body: Union[bytes, str, Dict[str, Any]],
+        data_type: str
+    ) -> bytes:
+        if data_type == 'bytes' and isinstance(message_body, bytes):
+            return message_body
+        elif data_type == 'str' and isinstance(message_body, str):
+            return message_body.encode('utf-8')
+        elif data_type == 'json' and isinstance(message_body, dict):
+            return json.dumps(message_body).encode('utf-8')
+        else:
+            raise NotImplementedError('unable to handle message body with '
+                                      f'data_type {data_type}')
 
     @classmethod
-    def _extract_messages(cls,
-            parsed_data: str,
-            data_type: type,
-            trigger_metadata: Mapping[str, meta.Datum]
-        ) -> List[ServiceBusMessage]:
+    def _extract_messages(
+        cls, parsed_data: str, data_type: str,
+        trigger_metadata: Mapping[str, meta.Datum]
+    ) -> List[ServiceBusMessage]:
 
         num_messages = cls._get_event_count(trigger_metadata)
 
