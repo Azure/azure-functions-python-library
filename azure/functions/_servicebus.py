@@ -134,21 +134,21 @@ class ServiceBusMessage(abc.ABC):
         """(Deprecated, use expires_at_utc instead)"""
         pass
 
-    @property
-    @abc.abstractmethod
-    def force_persistence(self) -> Optional[bool]:
-        """For queues or topics that have the EnableExpress flag set,
-        this property can be set to indicate that the message must be
-        persisted to disk before it is acknowledged. This is the standard
-        behavior for all non-express entities.
-
-        Returns:
-        --------
-        Optional[bool]
-            If force persistence is set, returns a bool.
-            Otherwise, returns None.
-        """
-        pass
+    # @property
+    # @abc.abstractmethod
+    # def force_persistence(self) -> Optional[bool]:
+    #    """For queues or topics that have the EnableExpress flag set,
+    #    this property can be set to indicate that the message must be
+    #    persisted to disk before it is acknowledged. This is the standard
+    #    behavior for all non-express entities.
+    #
+    #    Returns:
+    #    --------
+    #    Optional[bool]
+    #        If force persistence is set, returns a bool.
+    #        Otherwise, returns None.
+    #    """
+    #    pass
 
     @property
     @abc.abstractmethod
@@ -281,6 +281,24 @@ class ServiceBusMessage(abc.ABC):
         --------
         Optional[datetime.datetime]
             If scheduled enqueue time utc is set, returns a string.
+            Otherwise, returns None.
+        """
+        pass
+
+    @property
+    @abc.abstractmethod
+    def sequence_number(self) -> Optional[int]:
+        """The sequence number is a unique 64-bit integer assigned to a message
+        as it is accepted and stored by the broker and functions as its true
+        identifier. For partitioned entities, the topmost 16 bits reflect the
+        partition identifier. Sequence numbers monotonically increase and are
+        gapless. They roll over to 0 when the 48-64 bit range is exhausted.
+        This property is read-only.
+
+        Returns:
+        --------
+        Optional[int]
+            If sequence number is set, returns an integer.
             Otherwise, returns None.
         """
         pass

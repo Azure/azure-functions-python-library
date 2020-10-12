@@ -211,9 +211,9 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime(
-            cls, datetime_str: str) -> Optional[datetime.datetime]:
+            cls, datetime_str: Optional[str]) -> Optional[datetime.datetime]:
 
-        if datetime_str == '':
+        if datetime_str is None or datetime_str == '':
             return None
 
         too_fractional = re.match(
@@ -246,9 +246,10 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_timedelta(cls,
-                         timedelta_str: str) -> Optional[datetime.timedelta]:
+                         timedelta_str: Optional[str]
+                        ) -> Optional[datetime.timedelta]:
 
-        if timedelta_str == '':
+        if timedelta_str is None or timedelta_str == '':
             return None
 
         # Try parse timedelta

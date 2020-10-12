@@ -33,7 +33,7 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             reply_to: Optional[str] = None,
             reply_to_session_id: Optional[str] = None,
             scheduled_enqueue_time_utc: Optional[datetime.datetime] = None,
-            sequence_number: Optional[int] = 0,
+            sequence_number: Optional[int] = None,
             session_id: Optional[str] = None,
             time_to_live: Optional[datetime.timedelta] = None,
             to: Optional[str] = None,
@@ -106,7 +106,9 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
 
     @property
     def force_persistence(self) -> Optional[bool]:
-        return self.__force_persistence
+        # This field is not exposed to the customer in _servicebus.py interface
+        # Need to confirm how gRPC pass boolean value
+        raise NotImplementedError('This requires gRPC boolean support')
 
     @property
     def label(self) -> Optional[str]:
@@ -144,6 +146,10 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     @property
     def scheduled_enqueue_time_utc(self) -> Optional[datetime.datetime]:
         return self.__scheduled_enqueue_time_utc
+
+    @property
+    def sequence_number(self) -> Optional[int]:
+        return self.__sequence_number
 
     @property
     def session_id(self) -> Optional[str]:
@@ -191,9 +197,11 @@ class ServiceBusMessageInConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, azf_sbus.ServiceBusMessage) or (
-            meta.is_iterable_type_annotation(
-                pytype, azf_sbus.ServiceBusMessage))
+        valid_types = (azf_sbus.ServiceBusMessage)
+        return (
+            meta.is_iterable_type_annotation(pytype, valid_types)
+            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+        )
 
     @classmethod
     def decode(
@@ -286,6 +294,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'ReplyToSessionId', python_type=str),
             scheduled_enqueue_time_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'ScheduledEnqueueTimeUtc'),
+            sequence_number=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'SequenceNumber', python_type=int),
             session_id=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'SessionId', python_type=str),
             time_to_live=cls._parse_timedelta_metadata(
@@ -369,83 +379,93 @@ class ServiceBusMessageInConverter(meta.InConverter,
     ) -> List[ServiceBusMessage]:
 
         num_messages = cls._get_event_count(trigger_metadata)
-
-        messages = []
-        content_types: List[str] = (
-            trigger_metadata['ContentTypeArray'].value.string
-        )
-        correlation_ids: List[str] = (
-            trigger_metadata['CorrelationIdArray'].value.string
-        )
-        dead_letter_sources: List[str] = (
-            trigger_metadata['DeadLetterSourceArray'].value.string
-        )
-        delivery_counts: List[int] = json.loads(
-            trigger_metadata['DeliveryCountArray'].value
-        )
-        enqueued_time_utcs: List[str] = json.loads(
-            trigger_metadata['EnqueuedTimeUtcArray'].value
-        )
-        expires_at_utcs: List[str] = json.loads(
-            trigger_metadata['ExpiresAtUtcArray'].value
-        )
-        labels: List[str] = (
-            trigger_metadata['LabelArray'].value.string
-        )
-        lock_tokens: List[str] = (
-            trigger_metadata['LockTokenArray'].value.string
-        )
-        message_ids: List[str] = (
-            trigger_metadata['MessageIdArray'].value.string
-        )
-        sequence_numbers: List[int] = (
-            trigger_metadata['SequenceNumberArray'].value.sint64
-        )
-        tos: List[str] = (
-            trigger_metadata['ToArray'].value.string
-        )
-        reply_tos: List[str] = (
-            trigger_metadata['ReplyToArray'].value.string
-        )
-        user_properties_list: List[Dict[str, Any]] = json.loads(
-            trigger_metadata['UserPropertiesArray'].value
-        )
-
+        messages: List[ServiceBusMessage] = []
         for i in range(num_messages):
             messages.append(ServiceBusMessage(
                 body=cls._marshall_message_body(parsed_data[i], data_type),
                 trigger_metadata=trigger_metadata,
-                content_type=cls._get_or_none(content_types, i),
-                correlation_id=cls._get_or_none(correlation_ids, i),
-                dead_letter_source=cls._get_or_none(dead_letter_sources, i),
-                delivery_count=cls._get_or_none(delivery_counts, i),
+                content_type=cls._get_from_metadata_array(
+                    trigger_metadata, 'ContentTypeArray', i),
+                correlation_id=cls._get_from_metadata_array(
+                    trigger_metadata, 'CorrelationIdArray', i),
+                dead_letter_source=cls._get_from_metadata_array(
+                    trigger_metadata, 'DeadLetterSourceArray', i),
+                delivery_count=cls._get_from_metadata_array(
+                    trigger_metadata, 'DeliveryCountArray', i),
                 enqueued_time_utc=cls._parse_datetime(
-                    cls._get_or_none(enqueued_time_utcs, i)),
+                    cls._get_from_metadata_array(
+                        trigger_metadata, 'EnqueuedTimeUtcArray', i)),
                 expires_at_utc=cls._parse_datetime(
-                    cls._get_or_none(expires_at_utcs, i)),
-                label=cls._get_or_none(labels, i),
-                lock_token=cls._get_or_none(lock_tokens, i),
-                message_id=cls._get_or_none(message_ids, i),
-                sequence_number=cls._get_or_none(sequence_numbers, i),
-                to=cls._get_or_none(tos, i),
-                reply_to=cls._get_or_none(reply_tos, i),
-                user_properties=cls._get_or_none(user_properties_list, i)
+                    cls._get_from_metadata_array(
+                        trigger_metadata, 'ExpiresAtUtcArray', i)),
+                label=cls._get_from_metadata_array(
+                    trigger_metadata, 'LabelArray', i),
+                lock_token=cls._get_from_metadata_array(
+                    trigger_metadata, 'LockTokenArray', i),
+                message_id=cls._get_from_metadata_array(
+                    trigger_metadata, 'MessageIdArray', i),
+                sequence_number=cls._get_from_metadata_array(
+                    trigger_metadata, 'SequenceNumberArray', i),
+                to=cls._get_from_metadata_array(
+                    trigger_metadata, 'ToArray', i),
+                reply_to=cls._get_from_metadata_array(
+                    trigger_metadata, 'ReplyToArray', i),
+                user_properties=cls._get_from_metadata_array(
+                    trigger_metadata, 'UserPropertiesArray', i)
             ))
         return messages
 
     @classmethod
-    def _get_or_none(cls, list_: List[Any], index: int) -> Any:
-        """Some metadata array does not contain any values (e.g.
-        correlation_ids array may be empty [] when there's multiple messages).
+    def _get_from_metadata_array(cls,
+                                 trigger_metadata: Mapping[str, meta.Datum],
+                                 array_name: str,
+                                 index: int
+                                ) -> Optional[Union[str, int, bytes]]:
+        """This method is to safe-guard when retrieve data from arrays.
 
-        This results in a IndexError when referencing the message. To avoid
-        this issue, when getting the value, we should return None is index is
-        out of bound.
+        Some array may be missing in metadata. Others may not contain certain
+        values (e.g. correlation_ids array may be empty [] when there's
+        multiple messages).
+
+        Parameters
+        ----------
+        trigger_metadata: Mapping[str, meta.Datum]
+            The trigger metadata that contains multiple ServiceBus messages
+        array_name: str
+            The name of the array needs to be extracted
+        index: int
+            The element index wants to be extracted
+
+        Returns
+        -------
+        Optional[Any]
+            If the array name does not exist in trigger_metadata, returns None.
+            If the array does not contains certain element, or index out of
+            bound, returns None.
+            Otherwise, return the element.
         """
-        if index >= len(list_):
+
+        # Check if array name does exist (e.g. ContentTypeArray)
+        datum: meta.Datum = trigger_metadata.get(array_name)
+        if datum is None:
             return None
 
-        return list_[index]
+        # Check if datum is an iterable element (e.g. collection_string)
+        data_array: Union[List[str], List[int], List[bytes]] = None
+        if datum.type == 'collection_string':
+            data_array = datum.value.string
+        elif datum.type == 'collection_bytes':
+            data_array = datum.value.bytes
+        elif datum.type == 'collection_sint64':
+            data_array = datum.value.sint64
+        elif datum.type == 'json':
+            data_array = json.loads(datum.value)
+
+        # Check if the index is inbound
+        if index >= len(data_array):
+            return None
+
+        return data_array[index]
 
 
 class ServiceBusMessageOutConverter(meta.OutConverter, binding='serviceBus'):

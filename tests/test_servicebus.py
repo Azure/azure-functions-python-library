@@ -1,13 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import Mapping
+from typing import Dict, List
+import json
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import azure.functions as func
 import azure.functions.servicebus as azf_sb
 from azure.functions import meta
+
+from .testutils import CollectionBytes, CollectionString, CollectionSint64
 
 
 class TestServiceBus(unittest.TestCase):
@@ -16,9 +19,11 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_DEADLETTER_SOURCE = 'mocked_dead_letter_source'
     MOCKED_DELIVERY_COUNT = 571
     MOCKED_ENQUEUED_SEQUENCE_NUMBER = 4132
+    MOCKED_ENQUEUED_SEQUENCE_NUMBER_A = 11111
+    MOCKED_ENQUEUED_SEQUENCE_NUMBER_B = 22222
+    MOCKED_ENQUEUED_SEQUENCE_NUMBER_C = 33333
     MOCKED_ENQUEUE_TIME_UTC = datetime.utcnow()
     MOCKED_EXPIRY_AT_UTC = datetime.utcnow()
-    MOCKED_FORCE_PERSISTENCE = True
     MOCKED_LABEL = 'mocked_label'
     MOCKED_LOCKED_UNTIL_UTC = datetime.utcnow()
     MOCKED_LOCK_TOKEN = '87931fd2-39f4-415a-9fdc-adfdcbed3148'
@@ -30,16 +35,22 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_SEQUENCE_NUMBER = 38291
     MOCKED_SESSION_ID = 'mocked_session_id'
     MOCKED_TIME_TO_LIVE = '11:22:33'
+    MOCKED_TIME_TO_LIVE_TIMEDELTA = timedelta(hours=11, minutes=22, seconds=33)
+    MOCKED_TO = 'mocked_to'
+    MOCKED_VIA_PARTITION_KEY = 'mocked_via_partition_key'
 
     def test_servicebus_input_type(self):
         check_input_type = (
             azf_sb.ServiceBusMessageInConverter.check_input_type_annotation
         )
-        # Should accept a service bus message as trigger input type
-        self.assertTrue(check_input_type(azf_sb.ServiceBusMessage))
+        # Should accept a single service bus message as trigger input type
+        self.assertTrue(check_input_type(func.ServiceBusMessage))
+
+        # Should accept a multiple service bus message as trigger input type
+        self.assertTrue(check_input_type(List[func.ServiceBusMessage]))
 
         # Should accept a message class derived from service bus
-        class ServiceBusMessageChild(azf_sb.ServiceBusMessage):
+        class ServiceBusMessageChild(func.ServiceBusMessage):
             FOO = 'BAR'
 
         self.assertTrue(check_input_type(ServiceBusMessageChild))
@@ -58,7 +69,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertTrue(check_output_type(str))
 
         # Should reject if attempt to send a service bus message out
-        self.assertFalse(check_output_type(azf_sb.ServiceBusMessage))
+        self.assertFalse(check_output_type(func.ServiceBusMessage))
 
         # Should be false if a message type does not match expectation
         self.assertFalse(check_output_type(func.EventGridEvent))
@@ -66,35 +77,57 @@ class TestServiceBus(unittest.TestCase):
 
     def test_servicebus_data(self):
         servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(
-            data=self._generate_servicebus_data(),
-            trigger_metadata=self._generate_servicebus_metadata())
+            data=self._generate_single_servicebus_data(),
+            trigger_metadata=self._generate_single_trigger_metadata())
 
         servicebus_data = servicebus_msg.get_body().decode('utf-8')
-        self.assertEqual(servicebus_data, '{ "lucky_number": 23 }')
+        self.assertEqual(servicebus_data, json.dumps({"lucky_number": 23}))
 
     def test_servicebus_properties(self):
         # SystemProperties in metadata should propagate to class properties
         msg = azf_sb.ServiceBusMessageInConverter.decode(
             data=meta.Datum(b'body_bytes', 'bytes'),
-            trigger_metadata=self._generate_servicebus_metadata())
+            trigger_metadata=self._generate_single_trigger_metadata())
 
         self.assertEqual(msg.get_body(), b'body_bytes')
-        self.assertEqual(msg.content_type, 'application/json')
-        self.assertIsNone(msg.correlation_id)
-        self.assertEqual(msg.enqueued_time_utc, self.MOCKED_ENQUEUE_TIME)
+
+        # Test individual ServiceBus properties respectively
+        self.assertEqual(msg.content_type,
+                         self.MOCKED_CONTENT_TYPE)
+        self.assertEqual(msg.correlation_id,
+                         self.MOCKED_CORROLATION_ID)
+        self.assertEqual(msg.dead_letter_source,
+                         self.MOCKED_DEADLETTER_SOURCE)
+        self.assertEqual(msg.enqueued_sequence_number,
+                         self.MOCKED_ENQUEUED_SEQUENCE_NUMBER)
+        self.assertEqual(msg.enqueued_time_utc,
+                         self.MOCKED_ENQUEUE_TIME_UTC)
         self.assertEqual(msg.expires_at_utc,
-                         datetime(2020, 7, 2, 5, 39, 12, 170000,
-                                  tzinfo=timezone.utc))
-        self.assertEqual(msg.expiration_time)
-        self.assertEqual(msg.label, 'Microsoft.Azure.ServiceBus')
-        self.assertEqual(msg.message_id, '87c66eaf88e84119b66a26278a7b4149')
-        self.assertEqual(msg.partition_key, 'sample_part')
-        self.assertIsNone(msg.reply_to)
-        self.assertIsNone(msg.reply_to_session_id)
-        self.assertIsNone(msg.scheduled_enqueue_time)
-        self.assertIsNone(msg.session_id)
-        self.assertIsNone(msg.time_to_live)
-        self.assertIsNone(msg.to)
+                         self.MOCKED_EXPIRY_AT_UTC)
+        self.assertEqual(msg.expiration_time,
+                         self.MOCKED_EXPIRY_AT_UTC)
+        self.assertEqual(msg.label,
+                         self.MOCKED_LABEL)
+        self.assertEqual(msg.locked_until_utc,
+                         self.MOCKED_LOCKED_UNTIL_UTC)
+        self.assertEqual(msg.message_id,
+                         self.MOCKED_MESSAGE_ID)
+        self.assertEqual(msg.partition_key,
+                         self.MOCKED_PARTITION_KEY)
+        self.assertEqual(msg.reply_to,
+                         self.MOCKED_REPLY_TO)
+        self.assertEqual(msg.reply_to_session_id,
+                         self.MOCKED_REPLY_TO_SESSION_ID)
+        self.assertEqual(msg.scheduled_enqueue_time,
+                         self.MOCKED_SCHEDULED_ENQUEUE_TIME_UTC)
+        self.assertEqual(msg.scheduled_enqueue_time_utc,
+                         self.MOCKED_SCHEDULED_ENQUEUE_TIME_UTC)
+        self.assertEqual(msg.session_id,
+                         self.MOCKED_SESSION_ID)
+        self.assertEqual(msg.time_to_live,
+                         self.MOCKED_TIME_TO_LIVE_TIMEDELTA)
+        self.assertEqual(msg.to,
+                         self.MOCKED_TO)
         self.assertDictEqual(msg.user_properties, {
             '$AzureWebJobsParentId': '6ceef68b-0794-45dd-bb2e-630748515552',
             'x-opt-enqueue-sequence-number': 0
@@ -104,20 +137,20 @@ class TestServiceBus(unittest.TestCase):
         # Trigger metadata should contains all the essential information
         # about this service bus message
         servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(
-            data=self._generate_servicebus_data(),
-            trigger_metadata=self._generate_servicebus_metadata())
+            data=self._generate_single_servicebus_data(),
+            trigger_metadata=self._generate_single_trigger_metadata())
 
         # Datetime should be in iso8601 string instead of datetime object
         metadata_dict = servicebus_msg.metadata
         self.assertGreaterEqual(metadata_dict.items(), {
-            'DeliveryCount': 1,
-            'LockToken': '87931fd2-39f4-415a-9fdc-adfdcbed3148',
-            'ExpiresAtUtc': '2020-07-02T05:39:12.17Z',
-            'EnqueuedTimeUtc': self.MOCKED_ENQUEUE_TIME.isoformat(),
-            'MessageId': '87c66eaf88e84119b66a26278a7b4149',
-            'ContentType': 'application/json',
-            'SequenceNumber': 3,
-            'Label': 'Microsoft.Azure.ServiceBus',
+            'DeliveryCount': self.MOCKED_DELIVERY_COUNT,
+            'LockToken': self.MOCKED_LOCK_TOKEN,
+            'ExpiresAtUtc': self.MOCKED_EXPIRY_AT_UTC.isoformat(),
+            'EnqueuedTimeUtc': self.MOCKED_ENQUEUE_TIME_UTC.isoformat(),
+            'MessageId': self.MOCKED_MESSAGE_ID,
+            'ContentType': self.MOCKED_CONTENT_TYPE,
+            'SequenceNumber': self.MOCKED_SEQUENCE_NUMBER,
+            'Label': self.MOCKED_LABEL,
             'sys': {
                 'MethodName': 'ServiceBusSMany',
                 'UtcNow': '2020-06-18T05:39:12.2860411Z',
@@ -128,8 +161,8 @@ class TestServiceBus(unittest.TestCase):
     def test_servicebus_should_not_override_metadata(self):
         # SystemProperties in metadata should propagate to class properties
         servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(
-            data=self._generate_servicebus_data(),
-            trigger_metadata=self._generate_servicebus_metadata())
+            data=self._generate_single_servicebus_data(),
+            trigger_metadata=self._generate_single_trigger_metadata())
 
         # The content_type trigger field should be set
         self.assertEqual(servicebus_msg.content_type, 'application/json')
@@ -143,43 +176,98 @@ class TestServiceBus(unittest.TestCase):
         servicebus_msg.metadata['ContentType'] = 'text/plain'
         self.assertEqual(servicebus_msg.content_type, 'application/json')
 
-    def _generate_servicebus_data(self):
-        return meta.Datum(value='{ "lucky_number": 23 }', type='json')
+    def test_multiple_servicebus_trigger(self):
+        # When cardinality is turned on to 'many', metadata should contain
+        # information for all messages
+        servicebus_msgs = azf_sb.ServiceBusMessageInConverter.decode(
+            data=self._generate_multiple_service_bus_data(),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
 
-    def _generate_servicebus_metadata(self):
+        # The decoding result should contain a list of message
+        self.assertEqual(len(servicebus_msgs), 3)
+
+    def _generate_single_servicebus_data(self) -> meta.Datum:
+        return meta.Datum(value=json.dumps({
+            'lucky_number': 23
+        }), type='json')
+
+    def _generate_multiple_service_bus_data(self) -> meta.Datum:
+        return meta.Datum(value=json.dumps([
+            { 'lucky_number': 23 },
+            { 'lucky_number': 34 },
+            { 'lucky_number': 45 }
+        ]), type='json')
+
+    def _generate_single_trigger_metadata(self) -> Dict[str, meta.Datum]:
         """Generate a single ServiceBus message following
         https://docs.microsoft.com/en-us/azure/service-bus-messaging/
         service-bus-messages-payloads
         """
 
-        mocked_metadata: Mapping[str, meta.Datum] = {}
-        mocked_metadata['ContentType'] = meta.Datum(
-            self.MOCKED_CONTENT_TYPE, 'string'
-        )
-        mocked_metadata['CorrelationId'] = meta.Datum(
-            self.MOCKED_CORROLATION_ID, 'string'
-        )
-        mocked_metadata['DeadLetterSource'] = meta.Datum(
-            self.MOCKED_DEADLETTER_SOURCE, 'string'
-        )
-        mocked_metadata['DeliveryCount'] = meta.Datum(1, 'int')
-        mocked_metadata['LockToken'] = meta.Datum(
-            self.MOCKED_LOCK_TOKEN, 'string'
-        )
-        mocked_metadata['ExpiresAtUtc'] = meta.Datum(
-            self.MOCKED_EXPIRY_TIME.isoformat(), 'string'
-        )
-        mocked_metadata['EnqueuedTimeUtc'] = meta.Datum(
-            self.MOCKED_ENQUEUE_TIME.isoformat(), 'string'
-        )
-        mocked_metadata['MessageId'] = meta.Datum(
-            self.MOCKED_MESSAGE_ID, 'string'
-        )
-        mocked_metadata['SequenceNumber'] = meta.Datum(3, 'int')
-        mocked_metadata['PartitionKey'] = meta.Datum('sample_part', 'string')
-        mocked_metadata['Label'] = meta.Datum(
-            'Microsoft.Azure.ServiceBus', 'string'
-        )
+        mocked_metadata: Dict[str, meta.Datum] = {
+            'ContentType': meta.Datum(
+                self.MOCKED_CONTENT_TYPE, 'string'
+            ),
+            'CorrelationId': meta.Datum(
+                self.MOCKED_CORROLATION_ID, 'string'
+            ),
+            'DeadLetterSource': meta.Datum(
+                self.MOCKED_DEADLETTER_SOURCE, 'string'
+            ),
+            'DeliveryCount': meta.Datum(
+                self.MOCKED_DELIVERY_COUNT, 'int'
+            ),
+            'EnqueuedSequenceNumber': meta.Datum(
+                self.MOCKED_ENQUEUED_SEQUENCE_NUMBER, 'int'
+            ),
+            'EnqueuedTimeUtc': meta.Datum(
+                self.MOCKED_ENQUEUE_TIME_UTC.isoformat(), 'string'
+            ),
+            'ExpiresAtUtc': meta.Datum(
+                self.MOCKED_EXPIRY_AT_UTC.isoformat(), 'string'
+            ),
+            # 'ForcePersistence' not exposed yet, requires gRPC boolean passing
+            'Label': meta.Datum(
+                self.MOCKED_LABEL, 'string'
+            ),
+            'LockedUntilUtc': meta.Datum(
+                self.MOCKED_LOCKED_UNTIL_UTC.isoformat(), 'string'
+            ),
+            'LockToken': meta.Datum(
+                self.MOCKED_LOCK_TOKEN, 'string'
+            ),
+            'MessageId': meta.Datum(
+                self.MOCKED_MESSAGE_ID, 'string'
+            ),
+            'PartitionKey': meta.Datum(
+                self.MOCKED_PARTITION_KEY, 'string'
+            ),
+            'ReplyTo': meta.Datum(
+                self.MOCKED_REPLY_TO, 'string'
+            ),
+            'ReplyToSessionId': meta.Datum(
+                self.MOCKED_REPLY_TO_SESSION_ID, 'string'
+            ),
+            'ScheduledEnqueueTimeUtc': meta.Datum(
+                self.MOCKED_SCHEDULED_ENQUEUE_TIME_UTC.isoformat(), 'string'
+            ),
+            'SequenceNumber': meta.Datum(
+                self.MOCKED_SEQUENCE_NUMBER, 'int'
+            ),
+            'SessionId': meta.Datum(
+                self.MOCKED_SESSION_ID, 'string'
+            ),
+            'TimeToLive': meta.Datum(
+                self.MOCKED_TIME_TO_LIVE, 'string'
+            ),
+            'To': meta.Datum(
+                self.MOCKED_TO, 'string'
+            ),
+            'ViaPartitionKey': meta.Datum(
+                self.MOCKED_VIA_PARTITION_KEY, 'string'
+            )
+        }
         mocked_metadata['MessageReceiver'] = meta.Datum(type='json', value='''
         {
             "RegisteredPlugins": [],
@@ -226,3 +314,76 @@ class TestServiceBus(unittest.TestCase):
         }
         ''')
         return mocked_metadata
+
+    def _generate_multiple_trigger_metadata(self) -> Dict[str, meta.Datum]:
+        """Generate a metadatum containing 3 service bus messages which can be
+        distingushed by enqueued_sequence_number
+        """
+        sb_a = self._generate_single_trigger_metadata()
+        sb_b = self._generate_single_trigger_metadata()
+        sb_c = self._generate_single_trigger_metadata()
+
+        sb_a['EnqueuedSequenceNumber'] = meta.Datum(
+            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_A,
+            type='int'
+        )
+        sb_b['EnqueuedSequenceNumber'] = meta.Datum(
+            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_B,
+            type='int'
+        )
+        sb_b['EnqueuedSequenceNumber'] = meta.Datum(
+            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_C,
+            type='int'
+        )
+
+        combine_from = lambda key, et: self._zip(key, et, sb_a, sb_b, sb_c)
+
+        mocked_metadata = {
+            'ContentTypeArray': combine_from(
+                'ContentType', 'collection_string'
+            ),
+            'CorrelationIdArray': combine_from(
+                'CorrelationId', 'collection_string'
+            ),
+            'DeadLetterSourceArray': combine_from(
+                'DeadLetterSource', 'collection_string'
+            ),
+            'EnqueuedTimeUtcArray': combine_from(
+                'EnqueuedTimeUtc', 'json'
+            ),
+            'UserPropertiesArray': combine_from(
+                'UserProperties', 'json'
+            )
+        }
+
+        return mocked_metadata
+
+    def _zip(self, key: str, expected_type: str,
+             *args: List[Dict[str, meta.Datum]]) -> meta.Datum:
+        """Combining multiple metadata into one:
+        string -> collection_string
+        bytes -> collection_bytes
+        int -> collection_sint64
+        sint64 -> collection_sint64
+        json -> json (with array in it)
+        """
+        datum_type = args[0][key].type
+        if expected_type in ('collection_string',
+                             'collection_bytes',
+                             'collection_sint64'):
+            return meta.Datum(
+                value=CollectionString([d[key].value for d in args]),
+                type='collection_string'
+            )
+        elif expected_type == 'json':
+            if datum_type == 'json':
+                value = json.dumps([json.loads(d[key].value) for d in args])
+            else:
+                value = json.dumps([d[key].value for d in args])
+            return meta.Datum(
+                value=value,
+                type='json'
+            )
+        else:
+            raise NotImplementedError(f'Unknown convertion {key}: '
+                                      f'{datum_type} -> {expected_type}')

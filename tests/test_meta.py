@@ -9,6 +9,10 @@ from azure.functions import meta
 
 
 class TestMeta(unittest.TestCase):
+    def test_parsed_datetime_none(self):
+        parsed = self._parse_datetime(None)
+        self.assertEqual(parsed, None)
+
     def test_parse_datetime_empty(self):
         parsed = self._parse_datetime('')
         self.assertEqual(parsed, None)
@@ -47,6 +51,10 @@ class TestMeta(unittest.TestCase):
 
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999')
+
+    def test_parsed_timedelta_none(self):
+        parsed = self._parse_timedelta(None)
+        self.assertIsNone(parsed)
 
     def test_parsed_timedelta_empty(self):
         parsed = self._parse_timedelta('')
