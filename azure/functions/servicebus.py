@@ -231,7 +231,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 data, trigger_metadata=trigger_metadata)
         else:
             raise NotImplementedError(
-                f'unsupported service bus data type: {data.type}')
+                f'unsupported service bus data type: {data.type} or '
+                'UserProperties does not exist')
 
     @classmethod
     def decode_single_message(

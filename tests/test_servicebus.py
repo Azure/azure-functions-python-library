@@ -85,6 +85,25 @@ class TestServiceBus(unittest.TestCase):
         servicebus_data = servicebus_msg.get_body().decode('utf-8')
         self.assertEqual(servicebus_data, json.dumps({"lucky_number": 23}))
 
+    def test_servicebus_non_existing_property(self):
+        # The function should not fail even when property does not work
+        msg = azf_sb.ServiceBusMessageInConverter.decode(
+            data=self._generate_single_servicebus_data(),
+            trigger_metadata={
+                'MessageId': meta.Datum(self.MOCKED_MESSAGE_ID, 'string'),
+                'UserProperties': meta.Datum('{ "UserId": 1 }', 'json')
+            }
+        )
+
+        # Property that are not passed from extension should be None
+        self.assertIsNone(msg.content_type)
+
+        # Message id should always be available
+        self.assertEqual(msg.message_id, self.MOCKED_MESSAGE_ID)
+
+        # User property should always be available
+        self.assertEqual(msg.user_properties['UserId'], 1)
+
     def test_servicebus_properties(self):
         # SystemProperties in metadata should propagate to class properties
         msg = azf_sb.ServiceBusMessageInConverter.decode(
@@ -188,6 +207,39 @@ class TestServiceBus(unittest.TestCase):
 
         # The decoding result should contain a list of message
         self.assertEqual(len(servicebus_msgs), 3)
+
+    def test_multiple_servicebus_trigger_non_existing_properties(self):
+        servicebus_msgs = azf_sb.ServiceBusMessageInConverter.decode(
+            data=self._generate_multiple_service_bus_data(),
+            trigger_metadata={
+                'MessageIdArray': meta.Datum(type='collection_string',
+                                             value=CollectionString([
+                                                 self.MOCKED_MESSAGE_ID,
+                                                 self.MOCKED_MESSAGE_ID,
+                                                 self.MOCKED_MESSAGE_ID
+                                             ])),
+                'UserPropertiesArray': meta.Datum(type='json',
+                                                  value='''[{ "UserId": 1 },
+                                                            { "UserId": 2 },
+                                                            { "UserId": 3 }]
+                                                        ''')
+            }
+        )
+
+        # Non existing properties should return None
+        self.assertIsNone(servicebus_msgs[0].content_type)
+        self.assertIsNone(servicebus_msgs[1].content_type)
+        self.assertIsNone(servicebus_msgs[2].content_type)
+
+        # Message Id should always be available
+        self.assertEqual(servicebus_msgs[0].message_id, self.MOCKED_MESSAGE_ID)
+        self.assertEqual(servicebus_msgs[1].message_id, self.MOCKED_MESSAGE_ID)
+        self.assertEqual(servicebus_msgs[2].message_id, self.MOCKED_MESSAGE_ID)
+
+        # User properties should always be available
+        self.assertEqual(servicebus_msgs[0].user_properties['UserId'], 1)
+        self.assertEqual(servicebus_msgs[1].user_properties['UserId'], 2)
+        self.assertEqual(servicebus_msgs[2].user_properties['UserId'], 3)
 
     def test_multiple_servicebus_trigger_properties(self):
         # When cardinality is turned on to 'many', metadata should contain
