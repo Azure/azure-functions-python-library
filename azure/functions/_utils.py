@@ -70,7 +70,7 @@ def try_parse_timedelta_with_formats(
 
     for fmt in timedelta_formats:
         try:
-            # If singular form %S, %M, %H, will just return the timedelta in int
+            # If singular form %S, %M, %H, will just return the timedelta
             if fmt == '%S':
                 td = timedelta(seconds=int(timedelta_str))
             elif fmt == '%M':

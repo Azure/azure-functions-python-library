@@ -8,7 +8,7 @@ class CollectionBytes:
 
 class CollectionString:
     def __init__(self, data: List[str]):
-        self.string = list(map(lambda x: x.encode('utf-8'), data))
+        self.string = data
 
 
 class CollectionSint64:

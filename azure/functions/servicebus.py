@@ -3,7 +3,7 @@
 
 import datetime
 import json
-from typing import Dict, Any, List, Union, Optional, Mapping
+from typing import Dict, Any, List, Union, Optional, Mapping, cast
 
 from azure.functions import _servicebus as azf_sbus
 
@@ -24,7 +24,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             enqueued_sequence_number: Optional[int] = None,
             enqueued_time_utc: Optional[datetime.datetime] = None,
             expires_at_utc: Optional[datetime.datetime] = None,
-            force_persistence: Optional[bool] = None,
             label: Optional[str] = None,
             locked_until_utc: Optional[datetime.datetime] = None,
             lock_token: Optional[str] = None,
@@ -49,7 +48,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__enqueued_sequence_number = enqueued_sequence_number
         self.__enqueued_time_utc = enqueued_time_utc
         self.__expires_at_utc = expires_at_utc
-        self.__force_persistence = force_persistence
         self.__label = label
         self.__locked_until_utc = locked_until_utc
         self.__lock_token = lock_token
@@ -276,8 +274,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'EnqueuedTimeUtc'),
             expires_at_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'ExpiresAtUtc'),
-            force_persistence=cls._decode_trigger_metadata_field(
-                trigger_metadata, 'ForcePersistence', python_type=bool),
             label=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Label', python_type=str),
             locked_until_utc=cls._parse_datetime_metadata(
@@ -359,30 +355,53 @@ class ServiceBusMessageInConverter(meta.InConverter,
     @classmethod
     def _marshall_message_body(
         cls,
-        message_body: Union[bytes, str, Dict[str, Any]],
+        body: Union[bytes, str, Dict[str, Any]],
         data_type: str
     ) -> bytes:
-        if data_type == 'bytes' and isinstance(message_body, bytes):
-            return message_body
-        elif data_type == 'str' and isinstance(message_body, str):
-            return message_body.encode('utf-8')
-        elif data_type == 'json' and isinstance(message_body, dict):
-            return json.dumps(message_body).encode('utf-8')
+        if data_type == 'bytes' and isinstance(body, bytes):
+            return body
+        elif data_type == 'str' and isinstance(body, str):
+            return body.encode('utf-8')
+        elif data_type == 'json' and isinstance(body, dict):
+            return json.dumps(body).encode('utf-8')
         else:
-            raise NotImplementedError('unable to handle message body with '
+            raise NotImplementedError('unable to marshall message body with '
+                                      f'data_type {data_type}')
+
+    @classmethod
+    def _marshall_message_bodies(
+        cls,
+        bodies: Union[List[str], List[bytes]],
+        data_type: str
+    ) -> List[bytes]:
+        # The typing library cast() method is used as mypy type helper
+        # Currently, mypy does not provide List[type] checking for now
+        # Thus, forcefully casting is required
+        if data_type == 'collection_bytes':
+            return cast(List[bytes], bodies)
+        elif data_type == 'collection_string':
+            strings: List[str] = cast(List[str], bodies)
+            return cast(List[bytes], [b.encode('utf-8') for b in strings])
+        elif data_type == 'json':
+            return cast(List[bytes],
+                        [json.dumps(b).encode('utf-8') for b in bodies])
+        else:
+            raise NotImplementedError('unable to marshall message bodies with '
                                       f'data_type {data_type}')
 
     @classmethod
     def _extract_messages(
-        cls, parsed_data: str, data_type: str,
+        cls, parsed_data: Union[List[bytes], List[str]], data_type: str,
         trigger_metadata: Mapping[str, meta.Datum]
     ) -> List[ServiceBusMessage]:
-
-        num_messages = cls._get_event_count(trigger_metadata)
         messages: List[ServiceBusMessage] = []
+        num_messages: int = cls._get_event_count(trigger_metadata)
+        message_bodies: List[bytes] = cls._marshall_message_bodies(
+            bodies=parsed_data, data_type=data_type
+        )
         for i in range(num_messages):
             messages.append(ServiceBusMessage(
-                body=cls._marshall_message_body(parsed_data[i], data_type),
+                body=message_bodies[i],
                 trigger_metadata=trigger_metadata,
                 content_type=cls._get_from_metadata_array(
                     trigger_metadata, 'ContentTypeArray', i),
@@ -392,6 +411,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'DeadLetterSourceArray', i),
                 delivery_count=cls._get_from_metadata_array(
                     trigger_metadata, 'DeliveryCountArray', i),
+                enqueued_sequence_number=cls._get_from_metadata_array(
+                    trigger_metadata, 'EnqueuedSequenceNumberArray', i),
                 enqueued_time_utc=cls._parse_datetime(
                     cls._get_from_metadata_array(
                         trigger_metadata, 'EnqueuedTimeUtcArray', i)),
@@ -400,27 +421,44 @@ class ServiceBusMessageInConverter(meta.InConverter,
                         trigger_metadata, 'ExpiresAtUtcArray', i)),
                 label=cls._get_from_metadata_array(
                     trigger_metadata, 'LabelArray', i),
+                locked_until_utc=cls._parse_datetime(
+                    cls._get_from_metadata_array(
+                        trigger_metadata, 'LockedUntilUtc', i)),
                 lock_token=cls._get_from_metadata_array(
                     trigger_metadata, 'LockTokenArray', i),
                 message_id=cls._get_from_metadata_array(
                     trigger_metadata, 'MessageIdArray', i),
+                partition_key=cls._get_from_metadata_array(
+                    trigger_metadata, 'PartitionKeyArray', i),
+                reply_to_session_id=cls._get_from_metadata_array(
+                    trigger_metadata, 'ReplyToSessionIdArray', i),
+                scheduled_enqueue_time_utc=cls._parse_datetime(
+                    cls._get_from_metadata_array(
+                        trigger_metadata, 'ScheduledEnqueueTimeUtcArray', i)),
                 sequence_number=cls._get_from_metadata_array(
                     trigger_metadata, 'SequenceNumberArray', i),
+                session_id=cls._get_from_metadata_array(
+                    trigger_metadata, 'SessionIdArray', i),
+                time_to_live=cls._get_from_metadata_array(
+                    trigger_metadata, 'TimeToLiveArray', i),
                 to=cls._get_from_metadata_array(
                     trigger_metadata, 'ToArray', i),
                 reply_to=cls._get_from_metadata_array(
                     trigger_metadata, 'ReplyToArray', i),
+                via_partition_key=cls._get_from_metadata_array(
+                    trigger_metadata, 'ViaPartitionKey', i),
                 user_properties=cls._get_from_metadata_array(
                     trigger_metadata, 'UserPropertiesArray', i)
             ))
         return messages
 
     @classmethod
-    def _get_from_metadata_array(cls,
-                                 trigger_metadata: Mapping[str, meta.Datum],
-                                 array_name: str,
-                                 index: int
-                                ) -> Optional[Union[str, int, bytes]]:
+    def _get_from_metadata_array(
+        cls,
+        trigger_metadata: Mapping[str, meta.Datum],
+        array_name: str,
+        index: int
+    ) -> Any:
         """This method is to safe-guard when retrieve data from arrays.
 
         Some array may be missing in metadata. Others may not contain certain
@@ -446,12 +484,12 @@ class ServiceBusMessageInConverter(meta.InConverter,
         """
 
         # Check if array name does exist (e.g. ContentTypeArray)
-        datum: meta.Datum = trigger_metadata.get(array_name)
+        datum: Optional[meta.Datum] = trigger_metadata.get(array_name)
         if datum is None:
             return None
 
         # Check if datum is an iterable element (e.g. collection_string)
-        data_array: Union[List[str], List[int], List[bytes]] = None
+        data_array: Optional[Union[List[str], List[int], List[bytes]]] = None
         if datum.type == 'collection_string':
             data_array = datum.value.string
         elif datum.type == 'collection_bytes':
@@ -462,7 +500,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
             data_array = json.loads(datum.value)
 
         # Check if the index is inbound
-        if index >= len(data_array):
+        if data_array is None or index >= len(data_array):
             return None
 
         return data_array[index]

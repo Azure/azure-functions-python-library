@@ -245,9 +245,10 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             return None
 
     @classmethod
-    def _parse_timedelta(cls,
-                         timedelta_str: Optional[str]
-                        ) -> Optional[datetime.timedelta]:
+    def _parse_timedelta(
+        cls,
+        timedelta_str: Optional[str]
+    ) -> Optional[datetime.timedelta]:
 
         if timedelta_str is None or timedelta_str == '':
             return None

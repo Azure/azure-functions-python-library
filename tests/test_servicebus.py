@@ -4,7 +4,7 @@
 from typing import Dict, List
 import json
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 import azure.functions as func
 import azure.functions.servicebus as azf_sb
@@ -38,6 +38,8 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_TIME_TO_LIVE_TIMEDELTA = timedelta(hours=11, minutes=22, seconds=33)
     MOCKED_TO = 'mocked_to'
     MOCKED_VIA_PARTITION_KEY = 'mocked_via_partition_key'
+
+    MOCKED_AZURE_PARTNER_ID = '6ceef68b-0794-45dd-bb2e-630748515552'
 
     def test_servicebus_input_type(self):
         check_input_type = (
@@ -129,7 +131,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(msg.to,
                          self.MOCKED_TO)
         self.assertDictEqual(msg.user_properties, {
-            '$AzureWebJobsParentId': '6ceef68b-0794-45dd-bb2e-630748515552',
+            '$AzureWebJobsParentId': self.MOCKED_AZURE_PARTNER_ID,
             'x-opt-enqueue-sequence-number': 0
         })
 
@@ -187,6 +189,72 @@ class TestServiceBus(unittest.TestCase):
         # The decoding result should contain a list of message
         self.assertEqual(len(servicebus_msgs), 3)
 
+    def test_multiple_servicebus_trigger_properties(self):
+        # When cardinality is turned on to 'many', metadata should contain
+        # information for all messages
+        servicebus_msgs = azf_sb.ServiceBusMessageInConverter.decode(
+            data=self._generate_multiple_service_bus_data(),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
+
+        expceted_bodies: List[str] = [
+            json.dumps({"lucky_number": 23}),
+            json.dumps({"lucky_number": 34}),
+            json.dumps({"lucky_number": 45}),
+        ]
+
+        expected_enqueued_sequence_number: List[int] = [
+            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_A,
+            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_B,
+            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_C
+        ]
+
+        for i in range(len(servicebus_msgs)):
+            msg = servicebus_msgs[i]
+            body_data = msg.get_body().decode('utf-8')
+            self.assertEqual(body_data, expceted_bodies[i])
+
+            self.assertEqual(msg.content_type,
+                             self.MOCKED_CONTENT_TYPE)
+            self.assertEqual(msg.correlation_id,
+                             self.MOCKED_CORROLATION_ID)
+            self.assertEqual(msg.dead_letter_source,
+                             self.MOCKED_DEADLETTER_SOURCE)
+            self.assertEqual(msg.enqueued_sequence_number,
+                             expected_enqueued_sequence_number[i])
+            self.assertEqual(msg.enqueued_time_utc,
+                             self.MOCKED_ENQUEUE_TIME_UTC)
+            self.assertEqual(msg.expires_at_utc,
+                             self.MOCKED_EXPIRY_AT_UTC)
+            self.assertEqual(msg.expiration_time,
+                             self.MOCKED_EXPIRY_AT_UTC)
+            self.assertEqual(msg.label,
+                             self.MOCKED_LABEL)
+            self.assertEqual(msg.locked_until_utc,
+                             self.MOCKED_LOCKED_UNTIL_UTC)
+            self.assertEqual(msg.message_id,
+                             self.MOCKED_MESSAGE_ID)
+            self.assertEqual(msg.partition_key,
+                             self.MOCKED_PARTITION_KEY)
+            self.assertEqual(msg.reply_to,
+                             self.MOCKED_REPLY_TO)
+            self.assertEqual(msg.reply_to_session_id,
+                             self.MOCKED_REPLY_TO_SESSION_ID)
+            self.assertEqual(msg.scheduled_enqueue_time,
+                             self.MOCKED_SCHEDULED_ENQUEUE_TIME_UTC)
+            self.assertEqual(msg.scheduled_enqueue_time_utc,
+                             self.MOCKED_SCHEDULED_ENQUEUE_TIME_UTC)
+            self.assertEqual(msg.session_id,
+                             self.MOCKED_SESSION_ID)
+            self.assertEqual(msg.time_to_live,
+                             self.MOCKED_TIME_TO_LIVE_TIMEDELTA)
+            self.assertEqual(msg.to,
+                             self.MOCKED_TO)
+            self.assertDictEqual(msg.user_properties, {
+                '$AzureWebJobsParentId': self.MOCKED_AZURE_PARTNER_ID,
+                'x-opt-enqueue-sequence-number': 0
+            })
+
     def _generate_single_servicebus_data(self) -> meta.Datum:
         return meta.Datum(value=json.dumps({
             'lucky_number': 23
@@ -194,9 +262,9 @@ class TestServiceBus(unittest.TestCase):
 
     def _generate_multiple_service_bus_data(self) -> meta.Datum:
         return meta.Datum(value=json.dumps([
-            { 'lucky_number': 23 },
-            { 'lucky_number': 34 },
-            { 'lucky_number': 45 }
+            {'lucky_number': 23},
+            {'lucky_number': 34},
+            {'lucky_number': 45}
         ]), type='json')
 
     def _generate_single_trigger_metadata(self) -> Dict[str, meta.Datum]:
@@ -348,8 +416,32 @@ class TestServiceBus(unittest.TestCase):
             'DeadLetterSourceArray': combine_from(
                 'DeadLetterSource', 'collection_string'
             ),
+            'EnqueuedSequenceNumberArray': combine_from(
+                'EnqueuedSequenceNumber', 'collection_sint64'
+            ),
             'EnqueuedTimeUtcArray': combine_from(
                 'EnqueuedTimeUtc', 'json'
+            ),
+            'ExpiresAtUtcArray': combine_from(
+                'ExpiresAtUtc', 'json'
+            ),
+            'LabelArray': combine_from(
+                'Label', 'collection_string'
+            ),
+            'LockTokenArray': combine_from(
+                'LockToken', 'collection_string'
+            ),
+            'MessageIdArray': combine_from(
+                'MessageId', 'collection_string'
+            ),
+            'ReplyToArray': combine_from(
+                'ReplyTo', 'collection_string'
+            ),
+            'SequenceNumberArray': combine_from(
+                'SequenceNumber', 'collection_sint64'
+            ),
+            'ToArray': combine_from(
+                'To', 'collection_string'
             ),
             'UserPropertiesArray': combine_from(
                 'UserProperties', 'json'
@@ -367,13 +459,17 @@ class TestServiceBus(unittest.TestCase):
         sint64 -> collection_sint64
         json -> json (with array in it)
         """
+        convertible = {
+            'collection_string': CollectionString,
+            'collection_bytes': CollectionBytes,
+            'collection_sint64': CollectionSint64
+        }
+
         datum_type = args[0][key].type
-        if expected_type in ('collection_string',
-                             'collection_bytes',
-                             'collection_sint64'):
+        if expected_type in convertible.keys():
             return meta.Datum(
-                value=CollectionString([d[key].value for d in args]),
-                type='collection_string'
+                value=convertible[expected_type]([d[key].value for d in args]),
+                type=expected_type
             )
         elif expected_type == 'json':
             if datum_type == 'json':
