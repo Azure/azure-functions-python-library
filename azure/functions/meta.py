@@ -9,7 +9,10 @@ import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
 from ._thirdparty import typing_inspect
-from ._utils import try_parse_datetime_with_formats
+from ._utils import (
+    try_parse_datetime_with_formats,
+    try_parse_timedelta_with_formats
+)
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
@@ -209,6 +212,10 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     @classmethod
     def _parse_datetime(
             cls, datetime_str: str) -> Optional[datetime.datetime]:
+
+        if datetime_str == '':
+            return None
+
         too_fractional = re.match(
             r'(.*\.\d{6})(\d+)(Z|[\+|-]\d{1,2}:\d{1,2}){0,1}', datetime_str)
 
@@ -222,11 +229,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
         # Try parse time
         utc_time, utc_time_error = cls._parse_datetime_utc(datetime_str)
-        if utc_time:
+        if utc_time is not None:
             return utc_time.replace(tzinfo=datetime.timezone.utc)
 
         local_time, local_time_error = cls._parse_datetime_local(datetime_str)
-        if local_time:
+        if local_time is not None:
             return local_time.replace(tzinfo=None)
 
         # Report error
@@ -241,9 +248,12 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     def _parse_timedelta(cls,
                          timedelta_str: str) -> Optional[datetime.timedelta]:
 
+        if timedelta_str == '':
+            return None
+
         # Try parse timedelta
         timedelta, td_error = cls._parse_timedelta_internal(timedelta_str)
-        if timedelta:
+        if timedelta is not None:
             return timedelta
 
         # Report error
@@ -343,14 +353,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%S'
         ]
 
-        dt, _, excpt = try_parse_datetime_with_formats(
+        td, _, excpt = try_parse_timedelta_with_formats(
             timedelta_str, timedelta_formats)
 
-        if dt is not None:
-            delta = datetime.timedelta(hours=dt.hour,
-                                       minutes=dt.minute,
-                                       seconds=dt.second)
-            return delta, None
+        if td is not None:
+            return td, None
         return None, excpt
 
 
