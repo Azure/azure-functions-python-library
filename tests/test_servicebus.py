@@ -399,7 +399,7 @@ class TestServiceBus(unittest.TestCase):
             value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_B,
             type='int'
         )
-        sb_b['EnqueuedSequenceNumber'] = meta.Datum(
+        sb_c['EnqueuedSequenceNumber'] = meta.Datum(
             value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_C,
             type='int'
         )
@@ -431,14 +431,32 @@ class TestServiceBus(unittest.TestCase):
             'LockTokenArray': combine_from(
                 'LockToken', 'collection_string'
             ),
+            'LockedUntilUtcArray': combine_from(
+                'LockedUntilUtc', 'collection_string'
+            ),
             'MessageIdArray': combine_from(
                 'MessageId', 'collection_string'
+            ),
+            'PartitionKeyArray': combine_from(
+                'PartitionKey', 'collection_string'
             ),
             'ReplyToArray': combine_from(
                 'ReplyTo', 'collection_string'
             ),
+            'ReplyToSessionIdArray': combine_from(
+                'ReplyToSessionId', 'collection_string'
+            ),
+            'ScheduledEnqueueTimeUtcArray': combine_from(
+                'ScheduledEnqueueTimeUtc', 'collection_string'
+            ),
+            'SessionIdArray': combine_from(
+                'SessionId', 'collection_string'
+            ),
             'SequenceNumberArray': combine_from(
                 'SequenceNumber', 'collection_sint64'
+            ),
+            'TimeToLiveArray': combine_from(
+                'TimeToLive', 'collection_string'
             ),
             'ToArray': combine_from(
                 'To', 'collection_string'

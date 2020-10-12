@@ -423,7 +423,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'LabelArray', i),
                 locked_until_utc=cls._parse_datetime(
                     cls._get_from_metadata_array(
-                        trigger_metadata, 'LockedUntilUtc', i)),
+                        trigger_metadata, 'LockedUntilUtcArray', i)),
                 lock_token=cls._get_from_metadata_array(
                     trigger_metadata, 'LockTokenArray', i),
                 message_id=cls._get_from_metadata_array(
@@ -439,8 +439,9 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'SequenceNumberArray', i),
                 session_id=cls._get_from_metadata_array(
                     trigger_metadata, 'SessionIdArray', i),
-                time_to_live=cls._get_from_metadata_array(
-                    trigger_metadata, 'TimeToLiveArray', i),
+                time_to_live=cls._parse_timedelta(
+                    cls._get_from_metadata_array(
+                        trigger_metadata, 'TimeToLiveArray', i)),
                 to=cls._get_from_metadata_array(
                     trigger_metadata, 'ToArray', i),
                 reply_to=cls._get_from_metadata_array(
