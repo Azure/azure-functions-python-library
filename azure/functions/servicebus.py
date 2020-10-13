@@ -21,11 +21,9 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             correlation_id: Optional[str] = None,
             dead_letter_source: Optional[str] = None,
             delivery_count: Optional[int] = None,
-            enqueued_sequence_number: Optional[int] = None,
             enqueued_time_utc: Optional[datetime.datetime] = None,
             expires_at_utc: Optional[datetime.datetime] = None,
             label: Optional[str] = None,
-            locked_until_utc: Optional[datetime.datetime] = None,
             lock_token: Optional[str] = None,
             message_id: str,
             partition_key: Optional[str] = None,
@@ -36,7 +34,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             session_id: Optional[str] = None,
             time_to_live: Optional[datetime.timedelta] = None,
             to: Optional[str] = None,
-            via_partition_key: Optional[str] = None,
             user_properties: Dict[str, object]) -> None:
 
         self.__body = body
@@ -45,11 +42,9 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__correlation_id = correlation_id
         self.__dead_letter_source = dead_letter_source
         self.__delivery_count = delivery_count
-        self.__enqueued_sequence_number = enqueued_sequence_number
         self.__enqueued_time_utc = enqueued_time_utc
         self.__expires_at_utc = expires_at_utc
         self.__label = label
-        self.__locked_until_utc = locked_until_utc
         self.__lock_token = lock_token
         self.__message_id = message_id
         self.__partition_key = partition_key
@@ -60,7 +55,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__session_id = session_id
         self.__time_to_live = time_to_live
         self.__to = to
-        self.__via_partition_key = via_partition_key
         self.__user_properties = user_properties
 
         # Cache for trigger metadata after Python object conversion
@@ -86,10 +80,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         return self.__delivery_count
 
     @property
-    def enqueued_sequence_number(self) -> Optional[int]:
-        return self.__enqueued_sequence_number
-
-    @property
     def enqueued_time_utc(self) -> Optional[datetime.datetime]:
         return self.__enqueued_time_utc
 
@@ -111,10 +101,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     @property
     def label(self) -> Optional[str]:
         return self.__label
-
-    @property
-    def locked_until_utc(self) -> Optional[datetime.datetime]:
-        return self.__locked_until_utc
 
     @property
     def lock_token(self) -> Optional[str]:
@@ -160,10 +146,6 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     @property
     def to(self) -> Optional[str]:
         return self.__to
-
-    @property
-    def via_partition_key(self) -> Optional[str]:
-        return self.__via_partition_key
 
     @property
     def user_properties(self) -> Dict[str, object]:
@@ -269,16 +251,12 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'DeadLetterSource', python_type=str),
             delivery_count=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'DeliveryCount', python_type=int),
-            enqueued_sequence_number=cls._decode_trigger_metadata_field(
-                trigger_metadata, 'EnqueuedSequenceNumber', python_type=int),
             enqueued_time_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'EnqueuedTimeUtc'),
             expires_at_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'ExpiresAtUtc'),
             label=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Label', python_type=str),
-            locked_until_utc=cls._parse_datetime_metadata(
-                trigger_metadata, 'LockedUntilUtc'),
             lock_token=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'LockToken', python_type=str),
             message_id=cls._decode_trigger_metadata_field(
@@ -299,8 +277,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'TimeToLive'),
             to=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'To', python_type=str),
-            via_partition_key=cls._decode_trigger_metadata_field(
-                trigger_metadata, 'ViaPartitionKey', python_type=str),
             user_properties=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'UserProperties', python_type=dict),
         )
@@ -412,8 +388,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'DeadLetterSourceArray', i),
                 delivery_count=cls._get_from_metadata_array(
                     trigger_metadata, 'DeliveryCountArray', i),
-                enqueued_sequence_number=cls._get_from_metadata_array(
-                    trigger_metadata, 'EnqueuedSequenceNumberArray', i),
                 enqueued_time_utc=cls._parse_datetime(
                     cls._get_from_metadata_array(
                         trigger_metadata, 'EnqueuedTimeUtcArray', i)),
@@ -422,9 +396,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
                         trigger_metadata, 'ExpiresAtUtcArray', i)),
                 label=cls._get_from_metadata_array(
                     trigger_metadata, 'LabelArray', i),
-                locked_until_utc=cls._parse_datetime(
-                    cls._get_from_metadata_array(
-                        trigger_metadata, 'LockedUntilUtcArray', i)),
                 lock_token=cls._get_from_metadata_array(
                     trigger_metadata, 'LockTokenArray', i),
                 message_id=cls._get_from_metadata_array(
@@ -447,8 +418,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'ToArray', i),
                 reply_to=cls._get_from_metadata_array(
                     trigger_metadata, 'ReplyToArray', i),
-                via_partition_key=cls._get_from_metadata_array(
-                    trigger_metadata, 'ViaPartitionKey', i),
                 user_properties=cls._get_from_metadata_array(
                     trigger_metadata, 'UserPropertiesArray', i)
             ))

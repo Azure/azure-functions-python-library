@@ -81,23 +81,6 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def enqueued_sequence_number(self) -> Optional[int]:
-        """For messages that have been auto-forwarded,
-        this property reflects the sequence number that had first been
-        assigned to the message at its original point of submission.
-        This property is read-only.
-
-        Returns:
-        --------
-        Optional[int]
-            If enqueued sequence number is set, returns an int.
-            Otherwise,
-            returns None.
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
     def enqueued_time_utc(self) -> Optional[datetime.datetime]:
         """The UTC instant at which the message has been accepted and stored
         in the entity. This value can be used as an authoritative and neutral
@@ -134,22 +117,6 @@ class ServiceBusMessage(abc.ABC):
         """(Deprecated, use expires_at_utc instead)"""
         pass
 
-    # @property
-    # @abc.abstractmethod
-    # def force_persistence(self) -> Optional[bool]:
-    #    """For queues or topics that have the EnableExpress flag set,
-    #    this property can be set to indicate that the message must be
-    #    persisted to disk before it is acknowledged. This is the standard
-    #    behavior for all non-express entities.
-    #
-    #    Returns:
-    #    --------
-    #    Optional[bool]
-    #        If force persistence is set, returns a bool.
-    #        Otherwise, returns None.
-    #    """
-    #    pass
-
     @property
     @abc.abstractmethod
     def label(self) -> Optional[str]:
@@ -161,23 +128,6 @@ class ServiceBusMessage(abc.ABC):
         --------
         Optional[str]
             If label is set, returns a string.
-            Otherwise, returns None.
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
-    def locked_until_utc(self) -> Optional[datetime.datetime]:
-        """	For messages retrieved under a lock (peek-lock receive mode,
-        not pre-settled) this property reflects the UTC instant until which
-        the message is held locked in the queue/subscription. When the lock
-        expires, the DeliveryCount is incremented and the message is again
-        available for retrieval. This property is read-only.
-
-        Returns:
-        --------
-        Optional[str]
-            If local until utc is set, returns a datetime.
             Otherwise, returns None.
         """
         pass
@@ -351,20 +301,6 @@ class ServiceBusMessage(abc.ABC):
         --------
         Optional[str]
             If the recipient is set, returns a string.
-            Otherwise, returns None.
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
-    def via_partition_key(self) -> Optional[str]:
-        """If a message is sent via a transfer queue in the scope of a
-        transaction, this value selects the transfer queue partition.
-
-        Returns:
-        --------
-        Optional[str]
-            If via partition key is set, returns a string.
             Otherwise, returns None.
         """
         pass

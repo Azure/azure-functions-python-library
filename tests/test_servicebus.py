@@ -18,16 +18,14 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_CORROLATION_ID = '87c66eaf88e84119b66a26278a7b4149'
     MOCKED_DEADLETTER_SOURCE = 'mocked_dead_letter_source'
     MOCKED_DELIVERY_COUNT = 571
-    MOCKED_ENQUEUED_SEQUENCE_NUMBER = 4132
-    MOCKED_ENQUEUED_SEQUENCE_NUMBER_A = 11111
-    MOCKED_ENQUEUED_SEQUENCE_NUMBER_B = 22222
-    MOCKED_ENQUEUED_SEQUENCE_NUMBER_C = 33333
     MOCKED_ENQUEUE_TIME_UTC = datetime.utcnow()
     MOCKED_EXPIRY_AT_UTC = datetime.utcnow()
     MOCKED_LABEL = 'mocked_label'
-    MOCKED_LOCKED_UNTIL_UTC = datetime.utcnow()
     MOCKED_LOCK_TOKEN = '87931fd2-39f4-415a-9fdc-adfdcbed3148'
     MOCKED_MESSAGE_ID = 'abcee18397398d93891830a0aac89eed'
+    MOCKED_MESSAGE_ID_A = 'aaaaa18397398d93891830a0aac89eed'
+    MOCKED_MESSAGE_ID_B = 'bbbbb18397398d93891830a0aac89eed'
+    MOCKED_MESSAGE_ID_C = 'ccccc18397398d93891830a0aac89eed'
     MOCKED_PARTITION_KEY = 'mocked_partition_key'
     MOCKED_REPLY_TO = 'mocked_reply_to'
     MOCKED_REPLY_TO_SESSION_ID = 'mocked_reply_to_session_id'
@@ -37,7 +35,6 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_TIME_TO_LIVE = '11:22:33'
     MOCKED_TIME_TO_LIVE_TIMEDELTA = timedelta(hours=11, minutes=22, seconds=33)
     MOCKED_TO = 'mocked_to'
-    MOCKED_VIA_PARTITION_KEY = 'mocked_via_partition_key'
 
     MOCKED_AZURE_PARTNER_ID = '6ceef68b-0794-45dd-bb2e-630748515552'
 
@@ -119,8 +116,6 @@ class TestServiceBus(unittest.TestCase):
                          self.MOCKED_CORROLATION_ID)
         self.assertEqual(msg.dead_letter_source,
                          self.MOCKED_DEADLETTER_SOURCE)
-        self.assertEqual(msg.enqueued_sequence_number,
-                         self.MOCKED_ENQUEUED_SEQUENCE_NUMBER)
         self.assertEqual(msg.enqueued_time_utc,
                          self.MOCKED_ENQUEUE_TIME_UTC)
         self.assertEqual(msg.expires_at_utc,
@@ -129,8 +124,6 @@ class TestServiceBus(unittest.TestCase):
                          self.MOCKED_EXPIRY_AT_UTC)
         self.assertEqual(msg.label,
                          self.MOCKED_LABEL)
-        self.assertEqual(msg.locked_until_utc,
-                         self.MOCKED_LOCKED_UNTIL_UTC)
         self.assertEqual(msg.message_id,
                          self.MOCKED_MESSAGE_ID)
         self.assertEqual(msg.partition_key,
@@ -255,10 +248,10 @@ class TestServiceBus(unittest.TestCase):
             json.dumps({"lucky_number": 45}),
         ]
 
-        expected_enqueued_sequence_number: List[int] = [
-            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_A,
-            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_B,
-            self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_C
+        expected_message_ids: List[int] = [
+            self.MOCKED_MESSAGE_ID_A,
+            self.MOCKED_MESSAGE_ID_B,
+            self.MOCKED_MESSAGE_ID_C
         ]
 
         for i in range(len(servicebus_msgs)):
@@ -272,8 +265,6 @@ class TestServiceBus(unittest.TestCase):
                              self.MOCKED_CORROLATION_ID)
             self.assertEqual(msg.dead_letter_source,
                              self.MOCKED_DEADLETTER_SOURCE)
-            self.assertEqual(msg.enqueued_sequence_number,
-                             expected_enqueued_sequence_number[i])
             self.assertEqual(msg.enqueued_time_utc,
                              self.MOCKED_ENQUEUE_TIME_UTC)
             self.assertEqual(msg.expires_at_utc,
@@ -282,10 +273,8 @@ class TestServiceBus(unittest.TestCase):
                              self.MOCKED_EXPIRY_AT_UTC)
             self.assertEqual(msg.label,
                              self.MOCKED_LABEL)
-            self.assertEqual(msg.locked_until_utc,
-                             self.MOCKED_LOCKED_UNTIL_UTC)
             self.assertEqual(msg.message_id,
-                             self.MOCKED_MESSAGE_ID)
+                             expected_message_ids[i])
             self.assertEqual(msg.partition_key,
                              self.MOCKED_PARTITION_KEY)
             self.assertEqual(msg.reply_to,
@@ -338,9 +327,6 @@ class TestServiceBus(unittest.TestCase):
             'DeliveryCount': meta.Datum(
                 self.MOCKED_DELIVERY_COUNT, 'int'
             ),
-            'EnqueuedSequenceNumber': meta.Datum(
-                self.MOCKED_ENQUEUED_SEQUENCE_NUMBER, 'int'
-            ),
             'EnqueuedTimeUtc': meta.Datum(
                 self.MOCKED_ENQUEUE_TIME_UTC.isoformat(), 'string'
             ),
@@ -350,9 +336,6 @@ class TestServiceBus(unittest.TestCase):
             # 'ForcePersistence' not exposed yet, requires gRPC boolean passing
             'Label': meta.Datum(
                 self.MOCKED_LABEL, 'string'
-            ),
-            'LockedUntilUtc': meta.Datum(
-                self.MOCKED_LOCKED_UNTIL_UTC.isoformat(), 'string'
             ),
             'LockToken': meta.Datum(
                 self.MOCKED_LOCK_TOKEN, 'string'
@@ -383,9 +366,6 @@ class TestServiceBus(unittest.TestCase):
             ),
             'To': meta.Datum(
                 self.MOCKED_TO, 'string'
-            ),
-            'ViaPartitionKey': meta.Datum(
-                self.MOCKED_VIA_PARTITION_KEY, 'string'
             )
         }
         mocked_metadata['MessageReceiver'] = meta.Datum(type='json', value='''
@@ -443,18 +423,9 @@ class TestServiceBus(unittest.TestCase):
         sb_b = self._generate_single_trigger_metadata()
         sb_c = self._generate_single_trigger_metadata()
 
-        sb_a['EnqueuedSequenceNumber'] = meta.Datum(
-            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_A,
-            type='int'
-        )
-        sb_b['EnqueuedSequenceNumber'] = meta.Datum(
-            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_B,
-            type='int'
-        )
-        sb_c['EnqueuedSequenceNumber'] = meta.Datum(
-            value=self.MOCKED_ENQUEUED_SEQUENCE_NUMBER_C,
-            type='int'
-        )
+        sb_a['MessageId'] = meta.Datum(self.MOCKED_MESSAGE_ID_A, 'string')
+        sb_b['MessageId'] = meta.Datum(self.MOCKED_MESSAGE_ID_B, 'string')
+        sb_c['MessageId'] = meta.Datum(self.MOCKED_MESSAGE_ID_C, 'string')
 
         combine_from = lambda key, et: self._zip(key, et, sb_a, sb_b, sb_c)
 
@@ -468,9 +439,6 @@ class TestServiceBus(unittest.TestCase):
             'DeadLetterSourceArray': combine_from(
                 'DeadLetterSource', 'collection_string'
             ),
-            'EnqueuedSequenceNumberArray': combine_from(
-                'EnqueuedSequenceNumber', 'collection_sint64'
-            ),
             'EnqueuedTimeUtcArray': combine_from(
                 'EnqueuedTimeUtc', 'json'
             ),
@@ -482,9 +450,6 @@ class TestServiceBus(unittest.TestCase):
             ),
             'LockTokenArray': combine_from(
                 'LockToken', 'collection_string'
-            ),
-            'LockedUntilUtcArray': combine_from(
-                'LockedUntilUtc', 'collection_string'
             ),
             'MessageIdArray': combine_from(
                 'MessageId', 'collection_string'
