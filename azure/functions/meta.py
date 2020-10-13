@@ -213,7 +213,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     def _parse_datetime(
             cls, datetime_str: Optional[str]) -> Optional[datetime.datetime]:
 
-        if datetime_str is None or datetime_str == '':
+        if not datetime_str:
             return None
 
         too_fractional = re.match(
@@ -229,11 +229,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
         # Try parse time
         utc_time, utc_time_error = cls._parse_datetime_utc(datetime_str)
-        if utc_time is not None:
+        if not utc_time_error and utc_time:
             return utc_time.replace(tzinfo=datetime.timezone.utc)
 
         local_time, local_time_error = cls._parse_datetime_local(datetime_str)
-        if local_time is not None:
+        if not local_time_error and local_time:
             return local_time.replace(tzinfo=None)
 
         # Report error
@@ -250,7 +250,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         timedelta_str: Optional[str]
     ) -> Optional[datetime.timedelta]:
 
-        if timedelta_str is None or timedelta_str == '':
+        if not timedelta_str:
             return None
 
         # Try parse timedelta
