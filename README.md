@@ -1,9 +1,9 @@
 <img src="https://raw.githubusercontent.com/Azure/azure-functions-python-worker/dev/docs/Azure.Functions.svg" width = "180" alt="Functions Header Image">
 
-|Branch|Status|Coverage|
-|---|---|---|
-|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/master)
-|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/dev)
+|Branch|Status|Coverage|CodeCov|
+|---|---|---|---|
+|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/master)|[![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library)
+|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/dev)|[![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library)
 
 # Overview
 
