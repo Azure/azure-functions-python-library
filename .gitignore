@@ -79,13 +79,11 @@ celerybeat-schedule
 # SageMath parsed files
 *.sage.py
 
-# dotenv
-.env
-
 # virtualenv
-.venv*
+.env*/
+.venv*/
 venv/
-ENV/
+env/
 py3env/
 
 # Spyder project settings
@@ -111,3 +109,6 @@ py3env/
 # PyCharm related files
 .idea/
 .idea_modules/
+
+# vscode setting
+.vscode/

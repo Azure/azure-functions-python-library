@@ -199,6 +199,14 @@ class EventHubTriggerConverter(EventHubConverter,
         # data parsing. And we want to keep the same behavior here.
         if data_type == 'json':
             return json.dumps(parsed_data).encode('utf-8')
+        elif data_type == 'bytes':
+            return parsed_data
+        elif data_type == 'string':
+            return parsed_data.encode('utf-8')
+        elif data_type == 'collection_bytes':
+            return parsed_data
+        elif data_type == 'collection_string':
+            return parsed_data.encode('utf-8')
 
         return parsed_data
 

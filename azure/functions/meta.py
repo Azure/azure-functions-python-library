@@ -9,7 +9,10 @@ import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
 from ._thirdparty import typing_inspect
-from ._utils import try_parse_datetime_with_formats
+from ._utils import (
+    try_parse_datetime_with_formats,
+    try_parse_timedelta_with_formats
+)
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
@@ -208,7 +211,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
     @classmethod
     def _parse_datetime(
-            cls, datetime_str: str) -> Optional[datetime.datetime]:
+            cls, datetime_str: Optional[str]) -> Optional[datetime.datetime]:
+
+        if not datetime_str:
+            return None
+
         too_fractional = re.match(
             r'(.*\.\d{6})(\d+)(Z|[\+|-]\d{1,2}:\d{1,2}){0,1}', datetime_str)
 
@@ -222,11 +229,11 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
         # Try parse time
         utc_time, utc_time_error = cls._parse_datetime_utc(datetime_str)
-        if utc_time:
+        if not utc_time_error and utc_time:
             return utc_time.replace(tzinfo=datetime.timezone.utc)
 
         local_time, local_time_error = cls._parse_datetime_local(datetime_str)
-        if local_time:
+        if not local_time_error and local_time:
             return local_time.replace(tzinfo=None)
 
         # Report error
@@ -238,8 +245,29 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             return None
 
     @classmethod
+    def _parse_timedelta(
+        cls,
+        timedelta_str: Optional[str]
+    ) -> Optional[datetime.timedelta]:
+
+        if not timedelta_str:
+            return None
+
+        # Try parse timedelta
+        timedelta, td_error = cls._parse_timedelta_internal(timedelta_str)
+        if timedelta is not None:
+            return timedelta
+
+        # Report error
+        if td_error:
+            raise td_error
+        else:
+            return None
+
+    @classmethod
     def _parse_datetime_utc(
-        cls, datetime_str: str
+        cls,
+        datetime_str: str
     ) -> Tuple[Optional[datetime.datetime], Optional[Exception]]:
 
         # UTC ISO 8601 assumed
@@ -264,9 +292,26 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
     def _parse_datetime_local(
         cls, datetime_str: str
     ) -> Tuple[Optional[datetime.datetime], Optional[Exception]]:
+        """Parse a string into a datetime object, accepts following formats
+        1. Without fractional seconds (e.g. 2018-08-07T23:17:57)
+        2. With fractional seconds (e.g. 2018-08-07T23:17:57.461050)
 
-        # Local time assumed
-        # 2018-08-07T23:17:57.461050
+        Parameters
+        ----------
+        datetime_str: str
+            The string represents a datetime
+
+        Returns
+        -------
+        Tuple[Optional[datetime.datetime], Optional[Exception]]
+            If the datetime_str is None, will return None immediately.
+            If the datetime_str can be parsed correctly, it will return as the
+            first element in the tuple.
+            If the datetime_str cannot be parsed with all attempts, it will
+            return None in the first element, the exception in the second
+            element.
+        """
+
         local_formats = [
             '%Y-%m-%dT%H:%M:%S.%f',
             '%Y-%m-%dT%H:%M:%S',
@@ -280,9 +325,42 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         return dt, None
 
     @classmethod
-    def _parse_timedelta(
-            cls, timedelta_str: str) -> datetime.timedelta:
-        raise NotImplementedError
+    def _parse_timedelta_internal(
+        cls, timedelta_str: str
+    ) -> Tuple[Optional[datetime.timedelta], Optional[Exception]]:
+        """Parse a string into a timedelta object, accepts following formats
+        1. HH:MM:SS (e.g. 12:34:56)
+        2. MM:SS (e.g. 34:56)
+        3. Pure integer as seconds (e.g. 5819)
+
+        Parameters
+        ----------
+        timedelta_str: str
+            The string represents a datetime
+
+        Returns
+        -------
+        Tuple[Optional[datetime.timedelta], Optional[Exception]]
+            If the timedelta_str is None, will return None immediately.
+            If the timedelta_str can be parsed correctly, it will return as the
+            first element in the tuple.
+            If the timedelta_str cannot be parsed with all attempts, it will
+            return None in the first element, the exception in the second
+            element.
+        """
+
+        timedelta_formats = [
+            '%H:%M:%S',
+            '%M:%S',
+            '%S'
+        ]
+
+        td, _, excpt = try_parse_timedelta_with_formats(
+            timedelta_str, timedelta_formats)
+
+        if td is not None:
+            return td, None
+        return None, excpt
 
 
 class InConverter(_BaseConverter, binding=None):
