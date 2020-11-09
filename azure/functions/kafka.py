@@ -136,11 +136,15 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
     @classmethod
     def decode_multiple_events(cls, data: meta.Datum,
                                trigger_metadata) -> typing.List[KafkaEvent]:
+        parsed_data: List[bytes] = []
+
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
 
         elif data.type == 'collection_string':
-            parsed_data = data.value.string
+            parsed_data = [
+                d.encode('utf-8') for d in data.value.string
+            ]
 
         return [KafkaEvent(body=pd) for pd in parsed_data]
 
@@ -158,7 +162,6 @@ class KafkaTriggerConverter(KafkaConverter,
     def decode(
         cls, data: meta.Datum, *, trigger_metadata
     ) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
-
         data_type = data.type
 
         if data_type in ['string', 'bytes', 'json']:
@@ -202,11 +205,15 @@ class KafkaTriggerConverter(KafkaConverter,
     @classmethod
     def decode_multiple_events(cls, data: meta.Datum,
                                trigger_metadata) -> typing.List[KafkaEvent]:
+        parsed_data: List[bytes] = []
+
         if data.type == 'collection_bytes':
             parsed_data = data.value.bytes
 
         elif data.type == 'collection_string':
-            parsed_data = data.value.string
+            parsed_data = [
+                d.encode('utf-8') for d in data.value.string
+            ]
 
         timestamp_props = trigger_metadata.get('TimestampArray')
         key_props = trigger_metadata.get('KeyArray')

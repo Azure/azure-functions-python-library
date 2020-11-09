@@ -11,15 +11,7 @@ import azure.functions as func
 import azure.functions.eventhub as azf_eh
 import azure.functions.meta as meta
 
-
-class CollectionBytes:
-    def __init__(self, data: List[bytes]):
-        self.bytes = data
-
-
-class CollectionString:
-    def __init__(self, data: List[str]):
-        self.string = list(map(lambda x: x.encode('utf-8'), data))
+from .testutils import CollectionBytes, CollectionString
 
 
 class TestEventHub(unittest.TestCase):

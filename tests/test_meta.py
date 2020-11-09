@@ -9,6 +9,14 @@ from azure.functions import meta
 
 
 class TestMeta(unittest.TestCase):
+    def test_parsed_datetime_none(self):
+        parsed = self._parse_datetime(None)
+        self.assertEqual(parsed, None)
+
+    def test_parse_datetime_empty(self):
+        parsed = self._parse_datetime('')
+        self.assertEqual(parsed, None)
+
     def test_utc_datetime_no_fraction_parse(self):
         parsed = self._parse_datetime('2018-12-12T03:16:34Z')
         self.assertEqual(str(parsed), '2018-12-12 03:16:34+00:00')
@@ -43,6 +51,64 @@ class TestMeta(unittest.TestCase):
 
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999')
+
+    def test_parsed_timedelta_none(self):
+        parsed = self._parse_timedelta(None)
+        self.assertIsNone(parsed)
+
+    def test_parsed_timedelta_empty(self):
+        parsed = self._parse_timedelta('')
+        self.assertIsNone(parsed)
+
+    def test_parse_timedelta_seconds(self):
+        # Zeros
+        parsed = self._parse_timedelta('0')
+        self.assertEqual(parsed.seconds, 0)
+
+        # Single Digit
+        parsed = self._parse_timedelta('3')
+        self.assertEqual(parsed.seconds, 3)
+
+        # Double Digit
+        parsed = self._parse_timedelta('56')
+        self.assertEqual(parsed.seconds, 56)
+
+        parsed = self._parse_timedelta('678')
+        self.assertEqual(parsed.seconds, 678)
+
+    def test_parse_timedelta_minutes_seconds(self):
+        # Single Digits Zeros
+        parsed = self._parse_timedelta('0:0')
+        self.assertEqual(parsed.seconds, 0)
+
+        # Single Digits
+        parsed = self._parse_timedelta('3:4')
+        self.assertEqual(parsed.seconds, 3 * 60 + 4)
+
+        # Double Digits Zeros
+        parsed = self._parse_timedelta('00:00')
+        self.assertEqual(parsed.seconds, 0)
+
+        # Double Digits
+        parsed = self._parse_timedelta('34:56')
+        self.assertEqual(parsed.seconds, 34 * 60 + 56)
+
+    def test_parse_timedelta_hours_minutes_seconds(self):
+        # Single Digits Zeros
+        parsed = self._parse_timedelta('0:0:0')
+        self.assertEqual(parsed.seconds, 0)
+
+        # Single Digits
+        parsed = self._parse_timedelta('3:4:5')
+        self.assertEqual(parsed.seconds, 3 * 3600 + 4 * 60 + 5)
+
+        # Double Digits Zeros
+        parsed = self._parse_timedelta('00:00:00')
+        self.assertEqual(parsed.seconds, 0)
+
+        # Double Digits
+        parsed = self._parse_timedelta('12:34:56')
+        self.assertEqual(parsed.seconds, 12 * 3600 + 34 * 60 + 56)
 
     def test_parse_utc_datetime_failure(self):
         malformed_utc = '2018-12-12X03:16:34.219289Z'
@@ -157,3 +223,6 @@ class TestMeta(unittest.TestCase):
 
     def _parse_datetime(self, datetime_str):
         return meta._BaseConverter._parse_datetime(datetime_str)
+
+    def _parse_timedelta(self, timedelta_str):
+        return meta._BaseConverter._parse_timedelta(timedelta_str)
