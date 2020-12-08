@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import json
-from typing import Dict, Any, Optional
 import unittest
+from typing import Any, Dict
 
 import azure.functions as func
 import azure.functions.blob as afb
-from azure.functions.meta import Datum
 from azure.functions.blob import InputStream
+from azure.functions.meta import Datum
 
 
 class TestBlob(unittest.TestCase):
@@ -72,8 +72,8 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.BlobConverter.decode(
-                data=datum, trigger_metadata=trigger_metadata)
+        result: InputStream = afb.\
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
@@ -91,8 +91,8 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.BlobConverter.decode(
-                data=datum, trigger_metadata=trigger_metadata)
+        result: InputStream = afb.\
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
@@ -147,8 +147,8 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.BlobConverter.decode(
-                data=datum, trigger_metadata=trigger_metadata)
+        result: InputStream = afb.\
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
         self.assertIsInstance(result, InputStream)

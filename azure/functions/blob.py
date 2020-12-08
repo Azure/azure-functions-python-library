@@ -2,10 +2,9 @@
 # Licensed under the MIT License.
 
 import io
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 
 from azure.functions import _abc as azf_abc
-
 from . import meta
 
 
@@ -119,11 +118,12 @@ class BlobConverter(meta.InConverter,
 
             metadata = None
             try:
-                metadata = cls._decode_trigger_metadata_field(
-                        trigger_metadata, 'Metadata', python_type=dict)
+                metadata = cls._decode_trigger_metadata_field(trigger_metadata,
+                                                              'Metadata',
+                                                              python_type=dict)
             except (KeyError, ValueError):
-                # avoiding any exceptions when fetching Metadata as the metadata
-                # type is unclear.
+                # avoiding any exceptions when fetching Metadata as the
+                # metadata type is unclear.
                 pass
 
             return InputStream(
