@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from typing import Dict, Any
+import json
+from typing import Dict, Any, Optional
 import unittest
 
 import azure.functions as func
@@ -22,6 +22,11 @@ class TestBlob(unittest.TestCase):
         result: func.DocumentList = afb.BlobConverter.decode(
             data=None, trigger_metadata=None)
         self.assertIsNone(result)
+
+    def test_blob_input_incorrect_type(self):
+        datum: Datum = Datum(value=b'string_content', type='bytearray')
+        with self.assertRaises(ValueError):
+            afb.BlobConverter.decode(data=datum, trigger_metadata=None)
 
     def test_blob_input_string_no_metadata(self):
         datum: Datum = Datum(value='string_content', type='string')
@@ -61,21 +66,98 @@ class TestBlob(unittest.TestCase):
         content: bytes = result.read()
         self.assertEqual(content, b'bytes_content')
 
-    def test_blob_input_with_metadata(self):
+    def test_blob_input_with_metadata_no_blob_properties(self):
         datum: Datum = Datum(value=b'blob_content', type='bytes')
-        metadata: Dict[str, Any] = {
-            'Properties': Datum('{"Length": "12"}', 'json'),
+        trigger_metadata: Dict[str, Any] = {
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
         result: InputStream = afb.BlobConverter.decode(
-            data=datum, trigger_metadata=metadata)
+                data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.name, 'blob_trigger_name')
+        self.assertEqual(result.length, None)
+        self.assertEqual(result.uri, 'https://test.io/blob_trigger')
+        self.assertEqual(result.blob_properties, None)
+        self.assertEqual(result.metadata, None)
+
+    def test_blob_input_with_metadata_no_trigger_metadata(self):
+        sample_blob_properties = '{"Length": "12"}'
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Properties': Datum(sample_blob_properties, 'json'),
+            'BlobTrigger': Datum('blob_trigger_name', 'string'),
+            'Uri': Datum('https://test.io/blob_trigger', 'string')
+        }
+        result: InputStream = afb.BlobConverter.decode(
+                data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
         self.assertEqual(result.length, len(b'blob_content'))
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
+        self.assertEqual(result.blob_properties,
+                         json.loads(sample_blob_properties))
+        self.assertEqual(result.metadata, None)
+
+    def test_blob_input_with_metadata_with_trigger_metadata(self):
+        sample_metadata = '{"Hello": "World"}'
+        sample_blob_properties = '''{
+  "ContentMD5": "B54d+wzLC8IlnxyyZxwPsw==",
+  "ContentType": "application/octet-stream",
+  "ETag": "0x8D8989BC453467D",
+  "Created": "2020-12-03T08:07:26+00:00",
+  "LastModified": "2020-12-04T21:30:05+00:00",
+  "BlobType": 2,
+  "LeaseStatus": 2,
+  "LeaseState": 1,
+  "LeaseDuration": 0,
+  "Length": "12"
+}'''
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Metadata': Datum(sample_metadata, 'json'),
+            'Properties': Datum(sample_blob_properties, 'json'),
+            'BlobTrigger': Datum('blob_trigger_name', 'string'),
+            'Uri': Datum('https://test.io/blob_trigger', 'string')
+        }
+        result: InputStream = afb.BlobConverter.decode(
+            data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.name, 'blob_trigger_name')
+        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.uri, 'https://test.io/blob_trigger')
+        self.assertEqual(result.blob_properties,
+                         json.loads(sample_blob_properties))
+        self.assertEqual(result.metadata,
+                         json.loads(sample_metadata))
+
+    def test_blob_input_with_metadata_with_incorrect_trigger_metadata(self):
+        sample_metadata = 'Hello World'
+        sample_blob_properties = '''{"Length": "12"}'''
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Metadata': Datum(sample_metadata, 'string'),
+            'Properties': Datum(sample_blob_properties, 'json'),
+            'BlobTrigger': Datum('blob_trigger_name', 'string'),
+            'Uri': Datum('https://test.io/blob_trigger', 'string')
+        }
+        result: InputStream = afb.BlobConverter.decode(
+                data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.name, 'blob_trigger_name')
+        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.uri, 'https://test.io/blob_trigger')
+        self.assertEqual(result.blob_properties,
+                         json.loads(sample_blob_properties))
+        self.assertEqual(result.metadata, None)
 
     def test_blob_incomplete_read(self):
         datum: Datum = Datum(value=b'blob_content', type='bytes')

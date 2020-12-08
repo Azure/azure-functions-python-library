@@ -13,11 +13,15 @@ class InputStream(azf_abc.InputStream):
     def __init__(self, *, data: Union[bytes, meta.Datum],
                  name: Optional[str] = None,
                  uri: Optional[str] = None,
-                 length: Optional[int] = None) -> None:
+                 length: Optional[int] = None,
+                 blob_properties: Optional[dict] = None,
+                 metadata: Optional[dict] = None) -> None:
         self._io = io.BytesIO(data)  # type: ignore
         self._name = name
         self._length = length
         self._uri = uri
+        self._blob_properties = blob_properties
+        self._metadata = metadata
 
     @property
     def name(self) -> Optional[str]:
@@ -30,6 +34,14 @@ class InputStream(azf_abc.InputStream):
     @property
     def uri(self) -> Optional[str]:
         return self._uri
+
+    @property
+    def blob_properties(self):
+        return self._blob_properties
+
+    @property
+    def metadata(self):
+        return self._metadata
 
     def read(self, size=-1) -> bytes:
         return self._io.read(size)
@@ -48,7 +60,6 @@ class BlobConverter(meta.InConverter,
                     meta.OutConverter,
                     binding='blob',
                     trigger='blobTrigger'):
-
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
         return issubclass(pytype, (azf_abc.InputStream, bytes, str))
@@ -99,10 +110,21 @@ class BlobConverter(meta.InConverter,
             properties = cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Properties', python_type=dict)
             if properties:
+                blob_properties = properties
                 length = properties.get('Length')
                 length = int(length) if length else None
             else:
+                blob_properties = None
                 length = None
+
+            metadata = None
+            try:
+                metadata = cls._decode_trigger_metadata_field(
+                        trigger_metadata, 'Metadata', python_type=dict)
+            except (KeyError, ValueError):
+                # avoiding any exceptions when fetching Metadata as the metadata
+                # type is unclear.
+                pass
 
             return InputStream(
                 data=data,
@@ -111,4 +133,6 @@ class BlobConverter(meta.InConverter,
                 length=length,
                 uri=cls._decode_trigger_metadata_field(
                     trigger_metadata, 'Uri', python_type=str),
+                blob_properties=blob_properties,
+                metadata=metadata
             )
