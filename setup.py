@@ -39,6 +39,7 @@ setup(
             'flake8~=3.7.9',
             'mypy',
             'pytest',
+            'pytest-cov',
             'requests==2.*',
             'coverage'
         ]
