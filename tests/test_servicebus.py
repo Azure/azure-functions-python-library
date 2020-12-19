@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 from typing import Dict, List
-import json
+import ujson
 import unittest
 from datetime import datetime, timedelta
 
@@ -80,7 +80,7 @@ class TestServiceBus(unittest.TestCase):
             trigger_metadata=self._generate_single_trigger_metadata())
 
         servicebus_data = servicebus_msg.get_body().decode('utf-8')
-        self.assertEqual(servicebus_data, json.dumps({"lucky_number": 23}))
+        self.assertEqual(servicebus_data, ujson.dumps({"lucky_number": 23}))
 
     def test_servicebus_non_existing_property(self):
         # The function should not fail even when property does not work
@@ -243,9 +243,9 @@ class TestServiceBus(unittest.TestCase):
         )
 
         expceted_bodies: List[str] = [
-            json.dumps({"lucky_number": 23}),
-            json.dumps({"lucky_number": 34}),
-            json.dumps({"lucky_number": 45}),
+            ujson.dumps({"lucky_number": 23}),
+            ujson.dumps({"lucky_number": 34}),
+            ujson.dumps({"lucky_number": 45}),
         ]
 
         expected_message_ids: List[int] = [
@@ -297,12 +297,12 @@ class TestServiceBus(unittest.TestCase):
             })
 
     def _generate_single_servicebus_data(self) -> meta.Datum:
-        return meta.Datum(value=json.dumps({
+        return meta.Datum(value=ujson.dumps({
             'lucky_number': 23
         }), type='json')
 
     def _generate_multiple_service_bus_data(self) -> meta.Datum:
-        return meta.Datum(value=json.dumps([
+        return meta.Datum(value=ujson.dumps([
             {'lucky_number': 23},
             {'lucky_number': 34},
             {'lucky_number': 45}
@@ -508,9 +508,9 @@ class TestServiceBus(unittest.TestCase):
             )
         elif expected_type == 'json':
             if datum_type == 'json':
-                value = json.dumps([json.loads(d[key].value) for d in args])
+                value = ujson.dumps([ujson.loads(d[key].value) for d in args])
             else:
-                value = json.dumps([d[key].value for d in args])
+                value = ujson.dumps([d[key].value for d in args])
             return meta.Datum(
                 value=value,
                 type='json'

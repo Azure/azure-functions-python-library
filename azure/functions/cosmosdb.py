@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import collections.abc
-import json
+import ujson
 import typing
 
 from azure.functions import _cosmosdb as cdb
@@ -41,7 +41,7 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
             raise NotImplementedError(
                 f'unsupported queue payload type: {data_type}')
 
-        documents = json.loads(body)
+        documents = ujson.loads(body)
         if not isinstance(documents, list):
             documents = [documents]
 
@@ -72,7 +72,7 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
 
         return meta.Datum(
             type='json',
-            value=json.dumps([dict(d) for d in data])
+            value=ujson.dumps([dict(d) for d in data])
         )
 
 

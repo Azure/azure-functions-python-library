@@ -3,7 +3,7 @@
 
 from typing import List, Mapping
 import unittest
-import json
+import ujson
 from unittest.mock import patch
 from datetime import datetime
 
@@ -113,12 +113,12 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'), '{"device-status":"good1"}'
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'), '{"device-status":"good2"}'
         )
 
     def test_eventhub_trigger_multiple_events_collection_string(self):
@@ -131,12 +131,12 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'), '{"device-status":"good1"}'
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'), '{"device-status":"good2"}'
         )
 
     def test_eventhub_trigger_multiple_events_collection_bytes(self):
@@ -149,12 +149,12 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'), '{"device-status":"good1"}'
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'), '{"device-status":"good2"}'
         )
 
     def test_iothub_metadata_events(self):
@@ -299,12 +299,13 @@ class TestEventHub(unittest.TestCase):
         data = '[{"device-status": "good1"}, {"device-status": "good2"}]'
         if data_type == 'collection_bytes':
             data = list(
-                map(lambda x: json.dumps(x).encode('utf-8'), json.loads(data))
+                map(lambda x: ujson.dumps(x).encode('utf-8'),
+                    ujson.loads(data))
             )
             data = CollectionBytes(data)
         elif data_type == 'collection_string':
             data = list(
-                map(lambda x: json.dumps(x), json.loads(data))
+                map(lambda x: ujson.dumps(x), ujson.loads(data))
             )
             data = CollectionString(data)
 
@@ -334,6 +335,6 @@ class TestEventHub(unittest.TestCase):
 
         return {
             'SystemPropertiesArray': meta.Datum(
-                json.dumps(system_props_array), 'json'
+                ujson.dumps(system_props_array), 'json'
             )
         }

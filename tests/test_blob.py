@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import json
+import ujson
 import unittest
 from typing import Any, Dict
 
@@ -100,7 +100,7 @@ class TestBlob(unittest.TestCase):
         self.assertEqual(result.length, len(b'blob_content'))
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
-                         json.loads(sample_blob_properties))
+                         ujson.loads(sample_blob_properties))
         self.assertEqual(result.metadata, None)
 
     def test_blob_input_with_metadata_with_trigger_metadata(self):
@@ -133,9 +133,9 @@ class TestBlob(unittest.TestCase):
         self.assertEqual(result.length, len(b'blob_content'))
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
-                         json.loads(sample_blob_properties))
+                         ujson.loads(sample_blob_properties))
         self.assertEqual(result.metadata,
-                         json.loads(sample_metadata))
+                         ujson.loads(sample_metadata))
 
     def test_blob_input_with_metadata_with_incorrect_trigger_metadata(self):
         sample_metadata = 'Hello World'
@@ -156,7 +156,7 @@ class TestBlob(unittest.TestCase):
         self.assertEqual(result.length, len(b'blob_content'))
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
-                         json.loads(sample_blob_properties))
+                         ujson.loads(sample_blob_properties))
         self.assertEqual(result.metadata, None)
 
     def test_blob_incomplete_read(self):

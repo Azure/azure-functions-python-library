@@ -3,7 +3,7 @@
 
 import collections.abc
 import datetime
-import json
+import ujson
 from typing import List, Dict, Any, Union, Optional
 
 from azure.functions import _abc as azf_abc
@@ -116,7 +116,7 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
         elif isinstance(obj, azf_queue.QueueMessage):
             return meta.Datum(
                 type='json',
-                value=json.dumps({
+                value=ujson.dumps({
                     'id': obj.id,
                     'body': obj.get_body().decode('utf-8'),
                 })
@@ -139,7 +139,7 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
 
             return meta.Datum(
                 type='json',
-                value=json.dumps(msgs)
+                value=ujson.dumps(msgs)
             )
 
         raise NotImplementedError

@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import collections
-import json
+import ujson
 
 from . import _abc
 
@@ -20,7 +20,7 @@ class Document(_abc.Document, collections.UserDict):
     @classmethod
     def from_json(cls, json_data: str) -> 'Document':
         """Create a Document from a JSON string."""
-        return cls.from_dict(json.loads(json_data))
+        return cls.from_dict(ujson.loads(json_data))
 
     @classmethod
     def from_dict(cls, dct: dict) -> 'Document':
@@ -30,7 +30,7 @@ class Document(_abc.Document, collections.UserDict):
 
     def to_json(self) -> str:
         """Return the JSON representation of the document."""
-        return json.dumps(dict(self))
+        return ujson.dumps(dict(self))
 
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)

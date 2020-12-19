@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import typing
-import json
+import ujson
 
 from typing import Any, List
 
@@ -269,7 +269,7 @@ class KafkaTriggerConverter(KafkaConverter,
             cls, props: meta.Datum, parsed_data) -> List[Any]:
         parsed_props: List[Any] = []
         if props is not None:
-            parsed_props = json.loads(props.value)
+            parsed_props = ujson.loads(props.value)
         if len(parsed_data) != len(parsed_props):
             raise AssertionError('Number of bodies and metadata mismatched')
         return parsed_props

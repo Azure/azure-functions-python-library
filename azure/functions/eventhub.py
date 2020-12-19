@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
+import ujson
 from typing import Dict, Any, List, Union, Optional, Mapping
 
 from azure.functions import _eventhub
@@ -88,7 +88,7 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
             data = meta.Datum(type='int', value=obj)
 
         elif isinstance(obj, list):
-            data = meta.Datum(type='json', value=json.dumps(obj))
+            data = meta.Datum(type='json', value=ujson.dumps(obj))
 
         return data
 
@@ -147,13 +147,13 @@ class EventHubTriggerConverter(EventHubConverter,
 
         # Input Trigger IotHub Event
         elif data.type == 'json':
-            parsed_data = json.loads(data.value)
+            parsed_data = ujson.loads(data.value)
 
         sys_props = trigger_metadata.get('SystemPropertiesArray')
 
         parsed_sys_props: List[Any] = []
         if sys_props is not None:
-            parsed_sys_props = json.loads(sys_props.value)
+            parsed_sys_props = ujson.loads(sys_props.value)
 
         if len(parsed_data) != len(parsed_sys_props):
             raise AssertionError('Number of bodies and metadata mismatched')
@@ -198,7 +198,7 @@ class EventHubTriggerConverter(EventHubConverter,
         # it is handled as single_event by mistake and our users handle the
         # data parsing. And we want to keep the same behavior here.
         if data_type == 'json':
-            return json.dumps(parsed_data).encode('utf-8')
+            return ujson.dumps(parsed_data).encode('utf-8')
         elif data_type == 'bytes':
             return parsed_data
         elif data_type == 'string':
@@ -238,7 +238,7 @@ class EventHubTriggerConverter(EventHubConverter,
     @classmethod
     def _extract_iothub_from_system_properties(
             cls, system_properties_string: str) -> Dict[str, str]:
-        system_properties = json.loads(system_properties_string)
+        system_properties = ujson.loads(system_properties_string)
         return cls._extract_iothub_from_dict(system_properties)
 
     @classmethod

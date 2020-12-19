@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
+import ujson
 import typing
 
 from . import _abc
@@ -86,7 +86,7 @@ class QueueMessage(_abc.QueueMessage):
         :raises ValueError:
             when the body of the message does not contain valid JSON data.
         """
-        return json.loads(self.__body)
+        return ujson.loads(self.__body)
 
     def __repr__(self) -> str:
         return (

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
+import ujson
 import unittest
 
 import azure.functions as func
@@ -44,7 +44,7 @@ class TestQueue(unittest.TestCase):
     def test_QueueMessage_get_json(self):
         # given
         test_body: str = '{"isJSON": "True"}'
-        expected_body = json.loads(test_body)
+        expected_body = ujson.loads(test_body)
 
         # when
         test_queue_message = func.QueueMessage(

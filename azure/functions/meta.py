@@ -4,7 +4,7 @@
 import abc
 import collections.abc
 import datetime
-import json
+import ujson
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
@@ -49,7 +49,7 @@ class Datum:
         elif self.type in ('bytes', 'string', 'int', 'double'):
             return self.value
         elif self.type == 'json':
-            return json.loads(self.value)
+            return ujson.loads(self.value)
         elif self.type == 'collection_string':
             return [v for v in self.value.string]
         elif self.type == 'collection_bytes':
@@ -125,7 +125,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
         data_type = data.type
         if data_type == 'json':
-            result = json.loads(data.value)
+            result = ujson.loads(data.value)
 
         elif data_type == 'string':
             result = data.value

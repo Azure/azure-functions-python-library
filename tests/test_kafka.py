@@ -3,7 +3,7 @@
 
 from typing import List
 import unittest
-import json
+import ujson
 
 from unittest.mock import patch
 import azure.functions as func
@@ -112,16 +112,16 @@ class Kafka(unittest.TestCase):
             result[0].timestamp,
             self.MULTIPLE_KAFKA_TIMESTAMP_0)
         self.assertEqual(
-            json.loads(result[0].get_body().decode('utf-8')),
-            json.loads(self.MULTIPLE_KAFKA_DATA_0)
+            ujson.loads(result[0].get_body().decode('utf-8')),
+            ujson.loads(self.MULTIPLE_KAFKA_DATA_0)
         )
 
         self.assertEqual(
             result[1].timestamp,
             self.MULTIPLE_KAFKA_TIMESTAMP_1)
         self.assertEqual(
-            json.loads(result[1].get_body().decode('utf-8')),
-            json.loads(self.MULTIPLE_KAFKA_DATA_1)
+            ujson.loads(result[1].get_body().decode('utf-8')),
+            ujson.loads(self.MULTIPLE_KAFKA_DATA_1)
         )
 
     def test_kafka_trigger_multiple_events_collection_bytes(self):
@@ -136,16 +136,16 @@ class Kafka(unittest.TestCase):
             result[0].timestamp,
             self.MULTIPLE_KAFKA_TIMESTAMP_0)
         self.assertEqual(
-            json.loads(result[0].get_body().decode('utf-8')),
-            json.loads(self.MULTIPLE_KAFKA_DATA_0)
+            ujson.loads(result[0].get_body().decode('utf-8')),
+            ujson.loads(self.MULTIPLE_KAFKA_DATA_0)
         )
 
         self.assertEqual(
             result[1].timestamp,
             self.MULTIPLE_KAFKA_TIMESTAMP_1)
         self.assertEqual(
-            json.loads(result[1].get_body().decode('utf-8')),
-            json.loads(self.MULTIPLE_KAFKA_DATA_1)
+            ujson.loads(result[1].get_body().decode('utf-8')),
+            ujson.loads(self.MULTIPLE_KAFKA_DATA_1)
         )
 
     def test_single_kafka_trigger_metadata_field(self):
@@ -164,11 +164,11 @@ class Kafka(unittest.TestCase):
         self.assertEqual(result.partition, 0)
         # Value
         self.assertEqual(
-            json.loads(result.get_body().decode('utf-8'))['Value'], "hello")
+            ujson.loads(result.get_body().decode('utf-8'))['Value'], "hello")
         # Metadata
         metadata_dict = result.metadata
         sys = metadata_dict['sys']
-        sys_dict = json.loads(sys)
+        sys_dict = ujson.loads(sys)
         self.assertEqual(sys_dict['MethodName'], 'KafkaTrigger')
 
     def test_multiple_kafka_triggers_metadata_field(self):
@@ -191,7 +191,7 @@ class Kafka(unittest.TestCase):
             "2020-06-20T05:06:25.945Z")
         metadata_dict = result[0].metadata
         sys = metadata_dict['sys']
-        sys_dict = json.loads(sys)
+        sys_dict = ujson.loads(sys)
         self.assertEqual(sys_dict['MethodName'], 'KafkaTriggerMany')
 
     def _generate_single_kafka_datum(self, datum_type='string'):
@@ -207,13 +207,13 @@ class Kafka(unittest.TestCase):
                '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a"}]'
         if data_type == 'collection_bytes':
             data = list(
-                map(lambda x: json.dumps(x).encode('utf-8'),
-                    json.loads(data))
+                map(lambda x: ujson.dumps(x).encode('utf-8'),
+                    ujson.loads(data))
             )
             data = CollectionBytes(data)
         elif data_type == 'collection_string':
             data = list(
-                map(lambda x: json.dumps(x), json.loads(data))
+                map(lambda x: ujson.dumps(x), ujson.loads(data))
             )
             data = CollectionString(data)
 
@@ -252,16 +252,16 @@ class Kafka(unittest.TestCase):
 
         return {
             'KeyArray': meta.Datum(
-                json.dumps(key_array), 'json'
+                ujson.dumps(key_array), 'json'
             ),
             'OffsetArray': meta.Datum(
                 CollectionSint64([62, 63]), 'collection_sint64'
             ),
             'PartitionArray': meta.Datum(
-                json.dumps(partition_array), 'json'
+                ujson.dumps(partition_array), 'json'
             ),
             'TimestampArray': meta.Datum(
-                json.dumps(timestamp_array), 'json'
+                ujson.dumps(timestamp_array), 'json'
             ),
             'TopicArray': meta.Datum(
                 CollectionString(['message', 'message']), "collection_string"

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
+import ujson
 import typing
 
 from azure.functions import _abc as azf_abc
@@ -53,10 +53,10 @@ class HttpRequest(azf_http.HttpRequest):
     def get_json(self) -> typing.Any:
         if self.__body_type in ('json', 'string'):
             assert self.__body_str is not None
-            return json.loads(self.__body_str)
+            return ujson.loads(self.__body_str)
         elif self.__body_bytes is not None:
             try:
-                return json.loads(self.__body_bytes.decode('utf-8'))
+                return ujson.loads(self.__body_bytes.decode('utf-8'))
             except ValueError as e:
                 raise ValueError(
                     'HTTP request does not contain valid JSON data') from e

@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
+import ujson
 from typing import Dict, Any, List, Union, Optional, Mapping, cast
 
 from azure.functions import _servicebus as azf_sbus
@@ -298,7 +298,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
 
         # Input Trigger IotHub Event
         elif data.type == 'json':
-            parsed_data = json.loads(data.value)
+            parsed_data = ujson.loads(data.value)
 
         else:
             raise NotImplementedError('unable to decode multiple messages '
@@ -326,7 +326,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
         trigger_metadata: Mapping[str, meta.Datum]
     ) -> int:
         datum = trigger_metadata['UserPropertiesArray']
-        user_props = json.loads(datum.value)
+        user_props = ujson.loads(datum.value)
         return len(user_props)
 
     @classmethod
@@ -340,7 +340,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
         elif data_type == 'str' and isinstance(body, str):
             return body.encode('utf-8')
         elif data_type == 'json' and isinstance(body, dict):
-            return json.dumps(body).encode('utf-8')
+            return ujson.dumps(body).encode('utf-8')
         else:
             raise NotImplementedError('unable to marshall message body with '
                                       f'data_type {data_type}')
@@ -361,7 +361,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
             return cast(List[bytes], [b.encode('utf-8') for b in strings])
         elif data_type == 'json':
             return cast(List[bytes],
-                        [json.dumps(b).encode('utf-8') for b in bodies])
+                        [ujson.dumps(b).encode('utf-8') for b in bodies])
         else:
             raise NotImplementedError('unable to marshall message bodies with '
                                       f'data_type {data_type}')
@@ -468,7 +468,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
         elif datum.type == 'collection_sint64':
             data_array = datum.value.sint64
         elif datum.type == 'json':
-            data_array = json.loads(datum.value)
+            data_array = ujson.loads(datum.value)
 
         # Check if the index is inbound
         if data_array is None or index >= len(data_array):

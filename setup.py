@@ -34,6 +34,9 @@ setup(
     package_data={
         'azure.functions': ['py.typed']
     },
+    install_requires=[
+        'ujson~=4.0.1'
+    ],
     extras_require={
         'dev': [
             'flake8~=3.7.9',

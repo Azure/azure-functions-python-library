@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
+import ujson
 import typing
 
 from azure.functions import _abc as azf_abc
@@ -31,6 +31,6 @@ class TimerRequestConverter(meta.InConverter,
         if data.type != 'json':
             raise NotImplementedError
 
-        info = json.loads(data.value)
+        info = ujson.loads(data.value)
         return TimerRequest(
             past_due=info.get('IsPastDue', False))

@@ -3,7 +3,7 @@
 
 import collections
 import datetime
-import json
+import ujson
 from typing import Optional, List, Any, Dict, Union
 
 from azure.functions import _eventgrid as azf_eventgrid
@@ -31,7 +31,7 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
         data_type = data.type
 
         if data_type == 'json':
-            body = json.loads(data.value)
+            body = ujson.loads(data.value)
         else:
             raise NotImplementedError(
                 f'unsupported event grid payload type: {data_type}')
@@ -70,7 +70,7 @@ class EventGridEventOutConverter(meta.OutConverter, binding="eventGrid"):
         elif isinstance(obj, azf_eventgrid.EventGridOutputEvent):
             return meta.Datum(
                 type='json',
-                value=json.dumps({
+                value=ujson.dumps({
                     'id': obj.id,
                     'subject': obj.subject,
                     'dataVersion': obj.data_version,
@@ -101,7 +101,7 @@ class EventGridEventOutConverter(meta.OutConverter, binding="eventGrid"):
 
             return meta.Datum(
                 type='json',
-                value=json.dumps(msgs)
+                value=ujson.dumps(msgs)
             )
 
         raise NotImplementedError
