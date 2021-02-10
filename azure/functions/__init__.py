@@ -58,8 +58,7 @@ __all__ = (
     'WsgiMiddleware',
 
     # Extensions
-    'FuncExtension',
-    'FuncExtensionInitError'
+    'FuncExtension'
 )
 
 __version__ = '1.6.0'
