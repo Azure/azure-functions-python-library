@@ -1,31 +1,30 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from typing import NamedTuple, List
 import abc
 import os
-from typing import Callable, List, Dict, NamedTuple
 from logging import Logger
-from ._abc import Context
+from .extension_hook_meta import ExtensionHookMeta
+from .extension_meta import ExtensionMeta
+from .._abc import Context
 
 
-class FuncExtensionHookMeta(NamedTuple):
-    ext_name: str
-    impl: Callable
-
-
-# Defines kinds of hook that we support
+# Defines the life-cycle hooks we support in a single trigger
 class FuncExtensionHooks(NamedTuple):
-    before_invocation: List[FuncExtensionHookMeta] = []
-    after_invocation: List[FuncExtensionHookMeta] = []
+    after_function_load: List[ExtensionHookMeta] = []
+    before_invocation: List[ExtensionHookMeta] = []
+    after_invocation: List[ExtensionHookMeta] = []
 
 
-class FuncExtension(abc.ABC):
-    """An abstract class defines the lifecycle hooks which to be implemented
-    by customer's extension. Everytime when a new extension is initialized in
-    customer's trigger, the _instances field will record it and will be
-    executed by Python worker.
+class FuncExtension(metaclass=ExtensionMeta):
+    """An abstract class defines the life-cycle hooks which to be implemented
+    by customer's extension.
+
+    Everytime when a new extension is initialized in customer function scripts,
+    the ExtensionManager._func_exts field records the extension to this
+    specific function name.
     """
-    _instances: Dict[str, FuncExtensionHooks] = {}
 
     @abc.abstractmethod
     def __init__(self, trigger_name: str):
@@ -34,32 +33,43 @@ class FuncExtension(abc.ABC):
 
         The initializer serializes the extension to a tree. This speeds
         up the worker lookup and reduce the overhead on each invocation.
-        _instances[<trigger_name>].<hook_name>.(ext_name, impl)
+        _func_exts[<trigger_name>].<hook_name>.(ext_name, ext_impl)
 
         Parameters
         ----------
         trigger_name: str
             The name of trigger the extension attaches to (e.g. HttpTrigger).
         """
-        ext_hooks = FuncExtension._instances.setdefault(
-            trigger_name.lower(),
-            FuncExtensionHooks()
-        )
-
-        for hook_name in ext_hooks._fields:
-            hook_impl = getattr(self, hook_name, None)
-            if hook_impl is not None:
-                getattr(ext_hooks, hook_name).append(FuncExtensionHookMeta(
-                    ext_name=self.__class__.__name__,
-                    impl=hook_impl
-                ))
+        ExtensionMeta.set_hooks_for_trigger(trigger_name, self)
 
     # DO NOT decorate this with @abc.abstratmethod
-    # since implementation is not mandatory
+    # since implementation by subclass is not mandatory
+    def after_function_load(self, logger: Logger,
+                            function_name: str,
+                            function_directory: str,
+                            *args, **kwargs) -> None:
+        """This hook will be called right after a customer's function is loaded
+
+        Parameters
+        ----------
+        logger: logging.Logger
+            A logger provided by Python worker. Extension developer should
+            use this logger to emit telemetry to Azure Functions customers.
+        function_name: str
+            The name of customer's function (e.g. HttpTrigger)
+        function_directory: str
+            The path to customer's function directory
+            (e.g. /home/site/wwwroot/HttpTrigger)
+        """
+        pass
+
+
+    # DO NOT decorate this with @abc.abstratmethod
+    # since implementation by subclass is not mandatory
     def before_invocation(self, logger: Logger, context: Context,
                           *args, **kwargs) -> None:
-        """A lifecycle hook to be implemented by the extension. This method
-        will be called right before customer's function.
+        """This hook will be called right before customer's function
+        is being executed.
 
         Parameters
         ----------
@@ -73,11 +83,11 @@ class FuncExtension(abc.ABC):
         pass
 
     # DO NOT decorate this with @abc.abstratmethod
-    # since implementation is not mandatory
+    # since implementation by subclass is not mandatory
     def after_invocation(self, logger: Logger, context: Context,
                          *args, **kwargs) -> None:
-        """A lifecycle hook to be implemented by the extension. This method
-        will be called right after customer's function.
+        """This hook will be called right after a customer's function
+        is executed.
 
         Parameters
         ----------
@@ -91,18 +101,7 @@ class FuncExtension(abc.ABC):
         pass
 
     @classmethod
-    def get_hooks_of_trigger(cls, trigger_name: str) -> FuncExtensionHooks:
-        """Return all function extension hooks indexed by trigger name.
-
-        Parameters
-        ----------
-        trigger_name: str
-            The trigger name
-        """
-        return cls._instances.get(trigger_name.lower(), FuncExtensionHooks())
-
-    @classmethod
-    def register_to_trigger(cls, filename: str) -> 'FuncExtension':
+    def register_to_function(cls, filename: str) -> 'FuncExtension':
         """Register extension to a specific trigger. Derive trigger name from
         script filepath and AzureWebJobsScriptRoot environment variable.
 
