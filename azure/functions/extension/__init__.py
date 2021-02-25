@@ -1,7 +1,9 @@
-from .app_extension import AppExtension
-from .func_extension import FuncExtension
+from .extension_meta import ExtensionMeta
+from .app_extension_base import AppExtensionBase
+from .func_extension_base import FuncExtensionBase
 
 __all__ = [
-    'AppExtension',
-    'FuncExtension'
+    'ExtensionMeta',
+    'AppExtensionBase',
+    'FuncExtensionBase'
 ]

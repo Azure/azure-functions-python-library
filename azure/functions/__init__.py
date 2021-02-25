@@ -13,7 +13,7 @@ from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._durable_functions import OrchestrationContext, EntityContext
 from .meta import get_binding_registry
-from .extension import AppExtension, FuncExtension
+from .extension import FuncExtensionBase, AppExtensionBase, ExtensionMeta
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -58,8 +58,9 @@ __all__ = (
     'WsgiMiddleware',
 
     # Extensions
-    'AppExtension',
-    'FuncExtension'
+    'AppExtensionBase',
+    'FuncExtensionBase',
+    'ExtensionMeta'
 )
 
 __version__ = '1.6.0'
