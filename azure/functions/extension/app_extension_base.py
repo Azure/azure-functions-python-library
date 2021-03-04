@@ -4,6 +4,7 @@
 import abc
 from logging import Logger
 from .extension_meta import ExtensionMeta
+from .extension_scope import ExtensionScope
 from .._abc import Context
 
 
@@ -16,6 +17,8 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     To access an implementation of specific trigger extension, use
     _app_exts[i].<hook_name>.ext_impl
     """
+
+    _scope = ExtensionScope.APPLICATION
 
     @abc.abstractmethod
     def __init__(self, auto_enabled: bool = False):
@@ -31,7 +34,8 @@ class AppExtensionBase(metaclass=ExtensionMeta):
         trigger_name: str
             The name of trigger the extension attaches to (e.g. HttpTrigger).
         """
-        ExtensionMeta.set_hooks_for_app(self)
+        # This is handled by ExtensionMeta.__init__
+        pass
 
     # DO NOT decorate this with @abc.abstratmethod
     # since implementation by subclass is not mandatory
@@ -91,13 +95,17 @@ class AppExtensionBase(metaclass=ExtensionMeta):
         pass
 
     @classmethod
-    def register_to_app(cls) -> 'AppExtension':
+    def register_to_app(cls) -> 'AppExtensionBase':
         """Register extension to a specific trigger. Derive trigger name from
         script filepath and AzureWebJobsScriptRoot environment variable.
 
         Returns
         -------
-        FuncExtension
+        AppExtensionBase
             The extension or its subclass
         """
         return cls()
+
+    @property
+    def _scope(self):
+        return ExtensionScope.APPLICATION

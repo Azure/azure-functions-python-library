@@ -1,11 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import NamedTuple, List
 import abc
 import os
 from logging import Logger
 from .extension_meta import ExtensionMeta
+from .extension_scope import ExtensionScope
 from .._abc import Context
 
 
@@ -18,10 +18,12 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
     specific function name.
     """
 
+    _scope = ExtensionScope.FUNCTION
+
     @abc.abstractmethod
-    def __init__(self, trigger_name: str):
+    def __init__(self, file_path: str):
         """Constructor for extension. This needs to be implemented and ensure
-        super().__init__(trigger_name) is called.
+        super().__init__(file_path) is called.
 
         The initializer serializes the extension to a tree. This speeds
         up the worker lookup and reduce the overhead on each invocation.
@@ -29,10 +31,31 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
         Parameters
         ----------
-        trigger_name: str
-            The name of trigger the extension attaches to (e.g. HttpTrigger).
+        file_path: str
+            The name of trigger the extension attaches to (e.g. __file__).
         """
-        ExtensionMeta.set_hooks_for_trigger(trigger_name, self)
+        script_root = os.getenv('AzureWebJobsScriptRoot')
+        if script_root is None:
+            raise ValueError(
+                'AzureWebJobsScriptRoot environment variable is not defined. '
+                'Please ensure the extension is running in Azure Functions.'
+            )
+
+        try:
+            trigger_name = os.path.split(
+                os.path.relpath(
+                    os.path.abspath(file_path),
+                    os.path.abspath(script_root)
+                )
+            )[0]
+        except IndexError:
+            raise ValueError(
+                'Failed to parse trigger name from filename. Please ensure '
+                '__file__ is passed into the filename argument'
+            )
+
+        # This is used in ExtensionMeta._register_function_extension
+        self._trigger_name = trigger_name
 
     # DO NOT decorate this with @abc.abstratmethod
     # since implementation by subclass is not mandatory
@@ -93,7 +116,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         pass
 
     @classmethod
-    def register_to_function(cls, filename: str) -> 'FuncExtension':
+    def register_to_function(cls, filename: str) -> 'FuncExtensionBase':
         """Register extension to a specific trigger. Derive trigger name from
         script filepath and AzureWebJobsScriptRoot environment variable.
 
