@@ -130,8 +130,8 @@ class ExtensionMeta(abc.ABCMeta):
         cls.set_hooks_for_function(trigger_name, extension)
 
         # Record function extension information
-        hooks_info = cls._info.setdefault('FuncExtension', {})\
-                              .setdefault(trigger_name, [])  # type: ignore
+        hooks_info = cls._info.setdefault(  # type: ignore
+            'FuncExtension', {}).setdefault(trigger_name, [])
         hooks_info.append(extension.__class__.__name__)
 
     @classmethod
