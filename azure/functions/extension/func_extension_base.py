@@ -6,6 +6,7 @@ import os
 from logging import Logger
 from .extension_meta import ExtensionMeta
 from .extension_scope import ExtensionScope
+from .extension_exception import ExtensionException
 from .._abc import Context
 
 
@@ -36,28 +37,30 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         """
         script_root = os.getenv('AzureWebJobsScriptRoot')
         if script_root is None:
-            raise ValueError(
+            raise ExtensionException(
                 'AzureWebJobsScriptRoot environment variable is not defined. '
                 'Please ensure the extension is running in Azure Functions.'
             )
 
-        try:
-            trigger_name = os.path.split(
-                os.path.relpath(
-                    os.path.abspath(file_path),
-                    os.path.abspath(script_root)
-                )
-            )[0]
-        except IndexError:
-            raise ValueError(
-                'Failed to parse trigger name from filename. Please ensure '
-                '__file__ is passed into the filename argument'
+        # Split will always return ('') in if no folder exist in the path
+        relpath_to_project_root = os.path.relpath(
+            os.path.normpath(file_path),
+            os.path.normpath(script_root)
+        )
+
+        trigger_name = (relpath_to_project_root.split(os.sep) or [''])[0]
+        if not trigger_name or trigger_name.startswith(('.', '..')):
+            raise ExtensionException(
+                'Failed to parse trigger name from filename. '
+                'Function extension should bind to a trigger script, '
+                'not share folder. Please ensure extension is create inside a'
+                'trigger while __file__ is passed into the argument'
             )
 
         # This is used in ExtensionMeta._register_function_extension
         self._trigger_name = trigger_name
 
-    # DO NOT decorate this with @abc.abstratmethod
+    # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
     def after_function_load(self, logger: Logger,
                             function_name: str,
@@ -78,8 +81,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         """
         pass
 
-
-    # DO NOT decorate this with @abc.abstratmethod
+    # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
     def before_invocation(self, logger: Logger, context: Context,
                           *args, **kwargs) -> None:
@@ -97,7 +99,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         """
         pass
 
-    # DO NOT decorate this with @abc.abstratmethod
+    # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
     def after_invocation(self, logger: Logger, context: Context,
                          *args, **kwargs) -> None:
@@ -114,40 +116,3 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
             invocation_id of this specific invocation.
         """
         pass
-
-    @classmethod
-    def register_to_function(cls, filename: str) -> 'FuncExtensionBase':
-        """Register extension to a specific trigger. Derive trigger name from
-        script filepath and AzureWebJobsScriptRoot environment variable.
-
-        Parameters
-        ----------
-        filename: str
-            The path to current trigger script. Usually, pass in __file__.
-
-        Returns
-        -------
-        FuncExtension
-            The extension or its subclass
-        """
-        script_root = os.getenv('AzureWebJobsScriptRoot')
-        if script_root is None:
-            raise ValueError(
-                'AzureWebJobsScriptRoot environment variable is not defined. '
-                'Please ensure the extension is running in Azure Functions.'
-            )
-
-        try:
-            trigger_name = os.path.split(
-                os.path.relpath(
-                    os.path.abspath(filename),
-                    os.path.abspath(script_root)
-                )
-            )[0]
-        except IndexError:
-            raise ValueError(
-                'Failed to parse trigger name from filename. Please ensure '
-                '__file__ is passed into the filename argument'
-            )
-
-        return cls(trigger_name)

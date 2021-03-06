@@ -203,6 +203,7 @@ class TestHttpWsgi(unittest.TestCase):
                 self._invocation_id = ii
                 self._function_name = fn
                 self._function_directory = fd
+                self._trace_context = None
 
             @property
             def invocation_id(self):
@@ -215,6 +216,10 @@ class TestHttpWsgi(unittest.TestCase):
             @property
             def function_directory(self):
                 return self._function_directory
+
+            @property
+            def trace_context(self):
+                return self._trace_context
 
         return MockContext(invocation_id, function_name, function_directory)
 
