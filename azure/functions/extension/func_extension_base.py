@@ -3,6 +3,7 @@
 
 import abc
 import os
+import typing
 from logging import Logger
 from .extension_meta import ExtensionMeta
 from .extension_scope import ExtensionScope
@@ -62,17 +63,16 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def after_function_load(self, logger: Logger,
+    def after_function_load(self,
                             function_name: str,
                             function_directory: str,
                             *args, **kwargs) -> None:
-        """This hook will be called right after a customer's function is loaded
+        """This hook will be called right after a customer's function loaded.
+        In this stage, the customer's logger is not fully initialized, so it
+        is not provided. Please use print() statement if necessary.
 
         Parameters
         ----------
-        logger: logging.Logger
-            A logger provided by Python worker. Extension developer should
-            use this logger to emit telemetry to Azure Functions customers.
         function_name: str
             The name of customer's function (e.g. HttpTrigger)
         function_directory: str
@@ -83,8 +83,12 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def before_invocation(self, logger: Logger, context: Context,
-                          *args, **kwargs) -> None:
+    def before_invocation(self,
+                          logger: Logger,
+                          context: Context,
+                          func_args: typing.Dict[str, object] = {},
+                          *args,
+                          **kwargs) -> None:
         """This hook will be called right before customer's function
         is being executed.
 
@@ -96,13 +100,23 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         context: azure.functions.Context
             This will include the function_name, function_directory and an
             invocation_id of this specific invocation.
+        func_args: typing.Dict[str, object]
+            Arguments that are passed into the Azure Functions. The name of
+            each parameter is defined in function.json. Extension developers
+            may also want to do isinstance() check if you want to apply
+            operations to specific trigger types or input binding types.
         """
         pass
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def after_invocation(self, logger: Logger, context: Context,
-                         *args, **kwargs) -> None:
+    def after_invocation(self,
+                         logger: Logger,
+                         context: Context,
+                         func_args: typing.Dict[str, object] = {},
+                         func_ret: typing.Optional[object] = None,
+                         *args,
+                         **kwargs) -> None:
         """This hook will be called right after a customer's function
         is executed.
 
@@ -114,5 +128,15 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         context: azure.functions.Context
             This will include the function_name, function_directory and an
             invocation_id of this specific invocation.
+        func_args: typing.Dict[str, object]
+            Arguments that are passed into the Azure Functions. The name of
+            each parameter is defined in function.json. Extension developers
+            may also want to do isinstance() check if you want to apply
+            operations to specific trigger types or input binding types.
+        func_ret: typing.Optional[object]
+            Return value from Azure Functions. This is usually the value
+            defined in function.json $return section. Extension developers
+            may also want to do isinstance() check if you want to apply
+            operations to specific types or input binding types.
         """
         pass

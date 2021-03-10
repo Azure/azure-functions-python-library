@@ -68,7 +68,58 @@ class ExtensionMeta(abc.ABCMeta):
             )
 
     @classmethod
-    def set_hooks_for_function(cls, trigger_name: str, ext):
+    def get_function_hooks(cls, name: str) -> Optional[FuncExtensionHooks]:
+        """Return all function extension hooks indexed by trigger name.
+
+        Returns
+        -------
+        Optional[FuncExtensionHooks]:
+            Example to look up a certain life-cycle name:
+            get_function_hooks('HttpTrigger').before_invocation.ext_name
+        """
+        return cls._func_exts.get(name.lower())
+
+    @classmethod
+    def get_applicaiton_hooks(cls) -> Optional[AppExtensionHooks]:
+        """Return all application hooks
+
+        Returns
+        -------
+        Optional[AppExtensionHooks]:
+            Example to look up a certain life-cycle name:
+            get_application_hooks().before_invocation_global.ext_name
+        """
+        return cls._app_exts
+
+    @classmethod
+    def get_registered_extension_json(cls) -> str:
+        """Return a json string of the registered
+
+        Returns
+        -------
+        str:
+            The json string will be constructed in a structure of
+            {
+                "FuncExtension": {
+                    "<TriggerA>": [
+                        "ExtensionName"
+                    ]
+                },
+                "AppExtension": [
+                    "ExtensionName"
+                ]
+            }
+        """
+        return json.dumps(cls._info)
+
+    @classmethod
+    def _get_extension_scope(cls, extension) -> ExtensionScope:
+        """Return the scope of an extension"""
+        return getattr(extension, '_scope',  # type: ignore
+                       ExtensionScope.UNKNOWN)
+
+    @classmethod
+    def _set_hooks_for_function(cls, trigger_name: str, ext):
         ext_hooks = cls._func_exts.setdefault(
             trigger_name.lower(),
             cls._create_default_function_hook()
@@ -78,13 +129,14 @@ class ExtensionMeta(abc.ABCMeta):
         for hook_name in ext_hooks._fields:
             hook_impl = getattr(ext, hook_name, None)
             if hook_impl is not None:
-                getattr(ext_hooks, hook_name).append(ExtensionHookMeta(
+                hook_meta = ExtensionHookMeta(
                     ext_name=ext.__class__.__name__,
                     ext_impl=hook_impl,
-                ))
+                )
+                getattr(ext_hooks, hook_name).append(hook_meta)
 
     @classmethod
-    def set_hooks_for_application(cls, ext):
+    def _set_hooks_for_application(cls, ext):
         if cls._app_exts is None:
             cls._app_exts = cls._create_default_app_hook()
 
@@ -93,30 +145,9 @@ class ExtensionMeta(abc.ABCMeta):
             hook_impl = getattr(ext, hook_name, None)
             if hook_impl is not None:
                 getattr(cls._app_exts, hook_name).append(ExtensionHookMeta(
-                    ext_name=ext.__class__.__name__,
+                    ext_name=ext.__name__,
                     ext_impl=hook_impl
                 ))
-
-    @classmethod
-    def get_function_hooks(cls, name: str) -> Optional[FuncExtensionHooks]:
-        """Return all function extension hooks indexed by trigger name."""
-        return cls._func_exts.get(name.lower())
-
-    @classmethod
-    def get_applicaiton_hooks(cls) -> Optional[AppExtensionHooks]:
-        """Return all application hooks"""
-        return cls._app_exts
-
-    @classmethod
-    def get_hooks_information(cls) -> str:
-        """Return a json string of the registered hooks"""
-        return json.dumps(cls._info)
-
-    @classmethod
-    def _get_extension_scope(cls, extension) -> ExtensionScope:
-        """Return the scope of an extension"""
-        return getattr(extension, '_scope',  # type: ignore
-                       ExtensionScope.UNKNOWN)
 
     @classmethod
     def _register_function_extension(cls, extension):
@@ -127,7 +158,7 @@ class ExtensionMeta(abc.ABCMeta):
             return
 
         trigger_name = extension._trigger_name
-        cls.set_hooks_for_function(trigger_name, extension)
+        cls._set_hooks_for_function(trigger_name, extension)
 
         # Record function extension information
         hooks_info = cls._info.setdefault(  # type: ignore
@@ -142,8 +173,8 @@ class ExtensionMeta(abc.ABCMeta):
         if extension.__name__ == 'AppExtensionBase':
             return
 
-        extension.setup()
-        cls.set_hooks_for_application(extension)
+        extension.init()
+        cls._set_hooks_for_application(extension)
 
         # Record application extension information
         hooks_info = cls._info.setdefault('AppExtension', [])
