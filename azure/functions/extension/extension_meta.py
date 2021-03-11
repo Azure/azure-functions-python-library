@@ -80,7 +80,7 @@ class ExtensionMeta(abc.ABCMeta):
         return cls._func_exts.get(name.lower())
 
     @classmethod
-    def get_applicaiton_hooks(cls) -> Optional[AppExtensionHooks]:
+    def get_application_hooks(cls) -> Optional[AppExtensionHooks]:
         """Return all application hooks
 
         Returns
@@ -92,7 +92,7 @@ class ExtensionMeta(abc.ABCMeta):
         return cls._app_exts
 
     @classmethod
-    def get_registered_extension_json(cls) -> str:
+    def get_registered_extensions_json(cls) -> str:
         """Return a json string of the registered
 
         Returns
@@ -173,7 +173,9 @@ class ExtensionMeta(abc.ABCMeta):
         if extension.__name__ == 'AppExtensionBase':
             return
 
-        extension.init()
+        if getattr(extension, 'init', None):
+            extension.init()
+
         cls._set_hooks_for_application(extension)
 
         # Record application extension information

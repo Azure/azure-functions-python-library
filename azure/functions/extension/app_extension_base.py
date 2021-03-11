@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import abc
 import typing
 from logging import Logger
 from .extension_meta import ExtensionMeta
@@ -16,19 +15,20 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     An AppExtension should be treated as a static class. Must not contain
     __init__ method since it is not instantiable.
 
-    Please place your initialization code in setup() function.
+    Please place your initialization code in init() classmethod, consider
+    accepting extension settings in configure() classmethod from customers.
     """
 
     _scope = ExtensionScope.APPLICATION
 
-    @abc.abstractclassmethod
+    @classmethod
     def init(cls):
         """The function will be executed when the extension is loaded.
         Happens when Azure Functions customers import the extension module.
         """
         pass
 
-    @abc.abstractclassmethod
+    @classmethod
     def configure(cls, *args, **kwargs):
         """This function is intended to be called by Azure Functions
         customers. This is a contract between extension developers and
