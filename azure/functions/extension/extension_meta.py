@@ -75,7 +75,7 @@ class ExtensionMeta(abc.ABCMeta):
         -------
         Optional[FuncExtensionHooks]:
             Example to look up a certain life-cycle name:
-            get_function_hooks('HttpTrigger').before_invocation.ext_name
+            get_function_hooks('HttpTrigger').pre_invocation.ext_name
         """
         return cls._func_exts.get(name.lower())
 
@@ -87,7 +87,7 @@ class ExtensionMeta(abc.ABCMeta):
         -------
         Optional[AppExtensionHooks]:
             Example to look up a certain life-cycle name:
-            get_application_hooks().before_invocation_global.ext_name
+            get_application_hooks().pre_invocation_app_level.ext_name
         """
         return cls._app_exts
 
@@ -185,15 +185,15 @@ class ExtensionMeta(abc.ABCMeta):
     @classmethod
     def _create_default_function_hook(cls) -> FuncExtensionHooks:
         return FuncExtensionHooks(
-            after_function_load=[],
-            before_invocation=[],
-            after_invocation=[]
+            post_function_load=[],
+            pre_invocation=[],
+            post_invocation=[]
         )
 
     @classmethod
     def _create_default_app_hook(cls) -> AppExtensionHooks:
         return AppExtensionHooks(
-            after_function_load_global=[],
-            before_invocation_global=[],
-            after_invocation_global=[]
+            post_function_load_app_level=[],
+            pre_invocation_app_level=[],
+            post_invocation_app_level=[]
         )

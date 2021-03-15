@@ -40,10 +40,10 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     # DO NOT decorate this with @abc.abstractstatismethod
     # since implementation by subclass is not mandatory
     @classmethod
-    def after_function_load_global(cls,
-                                   function_name: str,
-                                   function_directory: str,
-                                   *args, **kwargs) -> None:
+    def post_function_load_app_level(cls,
+                                     function_name: str,
+                                     function_directory: str,
+                                     *args, **kwargs) -> None:
         """This must be implemented as a @classmethod. It will be called right
         a customer's function is loaded. In this stage, the customer's logger
         is not fully initialized. Please use print() statement if necessary.
@@ -61,7 +61,8 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     # DO NOT decorate this with @abc.abstractstatismethod
     # since implementation by subclass is not mandatory
     @classmethod
-    def before_invocation_global(cls,
+    def pre_invocation_app_level(cls,
+                                 logger: Logger,
                                  context: Context,
                                  func_args: typing.Dict[str, object] = {},
                                  *args,
@@ -89,13 +90,13 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     # DO NOT decorate this with @abc.abstractstatismethod
     # since implementation by subclass is not mandatory
     @classmethod
-    def after_invocation_global(cls,
-                                logger: Logger,
-                                context: Context,
-                                func_args: typing.Dict[str, object] = {},
-                                func_ret: typing.Optional[object] = None,
-                                *args,
-                                **kwargs) -> None:
+    def post_invocation_app_level(cls,
+                                  logger: Logger,
+                                  context: Context,
+                                  func_args: typing.Dict[str, object] = {},
+                                  func_ret: typing.Optional[object] = None,
+                                  *args,
+                                  **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
         before a customer's function is being executed.
 

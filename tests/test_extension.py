@@ -41,11 +41,11 @@ class TestExtensionMeta(unittest.TestCase):
                 pass
 
             @staticmethod
-            def after_function_load_global():
+            def post_function_load_app_level():
                 NewAppExtension.executed = True
 
         self.assertEqual(
-            len(self._instance._app_exts.after_function_load_global),
+            len(self._instance._app_exts.post_function_load_app_level),
             1
         )
 
@@ -60,14 +60,14 @@ class TestExtensionMeta(unittest.TestCase):
                 self._trigger_name = 'httptrigger'
                 self.executed = False
 
-            def after_function_load(self):
+            def post_function_load(self):
                 self.executed = True
 
         # Follow line should be executed from HttpTrigger/__init__.py script
         # Instantiate a new function extension
-        _ = NewFuncExtension()
+        NewFuncExtension()
         self.assertEqual(
-            len(self._instance._func_exts['httptrigger'].after_function_load),
+            len(self._instance._func_exts['httptrigger'].post_function_load),
             1
         )
 
@@ -87,7 +87,7 @@ class TestExtensionMeta(unittest.TestCase):
 
         # Follow line should be executed from HttpTrigger/__init__.py script
         # Instantiate a new function extension base
-        _ = FuncExtensionBase()
+        FuncExtensionBase()
         self.assertEqual(len(self._instance._func_exts), 0)
 
     def test_app_extension_instantiation_should_throw_error(self):
@@ -103,11 +103,11 @@ class TestExtensionMeta(unittest.TestCase):
                 pass
 
             @staticmethod
-            def after_function_load_global():
+            def post_function_load_app_level():
                 NewAppExtension.executed = True
 
         with self.assertRaises(ExtensionException):
-            _ = NewAppExtension()
+            NewAppExtension()
 
     def test_invalid_scope_extension_instantiation_should_throw_error(self):
         """If the _scope is not defined in an extension, it is most likely
@@ -117,7 +117,7 @@ class TestExtensionMeta(unittest.TestCase):
             pass
 
         with self.assertRaises(ExtensionException):
-            _ = InvalidExtension()
+            InvalidExtension()
 
     def test_get_function_hooks(self):
         """If a specific extension is registered in to a function, it should
@@ -125,27 +125,27 @@ class TestExtensionMeta(unittest.TestCase):
         """
         extension_hook = self._instance._func_exts.setdefault(
             'httptrigger', FuncExtensionHooks(
-                after_function_load=[],
-                before_invocation=[],
-                after_invocation=[]
+                post_function_load=[],
+                pre_invocation=[],
+                post_invocation=[]
             )
         )
 
-        extension_hook.after_function_load.append(
+        extension_hook.post_function_load.append(
             ExtensionHookMeta(ext_impl=lambda: 'hello', ext_name='world')
         )
 
         hook = self._instance.get_function_hooks('HttpTrigger')
-        self.assertEqual(hook.after_function_load[0].ext_impl(), 'hello')
-        self.assertEqual(hook.after_function_load[0].ext_name, 'world')
+        self.assertEqual(hook.post_function_load[0].ext_impl(), 'hello')
+        self.assertEqual(hook.post_function_load[0].ext_name, 'world')
 
     def test_get_application_hooks(self):
         """The application extension should be stored in self._app_hooks
         """
         hook_obj = AppExtensionHooks(
-            after_function_load_global=[],
-            before_invocation_global=[],
-            after_invocation_global=[]
+            post_function_load_app_level=[],
+            pre_invocation_app_level=[],
+            post_invocation_app_level=[]
         )
         self._instance._app_exts = hook_obj
         hooks = self._instance.get_application_hooks()
@@ -166,10 +166,10 @@ class TestExtensionMeta(unittest.TestCase):
             def __init__(self):
                 self._executed = False
 
-            def after_function_load_global(self):
+            def post_function_load_app_level(self):
                 self._executed = True
 
-        _ = NewFuncExtension()
+        NewFuncExtension()
         info_json = self._instance.get_registered_extensions_json()
         self.assertEqual(
             info_json,
@@ -222,13 +222,13 @@ class TestExtensionMeta(unittest.TestCase):
                 self._trigger_name = 'HttpTrigger'
                 self._executed = False
 
-            def after_function_load(self):
+            def post_function_load(self):
                 self._executed = True
 
         # Instantiate this as in HttpTrigger/__init__.py customer's code
         ext_instance = NewFuncExtension()
         self._instance._set_hooks_for_function('HttpTrigger', ext_instance)
-        meta = self._instance._func_exts['httptrigger'].after_function_load[0]
+        meta = self._instance._func_exts['httptrigger'].post_function_load[0]
 
         # Check extension name
         self.assertEqual(meta.ext_name, 'NewFuncExtension')
@@ -250,11 +250,11 @@ class TestExtensionMeta(unittest.TestCase):
                 pass
 
             @classmethod
-            def after_function_load_global(cls):
+            def post_function_load_app_level(cls):
                 cls._executed = True
 
         self._instance._set_hooks_for_application(NewAppExtension)
-        meta = self._instance._app_exts.after_function_load_global[0]
+        meta = self._instance._app_exts.post_function_load_app_level[0]
 
         # Check extension name
         self.assertEqual(meta.ext_name, 'NewAppExtension')
@@ -274,7 +274,7 @@ class TestExtensionMeta(unittest.TestCase):
                 self._trigger_name = 'HttpTrigger'
                 self._executed = False
 
-            def after_function_load(self):
+            def post_function_load(self):
                 self._executed = True
 
         # The following line should be called by customer
@@ -298,12 +298,12 @@ class TestExtensionMeta(unittest.TestCase):
             _scope = ExtensionScope.APPLICATION
 
             @staticmethod
-            def after_function_load_global():
+            def post_function_load_app_level():
                 pass
 
         # Check _app_exts should have lowercased tirgger name
         self.assertEqual(
-            len(self._instance._app_exts.after_function_load_global),
+            len(self._instance._app_exts.post_function_load_app_level),
             1
         )
 
@@ -428,20 +428,20 @@ class TestFuncExtensionBase(unittest.TestCase):
             def __init__(self, file_path: str):
                 super().__init__(file_path)
 
-            def after_function_load(self,
-                                    function_name: str,
-                                    function_directory: str,
-                                    *args,
-                                    **kwargs) -> None:
-                print('ok_after_function_load')
+            def post_function_load(self,
+                                   function_name: str,
+                                   function_directory: str,
+                                   *args,
+                                   **kwargs) -> None:
+                print('ok_post_function_load')
 
-            def before_invocation(self, logger: Logger, context: Context,
-                                  *args, **kwargs) -> None:
-                logger.info('ok_before_invocation')
+            def pre_invocation(self, logger: Logger, context: Context,
+                               *args, **kwargs) -> None:
+                logger.info('ok_pre_invocation')
 
-            def after_invocation(self, logger: Logger, context: Context,
-                                 *args, **kwargs) -> None:
-                logger.info('ok_after_invocation')
+            def post_invocation(self, logger: Logger, context: Context,
+                                *args, **kwargs) -> None:
+                logger.info('ok_post_invocation')
 
         # Instantiate Extension
         ext_instance = NewExtensionBeforeInvocation(self.mock_file_path)
@@ -450,67 +450,67 @@ class TestFuncExtensionBase(unittest.TestCase):
         hooks = ExtensionMeta.get_function_hooks('HttpTrigger')
         self.assertIsInstance(hooks, FuncExtensionHooks)
 
-        # Check after_function_load
-        hook_meta = hooks.after_function_load[0]
+        # Check post_function_load
+        hook_meta = hooks.post_function_load[0]
         self.assertEqual(hook_meta.ext_name, ext_instance.__class__.__name__)
-        self.assertEqual(hook_meta.ext_impl, ext_instance.after_function_load)
+        self.assertEqual(hook_meta.ext_impl, ext_instance.post_function_load)
 
-        # Check before_invocation_hook
-        hook_meta = hooks.before_invocation[0]
+        # Check pre_invocation_hook
+        hook_meta = hooks.pre_invocation[0]
         self.assertEqual(hook_meta.ext_name, ext_instance.__class__.__name__)
-        self.assertEqual(hook_meta.ext_impl, ext_instance.before_invocation)
+        self.assertEqual(hook_meta.ext_impl, ext_instance.pre_invocation)
 
-        # Check after_invocation_hook
-        hook_meta = hooks.after_invocation[0]
+        # Check post_invocation_hook
+        hook_meta = hooks.post_invocation[0]
         self.assertEqual(hook_meta.ext_name, ext_instance.__class__.__name__)
-        self.assertEqual(hook_meta.ext_impl, ext_instance.after_invocation)
+        self.assertEqual(hook_meta.ext_impl, ext_instance.post_invocation)
 
     def test_partial_registration(self):
         """Instantiate an extension with full life-cycle hooks support
         should be registered into _func_exts
         """
-        # Define extension with partial hooks support (e.g. after_invocation)
+        # Define extension with partial hooks support (e.g. post_invocation)
         class NewExtensionBeforeInvocation(FuncExtensionBase):
             def __init__(self, file_path: str):
                 super().__init__(file_path)
 
-            def after_invocation(self, logger: Logger, context: Context,
-                                 *args, **kwargs) -> None:
-                logger.info('ok_after_invocation')
+            def post_invocation(self, logger: Logger, context: Context,
+                                *args, **kwargs) -> None:
+                logger.info('ok_post_invocation')
 
         # Instantiate Extension
         ext_instance = NewExtensionBeforeInvocation(self.mock_file_path)
 
-        # Check after_invocation hook registration
+        # Check post_invocation hook registration
         hooks = ExtensionMeta.get_function_hooks('HttpTrigger')
-        hook_meta = hooks.after_invocation[0]
+        hook_meta = hooks.post_invocation[0]
         self.assertIsInstance(hooks, FuncExtensionHooks)
         self.assertEqual(hook_meta.ext_name, ext_instance.__class__.__name__)
-        self.assertEqual(hook_meta.ext_impl, ext_instance.after_invocation)
+        self.assertEqual(hook_meta.ext_impl, ext_instance.post_invocation)
 
     def test_extension_method_should_be_executed(self):
         """Ensure the life-cycle hook execution should happen
         """
-        # Define extension with partial hooks support (e.g. after_invocation)
+        # Define extension with partial hooks support (e.g. post_invocation)
         class NewExtensionBeforeInvocation(FuncExtensionBase):
             def __init__(self, file_path: str):
                 super().__init__(file_path)
-                self.is_after_invocation_executed = False
+                self.is_post_invocation_executed = False
 
-            def after_invocation(self, logger: Logger, context: Context,
-                                 *args, **kwargs) -> None:
-                logger.info('ok_after_invocation')
-                self.is_after_invocation_executed = True
+            def post_invocation(self, logger: Logger, context: Context,
+                                *args, **kwargs) -> None:
+                logger.info('ok_post_invocation')
+                self.is_post_invocation_executed = True
 
         # Instantiate Extension
         ext_instance = NewExtensionBeforeInvocation(self.mock_file_path)
 
-        # Check after_invocation hook invocation
+        # Check post_invocation hook invocation
         mock_logger = MagicMock()
         hooks = ExtensionMeta.get_function_hooks('HttpTrigger')
-        self.assertFalse(ext_instance.is_after_invocation_executed)
-        hooks.after_invocation[0].ext_impl(mock_logger, {})
-        self.assertTrue(ext_instance.is_after_invocation_executed)
+        self.assertFalse(ext_instance.is_post_invocation_executed)
+        hooks.post_invocation[0].ext_impl(mock_logger, {})
+        self.assertTrue(ext_instance.is_post_invocation_executed)
 
     def test_registration_should_lowercase_the_trigger_name(self):
         """The ExtensionMeta should not be case sensitive
@@ -519,9 +519,9 @@ class TestFuncExtensionBase(unittest.TestCase):
             def __init__(self, file_name: str):
                 super().__init__(file_name)
 
-            def before_invocation(self, logger: Logger, context: Context,
-                                  *args, **kwargs) -> None:
-                logger.info('ok_before_invocation')
+            def pre_invocation(self, logger: Logger, context: Context,
+                               *args, **kwargs) -> None:
+                logger.info('ok_pre_invocation')
 
         NewExtensionBeforeInvocation(self.mock_file_path)
 
@@ -535,9 +535,9 @@ class TestFuncExtensionBase(unittest.TestCase):
             def __init__(self, trigger_name: str):
                 super().__init__(trigger_name)
 
-            def before_invocation(self, logger: Logger, context: Context,
-                                  *args, **kwargs) -> None:
-                logger.info('ok_before_invocation')
+            def pre_invocation(self, logger: Logger, context: Context,
+                               *args, **kwargs) -> None:
+                logger.info('ok_pre_invocation')
 
         # Register extension in customer's
         NewExtensionBeforeAndAfter(self.mock_file_path)
@@ -545,8 +545,8 @@ class TestFuncExtensionBase(unittest.TestCase):
 
         # Check if the hook implementation executes
         mock_logger = MagicMock()
-        hooks.before_invocation[0].ext_impl(logger=mock_logger, context={})
-        mock_logger.info.assert_called_with('ok_before_invocation')
+        hooks.pre_invocation[0].ext_impl(logger=mock_logger, context={})
+        mock_logger.info.assert_called_with('ok_pre_invocation')
 
     def test_two_extensions_on_same_trigger(self):
         """Test if two extensions can be registered on the same trigger
@@ -555,16 +555,16 @@ class TestFuncExtensionBase(unittest.TestCase):
             def __init__(self, trigger_name: str):
                 super().__init__(trigger_name)
 
-            def before_invocation(self, logger: Logger, context: Context,
-                                  *args, **kwargs) -> None:
+            def pre_invocation(self, logger: Logger, context: Context,
+                               *args, **kwargs) -> None:
                 logger.info('ok_before_1')
 
         class NewExtension2(FuncExtensionBase):
             def __init__(self, trigger_name: str):
                 super().__init__(trigger_name)
 
-            def before_invocation(self, logger: Logger, context: Context,
-                                  *args, **kwargs) -> None:
+            def pre_invocation(self, logger: Logger, context: Context,
+                               *args, **kwargs) -> None:
                 logger.info('ok_before_2')
 
         # Check if both extensions are registered under the same hook
@@ -575,7 +575,7 @@ class TestFuncExtensionBase(unittest.TestCase):
         # Check if the before invocation hook matches metadata
         extension_names = map(
             lambda x: getattr(x, 'ext_name'),
-            hooks.before_invocation
+            hooks.pre_invocation
         )
         self.assertIn('NewExtension1', extension_names)
         self.assertIn('NewExtension2', extension_names)
@@ -590,7 +590,7 @@ class TestFuncExtensionBase(unittest.TestCase):
                 self.executed = False
 
             # Drop arguments
-            def before_invocation(self):
+            def pre_invocation(self):
                 self.executed = True
 
         # Check if the before invocation hook matches metadata
@@ -598,7 +598,7 @@ class TestFuncExtensionBase(unittest.TestCase):
         hooks = ExtensionMeta.get_function_hooks('HttpTrigger')
 
         # Check if implementation works
-        hook_meta = hooks.before_invocation[0]
+        hook_meta = hooks.pre_invocation[0]
         self.assertEqual(hook_meta.ext_name, 'ExtensionWithLessArgument')
 
         # Check if the hook implementation executes
@@ -643,41 +643,41 @@ class TestAppExtensionBase(unittest.TestCase):
         """
         class NewAppExtension(AppExtensionBase):
             @classmethod
-            def after_function_load_global(cls,
-                                           function_name,
-                                           function_directory,
-                                           *args,
-                                           **kwargs) -> None:
-                print('ok_after_function_load_global')
+            def post_function_load_app_level(cls,
+                                             function_name,
+                                             function_directory,
+                                             *args,
+                                             **kwargs) -> None:
+                print('ok_post_function_load_app_level')
 
             @classmethod
-            def before_invocation_global(self, logger, context,
+            def pre_invocation_app_level(self, logger, context,
                                          *args, **kwargs) -> None:
-                logger.info('ok_before_invocation_global')
+                logger.info('ok_pre_invocation_app_level')
 
             @classmethod
-            def after_invocation_global(self, logger, context,
-                                        *args, **kwargs) -> None:
-                logger.info('ok_after_invocation_global')
+            def post_invocation_app_level(self, logger, context,
+                                          *args, **kwargs) -> None:
+                logger.info('ok_post_invocation_app_level')
 
         # Check app hooks registration
         hooks = ExtensionMeta.get_application_hooks()
         self.assertIsInstance(hooks, AppExtensionHooks)
 
-        # Check after_function_load
-        hook_meta = hooks.after_function_load_global[0]
+        # Check post_function_load
+        hook_meta = hooks.post_function_load_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
-                         NewAppExtension.after_function_load_global)
+                         NewAppExtension.post_function_load_app_level)
 
-        # Check before_invocation_hook
-        hook_meta = hooks.before_invocation_global[0]
+        # Check pre_invocation_hook
+        hook_meta = hooks.pre_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
-                         NewAppExtension.before_invocation_global)
+                         NewAppExtension.pre_invocation_app_level)
 
-        # Check after_invocation_hook
-        hook_meta = hooks.after_invocation_global[0]
+        # Check post_invocation_hook
+        hook_meta = hooks.post_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
-                         NewAppExtension.after_invocation_global)
+                         NewAppExtension.post_invocation_app_level)

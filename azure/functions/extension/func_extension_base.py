@@ -63,10 +63,10 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def after_function_load(self,
-                            function_name: str,
-                            function_directory: str,
-                            *args, **kwargs) -> None:
+    def post_function_load(self,
+                           function_name: str,
+                           function_directory: str,
+                           *args, **kwargs) -> None:
         """This hook will be called right after a customer's function loaded.
         In this stage, the customer's logger is not fully initialized, so it
         is not provided. Please use print() statement if necessary.
@@ -83,12 +83,12 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def before_invocation(self,
-                          logger: Logger,
-                          context: Context,
-                          func_args: typing.Dict[str, object] = {},
-                          *args,
-                          **kwargs) -> None:
+    def pre_invocation(self,
+                       logger: Logger,
+                       context: Context,
+                       func_args: typing.Dict[str, object] = {},
+                       *args,
+                       **kwargs) -> None:
         """This hook will be called right before customer's function
         is being executed.
 
@@ -110,13 +110,13 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def after_invocation(self,
-                         logger: Logger,
-                         context: Context,
-                         func_args: typing.Dict[str, object] = {},
-                         func_ret: typing.Optional[object] = None,
-                         *args,
-                         **kwargs) -> None:
+    def post_invocation(self,
+                        logger: Logger,
+                        context: Context,
+                        func_args: typing.Dict[str, object] = {},
+                        func_ret: typing.Optional[object] = None,
+                        *args,
+                        **kwargs) -> None:
         """This hook will be called right after a customer's function
         is executed.
 

@@ -11,6 +11,6 @@ class FuncExtensionHooks(NamedTuple):
     """
     # The default value ([] empty list) is not being set here intentionally
     # since it is impacted by a Python bug https://bugs.python.org/issue33077.
-    after_function_load: List[ExtensionHookMeta]
-    before_invocation: List[ExtensionHookMeta]
-    after_invocation: List[ExtensionHookMeta]
+    post_function_load: List[ExtensionHookMeta]
+    pre_invocation: List[ExtensionHookMeta]
+    post_invocation: List[ExtensionHookMeta]
