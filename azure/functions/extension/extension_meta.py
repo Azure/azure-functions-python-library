@@ -21,7 +21,10 @@ class ExtensionMeta(abc.ABCMeta):
     After registration, the extension class will be flatten into the following
     structure to speed up worker lookup:
         _func_exts[<trigger_name>].<hook_name>.(ext_name, ext_impl)
+        (e.g. _func_exts['HttpTrigger'].pre_invocation.ext_impl)
+
         _app_exts.<hook_name>.(ext_name, ext_impl)
+        (e.g. _app_exts.pre_invocation_app_level.ext_impl)
 
     The extension tree information is stored in _info for diagnostic
     purpose. The dictionary is serializible to json:

@@ -30,6 +30,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         The initializer serializes the extension to a tree. This speeds
         up the worker lookup and reduce the overhead on each invocation.
         _func_exts[<trigger_name>].<hook_name>.(ext_name, ext_impl)
+        (e.g. _func_exts['HttpTrigger'].pre_invocation.ext_impl)
 
         Parameters
         ----------
@@ -55,7 +56,9 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
                 'Failed to parse trigger name from filename. '
                 'Function extension should bind to a trigger script, '
                 'not share folder. Please ensure extension is create inside a'
-                'trigger while __file__ is passed into the argument'
+                'trigger while __file__ is passed into the argument. '
+                'The trigger name is resolved from os.path.relpath(file_path,'
+                'project_root).'
             )
 
         # This is used in ExtensionMeta._register_function_extension
