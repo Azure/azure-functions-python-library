@@ -8,7 +8,7 @@ from .app_extension_hooks import AppExtensionHooks
 from .func_extension_hooks import FuncExtensionHooks
 from .extension_hook_meta import ExtensionHookMeta
 from .extension_scope import ExtensionScope
-from .extension_exception import ExtensionException
+from .function_extension_exception import FunctionExtensionException
 
 
 class ExtensionMeta(abc.ABCMeta):
@@ -57,12 +57,12 @@ class ExtensionMeta(abc.ABCMeta):
             ExtensionMeta._register_function_extension(instance)
             return instance
         elif scope is ExtensionScope.APPLICATION:
-            raise ExtensionException(
+            raise FunctionExtensionException(
                 f'Python worker extension with scope:{scope} should not be'
                 'instantiable. Please access via class method directly.'
             )
         else:
-            raise ExtensionException(
+            raise FunctionExtensionException(
                 f'Python worker extension:{cls.__name__} is not properly '
                 'implemented from AppExtensionBase or FuncExtensionBase.'
             )

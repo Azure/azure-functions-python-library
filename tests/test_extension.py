@@ -7,12 +7,12 @@ import unittest
 from unittest.mock import MagicMock, patch
 from logging import Logger
 
+from azure.functions.extension import FunctionExtensionException
 from azure.functions.extension.app_extension_base import AppExtensionBase
 from azure.functions.extension.func_extension_base import FuncExtensionBase
 from azure.functions.extension.extension_meta import ExtensionMeta
 from azure.functions.extension.extension_scope import ExtensionScope
 from azure.functions.extension.extension_hook_meta import ExtensionHookMeta
-from azure.functions.extension.extension_exception import ExtensionException
 from azure.functions.extension.func_extension_hooks import FuncExtensionHooks
 from azure.functions._abc import Context
 
@@ -106,7 +106,7 @@ class TestExtensionMeta(unittest.TestCase):
             def post_function_load_app_level():
                 NewAppExtension.executed = True
 
-        with self.assertRaises(ExtensionException):
+        with self.assertRaises(FunctionExtensionException):
             NewAppExtension()
 
     def test_invalid_scope_extension_instantiation_should_throw_error(self):
@@ -116,7 +116,7 @@ class TestExtensionMeta(unittest.TestCase):
         class InvalidExtension(metaclass=self._instance):
             pass
 
-        with self.assertRaises(ExtensionException):
+        with self.assertRaises(FunctionExtensionException):
             InvalidExtension()
 
     def test_get_function_hooks(self):
@@ -363,7 +363,7 @@ class TestFuncExtensionBase(unittest.TestCase):
 
         # Customer try to register extension with invalid path name.
         # This should be pointing to a script __init__.py instead of a folder.
-        with self.assertRaises(ExtensionException):
+        with self.assertRaises(FunctionExtensionException):
             NewExtension('some_invalid_path')
 
     def test_new_extension_should_be_invalid_in_root_folder(self):
@@ -376,7 +376,7 @@ class TestFuncExtensionBase(unittest.TestCase):
 
         # Customer try to register extension with /home/site/wwwroot.
         # This should be pointing to a script __init__.py instead of a folder.
-        with self.assertRaises(ExtensionException):
+        with self.assertRaises(FunctionExtensionException):
             NewExtension(self.mock_script_root)
 
     def test_new_extension_should_be_invalid_in_other_folder(self):
@@ -389,7 +389,7 @@ class TestFuncExtensionBase(unittest.TestCase):
 
         # Customer try to register extension with /some/other/path.
         # This should be pointing to a script __init__.py instead of a folder.
-        with self.assertRaises(ExtensionException):
+        with self.assertRaises(FunctionExtensionException):
             NewExtension(os.path.join('/', 'some', 'other', 'path'))
 
     def test_new_extension_initialize_with_correct_path(self):

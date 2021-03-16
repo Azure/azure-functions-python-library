@@ -7,7 +7,7 @@ import typing
 from logging import Logger
 from .extension_meta import ExtensionMeta
 from .extension_scope import ExtensionScope
-from .extension_exception import ExtensionException
+from .function_extension_exception import FunctionExtensionException
 from .._abc import Context
 
 
@@ -38,7 +38,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
         """
         script_root = os.getenv('AzureWebJobsScriptRoot')
         if script_root is None:
-            raise ExtensionException(
+            raise FunctionExtensionException(
                 'AzureWebJobsScriptRoot environment variable is not defined. '
                 'Please ensure the extension is running in Azure Functions.'
             )
@@ -51,7 +51,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
         trigger_name = (relpath_to_project_root.split(os.sep) or [''])[0]
         if not trigger_name or trigger_name.startswith(('.', '..')):
-            raise ExtensionException(
+            raise FunctionExtensionException(
                 'Failed to parse trigger name from filename. '
                 'Function extension should bind to a trigger script, '
                 'not share folder. Please ensure extension is create inside a'

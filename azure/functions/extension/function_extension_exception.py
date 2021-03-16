@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 
-class ExtensionException(Exception):
+class FunctionExtensionException(Exception):
     """Excpetion emitted from Azure Functions Python Worker extension
     """
     pass
