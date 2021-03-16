@@ -69,7 +69,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
                            *args, **kwargs) -> None:
         """This hook will be called right after a customer's function loaded.
         In this stage, the customer's logger is not fully initialized, so it
-        is not provided. Please use print() statement if necessary.
+        is not provided. Please use print() to emit message if necessary.
 
         Parameters
         ----------

@@ -46,7 +46,8 @@ class AppExtensionBase(metaclass=ExtensionMeta):
                                      *args, **kwargs) -> None:
         """This must be implemented as a @classmethod. It will be called right
         a customer's function is loaded. In this stage, the customer's logger
-        is not fully initialized. Please use print() statement if necessary.
+        is not fully initialized from the Python worker. Please use print()
+        to emit message if necessary.
 
         Parameters
         ----------
@@ -68,8 +69,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
                                  *args,
                                  **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
-        before a customer's function is being executed. In this stage, the
-        ustomer's logger is not fully initialized, so it is not provided.
+        before a customer's function is being executed.
 
         Parameters
         ----------
