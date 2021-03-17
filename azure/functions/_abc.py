@@ -24,33 +24,6 @@ class Out(abc.ABC, typing.Generic[T]):
         pass
 
 
-class TraceContext(abc.ABC):
-    """Trace context provided by function host. This represents the trace
-    context in HTTP header.
-    For more information, please visit https://www.w3.org/TR/trace-context/
-    """
-
-    @property
-    @abc.abstractmethod
-    def trace_state(self) -> str:
-        """The trace state flow (e.g. rojo=00f067aa0ba902b7)"""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def trace_parent(self) -> str:
-        """The trace parent of the last entity
-        (e.g. 00-4bf92f3577b34da6a3ce929d0e0e4736-bdaf5a8753b4ee47-01)
-        """
-        pass
-
-    @property
-    @abc.abstractmethod
-    def attributes(self) -> typing.Mapping[str, str]:
-        """The attributes that contains in the trace context"""
-        pass
-
-
 class Context(abc.ABC):
     """Function invocation context."""
 
@@ -70,12 +43,6 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def function_directory(self) -> str:
         """Function directory."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def trace_context(self) -> TraceContext:
-        """The trace context passed from function host"""
         pass
 
 

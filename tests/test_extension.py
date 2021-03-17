@@ -44,9 +44,12 @@ class TestExtensionMeta(unittest.TestCase):
             def post_function_load_app_level():
                 NewAppExtension.executed = True
 
+        registered_post_function_load_exts = (
+            self._instance._app_exts.post_function_load_app_level
+        )
         self.assertEqual(
-            len(self._instance._app_exts.post_function_load_app_level),
-            1
+            registered_post_function_load_exts[0].ext_impl,
+            NewAppExtension.post_function_load_app_level
         )
 
     def test_func_extension_should_register_to_func_exts(self):
@@ -65,14 +68,19 @@ class TestExtensionMeta(unittest.TestCase):
 
         # Follow line should be executed from HttpTrigger/__init__.py script
         # Instantiate a new function extension
-        NewFuncExtension()
+        ext_instance = NewFuncExtension()
+        registered_post_function_load_exts = (
+            self._instance._func_exts['httptrigger'].post_function_load[0]
+        )
         self.assertEqual(
-            len(self._instance._func_exts['httptrigger'].post_function_load),
-            1
+            registered_post_function_load_exts.ext_impl,
+            ext_instance.post_function_load
         )
 
     def test_app_extension_base_should_not_be_registered(self):
-        """When defining the app extension base, it should not be registerd"""
+        """When defining the app extension base, it should not be registerd
+        since the base is not an actual application extension.
+        """
         class AppExtensionBase(metaclass=self._instance):
             _scope = ExtensionScope.APPLICATION
 
@@ -80,7 +88,7 @@ class TestExtensionMeta(unittest.TestCase):
 
     def test_func_extension_base_should_not_be_registered(self):
         """When instantiating the func extension base, it should not be
-        registered
+        registered since the base is not an actual function extension.
         """
         class FuncExtensionBase(metaclass=self._instance):
             _scope = ExtensionScope.FUNCTION
@@ -551,25 +559,27 @@ class TestFuncExtensionBase(unittest.TestCase):
     def test_two_extensions_on_same_trigger(self):
         """Test if two extensions can be registered on the same trigger
         """
-        class NewExtension1(FuncExtensionBase):
+        class NewFuncExtension1(FuncExtensionBase):
             def __init__(self, trigger_name: str):
                 super().__init__(trigger_name)
 
             def pre_invocation(self, logger: Logger, context: Context,
-                               *args, **kwargs) -> None:
-                logger.info('ok_before_1')
+                               function_name: str, function_directory: str,
+                               *args, **kwargs):
+                return 'ok_before1'
 
-        class NewExtension2(FuncExtensionBase):
+        class NewFuncExtension2(FuncExtensionBase):
             def __init__(self, trigger_name: str):
                 super().__init__(trigger_name)
 
             def pre_invocation(self, logger: Logger, context: Context,
-                               *args, **kwargs) -> None:
-                logger.info('ok_before_2')
+                               function_name: str, function_directory: str,
+                               *args, **kwargs):
+                return 'ok_before2'
 
         # Check if both extensions are registered under the same hook
-        NewExtension1(self.mock_file_path)
-        NewExtension2(self.mock_file_path)
+        NewFuncExtension1(self.mock_file_path)
+        NewFuncExtension2(self.mock_file_path)
         hooks = ExtensionMeta.get_function_hooks('HttpTrigger')
 
         # Check if the before invocation hook matches metadata
@@ -577,8 +587,26 @@ class TestFuncExtensionBase(unittest.TestCase):
             lambda x: getattr(x, 'ext_name'),
             hooks.pre_invocation
         )
-        self.assertIn('NewExtension1', extension_names)
-        self.assertIn('NewExtension2', extension_names)
+        self.assertIn('NewFuncExtension1', extension_names)
+        self.assertIn('NewFuncExtension2', extension_names)
+
+        # Check if the extension can be executed correctly
+        extension_implementations = list(map(
+            lambda x: getattr(x, 'ext_impl'),
+            hooks.pre_invocation
+        ))
+        self.assertEqual(
+            extension_implementations[0](
+                logger=None, context={}, function_name='HttpTrigger',
+                function_directory='/home/site/wwwroot/HttpTrigger'
+            ), 'ok_before1'
+        )
+        self.assertEqual(
+            extension_implementations[1](
+                logger=None, context={}, function_name='HttpTrigger',
+                function_directory='/home/site/wwwroot/HttpTrigger'
+            ), 'ok_before2'
+        )
 
     def test_backward_compatilbility_less_arguments(self):
         """Test if the existing extension implemented the interface with
@@ -618,9 +646,10 @@ class TestAppExtensionBase(unittest.TestCase):
         ExtensionMeta._func_exts.clear()
         ExtensionMeta._app_exts = None
 
-    def test_empty_extension_should_pass(self):
+    def test_empty_app_extension_should_pass(self):
         """An application extension can be registered directly since it never
-        gets instantiate
+        gets instantiate. Defining a new AppExtension should not raise an
+        exception.
         """
         class NewAppExtension(AppExtensionBase):
             pass
@@ -647,18 +676,18 @@ class TestAppExtensionBase(unittest.TestCase):
                                              function_name,
                                              function_directory,
                                              *args,
-                                             **kwargs) -> None:
-                print('ok_post_function_load_app_level')
+                                             **kwargs):
+                return 'ok_post_function_load_app_level'
 
             @classmethod
             def pre_invocation_app_level(self, logger, context,
-                                         *args, **kwargs) -> None:
-                logger.info('ok_pre_invocation_app_level')
+                                         *args, **kwargs):
+                return 'ok_pre_invocation_app_level'
 
             @classmethod
             def post_invocation_app_level(self, logger, context,
-                                          *args, **kwargs) -> None:
-                logger.info('ok_post_invocation_app_level')
+                                          *args, **kwargs):
+                return 'ok_post_invocation_app_level'
 
         # Check app hooks registration
         hooks = ExtensionMeta.get_application_hooks()
@@ -669,15 +698,25 @@ class TestAppExtensionBase(unittest.TestCase):
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.post_function_load_app_level)
+        self.assertEqual(
+            hook_meta.ext_impl(
+                logger=None, context={}, function_name='HttpTrigger',
+                function_directory='/home/site/wwwroot/HttpTrigger'
+            ), 'ok_post_function_load_app_level'
+        )
 
         # Check pre_invocation_hook
         hook_meta = hooks.pre_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.pre_invocation_app_level)
+        self.assertEqual(hook_meta.ext_impl(logger=None, context={}),
+                         'ok_pre_invocation_app_level')
 
         # Check post_invocation_hook
         hook_meta = hooks.post_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.post_invocation_app_level)
+        self.assertEqual(hook_meta.ext_impl(logger=None, context={}),
+                         'ok_post_invocation_app_level')
