@@ -56,15 +56,8 @@ class TestExtensionMeta(unittest.TestCase):
         """When instantiating a function extension, it should be registered
         to function extension set in ExtensionMeta
         """
-        class NewFuncExtension(metaclass=self._instance):
-            _scope = ExtensionScope.FUNCTION
-
-            def __init__(self):
-                self._trigger_name = 'httptrigger'
-                self.executed = False
-
-            def post_function_load(self):
-                self.executed = True
+        # Define a new function extension
+        NewFuncExtension = _generate_new_func_extension_class(self._instance)
 
         # Follow line should be executed from HttpTrigger/__init__.py script
         # Instantiate a new function extension
@@ -167,16 +160,10 @@ class TestExtensionMeta(unittest.TestCase):
 
     def test_get_registered_extensions_json_function_ext(self):
         """Ensure the get extension json will return function ext info"""
-        class NewFuncExtension(metaclass=self._instance):
-            _scope = ExtensionScope.FUNCTION
-            _trigger_name = 'HttpTrigger'
+        # Define a new function extension
+        NewFuncExtension = _generate_new_func_extension_class(self._instance)
 
-            def __init__(self):
-                self._executed = False
-
-            def post_function_load_app_level(self):
-                self._executed = True
-
+        # Instantiate the function extension as in a customer's code
         NewFuncExtension()
         info_json = self._instance.get_registered_extensions_json()
         self.assertEqual(
@@ -223,15 +210,8 @@ class TestExtensionMeta(unittest.TestCase):
         """Instantiating a function extension will register the life-cycle
         hooks
         """
-        class NewFuncExtension(metaclass=self._instance):
-            _scope = ExtensionScope.FUNCTION
-
-            def __init__(self):
-                self._trigger_name = 'HttpTrigger'
-                self._executed = False
-
-            def post_function_load(self):
-                self._executed = True
+        # Define a new function extension
+        NewFuncExtension = _generate_new_func_extension_class(self._instance)
 
         # Instantiate this as in HttpTrigger/__init__.py customer's code
         ext_instance = NewFuncExtension()
@@ -242,8 +222,11 @@ class TestExtensionMeta(unittest.TestCase):
         self.assertEqual(meta.ext_name, 'NewFuncExtension')
 
         # Check if the extension is executable
-        meta.ext_impl()
-        self.assertTrue(ext_instance._executed)
+        meta.ext_impl(
+            function_name='HttpTrigger',
+            function_directory='/home/site/wwwroot/HttpTrigger'
+        )
+        self.assertTrue(ext_instance._post_function_load_executed)
 
     def test_set_hooks_for_application(self):
         """Create an application extension class will register the life-cycle
@@ -275,15 +258,8 @@ class TestExtensionMeta(unittest.TestCase):
         """After intiializing, function extension should be recorded in
         func_exts and _info
         """
-        class NewFuncExtension(metaclass=self._instance):
-            _scope = ExtensionScope.FUNCTION
-
-            def __init__(self):
-                self._trigger_name = 'HttpTrigger'
-                self._executed = False
-
-            def post_function_load(self):
-                self._executed = True
+        # Define a new function extension
+        NewFuncExtension = _generate_new_func_extension_class(self._instance)
 
         # The following line should be called by customer
         ext_instance = NewFuncExtension()
@@ -637,14 +613,17 @@ class TestFuncExtensionBase(unittest.TestCase):
 class TestAppExtensionBase(unittest.TestCase):
 
     def setUp(self):
+        super().setUp()
+        self._instance = ExtensionMeta
         self.patch_os_environ = patch.dict('os.environ', os.environ.copy())
         self.patch_os_environ.start()
 
     def tearDown(self) -> None:
+        super().tearDown()
         self.patch_os_environ.stop()
+        ExtensionMeta._app_exts = None
         ExtensionMeta._info.clear()
         ExtensionMeta._func_exts.clear()
-        ExtensionMeta._app_exts = None
 
     def test_empty_app_extension_should_pass(self):
         """An application extension can be registered directly since it never
@@ -670,53 +649,102 @@ class TestAppExtensionBase(unittest.TestCase):
         """The life-cycles implementations in extension should be automatically
         registered in class creation
         """
-        class NewAppExtension(AppExtensionBase):
-            @classmethod
-            def post_function_load_app_level(cls,
-                                             function_name,
-                                             function_directory,
-                                             *args,
-                                             **kwargs):
-                return 'ok_post_function_load_app_level'
-
-            @classmethod
-            def pre_invocation_app_level(self, logger, context,
-                                         *args, **kwargs):
-                return 'ok_pre_invocation_app_level'
-
-            @classmethod
-            def post_invocation_app_level(self, logger, context,
-                                          *args, **kwargs):
-                return 'ok_post_invocation_app_level'
+        # Define new an application extension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
         # Check app hooks registration
-        hooks = ExtensionMeta.get_application_hooks()
+        hooks = self._instance.get_application_hooks()
         self.assertIsInstance(hooks, AppExtensionHooks)
 
-        # Check post_function_load
+        # Check post_function_load_app_level
         hook_meta = hooks.post_function_load_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.post_function_load_app_level)
-        self.assertEqual(
-            hook_meta.ext_impl(
-                logger=None, context={}, function_name='HttpTrigger',
-                function_directory='/home/site/wwwroot/HttpTrigger'
-            ), 'ok_post_function_load_app_level'
+
+        # Execute post_function_load_app_level
+        hook_meta.ext_impl(
+            logger=None, context={}, function_name='HttpTrigger',
+            function_directory='/home/site/wwwroot/HttpTrigger'
+        )
+        self.assertTrue(
+            NewAppExtension._post_function_load_app_level_executed
         )
 
-        # Check pre_invocation_hook
+        # Check pre_invocation_app_level
         hook_meta = hooks.pre_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.pre_invocation_app_level)
-        self.assertEqual(hook_meta.ext_impl(logger=None, context={}),
-                         'ok_pre_invocation_app_level')
 
-        # Check post_invocation_hook
+        # Execute pre_invocation_app_level
+        hook_meta.ext_impl(logger=None, context={})
+        self.assertTrue(
+            NewAppExtension._pre_invocation_app_level
+        )
+
+        # Check post_invocation_app_level
         hook_meta = hooks.post_invocation_app_level[0]
         self.assertEqual(hook_meta.ext_name, 'NewAppExtension')
         self.assertEqual(hook_meta.ext_impl,
                          NewAppExtension.post_invocation_app_level)
-        self.assertEqual(hook_meta.ext_impl(logger=None, context={}),
-                         'ok_post_invocation_app_level')
+
+        # Exectue post_invocation_app_level
+        hook_meta.ext_impl(logger=None, context={})
+        self.assertTrue(
+            NewAppExtension._post_invocation_app_level
+        )
+
+
+def _generate_new_func_extension_class(
+    metaclass: type,
+    trigger_name: str = 'HttpTrigger'
+):
+    class NewFuncExtension(metaclass=metaclass):
+        _scope = ExtensionScope.FUNCTION
+
+        def __init__(self):
+            self._trigger_name = trigger_name
+            self._post_function_load_executed = False
+            self._pre_invocation_executed = False
+            self._post_invocation_executed = False
+
+        def post_function_load(self, function_name, function_directory):
+            self._post_function_load_executed = True
+
+        def pre_invocation(self, logger, context):
+            self._pre_invocation_executed = True
+
+        def post_invocation(self, logger, context):
+            self._post_invocation_executed = True
+
+    return NewFuncExtension
+
+
+def _generate_new_app_extension(metaclass: type):
+    class NewAppExtension(metaclass=metaclass):
+        _scope = ExtensionScope.APPLICATION
+
+        _post_function_load_app_level_executed = False
+        _pre_invocation_app_level = False
+        _post_invocation_app_level = False
+
+        @classmethod
+        def post_function_load_app_level(cls,
+                                         function_name,
+                                         function_directory,
+                                         *args,
+                                         **kwargs):
+            cls._post_function_load_app_level_executed = True
+
+        @classmethod
+        def pre_invocation_app_level(cls, logger, context,
+                                     *args, **kwargs):
+            cls._pre_invocation_app_level = True
+
+        @classmethod
+        def post_invocation_app_level(cls, logger, context,
+                                      *args, **kwargs):
+            cls._post_invocation_app_level = True
+
+    return NewAppExtension
