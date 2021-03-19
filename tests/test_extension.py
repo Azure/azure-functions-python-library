@@ -32,18 +32,10 @@ class TestExtensionMeta(unittest.TestCase):
         """When defining an application extension, it should be registered
         to application extension set in ExtensionMeta
         """
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
-            _executed = False
+        # Define a new AppExtension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
-            @staticmethod
-            def init():
-                pass
-
-            @staticmethod
-            def post_function_load_app_level():
-                NewAppExtension.executed = True
-
+        # Check if the extension is actuall being loaded
         registered_post_function_load_exts = (
             self._instance._app_exts.post_function_load_app_level
         )
@@ -95,18 +87,10 @@ class TestExtensionMeta(unittest.TestCase):
         """Application extension is operating on a class level, shouldn't be
         instantiate by trigger script
         """
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
-            _executed = False
+        # Define a new AppExtension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
-            @staticmethod
-            def init():
-                pass
-
-            @staticmethod
-            def post_function_load_app_level():
-                NewAppExtension.executed = True
-
+        # Try instantiate the extension but it should fail
         with self.assertRaises(FunctionExtensionException):
             NewAppExtension()
 
@@ -173,13 +157,10 @@ class TestExtensionMeta(unittest.TestCase):
 
     def test_get_registered_extension_json_application_ext(self):
         """Ensure the get extension json will return application ext info"""
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
+        # Register a new application extension
+        _generate_new_app_extension(self._instance)
 
-            @classmethod
-            def init(cls):
-                pass
-
+        # The registration should be tracked in the info
         info_json = self._instance.get_registered_extensions_json()
         self.assertEqual(
             info_json,
@@ -188,12 +169,8 @@ class TestExtensionMeta(unittest.TestCase):
 
     def test_get_extension_scope(self):
         """Test if ExtensionScope is properly retrieved"""
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
-
-            @classmethod
-            def init(cls):
-                pass
+        # Register a new application extension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
         scope = self._instance._get_extension_scope(NewAppExtension)
         self.assertEqual(scope, ExtensionScope.APPLICATION)
@@ -232,17 +209,8 @@ class TestExtensionMeta(unittest.TestCase):
         """Create an application extension class will register the life-cycle
         hooks
         """
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
-            _executed = False
-
-            @classmethod
-            def init(cls):
-                pass
-
-            @classmethod
-            def post_function_load_app_level(cls):
-                cls._executed = True
+        # Register a new application extension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
         self._instance._set_hooks_for_application(NewAppExtension)
         meta = self._instance._app_exts.post_function_load_app_level[0]
@@ -251,8 +219,9 @@ class TestExtensionMeta(unittest.TestCase):
         self.assertEqual(meta.ext_name, 'NewAppExtension')
 
         # Check if extension is initialized and executable
-        meta.ext_impl()
-        self.assertTrue(NewAppExtension._executed)
+        meta.ext_impl(function_name="HttpTrigger",
+                      function_directory="/home/site/wwwroot")
+        self.assertTrue(NewAppExtension._post_function_load_app_level_executed)
 
     def test_register_function_extension(self):
         """After intiializing, function extension should be recorded in
@@ -278,17 +247,13 @@ class TestExtensionMeta(unittest.TestCase):
         """After creating an application extension class, it should be recorded
         in app_exts and _info
         """
-        class NewAppExtension(metaclass=self._instance):
-            _scope = ExtensionScope.APPLICATION
+        # Register a new application extension
+        _generate_new_app_extension(self._instance)
 
-            @staticmethod
-            def post_function_load_app_level():
-                pass
-
-        # Check _app_exts should have lowercased tirgger name
+        # Check _app_exts should trigger_hook
         self.assertEqual(
-            len(self._instance._app_exts.post_function_load_app_level),
-            1
+            self._instance._app_exts.post_function_load_app_level[0].ext_name,
+            'NewAppExtension'
         )
 
         # Check _info should record the application extension
@@ -630,20 +595,17 @@ class TestAppExtensionBase(unittest.TestCase):
         gets instantiate. Defining a new AppExtension should not raise an
         exception.
         """
-        class NewAppExtension(AppExtensionBase):
+        class NewEmptyAppExtension(AppExtensionBase):
             pass
 
     def test_init_method_should_be_called(self):
         """An application extension's init() classmethod should be called
         when the class is created"""
-        class NewAppExtension(AppExtensionBase):
-            _initialized = False
+        # Define new an application extension
+        NewAppExtension = _generate_new_app_extension(self._instance)
 
-            @classmethod
-            def init(cls):
-                cls._initialized = True
-
-        self.assertTrue(NewAppExtension._initialized)
+        # Ensure the init() method is executed
+        self.assertTrue(NewAppExtension._init_executed)
 
     def test_extension_registration(self):
         """The life-cycles implementations in extension should be automatically
@@ -725,9 +687,14 @@ def _generate_new_app_extension(metaclass: type):
     class NewAppExtension(metaclass=metaclass):
         _scope = ExtensionScope.APPLICATION
 
+        _init_executed = False
         _post_function_load_app_level_executed = False
         _pre_invocation_app_level = False
         _post_invocation_app_level = False
+
+        @classmethod
+        def init(cls):
+            cls._init_executed = True
 
         @classmethod
         def post_function_load_app_level(cls,
