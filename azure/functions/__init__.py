@@ -13,6 +13,8 @@ from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._durable_functions import OrchestrationContext, EntityContext
 from .meta import get_binding_registry
+from .extension import (ExtensionMeta, FunctionExtensionException,
+                        FuncExtensionBase, AppExtensionBase)
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -54,7 +56,13 @@ __all__ = (
     'TimerRequest',
 
     # Middlewares
-    'WsgiMiddleware'
+    'WsgiMiddleware',
+
+    # Extensions
+    'AppExtensionBase',
+    'FuncExtensionBase',
+    'ExtensionMeta',
+    'FunctionExtensionException'
 )
 
 __version__ = '1.6.0'
