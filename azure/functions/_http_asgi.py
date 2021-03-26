@@ -48,10 +48,12 @@ class AsgiResponse:
         self._status_code = 0
         self._headers = {}
         self._buffer: List[bytes] = []
+        self._request_body = b""
 
     @classmethod
-    async def from_app(cls, app, scope) -> "AsgiResponse":
+    async def from_app(cls, app, scope: Dict[str, Any], body: bytes) -> "AsgiResponse":
         res = cls()
+        res._request_body = body
         await app(scope, res._receive, res._send)
         return res
 
@@ -76,7 +78,7 @@ class AsgiResponse:
     async def _receive(self):
         return {
             "type": "http.request",
-            "body": b"",  # TODO : Push the request body
+            "body": self._request_body,
             "more_body": False,
         }
 
@@ -117,7 +119,7 @@ class AsgiMiddleware:
         asyncio.set_event_loop(self.loop)
         scope = asgi_request.to_asgi_http_scope()
         asgi_response = self.loop.run_until_complete(
-            AsgiResponse.from_app(self._app, scope)
+            AsgiResponse.from_app(self._app, scope, req.get_body())
         )
         self._handle_errors()
         return asgi_response.to_func_response()
