@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import asyncio
-from typing import Callable, Dict, List, Optional, Any
+from typing import Callable, Dict, List, Tuple, Optional, Any
 from io import StringIO
 from os import linesep
 from wsgiref.headers import Headers
@@ -18,7 +18,11 @@ class AsgiRequest(WsgiRequest):
     def __init__(self, func_req: HttpRequest, func_ctx: Optional[Context] = None):
         self.asgi_version = "2.1"
         self.asgi_spec_version = "2.1"
+        self._headers = func_req.headers
         super().__init__(func_req, func_ctx)
+
+    def _get_encoded_http_headers(self) -> List[Tuple[bytes, bytes]]:
+        return [(k.encode('utf8'), v.encode('utf8')) for k, v in self._headers.items()]
 
     def to_asgi_http_scope(self):
         return {
@@ -32,7 +36,7 @@ class AsgiRequest(WsgiRequest):
             "raw_path": self.path_info,
             "query_string": self.query_string,
             "root_path": self.script_name,
-            "headers": self._http_environ,
+            "headers": self._get_encoded_http_headers(),
             "server": (self.server_name, self.server_port),
         }
         # Notes, missing client name, port
