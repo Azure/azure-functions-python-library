@@ -153,7 +153,7 @@ class WsgiMiddleware:
         return self._handle
 
     # Usage
-    # return func.WsgiMiddlewawre(app).handle(req, context)
+    # return func.WsgiMiddleware(app).handle(req, context)
     def handle(self,
                req: HttpRequest,
                context: Optional[Context] = None) -> HttpResponse:
