@@ -16,14 +16,16 @@ from ._http_wsgi import WsgiRequest
 class AsgiRequest(WsgiRequest):
     _environ_cache: Optional[Dict[str, Any]] = None
 
-    def __init__(self, func_req: HttpRequest, func_ctx: Optional[Context] = None):
+    def __init__(self, func_req: HttpRequest,
+                 func_ctx: Optional[Context] = None):
         self.asgi_version = "2.1"
         self.asgi_spec_version = "2.1"
         self._headers = func_req.headers
         super().__init__(func_req, func_ctx)
 
     def _get_encoded_http_headers(self) -> List[Tuple[bytes, bytes]]:
-        return [(k.encode("utf8"), v.encode("utf8")) for k, v in self._headers.items()]
+        return [(k.encode("utf8"), v.encode("utf8"))
+                for k, v in self._headers.items()]
 
     def to_asgi_http_scope(self):
         return {
@@ -51,7 +53,8 @@ class AsgiResponse:
         self._request_body = b""
 
     @classmethod
-    async def from_app(cls, app, scope: Dict[str, Any], body: bytes) -> "AsgiResponse":
+    async def from_app(cls, app, scope: Dict[str, Any],
+                       body: bytes) -> "AsgiResponse":
         res = cls()
         res._request_body = body
         await app(scope, res._receive, res._send)
@@ -68,7 +71,9 @@ class AsgiResponse:
         )
 
     def _handle_http_response_start(self, message: Dict):
-        self._headers = Headers([(k.decode(), v.decode()) for k, v in message["headers"]])  # type: ignore
+        self._headers = Headers(
+            [(k.decode(), v.decode())
+             for k, v in message["headers"]])  # type: ignore
         self._status_code = message["status"]
 
     def _handle_http_response_body(self, message: Dict):
@@ -114,7 +119,8 @@ class AsgiMiddleware:
         logging.info(f"Handling {req.url} as ASGI request.")
         return self._handle(req, context)
 
-    def _handle(self, req: HttpRequest, context: Optional[Context]) -> HttpResponse:
+    def _handle(self, req: HttpRequest,
+                context: Optional[Context]) -> HttpResponse:
         asgi_request = AsgiRequest(req, context)
         asyncio.set_event_loop(self.loop)
         scope = asgi_request.to_asgi_http_scope()
