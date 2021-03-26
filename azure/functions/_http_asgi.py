@@ -4,6 +4,7 @@
 import asyncio
 from typing import Callable, Dict, List, Tuple, Optional, Any
 from io import StringIO
+import logging
 from os import linesep
 from wsgiref.headers import Headers
 
@@ -22,7 +23,7 @@ class AsgiRequest(WsgiRequest):
         super().__init__(func_req, func_ctx)
 
     def _get_encoded_http_headers(self) -> List[Tuple[bytes, bytes]]:
-        return [(k.encode('utf8'), v.encode('utf8')) for k, v in self._headers.items()]
+        return [(k.encode("utf8"), v.encode("utf8")) for k, v in self._headers.items()]
 
     def to_asgi_http_scope(self):
         return {
@@ -80,6 +81,7 @@ class AsgiResponse:
         }
 
     async def _send(self, message):
+        logging.debug(f"Received {message} from ASGI worker.")
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":
@@ -90,9 +92,11 @@ class AsgiResponse:
 
 class AsgiMiddleware:
     def __init__(self, app):
+        logging.debug("Instantiating ASGI middleware.")
         self._app = app
         self._asgi_error_buffer = StringIO()
         self.loop = asyncio.new_event_loop()
+        logging.debug("asyncio event loop initialized.")
 
     # Usage
     # main = func.AsgiMiddleware(app).main
@@ -105,6 +109,7 @@ class AsgiMiddleware:
     def handle(
         self, req: HttpRequest, context: Optional[Context] = None
     ) -> HttpResponse:
+        logging.info(f"Handling {req.url} as ASGI request.")
         return self._handle(req, context)
 
     def _handle(self, req: HttpRequest, context: Optional[Context]) -> HttpResponse:
