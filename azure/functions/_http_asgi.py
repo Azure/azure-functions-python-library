@@ -3,15 +3,13 @@
 
 import asyncio
 from typing import Callable, Dict, List, Optional, Any
-from io import BytesIO, StringIO
+from io import StringIO
 from os import linesep
-from urllib.parse import urlparse
 from wsgiref.headers import Headers
 
 from ._abc import Context
 from ._http import HttpRequest, HttpResponse
 from ._http_wsgi import WsgiRequest
-from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
 
 
 class AsgiRequest(WsgiRequest):
