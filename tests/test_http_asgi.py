@@ -5,8 +5,6 @@ import unittest
 
 import azure.functions as func
 from azure.functions._http_asgi import (
-    AsgiRequest,
-    AsgiResponse,
     AsgiMiddleware
 )
 
@@ -20,7 +18,7 @@ class MockAsgiApplication:
 
     async def __call__(self, scope, receive, send):
         self.received_scope = scope
-        # Verify against https://asgi.readthedocs.io/en/latest/specs/www.html#http-connection-scope
+        # Verify against ASGI specification
         assert scope['type'] == 'http'
         assert isinstance(scope['type'], str)
 

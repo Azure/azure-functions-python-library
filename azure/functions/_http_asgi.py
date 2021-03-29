@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import asyncio
-from typing import Callable, Dict, List, Tuple, Optional, Any
+from typing import Callable, Dict, List, Tuple, Optional, Any, Union
 import logging
 from wsgiref.headers import Headers
 
@@ -52,7 +52,7 @@ class AsgiRequest(WsgiRequest):
 class AsgiResponse:
     def __init__(self):
         self._status_code = 0
-        self._headers = {}
+        self._headers: Union[Headers, Dict] = {}
         self._buffer: List[bytes] = []
         self._request_body = b""
 
@@ -74,13 +74,13 @@ class AsgiResponse:
             charset=lowercased_headers.get("content-encoding"),
         )
 
-    def _handle_http_response_start(self, message: Dict):
+    def _handle_http_response_start(self, message: Dict[str, Any]):
         self._headers = Headers(
             [(k.decode(), v.decode())
-             for k, v in message["headers"]])  # type: ignore
+             for k, v in message["headers"]])
         self._status_code = message["status"]
 
-    def _handle_http_response_body(self, message: Dict):
+    def _handle_http_response_body(self, message: Dict[str, Any]):
         self._buffer.append(message["body"])
         # TODO : Handle more_body flag
 
