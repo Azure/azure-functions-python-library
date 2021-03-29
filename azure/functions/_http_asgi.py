@@ -3,9 +3,7 @@
 
 import asyncio
 from typing import Callable, Dict, List, Tuple, Optional, Any
-from io import StringIO
 import logging
-from os import linesep
 from wsgiref.headers import Headers
 
 from ._abc import Context
@@ -27,6 +25,11 @@ class AsgiRequest(WsgiRequest):
         return [(k.encode("utf8"), v.encode("utf8"))
                 for k, v in self._headers.items()]
 
+    def _get_server_address(self):
+        if self.server_name is not None:
+            return (self.server_name, int(self.server_port))
+        return None
+
     def to_asgi_http_scope(self):
         return {
             "type": "http",
@@ -36,11 +39,12 @@ class AsgiRequest(WsgiRequest):
             "method": self.request_method,
             "scheme": "https",
             "path": self.path_info,
-            "raw_path": self.path_info,
-            "query_string": self.query_string,
+            "raw_path": self.path_info.encode("utf-8"),
+            "query_string": self.query_string.encode("utf-8"),
             "root_path": self.script_name,
             "headers": self._get_encoded_http_headers(),
-            "server": (self.server_name, self.server_port),
+            "server": self._get_server_address(),
+            "client": None
         }
         # Notes, missing client name, port
 
@@ -101,7 +105,6 @@ class AsgiMiddleware:
     def __init__(self, app):
         logging.debug("Instantiating ASGI middleware.")
         self._app = app
-        self._asgi_error_buffer = StringIO()
         self.loop = asyncio.new_event_loop()
         logging.debug("asyncio event loop initialized.")
 
@@ -127,11 +130,5 @@ class AsgiMiddleware:
         asgi_response = self.loop.run_until_complete(
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
-        self._handle_errors()
-        return asgi_response.to_func_response()
 
-    def _handle_errors(self):
-        if self._asgi_error_buffer.tell() > 0:
-            self._asgi_error_buffer.seek(0)
-            error_message = linesep.join(self._asgi_error_buffer.readline())
-            raise Exception(error_message)
+        return asgi_response.to_func_response()
