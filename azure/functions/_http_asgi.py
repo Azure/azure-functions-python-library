@@ -12,8 +12,6 @@ from ._http_wsgi import WsgiRequest
 
 
 class AsgiRequest(WsgiRequest):
-    _environ_cache: Optional[Dict[str, Any]] = None
-
     def __init__(self, func_req: HttpRequest,
                  func_ctx: Optional[Context] = None):
         self.asgi_version = "2.1"
@@ -44,7 +42,10 @@ class AsgiRequest(WsgiRequest):
             "root_path": self.script_name,
             "headers": self._get_encoded_http_headers(),
             "server": self._get_server_address(),
-            "client": None
+            "client": None,
+            "azure_functions.function_directory": self.af_function_directory,
+            "azure_functions.function_name": self.af_function_name,
+            "azure_functions.invocation_id": self.af_invocation_id
         }
         # Notes, missing client name, port
 
@@ -82,7 +83,8 @@ class AsgiResponse:
 
     def _handle_http_response_body(self, message: Dict[str, Any]):
         self._buffer.append(message["body"])
-        # TODO : Handle more_body flag
+        # XXX : Chunked bodies not supported, see
+        # https://github.com/Azure/azure-functions-host/issues/4926
 
     async def _receive(self):
         return {
