@@ -146,11 +146,7 @@ class WsgiMiddleware:
         self._app = app
         self._wsgi_error_buffer = StringIO()
 
-    # Usage
-    # main = func.WsgiMiddleware(app).main
-    @property
-    def main(self) -> Callable[[HttpRequest, Context], HttpResponse]:
-        return self._handle
+        self.main = self._handle
 
     # Usage
     # return func.WsgiMiddleware(app).handle(req, context)
@@ -159,9 +155,9 @@ class WsgiMiddleware:
                context: Optional[Context] = None) -> HttpResponse:
         return self._handle(req, context)
 
-    def _handle(self,
-                req: HttpRequest,
-                context: Optional[Context]) -> HttpResponse:
+    # Usage
+    # main = func.WsgiMiddleware(app).main
+    def _handle(self, req, context):
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
