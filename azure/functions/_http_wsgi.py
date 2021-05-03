@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import Callable, Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any
+import logging
 from io import BytesIO, StringIO
 from os import linesep
 from urllib.parse import urlparse
@@ -142,17 +143,21 @@ class WsgiResponse:
 
 
 class WsgiMiddleware:
+    _logger = logging.getLogger('azure.functions.WsgiMiddleware')
+    _usage_reported = False
+
     def __init__(self, app):
+        if not self._usage_reported:
+            self._logger.info("Instantiating Azure Functions WSGI middleware.")
+            self._usage_reported = True
+
         self._app = app
         self._wsgi_error_buffer = StringIO()
-
         self.main = self._handle
 
     # Usage
     # return func.WsgiMiddleware(app).handle(req, context)
-    def handle(self,
-               req: HttpRequest,
-               context: Optional[Context] = None) -> HttpResponse:
+    def handle(self, req: HttpRequest, context: Optional[Context] = None):
         return self._handle(req, context)
 
     # Usage

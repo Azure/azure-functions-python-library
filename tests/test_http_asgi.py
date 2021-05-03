@@ -153,3 +153,18 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         # Verify asserted
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_body(), test_body)
+
+    def test_middleware_wrapper(self):
+        app = MockAsgiApplication()
+        test_body = b'Hello world!'
+        app.response_body = test_body
+        app.response_code = 200
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        main = AsgiMiddleware(app).main
+        response = main(req, ctx)
+
+        # Verify asserted
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_body(), test_body)

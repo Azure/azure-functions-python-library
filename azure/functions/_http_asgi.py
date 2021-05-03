@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import asyncio
-from typing import Callable, Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
+import asyncio
 from wsgiref.headers import Headers
 
 from ._abc import Context
@@ -104,32 +104,31 @@ class AsgiResponse:
 
 
 class AsgiMiddleware:
-    def __init__(self, app):
-        logging.debug("Instantiating ASGI middleware.")
-        self._app = app
-        self.loop = asyncio.new_event_loop()
-        logging.debug("asyncio event loop initialized.")
+    _logger = logging.getLogger('azure.functions.AsgiMiddleware')
+    _usage_reported = False
 
-    # Usage
-    # main = func.AsgiMiddleware(app).main
-    @property
-    def main(self) -> Callable[[HttpRequest, Context], HttpResponse]:
-        return self._handle
+    def __init__(self, app):
+        if not self._usage_reported:
+            self._logger.info("Instantiating Azure Functions ASGI middleware.")
+            self._usage_reported = True
+
+        self._app = app
+        self._loop = asyncio.new_event_loop()
+        self.main = self._handle
 
     # Usage
     # return func.AsgiMiddleware(app).handle(req, context)
-    def handle(
-        self, req: HttpRequest, context: Optional[Context] = None
-    ) -> HttpResponse:
-        logging.info(f"Handling {req.url} as ASGI request.")
+    def handle(self, req: HttpRequest, context: Optional[Context] = None):
+        self._logger.debug(f"Handling {req.url} as an ASGI request.")
         return self._handle(req, context)
 
-    def _handle(self, req: HttpRequest,
-                context: Optional[Context]) -> HttpResponse:
+    # Usage
+    # main = func.AsgiMiddleware(app).main
+    def _handle(self, req, context):
         asgi_request = AsgiRequest(req, context)
-        asyncio.set_event_loop(self.loop)
+        asyncio.set_event_loop(self._loop)
         scope = asgi_request.to_asgi_http_scope()
-        asgi_response = self.loop.run_until_complete(
+        asgi_response = self._loop.run_until_complete(
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
 

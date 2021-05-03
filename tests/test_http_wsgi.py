@@ -168,6 +168,16 @@ class TestHttpWsgi(unittest.TestCase):
         func_request = self._generate_func_request()
         func_response = WsgiMiddleware(app).handle(func_request)
         self.assertEqual(func_response.status_code, 200)
+        self.assertEqual(func_response.get_body(), b'sample string')
+
+    def test_middleware_wrapper(self):
+        app = self._generate_wsgi_app()
+        main = WsgiMiddleware(app).main
+        func_request = self._generate_func_request()
+        func_context = self._generate_func_context()
+        func_response = main(func_request, func_context)
+        self.assertEqual(func_response.status_code, 200)
+        self.assertEqual(func_response.get_body(), b'sample string')
 
     def _generate_func_request(
             self,
