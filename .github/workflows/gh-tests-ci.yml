@@ -27,7 +27,7 @@ jobs:
       run: |
         pytest --cov=./azure --cov-report=xml --cov-branch tests
     - name: Codecov
-      if: matrix.python-version == 3.9
+      if: ${{ matrix.python-version == 3.9 }}
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
