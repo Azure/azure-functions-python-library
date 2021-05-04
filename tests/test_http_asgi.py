@@ -142,6 +142,11 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         self.assertEqual(response.get_body(), test_body)
 
     def test_middleware_calls_app_with_context(self):
+        """Test if the middleware can be used by exposing the .handle method,
+        specifically when the middleware is used as
+        def main(req, context):
+            return AsgiMiddleware(app).handle(req, context)
+        """
         app = MockAsgiApplication()
         test_body = b'Hello world!'
         app.response_body = test_body
@@ -149,6 +154,25 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         req = self._generate_func_request()
         ctx = self._generate_func_context()
         response = AsgiMiddleware(app).handle(req, ctx)
+
+        # Verify asserted
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_body(), test_body)
+
+    def test_middleware_wrapper(self):
+        """Test if the middleware can be used by exposing the .main property,
+        specifically when the middleware is used as
+        main = AsgiMiddleware(app).main
+        """
+        app = MockAsgiApplication()
+        test_body = b'Hello world!'
+        app.response_body = test_body
+        app.response_code = 200
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        main = AsgiMiddleware(app).main
+        response = main(req, ctx)
 
         # Verify asserted
         self.assertEqual(response.status_code, 200)

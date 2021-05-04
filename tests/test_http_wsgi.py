@@ -164,10 +164,29 @@ class TestHttpWsgi(unittest.TestCase):
         self.assertEqual(e.exception.message, 'wsgi excpt')
 
     def test_middleware_handle(self):
+        """Test if the middleware can be used by exposing the .handle method,
+        specifically when the middleware is used as
+        def main(req, context):
+            return WsgiMiddleware(app).handle(req, context)
+        """
         app = self._generate_wsgi_app()
         func_request = self._generate_func_request()
         func_response = WsgiMiddleware(app).handle(func_request)
         self.assertEqual(func_response.status_code, 200)
+        self.assertEqual(func_response.get_body(), b'sample string')
+
+    def test_middleware_wrapper(self):
+        """Test if the middleware can be used by exposing the .main property,
+        specifically when the middleware is used as
+        main = WsgiMiddleware(app).main
+        """
+        app = self._generate_wsgi_app()
+        main = WsgiMiddleware(app).main
+        func_request = self._generate_func_request()
+        func_context = self._generate_func_context()
+        func_response = main(func_request, func_context)
+        self.assertEqual(func_response.status_code, 200)
+        self.assertEqual(func_response.get_body(), b'sample string')
 
     def _generate_func_request(
             self,
