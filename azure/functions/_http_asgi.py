@@ -104,10 +104,24 @@ class AsgiResponse:
 
 
 class AsgiMiddleware:
+    """This middleware is to adapt an ASGI supported Python server
+    framework into Azure Functions. It can be used by either calling the
+    .handle() function or exposing the .main property in a HttpTrigger.
+    """
     _logger = logging.getLogger('azure.functions.AsgiMiddleware')
     _usage_reported = False
 
     def __init__(self, app):
+        """Instantiate an ASGI middleware to convert Azure Functions HTTP
+        request into ASGI Python object. Example on handling ASGI app in a HTTP
+        trigger by overwriting the .main() method:
+
+        import azure.functions as func
+
+        from FastapiApp import app
+
+        main = func.AsgiMiddleware(app).main
+        """
         if not self._usage_reported:
             self._logger.info("Instantiating Azure Functions ASGI middleware.")
             self._usage_reported = True
@@ -116,14 +130,21 @@ class AsgiMiddleware:
         self._loop = asyncio.new_event_loop()
         self.main = self._handle
 
-    # Usage
-    # return func.AsgiMiddleware(app).handle(req, context)
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
+        """Method to convert an Azure Functions HTTP request into a ASGI
+        Python object. Example on handling ASGI app in a HTTP trigger by
+        calling .handle() in .main() method:
+
+        import azure.functions as func
+
+        from FastapiApp import app
+
+        def main(req, context):
+            return func.AsgiMiddleware(app).handle(req, context)
+        """
         self._logger.debug(f"Handling {req.url} as an ASGI request.")
         return self._handle(req, context)
 
-    # Usage
-    # main = func.AsgiMiddleware(app).main
     def _handle(self, req, context):
         asgi_request = AsgiRequest(req, context)
         asyncio.set_event_loop(self._loop)

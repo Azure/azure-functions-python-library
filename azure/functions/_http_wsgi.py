@@ -143,10 +143,24 @@ class WsgiResponse:
 
 
 class WsgiMiddleware:
+    """This middleware is to adapt a WSGI supported Python server
+    framework into Azure Functions. It can be used by either calling the
+    .handle() function or exposing the .main property in a HttpTrigger.
+    """
     _logger = logging.getLogger('azure.functions.WsgiMiddleware')
     _usage_reported = False
 
     def __init__(self, app):
+        """Instantiate a WSGI middleware to convert Azure Functions HTTP
+        request into WSGI Python object. Example on handling WSGI app in a HTTP
+        trigger by overwriting the .main() method:
+
+        import azure.functions as func
+
+        from FlaskApp import app
+
+        main = func.WsgiMiddleware(app.wsgi_app).main
+        """
         if not self._usage_reported:
             self._logger.info("Instantiating Azure Functions WSGI middleware.")
             self._usage_reported = True
@@ -155,13 +169,20 @@ class WsgiMiddleware:
         self._wsgi_error_buffer = StringIO()
         self.main = self._handle
 
-    # Usage
-    # return func.WsgiMiddleware(app).handle(req, context)
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
+        """Method to convert an Azure Functions HTTP request into a WSGI
+        Python object. Example on handling WSGI app in a HTTP trigger by
+        calling .handle() in .main() method:
+
+        import azure.functions as func
+
+        from FlaskApp import app
+
+        def main(req, context):
+            return func.WsgiMiddleware(app.wsgi_app).handle(req, context)
+        """
         return self._handle(req, context)
 
-    # Usage
-    # main = func.WsgiMiddleware(app).main
     def _handle(self, req, context):
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
