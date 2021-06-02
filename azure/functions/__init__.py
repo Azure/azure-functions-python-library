@@ -8,6 +8,7 @@ from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest
 from ._http import HttpResponse
 from ._http_wsgi import WsgiMiddleware
+from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
@@ -57,6 +58,7 @@ __all__ = (
 
     # Middlewares
     'WsgiMiddleware',
+    'AsgiMiddleware',
 
     # Extensions
     'AppExtensionBase',
@@ -65,4 +67,4 @@ __all__ = (
     'FunctionExtensionException'
 )
 
-__version__ = '1.7.0'
+__version__ = '1.7.1'
