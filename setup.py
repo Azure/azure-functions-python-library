@@ -30,7 +30,11 @@ setup(
         'Development Status :: 5 - Production/Stable',
     ],
     license='MIT',
-    packages=['azure.functions', 'azure.functions.extension'],
+    packages=[
+        'azure.functions',
+        'azure.functions.extension',
+        'azure.functions._thirdparty'
+    ],
     package_data={
         'azure.functions': ['py.typed']
     },
