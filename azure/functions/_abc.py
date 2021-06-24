@@ -24,6 +24,28 @@ class Out(abc.ABC, typing.Generic[T]):
         pass
 
 
+class TraceContext(abc.ABC):
+    """Function invocation trace context."""
+
+    @property
+    @abc.abstractmethod
+    def trace_parent(self) -> str:
+        """Function invocation trace parent."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def trace_state(self) -> str:
+        """Function invocation trace state."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> typing.Mapping[str, typing.Any]:
+        """Function invocation trace attributes."""
+        pass
+
+
 class Context(abc.ABC):
     """Function invocation context."""
 
@@ -43,6 +65,12 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def function_directory(self) -> str:
         """Function directory."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def trace_context(self) -> TraceContext:
+        """Trace context."""
         pass
 
 
