@@ -70,7 +70,7 @@ class AsgiResponse:
         return HttpResponse(
             body=b"".join(self._buffer),
             status_code=self._status_code,
-            headers=self._headers,
+            headers=self._headers,  # type: ignore
             mimetype=lowercased_headers.get("content-type"),
             charset=lowercased_headers.get("content-encoding"),
         )
