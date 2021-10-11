@@ -279,6 +279,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S.%f-00:00',
             '%Y-%m-%dT%H:%M:%SZ',
             '%Y-%m-%dT%H:%M:%S.%fZ',
+            '%d/%m/%Y %H:%M:%S'
         ]
 
         dt, _, excpt = try_parse_datetime_with_formats(
@@ -350,6 +351,7 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         """
 
         timedelta_formats = [
+            '%d.%H:%M:%S',
             '%H:%M:%S',
             '%M:%S',
             '%S'
