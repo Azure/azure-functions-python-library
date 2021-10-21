@@ -279,7 +279,13 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
             '%Y-%m-%dT%H:%M:%S.%f-00:00',
             '%Y-%m-%dT%H:%M:%SZ',
             '%Y-%m-%dT%H:%M:%S.%fZ',
-            '%d/%m/%Y %H:%M:%S'
+
+            '%m/%d/%Y %H:%M:%SZ',
+            '%m/%d/%Y %H:%M:%S.%fZ',
+            '%m/%d/%Y %H:%M:%S+00:00',
+            '%m/%d/%Y %H:%M:%S-00:00',
+            '%m/%d/%Y %H:%M:%S.%f+00:00',
+            '%m/%d/%Y %H:%M:%S.%f-00:00',
         ]
 
         dt, _, excpt = try_parse_datetime_with_formats(
@@ -316,6 +322,9 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         local_formats = [
             '%Y-%m-%dT%H:%M:%S.%f',
             '%Y-%m-%dT%H:%M:%S',
+
+            '%m/%d/%YT%H:%M:%S.%f',
+            '%m/%d/%YT%H:%M:%S'
         ]
 
         dt, _, excpt = try_parse_datetime_with_formats(
