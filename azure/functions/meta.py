@@ -360,7 +360,6 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
         """
 
         timedelta_formats = [
-            '%d.%H:%M:%S',
             '%H:%M:%S',
             '%M:%S',
             '%S'
