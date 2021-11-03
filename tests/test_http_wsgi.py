@@ -120,7 +120,6 @@ class TestHttpWsgi(unittest.TestCase):
         self.assertEqual(environ['azure_functions.retry_context'],
                          RetryContext)
 
-
     def test_response_from_wsgi_app(self):
         app = self._generate_wsgi_app()
         func_request = self._generate_func_request()
