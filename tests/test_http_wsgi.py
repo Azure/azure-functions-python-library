@@ -115,8 +115,10 @@ class TestHttpWsgi(unittest.TestCase):
                          'httptrigger')
         self.assertEqual(environ['azure_functions.function_directory'],
                          '/home/roger/wwwroot/httptrigger')
-        self.assertEqual(environ['azure_functions.trace_context'], TraceContext)
-        self.assertEqual(environ['azure_functions.retry_context'], RetryContext)
+        self.assertEqual(environ['azure_functions.trace_context'],
+                         TraceContext)
+        self.assertEqual(environ['azure_functions.retry_context'],
+                         RetryContext)
 
 
     def test_response_from_wsgi_app(self):
