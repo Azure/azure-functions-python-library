@@ -24,6 +24,74 @@ class Out(abc.ABC, typing.Generic[T]):
         pass
 
 
+class RpcException:
+    """Rpc Exception object."""
+
+    @property
+    @abc.abstractmethod
+    def source(self) -> str:
+        """Source of the exception."""
+        return self.__source
+
+    @property
+    @abc.abstractmethod
+    def stack_trace(self) -> str:
+        """Stack trace for the exception."""
+        return self.__stack_trace
+
+    @property
+    @abc.abstractmethod
+    def message(self) -> str:
+        """Textual message describing the exception."""
+        return self.__message
+
+
+class TraceContext(abc.ABC):
+    """Trace context object."""
+
+    @property
+    @abc.abstractmethod
+    def trace_state(self) -> str:
+        """Gets trace state from trace-context."""
+        return self.__trace_state
+
+    @property
+    @abc.abstractmethod
+    def trace_parent(self) -> str:
+        """Gets trace parent from trace-context."""
+        return self.__trace_parent
+
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> typing.Dict[str, str]:
+        """Gets trace-context attributes."""
+        return self.__attributes
+
+
+class RetryContext(abc.ABC):
+    """Retry Context object.
+       For more information refer: https://aka.ms/azfunc-retries-policies
+    """
+
+    @property
+    @abc.abstractmethod
+    def retry_count(self) -> int:
+        """Gets the current retry count from retry-context."""
+        return self.__retry_count
+
+    @property
+    @abc.abstractmethod
+    def max_retry_count(self) -> int:
+        """Gets the max retry count from retry-context."""
+        return self.__max_retry_count
+
+    @property
+    @abc.abstractmethod
+    def exception(self) -> RpcException:
+        """Gets the RpcException"""
+        return self.__rpc_exception
+
+
 class Context(abc.ABC):
     """Function invocation context."""
 
@@ -56,74 +124,6 @@ class Context(abc.ABC):
     def retry_context(self) -> RetryContext:
         """Context for retries to the function."""
         pass
-
-
-class TraceContext(abc.ABC):
-    """Trace context object."""
-
-    @property
-    @abc.abstractmethod
-    def trace_state(self) -> str:
-        """Gets trace state from trace-context."""
-        return self.__trace_state
-
-    @property
-    @abc.abstractmethod
-    def trace_parent(self) -> str:
-        """Gets trace parent from trace-context."""
-        return self.__trace_parent
-
-    @property
-    @abc.abstractmethod
-    def attributes(self) -> Dict[str, str]:
-        """Gets trace-context attributes."""
-        return self.__attributes
-
-
-class RetryContext(abc.ABC):
-    """Retry Context object.
-       For more information refer: https://aka.ms/azfunc-retries-policies
-    """
-
-    @property
-    @abc.abstractmethod
-    def retry_count(self) -> int:
-        """Gets the current retry count from retry-context."""
-        return self.__retry_count
-
-    @property
-    @abc.abstractmethod
-    def max_retry_count(self) -> int:
-        """Gets the max retry count from retry-context."""
-        return self.__max_retry_count
-
-    @property
-    @abc.abstractmethod
-    def exception(self) -> RpcException:
-        """Gets the RpcException"""
-        return self.__rpc_exception
-
-
-class RpcException(abc.ABC):
-    """Rpc Exception object."""
-
-    @property
-    @abc.abstractmethod
-    def source(self) -> str:
-        """Source of the exception."""
-        return self.__source
-
-    @property
-    @abc.abstractmethod
-    def stack_trace(self) -> str:
-        """Stack trace for the exception."""
-        return self.__stack_trace
-
-    @property
-    @abc.abstractmethod
-    def message(self) -> str:
-        """Textual message describing the exception."""
-        return self.__message
 
 
 class HttpRequest(abc.ABC):
