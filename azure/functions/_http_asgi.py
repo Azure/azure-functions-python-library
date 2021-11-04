@@ -45,7 +45,9 @@ class AsgiRequest(WsgiRequest):
             "client": None,
             "azure_functions.function_directory": self.af_function_directory,
             "azure_functions.function_name": self.af_function_name,
-            "azure_functions.invocation_id": self.af_invocation_id
+            "azure_functions.invocation_id": self.af_invocation_id,
+            "azure_functions.trace_context": self.af_trace_context,
+            "azure_functions.retry_context": self.af_retry_context
         }
         # Notes, missing client name, port
 

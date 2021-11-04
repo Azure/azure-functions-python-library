@@ -4,6 +4,7 @@
 import unittest
 
 import azure.functions as func
+from azure.functions._abc import TraceContext, RetryContext
 from azure.functions._http_asgi import (
     AsgiMiddleware
 )
@@ -107,13 +108,17 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         self,
         invocation_id='123e4567-e89b-12d3-a456-426655440000',
         function_name='httptrigger',
-        function_directory='/home/roger/wwwroot/httptrigger'
+        function_directory='/home/roger/wwwroot/httptrigger',
+        trace_context=TraceContext,
+        retry_context=RetryContext
     ) -> func.Context:
         class MockContext(func.Context):
-            def __init__(self, ii, fn, fd):
+            def __init__(self, ii, fn, fd, tc, rc):
                 self._invocation_id = ii
                 self._function_name = fn
                 self._function_directory = fd
+                self._trace_context = tc
+                self._retry_context = rc
 
             @property
             def invocation_id(self):
@@ -127,7 +132,16 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
             def function_directory(self):
                 return self._function_directory
 
-        return MockContext(invocation_id, function_name, function_directory)
+            @property
+            def trace_context(self):
+                return self._trace_context
+
+            @property
+            def retry_context(self):
+                return self._retry_context
+
+        return MockContext(invocation_id, function_name, function_directory,
+                           trace_context, retry_context)
 
     def test_middleware_calls_app(self):
         app = MockAsgiApplication()
