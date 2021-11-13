@@ -24,6 +24,74 @@ class Out(abc.ABC, typing.Generic[T]):
         pass
 
 
+class RpcException:
+    """Rpc Exception object."""
+
+    @property
+    @abc.abstractmethod
+    def source(self) -> str:
+        """Source of the exception."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def stack_trace(self) -> str:
+        """Stack trace for the exception."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def message(self) -> str:
+        """Textual message describing the exception."""
+        pass
+
+
+class TraceContext(abc.ABC):
+    """Trace context object."""
+
+    @property
+    @abc.abstractmethod
+    def trace_state(self) -> str:
+        """Gets trace state from trace-context."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def trace_parent(self) -> str:
+        """Gets trace parent from trace-context."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> typing.Dict[str, str]:
+        """Gets trace-context attributes."""
+        pass
+
+
+class RetryContext(abc.ABC):
+    """Retry Context object.
+       For more information refer: https://aka.ms/azfunc-retries-policies
+    """
+
+    @property
+    @abc.abstractmethod
+    def retry_count(self) -> int:
+        """Gets the current retry count from retry-context."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def max_retry_count(self) -> int:
+        """Gets the max retry count from retry-context."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def exception(self) -> RpcException:
+        """Gets the RpcException"""
+        pass
+
+
 class Context(abc.ABC):
     """Function invocation context."""
 
@@ -43,6 +111,18 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def function_directory(self) -> str:
         """Function directory."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def trace_context(self) -> TraceContext:
+        """Context for distributed tracing."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def retry_context(self) -> RetryContext:
+        """Context for retries to the function."""
         pass
 
 

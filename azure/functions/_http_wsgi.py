@@ -56,6 +56,8 @@ class WsgiRequest:
                                              'function_directory', None)
         self.af_function_name = getattr(func_ctx, 'function_name', None)
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
+        self.af_trace_context = getattr(func_ctx, 'trace_context', None)
+        self.af_retry_context = getattr(func_ctx, 'retry_context', None)
 
     def to_environ(self, errors_buffer: StringIO) -> Dict[str, Any]:
         if self._environ_cache is not None:
@@ -80,7 +82,9 @@ class WsgiRequest:
             'wsgi.run_once': self.wsgi_run_once,
             'azure_functions.function_directory': self.af_function_directory,
             'azure_functions.function_name': self.af_function_name,
-            'azure_functions.invocation_id': self.af_invocation_id
+            'azure_functions.invocation_id': self.af_invocation_id,
+            'azure_functions.trace_context': self.af_trace_context,
+            'azure_functions.retry_context': self.af_retry_context
         }
         environ.update(self._http_environ)
 
