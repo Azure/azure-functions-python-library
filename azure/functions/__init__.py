@@ -16,6 +16,9 @@ from ._durable_functions import OrchestrationContext, EntityContext
 from .meta import get_binding_registry
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
+from ._decorators import DataType
+from .decorators import AuthLevel, BlobInput, BlobOutput, EventHubTrigger, \
+    FunctionsApp, Http, HttpMethod, HttpTrigger
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -64,7 +67,17 @@ __all__ = (
     'AppExtensionBase',
     'FuncExtensionBase',
     'ExtensionMeta',
-    'FunctionExtensionException'
+    'FunctionExtensionException',
+
+    ### Decorators
+    # 'BlobInput',
+    # 'BlobOutput',
+    # 'DataType',
+    # 'EventHubTrigger',
+    'FunctionsApp',
+    # 'HttpTrigger',
+    # 'HttpMethod',
+    # 'Http'
 )
 
 __version__ = '1.8.0'
