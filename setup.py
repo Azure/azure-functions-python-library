@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from setuptools import setup
+from setuptools import find_packages, setup
 from azure.functions import __version__
 
 with open("README.md") as readme:
@@ -30,11 +30,9 @@ setup(
         'Development Status :: 5 - Production/Stable',
     ],
     license='MIT',
-    packages=[
-        'azure.functions',
-        'azure.functions.extension',
-        'azure.functions._thirdparty'
-    ],
+    packages=find_packages(exclude=[
+        'azure'
+    ]),
     package_data={
         'azure.functions': ['py.typed']
     },

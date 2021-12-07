@@ -22,13 +22,26 @@ class TestMeta(unittest.TestCase):
         self.assertEqual(str(parsed), '2018-12-12 03:16:34+00:00')
         self.assertEqual(parsed.tzinfo, datetime.timezone.utc)
 
+        parsed = self._parse_datetime('12/31/9999 23:59:59Z')
+        self.assertEqual(str(parsed), '9999-12-31 23:59:59+00:00')
+        self.assertEqual(parsed.tzinfo, datetime.timezone.utc)
+
     def test_utc_datetime_parse(self):
         parsed = self._parse_datetime('2018-12-12T03:16:34.2191Z')
         self.assertEqual(str(parsed), '2018-12-12 03:16:34.219100+00:00')
 
+        parsed = self._parse_datetime('12/31/9999 23:59:59.000000Z')
+        self.assertEqual(str(parsed), '9999-12-31 23:59:59+00:00')
+
+        parsed = self._parse_datetime('12/31/9999 23:59:59.999999Z')
+        self.assertEqual(str(parsed), '9999-12-31 23:59:59.999999+00:00')
+
     def test_utc_datetime_neg_tz_parse(self):
         parsed = self._parse_datetime('2018-12-12T03:16:34.2191-00:00')
         self.assertEqual(str(parsed), '2018-12-12 03:16:34.219100+00:00')
+
+        parsed = self._parse_datetime('12/31/9999 23:59:59.999999-00:00')
+        self.assertEqual(str(parsed), '9999-12-31 23:59:59.999999+00:00')
 
     def test_too_fractional_utc_datetime_parse(self):
         parsed1 = self._parse_datetime('2018-12-12T03:16:34.2191989Z')
@@ -37,13 +50,25 @@ class TestMeta(unittest.TestCase):
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999+00:00')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999+00:00')
 
+        parsed3 = self._parse_datetime('12/31/9999 23:59:59.9999999Z')
+        self.assertEqual(str(parsed3), '9999-12-31 23:59:59.999999+00:00')
+
+        parsed4 = self._parse_datetime('12/31/9999 23:59:59.9999999+00:00')
+        self.assertEqual(str(parsed4), '9999-12-31 23:59:59.999999+00:00')
+
     def test_local_datetime_no_fraction_parse(self):
         parsed = self._parse_datetime('2018-12-12T03:16:34')
         self.assertEqual(str(parsed), '2018-12-12 03:16:34')
 
+        parsed2 = self._parse_datetime('12/31/9999T23:59:59')
+        self.assertEqual(str(parsed2), '9999-12-31 23:59:59')
+
     def test_local_datetime_parse(self):
         parsed = self._parse_datetime('2018-12-12T03:16:34.2191')
         self.assertEqual(str(parsed), '2018-12-12 03:16:34.219100')
+
+        parsed2 = self._parse_datetime('12/31/9999T23:59:59.219100')
+        self.assertEqual(str(parsed2), '9999-12-31 23:59:59.219100')
 
     def test_too_fractional_local_datetime_parse(self):
         parsed1 = self._parse_datetime('2018-08-07T23:17:57.4610506')
@@ -51,6 +76,9 @@ class TestMeta(unittest.TestCase):
 
         parsed2 = self._parse_datetime('9999-12-31T23:59:59.9999999')
         self.assertEqual(str(parsed2), '9999-12-31 23:59:59.999999')
+
+        parsed3 = self._parse_datetime('12/31/9999T23:59:59.9999999')
+        self.assertEqual(str(parsed3), '9999-12-31 23:59:59.999999')
 
     def test_parsed_timedelta_none(self):
         parsed = self._parse_timedelta(None)
