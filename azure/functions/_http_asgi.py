@@ -89,11 +89,18 @@ class AsgiResponse:
         # https://github.com/Azure/azure-functions-host/issues/4926
 
     async def _receive(self):
-        return {
-            "type": "http.request",
-            "body": self._request_body,
-            "more_body": False,
-        }
+        if self._request_body is not None:
+            reply = {
+                "type": "http.request",
+                "body": self._request_body,
+                "more_body": False,
+            }
+            self._request_body = None
+        else:
+            reply = {
+                "type": "http.disconnect",
+            }
+        return reply
 
     async def _send(self, message):
         logging.debug(f"Received {message} from ASGI worker.")
