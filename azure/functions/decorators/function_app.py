@@ -1,18 +1,15 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import json
-from typing import List, Dict, Union, Optional
+from typing import Callable, Dict, List, Optional, Union
 
-from azure.functions.decorator._abc import Trigger, Binding, DummyTrigger, \
-    StringifyEnum
-from azure.functions.decorator.http import HttpTrigger, Http
+from azure.functions.decorators.core import Binding, Trigger
+from azure.functions.decorators.http import Http, HttpTrigger
 
-
-class AuthLevel(StringifyEnum):
-    FUNCTION = "function"
-    ANONYMOUS = "anonymous"
-    ADMIN = "admin"
 
 class Function(object):
-    def __init__(self, func, script_file=None):
+    def __init__(self, func: Callable, script_file: str = None):
         self._name = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
@@ -24,11 +21,13 @@ class Function(object):
         self._bindings.append(binding)
 
     def add_trigger(self, trigger: Trigger):
-        if self._trigger and not isinstance(self._trigger, DummyTrigger):
+        if self._trigger:
             raise ValueError("A trigger was already registered to this "
                              "function. Adding another trigger is not the "
-                             "correct behavior as a function can only have one"
-                             f" trigger. New trigger being added {trigger}")
+                             "correct behavior as a function can only have one "
+                             "trigger. Existing registered trigger "
+                             f"is {self._trigger} and New trigger "
+                             f"being added is {trigger}")
         self._trigger = trigger
 
         #  We still add the trigger info to the bindings to ensure that
@@ -87,7 +86,7 @@ class FunctionsApp:
         if isinstance(func, Function):
             f = self._functions.pop()
         elif callable(func):
-            f = Function(func, self.app_script_file)
+            f = Function(func, self._app_script_file)
         else:
             raise ValueError("WTF Trigger!")
         return f

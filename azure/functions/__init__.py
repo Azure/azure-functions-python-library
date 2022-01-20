@@ -5,17 +5,17 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from ._http import HttpRequest
-from ._http import HttpResponse
+from .decorators import FunctionsApp, Function
+from ._durable_functions import OrchestrationContext, EntityContext
+from .extension import (ExtensionMeta, FunctionExtensionException,
+                        FuncExtensionBase, AppExtensionBase)
+from ._http import HttpRequest, HttpResponse
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
+from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
-from ._durable_functions import OrchestrationContext, EntityContext
-from .meta import get_binding_registry
-from .extension import (ExtensionMeta, FunctionExtensionException,
-                        FuncExtensionBase, AppExtensionBase)
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -66,15 +66,9 @@ __all__ = (
     'ExtensionMeta',
     'FunctionExtensionException',
 
-    ### Decorators
-    # 'BlobInput',
-    # 'BlobOutput',
-    # 'DataType',
-    # 'EventHubTrigger',
+    # PyStein implementation
     'FunctionsApp',
-    # 'HttpTrigger',
-    # 'HttpMethod',
-    # 'Http'
+    'Function'
 )
 
 __version__ = '1.8.0'

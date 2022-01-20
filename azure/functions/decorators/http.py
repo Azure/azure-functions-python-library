@@ -1,5 +1,8 @@
-from azure.functions.decorator._abc import StringifyEnum, Trigger, OutputBinding
-from azure.functions.decorator.core import AuthLevel
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
+    StringifyEnum
 
 
 class HttpMethod(StringifyEnum):
@@ -7,6 +10,7 @@ class HttpMethod(StringifyEnum):
     POST = "POST"
     PATCH = "PATCH"
     PUT = "PUT"
+
 
 class HttpTrigger(Trigger):
     @staticmethod

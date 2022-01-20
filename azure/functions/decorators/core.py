@@ -3,7 +3,6 @@
 
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
-from typing import Dict
 
 
 class StringifyEnum(Enum):
@@ -32,18 +31,26 @@ class Binding(ABC):
 
     def __init__(self, name: str,
                  direction: BindingDirection,
-                 data_type: DataType = DataType.UNDEFINED):
-        self.direction: int = direction.value
+                 data_type: DataType = DataType.UNDEFINED,
+                 is_trigger: bool = False):
         self.type: str = self.get_binding_name()
-        self.data_type: int = data_type.value
+        self.is_trigger = is_trigger
         self.name: str = name
+
+        self._direction: BindingDirection = direction
+        self._data_type: DataType = data_type
+
+    @property
+    def data_type(self):
+        return self._data_type.value
+
+    @property
+    def direction(self):
+        return self._direction.value
 
     @abstractmethod
     def get_dict_repr(self):
         pass
-
-    def get_binding_direction(self) -> str:
-        return str(self.direction)
 
     def __str__(self) -> str:
         return str(self.get_dict_repr())
@@ -51,30 +58,23 @@ class Binding(ABC):
 
 class Trigger(Binding, metaclass=ABCMeta):
     def __init__(self, name) -> None:
-        self.is_trigger = True
         super().__init__(direction=BindingDirection.IN,
-                         name=name)
+                         name=name, is_trigger=True)
 
 
 class InputBinding(Binding, metaclass=ABCMeta):
     def __init__(self, name) -> None:
         super().__init__(direction=BindingDirection.IN,
-                         name=name)
+                         name=name, is_trigger=False)
 
 
 class OutputBinding(Binding, metaclass=ABCMeta):
     def __init__(self, name) -> None:
         super().__init__(direction=BindingDirection.OUT,
-                         name=name)
+                         name=name, is_trigger=False)
 
 
-class DummyTrigger(Trigger):
-    @staticmethod
-    def get_binding_name() -> str:
-        return "Dummy"
-
-    def get_dict_repr(self) -> Dict[str, str]:
-        return {"dummy": "trigger"}
-
-    def __init__(self):
-        super(DummyTrigger, self).__init__(name="Dummy")
+class AuthLevel(StringifyEnum):
+    FUNCTION = "function"
+    ANONYMOUS = "anonymous"
+    ADMIN = "admin"
