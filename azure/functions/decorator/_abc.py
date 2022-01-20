@@ -3,7 +3,7 @@
 
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict
 
 
 class StringifyEnum(Enum):
@@ -70,7 +70,7 @@ class OutputBinding(Binding, metaclass=ABCMeta):
 
 class DummyTrigger(Trigger):
     @staticmethod
-    def get_binding_name(Scaffold) -> str:
+    def get_binding_name() -> str:
         return "Dummy"
 
     def get_dict_repr(self) -> Dict[str, str]:
@@ -78,16 +78,3 @@ class DummyTrigger(Trigger):
 
     def __init__(self):
         super(DummyTrigger, self).__init__(name="Dummy")
-
-
-class Scaffold(ABC):
-    def __init__(self, app_script_file="app_file"):
-        self.app_script_file = app_script_file
-
-    @abstractmethod
-    def on_trigger(self, trigger: Trigger, function_name: str, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def binding(self, binding: Binding, *args, **kwargs):
-        pass
