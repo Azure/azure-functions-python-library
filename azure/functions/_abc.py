@@ -421,3 +421,32 @@ class OrchestrationContext(abc.ABC):
     @abc.abstractmethod
     def body(self) -> str:
         pass
+
+
+class SqlRow(abc.ABC):
+
+    @classmethod
+    @abc.abstractmethod
+    def from_json(cls, json_data: str) -> 'SqlRow':
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, dct: dict) -> 'SqlRow':
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, key):
+        pass
+
+    @abc.abstractmethod
+    def __setitem__(self, key, value):
+        pass
+
+    @abc.abstractmethod
+    def to_json(self) -> str:
+        pass
+
+
+class SqlRowList(abc.ABC):
+    pass

@@ -16,6 +16,7 @@ from ._durable_functions import OrchestrationContext, EntityContext
 from .meta import get_binding_registry
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
+from ._sql import SqlRow, SqlRowList
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -28,6 +29,7 @@ from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
+from . import sql # NoQA
 
 
 __all__ = (
@@ -54,6 +56,8 @@ __all__ = (
     'EntityContext',
     'QueueMessage',
     'ServiceBusMessage',
+    'SqlRow',
+    'SqlRowList',
     'TimerRequest',
 
     # Middlewares
