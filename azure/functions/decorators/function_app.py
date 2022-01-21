@@ -1,5 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License.
 
 import json
 from typing import Callable, Dict, List, Optional, Union
@@ -74,31 +74,56 @@ class Function(object):
         return self.get_function_json()
 
 
+class FunctionBuilder(object):
+    def __init__(self, func, app_script_file):
+        self.function = Function(func, app_script_file)
+
+    def configure_function_name(self, function_name):
+        self.function.set_function_name(function_name)
+        return self
+
+    def add_trigger(self, trigger: Trigger):
+        self.function.add_trigger(trigger=trigger)
+        return self
+
+    def add_trigger(self, binding: Binding):
+        self.function.add_binding(binding=binding)
+        return self
+
+    def __validate_function(self) -> bool:
+        pass
+
+    def build(self):
+        if not self.__validate_function():
+            raise ValueError("Invalid function!")
+        return self.function
+
+
 class FunctionsApp:
     def __init__(self, app_script_file):
-        self._functions: List[Function] = []
+        self._function_builders: List[FunctionBuilder] = []
         self._app_script_file = app_script_file
 
     def get_functions(self) -> List[Function]:
-        return self._functions
+        return [function_builder.build() for function_builder
+                in self._function_builders]
 
     def _validate_type(self, func):
-        if isinstance(func, Function):
-            f = self._functions.pop()
+        if isinstance(func, FunctionBuilder):
+            fb = self._function_builders.pop()
         elif callable(func):
-            f = Function(func, self._app_script_file)
+            fb = FunctionBuilder(func, self._app_script_file)
         else:
             raise ValueError("WTF Trigger!")
-        return f
+        return fb
 
     def route(self, name: str, function_name: str = None):
         def decorator(func, *args, **kwargs):
-            f = self._validate_type(func)
-            f.set_function_name(function_name)
-            f.add_trigger(trigger=HttpTrigger(name))
-            f.add_binding(binding=Http())
-            f.validate_function()
-            self._functions.append(f)
-            return f
+            fb = self._validate_type(func)
+            fb.configure_function_name(function_name)
+            fb.add_trigger(trigger=HttpTrigger(name))
+            fb.add_binding(binding=Http())
+            self._function_builders.append(fb)
+            return fb
 
         return decorator

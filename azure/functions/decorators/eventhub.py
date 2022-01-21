@@ -1,4 +1,7 @@
-from azure.functions.decorator._abc import Trigger
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License.
+
+from azure.functions.decorators.core import Trigger
 
 
 class EventHubTrigger(Trigger):

@@ -1,5 +1,8 @@
-from azure.functions.decorator._abc import InputBinding, DataType, \
-    OutputBinding, Trigger
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License.
+
+from azure.functions.decorators.core import OutputBinding, DataType, \
+    InputBinding, Trigger
 
 
 class BlobOutput(OutputBinding):
