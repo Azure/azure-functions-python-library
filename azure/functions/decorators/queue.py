@@ -2,7 +2,7 @@
 #  Licensed under the MIT License.
 from typing import Optional
 
-from azure.functions.decorators.core import Trigger, OutputBinding
+from azure.functions.decorators.core import Trigger, OutputBinding, DataType
 
 
 class QueueTrigger(Trigger):
@@ -10,11 +10,10 @@ class QueueTrigger(Trigger):
                  name: str,
                  queue_name: str,
                  connection: str,
-                 data_type: Optional[str] = None):
-        self.data_type = data_type
+                 data_type: Optional[DataType] = DataType.UNDEFINED):
         self.queue_name = queue_name
         self.connection = connection
-        super().__init__(name=name)
+        super().__init__(name=name, data_type=data_type)
 
     @staticmethod
     def get_binding_name():
@@ -22,8 +21,8 @@ class QueueTrigger(Trigger):
 
     def get_dict_repr(self):
         return {
-            "type": self.get_binding_name(),
-            "direction": self.get_binding_direction(),
+            "type": self.type,
+            "direction": self.direction,
             "name": self.name,
             "dataType": self.data_type,
             "queueName": self.queue_name,
@@ -36,11 +35,10 @@ class QueueOutput(OutputBinding):
                  name: str,
                  queue_name: str,
                  connection: str,
-                 data_type: Optional[str] = None):
-        self.data_type = data_type
+                 data_type: Optional[DataType] = DataType.UNDEFINED):
         self.queue_name = queue_name
         self.connection = connection
-        super().__init__(name=name)
+        super().__init__(name=name, data_type=data_type)
 
     @staticmethod
     def get_binding_name():
@@ -48,8 +46,8 @@ class QueueOutput(OutputBinding):
 
     def get_dict_repr(self):
         return {
-            "type": self.get_binding_name(),
-            "direction": self.get_binding_direction(),
+            "type": self.type,
+            "direction": self.direction,
             "name": self.name,
             "data_type": self.data_type,
             "queueName": self.queue_name,

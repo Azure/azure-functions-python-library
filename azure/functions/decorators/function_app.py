@@ -2,10 +2,12 @@
 #  Licensed under the MIT License.
 
 import json
-from typing import Callable, Dict, List, Optional, Union
+from types import MethodType
+from typing import Callable, Dict, List, Optional, Union, Tuple
 
-from azure.functions.decorators.core import Binding, Trigger
-from azure.functions.decorators.http import Http, HttpTrigger
+from azure.functions.decorators.core import Binding, Trigger, DataType, \
+    AuthLevel
+from azure.functions.decorators.http import HttpTrigger
 
 
 class Function(object):
@@ -66,9 +68,8 @@ class Function(object):
     def get_function_json(self):
         return json.dumps(self.get_dict_repr())
 
-    # TODO: Check function has trigger defined
     def validate_function(self):
-        pass
+        return self._trigger is not None
 
     def __str__(self):
         return self.get_function_json()
@@ -86,7 +87,7 @@ class FunctionBuilder(object):
         self.function.add_trigger(trigger=trigger)
         return self
 
-    def add_trigger(self, binding: Binding):
+    def add_binding(self, binding: Binding):
         self.function.add_binding(binding=binding)
         return self
 
@@ -108,7 +109,7 @@ class FunctionsApp:
         return [function_builder.build() for function_builder
                 in self._function_builders]
 
-    def _validate_type(self, func):
+    def __validate_type(self, func):
         if isinstance(func, FunctionBuilder):
             fb = self._function_builders.pop()
         elif callable(func):
@@ -117,13 +118,44 @@ class FunctionsApp:
             raise ValueError("WTF Trigger!")
         return fb
 
-    def route(self, name: str, function_name: str = None):
-        def decorator(func, *args, **kwargs):
-            fb = self._validate_type(func)
-            fb.configure_function_name(function_name)
-            fb.add_trigger(trigger=HttpTrigger(name))
-            fb.add_binding(binding=Http())
-            self._function_builders.append(fb)
-            return fb
+    def function_name(self, function_name: str):
+        def wrap(func):
+            def decorator():
+                fb = self.__validate_type(func)
+                fb.configure_function_name(function_name)
+                self._function_builders.append(fb)
+                return fb
+            return decorator
+        return wrap
 
-        return decorator
+    def http_trigger(self,
+                     name: str,
+                     data_type: Optional[DataType] = DataType.UNDEFINED,
+                     methods: Optional[Tuple[MethodType]] = (),
+                     auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
+                     route: Optional[str] = None):
+        def wrap(func):
+            def decorator():
+                fb = self.__validate_type(func)
+                fb.add_trigger(
+                    HttpTrigger(name=name, data_type=data_type, methods=methods,
+                                auth_level=auth_level, route=route))
+                self._function_builders.append(fb)
+                return fb
+
+            return decorator
+        return wrap
+
+    def http_output_binding(self):
+        pass
+
+    # def route(self, trigger_name: str, output_name: str, function_name: str):
+    #     def decorator(func, *args, **kwargs):
+    #         fb = self.__validate_type(func)
+    #         fb.configure_function_name(function_name)
+    #         fb.add_trigger(trigger=HttpTrigger(name=trigger_name))
+    #         fb.add_binding(binding=HttpOutput(name=output_name))
+    #         self._function_builders.append(fb)
+    #         return fb
+    #
+    #     return decorator

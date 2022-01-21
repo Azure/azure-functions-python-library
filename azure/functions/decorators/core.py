@@ -57,21 +57,21 @@ class Binding(ABC):
 
 
 class Trigger(Binding, metaclass=ABCMeta):
-    def __init__(self, name) -> None:
+    def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
-                         name=name, is_trigger=True)
+                         name=name, data_type=data_type, is_trigger=True)
 
 
 class InputBinding(Binding, metaclass=ABCMeta):
-    def __init__(self, name) -> None:
+    def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
-                         name=name, is_trigger=False)
+                         name=name, data_type=data_type, is_trigger=False)
 
 
 class OutputBinding(Binding, metaclass=ABCMeta):
-    def __init__(self, name) -> None:
+    def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.OUT,
-                         name=name, is_trigger=False)
+                         name=name, data_type=data_type, is_trigger=False)
 
 
 class AuthLevel(StringifyEnum):

@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+from typing import Optional, Tuple
 
 from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
-    StringifyEnum
+    StringifyEnum, DataType
 
 
 class HttpMethod(StringifyEnum):
@@ -17,20 +18,25 @@ class HttpTrigger(Trigger):
     def get_binding_name():
         return "httpTrigger"
 
-    def __init__(self, name, methods=None,
-                 auth_level: AuthLevel = AuthLevel.ANONYMOUS,
-                 route='/api') -> None:
+    def __init__(self,
+                 name,
+                 data_type: Optional[DataType] = DataType.UNDEFINED,
+                 methods: Optional[Tuple[HttpMethod]] = (),
+                 auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
+                 route: Optional[str] = None) -> None:
         self.auth_level = auth_level
         self.route = route
         self.methods = methods
-        super().__init__(name=name)
+        super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):
         dict_repr = {
             "authLevel": str(self.auth_level),
-            "type": self.get_binding_name(),
-            "direction": self.get_binding_direction(),
-            "name": self.name
+            "type": self.type,
+            "direction": self.direction,
+            "name": self.name,
+            "data_type": self.name,
+            "route": self.route
         }
         if self.methods is not None:
             dict_repr["methods"] = [str(m) for m in self.methods]
@@ -38,17 +44,20 @@ class HttpTrigger(Trigger):
         return dict_repr
 
 
-class Http(OutputBinding):
+class HttpOutput(OutputBinding):
     @staticmethod
     def get_binding_name():
         return "http"
 
-    def __init__(self, name="$return") -> None:
-        super().__init__(name=name)
+    def __init__(self,
+                 name: str,
+                 data_type: Optional[DataType] = DataType.UNDEFINED) -> None:
+        super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):
         return {
-            "type": self.get_binding_name(),
-            "direction": self.get_binding_direction(),
-            "name": self.name
+            "type": self.type,
+            "direction": self.direction,
+            "name": self.name,
+            "data_type": self.data_type
         }
