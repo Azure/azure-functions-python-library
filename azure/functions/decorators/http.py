@@ -35,7 +35,7 @@ class HttpTrigger(Trigger):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "data_type": self.name,
+            "dataType": self.name,
             "route": self.route
         }
         if self.methods is not None:
@@ -59,5 +59,5 @@ class HttpOutput(OutputBinding):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "data_type": self.data_type
+            "dataType": self.data_type
         }

@@ -58,7 +58,7 @@ class EventHubOutput(OutputBinding):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "data_type": self.data_type,
+            "dataType": self.data_type,
             "connection": self.connection,
             "eventHubName": self.event_hub_name
         }

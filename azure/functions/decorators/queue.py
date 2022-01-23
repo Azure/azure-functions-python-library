@@ -49,7 +49,7 @@ class QueueOutput(OutputBinding):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "data_type": self.data_type,
+            "dataType": self.data_type,
             "queueName": self.queue_name,
             "connection": self.connection,
         }
