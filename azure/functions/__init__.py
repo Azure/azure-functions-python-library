@@ -5,7 +5,7 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from .decorators import FunctionsApp, Function
+from .decorators import FunctionsApp, Function, Binding, DataType, AuthLevel
 from ._durable_functions import OrchestrationContext, EntityContext
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
@@ -68,7 +68,10 @@ __all__ = (
 
     # PyStein implementation
     'FunctionsApp',
-    'Function'
+    'Function',
+    'Binding',
+    'DataType',
+    'AuthLevel'
 )
 
 __version__ = '1.8.0'

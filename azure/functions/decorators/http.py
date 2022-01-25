@@ -35,7 +35,7 @@ class HttpTrigger(Trigger):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "dataType": self.name,
+            "dataType": self.data_type,
             "route": self.route
         }
         if self.methods is not None:

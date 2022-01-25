@@ -2,9 +2,8 @@
 #  Licensed under the MIT License.
 
 import json
-from functools import wraps
 from types import MethodType
-from typing import Callable, Dict, List, Optional, Union, Tuple
+from typing import Callable, Dict, List, Optional, Union, Tuple, Set
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel
@@ -20,7 +19,9 @@ from azure.functions.decorators.timer import TimerTrigger
 
 
 class Function(object):
-    def __init__(self, func: Callable, script_file):
+    def __init__(self,
+                 func: Callable,
+                 script_file):
         self._name = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
@@ -28,10 +29,12 @@ class Function(object):
 
         self.function_script_file = script_file
 
-    def add_binding(self, binding: Binding):
+    def add_binding(self,
+                    binding: Binding):
         self._bindings.append(binding)
 
-    def add_trigger(self, trigger: Trigger):
+    def add_trigger(self,
+                    trigger: Trigger):
         if self._trigger:
             raise ValueError("A trigger was already registered to this "
                              "function. Adding another trigger is not the "
@@ -45,7 +48,8 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self, function_name: str = None):
+    def set_function_name(self,
+                          function_name: str = None):
         if function_name:
             self._name = function_name
 
@@ -82,21 +86,28 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    def __init__(self, func, app_script_file):
+    def __init__(self,
+                 func,
+                 app_script_file):
         self._function = Function(func, app_script_file)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self,
+                 *args,
+                 **kwargs):
         pass
 
-    def configure_function_name(self, function_name: str):
+    def configure_function_name(self,
+                                function_name: str):
         self._function.set_function_name(function_name)
         return self
 
-    def add_trigger(self, trigger: Trigger):
+    def add_trigger(self,
+                    trigger: Trigger):
         self._function.add_trigger(trigger=trigger)
         return self
 
-    def add_binding(self, binding: Binding):
+    def add_binding(self,
+                    binding: Binding):
         self._function.add_binding(binding=binding)
         return self
 
@@ -113,7 +124,8 @@ class FunctionBuilder(object):
 
 
 class FunctionsApp:
-    def __init__(self, app_script_file: str):
+    def __init__(self,
+                 app_script_file: str):
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file = app_script_file
 
@@ -121,7 +133,8 @@ class FunctionsApp:
         return [function_builder.build() for function_builder
                 in self._function_builders]
 
-    def __validate_type(self, func):
+    def __validate_type(self,
+                        func):
         if isinstance(func, FunctionBuilder):
             fb = self._function_builders.pop()
         elif callable(func):
@@ -130,7 +143,8 @@ class FunctionsApp:
             raise ValueError("WTF Trigger!")
         return fb
 
-    def __configure_function_builder(self, wrap):
+    def __configure_function_builder(self,
+                                     wrap):
         def decorator(func):
             fb = self.__validate_type(func)
             self._function_builders.append(fb)
@@ -138,7 +152,8 @@ class FunctionsApp:
 
         return decorator
 
-    def function_name(self, name: str):
+    def function_name(self,
+                      name: str):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -175,27 +190,29 @@ class FunctionsApp:
             def decorator():
                 fb.add_binding(HttpOutput(name=name, data_type=data_type))
                 return fb
+
             return decorator()
+
         return wrap
 
     def route(self,
-              trigger_name: str,
-              output_name: str,
-              trigger_data_type: Optional[DataType] = DataType.UNDEFINED,
-              output_data_type: Optional[DataType] = DataType.UNDEFINED,
-              methods: Optional[Tuple[HttpMethod]] = (),
+              trigger_arg_name: str = 'req',
+              binding_arg_name: str = '$return',
+              trigger_arg_data_type: Optional[DataType] = DataType.UNDEFINED,
+              output_arg_data_type: Optional[DataType] = DataType.UNDEFINED,
+              methods: Set[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
               auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
               route: Optional[str] = None):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
-                fb.add_trigger(trigger=HttpTrigger(name=trigger_name,
-                                                   data_type=trigger_data_type,
+                fb.add_trigger(trigger=HttpTrigger(name=trigger_arg_name,
+                                                   data_type=trigger_arg_data_type,
                                                    methods=methods,
                                                    auth_level=auth_level,
                                                    route=route))
-                fb.add_binding(binding=HttpOutput(name=output_name,
-                                                  data_type=output_data_type))
+                fb.add_binding(binding=HttpOutput(name=binding_arg_name,
+                                                  data_type=output_arg_data_type))
                 return fb
 
             return decorator()
@@ -212,7 +229,8 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=TimerTrigger(name=name, schedule=schedule,
+                    trigger=TimerTrigger(name=name,
+                                         schedule=schedule,
                                          run_on_startup=run_on_startup,
                                          use_monitor=use_monitor,
                                          data_type=data_type))
@@ -252,13 +270,13 @@ class FunctionsApp:
         return wrap
 
     def write_service_bus_queue(self,
-                               name: str,
-                               connection: str,
-                               queue_name: str,
-                               data_type: Optional[
-                                   DataType] = DataType.UNDEFINED,
-                               access_rights: Optional[
-                                   AccessRights] = AccessRights.MANAGE):
+                                name: str,
+                                connection: str,
+                                queue_name: str,
+                                data_type: Optional[
+                                    DataType] = DataType.UNDEFINED,
+                                access_rights: Optional[
+                                    AccessRights] = AccessRights.MANAGE):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -376,7 +394,7 @@ class FunctionsApp:
                              event_hub_name: str,
                              data_type: Optional[DataType] = DataType.UNDEFINED,
                              cardinality: Optional[
-                                Cardinality] = Cardinality.MANY,
+                                 Cardinality] = Cardinality.MANY,
                              consumer_group: Optional[str] = "$Default"):
         @self.__configure_function_builder
         def wrap(fb):
@@ -397,7 +415,8 @@ class FunctionsApp:
                                 name: str,
                                 connection: str,
                                 event_hub_name: str,
-                                data_type: Optional[DataType] = DataType.UNDEFINED):
+                                data_type: Optional[DataType] =
+                                DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -531,7 +550,8 @@ class FunctionsApp:
                     binding=CosmosDBInput(name=name,
                                           database_name=database_name,
                                           collection_name=collection_name,
-                                          connection_string_setting=connection_string_setting,
+                                          connection_string_setting=
+                                          connection_string_setting,
                                           document_id=document_id,
                                           sql_query=sql_query,
                                           partitions=partitions,
@@ -541,6 +561,7 @@ class FunctionsApp:
             return decorator()
 
         return wrap
+
 # Uncomment to test the http decorators working as expected
 # app = FunctionsApp("hello.txt")
 #
@@ -558,8 +579,6 @@ class FunctionsApp:
 # app.get_functions()[0].get_user_function()("hh")
 
 
-
-
 # app2 = FunctionsApp("hello.txt")
 #
 #
@@ -569,6 +588,11 @@ class FunctionsApp:
 #     resp = object()
 #     return resp
 #
+#
 # print(app2.get_functions()[0].get_trigger())
 # print(app2.get_functions()[0].get_function_name())
 # app2.get_functions()[0].get_user_function()("hh")
+
+
+# ta = DataType.UNDEFINED
+# print(ta)
