@@ -33,12 +33,20 @@ class Binding(ABC):
                  direction: BindingDirection,
                  data_type: DataType = DataType.UNDEFINED,
                  is_trigger: bool = False):
-        self.type: str = self.get_binding_name()
+        self._type = self.get_binding_name()
         self.is_trigger = is_trigger
-        self.name: str = name
+        self._name = name
 
-        self._direction: BindingDirection = direction
-        self._data_type: DataType = data_type
+        self._direction = direction
+        self._data_type = data_type
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def name(self):
+        return self._name
 
     @property
     def data_type(self):

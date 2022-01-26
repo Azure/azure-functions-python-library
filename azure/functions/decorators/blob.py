@@ -21,7 +21,7 @@ class BlobOutput(OutputBinding):
         return {
             "type": self.get_binding_name(),
             "direction": self.get_binding_direction(),
-            "name": self.name,
+            "name": self._name,
             "dataType": self.data_type,
             "path": self.path,
             "connection": self.connection
@@ -44,7 +44,7 @@ class BlobInput(InputBinding):
         return {
             "type": self.get_binding_name(),
             "direction": self.get_binding_direction(),
-            "name": self.name,
+            "name": self._name,
             "dataType": self.data_type,
             "path": self.path,
             "connection": self.connection
@@ -67,7 +67,7 @@ class BlobTrigger(Trigger):
         return {
             "type": self.get_binding_name(),
             "direction": self.get_binding_direction(),
-            "name": self.name,
+            "name": self._name,
             "dataType": self.data_type,
             "path": self.path,
             "connection": self.connection

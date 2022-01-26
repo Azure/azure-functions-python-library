@@ -48,8 +48,7 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self,
-                          function_name: str = None):
+    def set_function_name(self, function_name: str = None):
         if function_name:
             self._name = function_name
 
@@ -96,9 +95,9 @@ class FunctionBuilder(object):
                  **kwargs):
         pass
 
-    def configure_function_name(self,
-                                function_name: str):
+    def configure_function_name(self, function_name: str):
         self._function.set_function_name(function_name)
+
         return self
 
     def add_trigger(self,
@@ -114,15 +113,14 @@ class FunctionBuilder(object):
     def __validate_function(self) -> bool:
         return self._function.get_trigger() is not None
 
-    def get_method_name(self) -> str:
-        return self._function.get_user_function().__name__
-
-    def get_function_name(self) -> str:
-        return self._function.get_function_name()
-
     def build(self):
         if not self.__validate_function():
             raise ValueError("Invalid function!")
+
+        if isinstance(self._function.get_trigger(), HttpTrigger):
+            self._function.get_trigger().route = \
+                self._function.get_function_name()
+
         return self._function
 
 
@@ -146,8 +144,7 @@ class FunctionsApp:
             raise ValueError("WTF Trigger!")
         return fb
 
-    def __configure_function_builder(self,
-                                     wrap):
+    def __configure_function_builder(self, wrap):
         def decorator(func):
             fb = self.__validate_type(func)
             self._function_builders.append(fb)
@@ -155,8 +152,7 @@ class FunctionsApp:
 
         return decorator
 
-    def function_name(self,
-                      name: str):
+    def function_name(self, name: str):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -169,16 +165,14 @@ class FunctionsApp:
 
     def on_http_request(self,
                         name: str = 'req',
-                        data_type: Optional[DataType] = DataType.UNDEFINED,
+                        data_type: DataType = DataType.UNDEFINED,
                         methods: Set[HttpMethod] =
                         (HttpMethod.GET, HttpMethod.POST),
-                        auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
+                        auth_level: AuthLevel = AuthLevel.ANONYMOUS,
                         route: Optional[str] = None):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
-                nonlocal route
-                route = fb.get_function_name()
                 fb.add_trigger(
                     HttpTrigger(name=name, data_type=data_type, methods=methods,
                                 auth_level=auth_level, route=route))
@@ -190,7 +184,7 @@ class FunctionsApp:
 
     def write_http(self,
                    name: str = '$return',
-                   data_type: Optional[DataType] = DataType.UNDEFINED):
+                   data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -204,16 +198,14 @@ class FunctionsApp:
     def route(self,
               trigger_arg_name: str = 'req',
               binding_arg_name: str = '$return',
-              trigger_arg_data_type: Optional[DataType] = DataType.UNDEFINED,
-              output_arg_data_type: Optional[DataType] = DataType.UNDEFINED,
+              trigger_arg_data_type: DataType = DataType.UNDEFINED,
+              output_arg_data_type: DataType = DataType.UNDEFINED,
               methods: Set[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
-              auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
+              auth_level: AuthLevel = AuthLevel.ANONYMOUS,
               route: Optional[str] = None):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
-                nonlocal route
-                route = fb.get_function_name()
                 fb.add_trigger(trigger=HttpTrigger(name=trigger_arg_name,
                                                    data_type=
                                                    trigger_arg_data_type,
@@ -590,9 +582,10 @@ class FunctionsApp:
 
 
 # app2 = FunctionsApp("hello.txt")
-#
-#
-# @app2.route(trigger_name="req", output_name="resp")
+# #
+# #
+# @app2.function_name("hello")
+# @app2.route()
 # def hello_world(req) -> object:
 #     print("hello")
 #     resp = object()

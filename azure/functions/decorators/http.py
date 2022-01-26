@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Optional, Tuple
+from typing import Optional, Set
 
 from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
     StringifyEnum, DataType
@@ -9,8 +9,11 @@ from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
 class HttpMethod(StringifyEnum):
     GET = "GET"
     POST = "POST"
+    DELETE = "DELETE"
+    HEAD = "HEAD"
     PATCH = "PATCH"
     PUT = "PUT"
+    OPTIONS = "OPTIONS"
 
 
 class HttpTrigger(Trigger):
@@ -20,13 +23,13 @@ class HttpTrigger(Trigger):
 
     def __init__(self,
                  name,
-                 data_type: Optional[DataType] = DataType.UNDEFINED,
-                 methods: Optional[Tuple[HttpMethod]] = (),
-                 auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
-                 route: Optional[str] = None) -> None:
-        self.auth_level = auth_level
-        self.route = route
-        self.methods = methods
+                 methods: Set[HttpMethod],
+                 data_type: DataType,
+                 auth_level: AuthLevel,
+                 route: str) -> None:
+        self._auth_level = auth_level
+        self._route = route
+        self._methods = methods
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):
@@ -38,10 +41,37 @@ class HttpTrigger(Trigger):
             "dataType": self.data_type,
             "route": self.route
         }
-        if self.methods is not None:
+        if self._methods is not None:
             dict_repr["methods"] = [str(m) for m in self.methods]
 
         return dict_repr
+
+    @property
+    def auth_level(self):
+        return self._auth_level
+
+    @auth_level.setter
+    def auth_level(self,
+                   auth_level: AuthLevel):
+        self._auth_level = auth_level
+
+    @property
+    def route(self):
+        return self._route
+
+    @route.setter
+    def route(self,
+              route: str):
+        self._route = route
+
+    @property
+    def methods(self):
+        return self._methods
+
+    @methods.setter
+    def methods(self,
+                methods: Set[HttpMethod]):
+        self._methods = methods
 
 
 class HttpOutput(OutputBinding):
@@ -49,9 +79,7 @@ class HttpOutput(OutputBinding):
     def get_binding_name():
         return "http"
 
-    def __init__(self,
-                 name: str,
-                 data_type: Optional[DataType] = DataType.UNDEFINED) -> None:
+    def __init__(self, name: str, data_type: DataType) -> None:
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):

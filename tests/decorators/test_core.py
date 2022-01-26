@@ -52,7 +52,7 @@ class TestTriggers(unittest.TestCase):
         test_trigger = DummyTrigger()
 
         self.assertTrue(test_trigger.is_trigger)
-        self.assertEqual(test_trigger.name, "Dummy")
+        self.assertEqual(test_trigger._name, "Dummy")
         self.assertEqual(test_trigger.type, "Dummy")
         self.assertEqual(test_trigger.get_dict_repr(), {"dummy": "trigger"})
         self.assertEqual(test_trigger.direction, BindingDirection.IN.value)
