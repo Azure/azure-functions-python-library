@@ -5,7 +5,8 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from .decorators import FunctionsApp, Function, Binding, DataType, AuthLevel
+from .decorators import FunctionsApp, Function, Binding, DataType, AuthLevel, \
+    AccessRights, Cardinality
 from ._durable_functions import OrchestrationContext, EntityContext
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
@@ -71,7 +72,9 @@ __all__ = (
     'Function',
     'Binding',
     'DataType',
-    'AuthLevel'
+    'AuthLevel',
+    'AccessRights',
+    'Cardinality'
 )
 
 __version__ = '1.8.0'

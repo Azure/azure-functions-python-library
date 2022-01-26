@@ -117,6 +117,9 @@ class FunctionBuilder(object):
     def get_method_name(self) -> str:
         return self._function.get_user_function().__name__
 
+    def get_function_name(self) -> str:
+        return self._function.get_function_name()
+
     def build(self):
         if not self.__validate_function():
             raise ValueError("Invalid function!")
@@ -165,14 +168,17 @@ class FunctionsApp:
         return wrap
 
     def on_http_request(self,
-                        name: str,
+                        name: str = 'req',
                         data_type: Optional[DataType] = DataType.UNDEFINED,
-                        methods: Optional[Tuple[MethodType]] = (),
+                        methods: Set[HttpMethod] =
+                        (HttpMethod.GET, HttpMethod.POST),
                         auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
                         route: Optional[str] = None):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
+                nonlocal route
+                route = fb.get_function_name()
                 fb.add_trigger(
                     HttpTrigger(name=name, data_type=data_type, methods=methods,
                                 auth_level=auth_level, route=route))
@@ -183,7 +189,7 @@ class FunctionsApp:
         return wrap
 
     def write_http(self,
-                   name: str,
+                   name: str = '$return',
                    data_type: Optional[DataType] = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
@@ -206,13 +212,17 @@ class FunctionsApp:
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
+                nonlocal route
+                route = fb.get_function_name()
                 fb.add_trigger(trigger=HttpTrigger(name=trigger_arg_name,
-                                                   data_type=trigger_arg_data_type,
+                                                   data_type=
+                                                   trigger_arg_data_type,
                                                    methods=methods,
                                                    auth_level=auth_level,
                                                    route=route))
                 fb.add_binding(binding=HttpOutput(name=binding_arg_name,
-                                                  data_type=output_arg_data_type))
+                                                  data_type=
+                                                  output_arg_data_type))
                 return fb
 
             return decorator()
