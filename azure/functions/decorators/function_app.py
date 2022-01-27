@@ -1,8 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-
 import json
-from typing import Callable, Dict, List, Optional, Union, Set
+from typing import Callable, Dict, List, Optional, Union, Set, Tuple
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel
@@ -21,7 +20,7 @@ class Function(object):
     def __init__(self,
                  func: Callable,
                  script_file):
-        self._name = func.__name__
+        self._name = None
         self._func = func
         self._trigger: Optional[Trigger] = None
         self._bindings: List[Binding] = []
@@ -119,24 +118,20 @@ class FunctionBuilder(object):
         trigger = self._function.get_trigger()
         if trigger is None:
             raise ValueError(
-                f"Function ${function_name} does not have a trigger.")
+                f"Function {function_name} does not have a trigger.")
 
         bindings = self._function.get_bindings()
-        if not bindings:
-            raise ValueError(
-                f"Function ${bindings} does not have bindings.")
-
         if trigger not in bindings:
             raise ValueError(
-                f"Function ${function_name} trigger ${trigger} not present"
-                f" in bindings ${bindings}")
+                f"Function {function_name} trigger {trigger} not present"
+                f" in bindings {bindings}")
 
     def build(self):
         self.__validate_function()
 
-        if isinstance(self._function.get_trigger(), HttpTrigger):
-            self._function.get_trigger().route = \
-                self._function.get_function_name()
+        trigger = self._function.get_trigger()
+        if isinstance(trigger, HttpTrigger) and trigger.route is None:
+            trigger.route = self._function.get_function_name()
 
         return self._function
 
@@ -185,7 +180,7 @@ class FunctionsApp:
     def on_http_request(self,
                         name: str = 'req',
                         data_type: DataType = DataType.UNDEFINED,
-                        methods: Set[HttpMethod] =
+                        methods: Tuple[HttpMethod] =
                         (HttpMethod.GET, HttpMethod.POST),
                         auth_level: AuthLevel = AuthLevel.ANONYMOUS,
                         route: Optional[str] = None):
@@ -219,7 +214,7 @@ class FunctionsApp:
               binding_arg_name: str = '$return',
               trigger_arg_data_type: DataType = DataType.UNDEFINED,
               output_arg_data_type: DataType = DataType.UNDEFINED,
-              methods: Set[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
+              methods: Tuple[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
               auth_level: AuthLevel = AuthLevel.ANONYMOUS,
               route: Optional[str] = None):
         @self.__configure_function_builder
@@ -245,7 +240,7 @@ class FunctionsApp:
                  schedule: str,
                  run_on_startup: Optional[bool] = None,
                  use_monitor: Optional[bool] = None,
-                 data_type: Optional[DataType] = DataType.UNDEFINED):
+                 data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -265,13 +260,11 @@ class FunctionsApp:
                                     name: str,
                                     connection: str,
                                     queue_name: str,
-                                    data_type: Optional[
-                                        DataType] = DataType.UNDEFINED,
-                                    access_rights: Optional[
-                                        AccessRights] = AccessRights.MANAGE,
-                                    is_sessions_enabled: Optional[bool] = False,
-                                    cardinality: Optional[
-                                        Cardinality] = Cardinality.ONE):
+                                    data_type: DataType = DataType.UNDEFINED,
+                                    access_rights: AccessRights =
+                                    AccessRights.MANAGE,
+                                    is_sessions_enabled: bool = False,
+                                    cardinality: Cardinality = Cardinality.ONE):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -294,10 +287,9 @@ class FunctionsApp:
                                 name: str,
                                 connection: str,
                                 queue_name: str,
-                                data_type: Optional[
-                                    DataType] = DataType.UNDEFINED,
-                                access_rights: Optional[
-                                    AccessRights] = AccessRights.MANAGE):
+                                data_type: DataType = DataType.UNDEFINED,
+                                access_rights: AccessRights =
+                                AccessRights.MANAGE):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -318,13 +310,11 @@ class FunctionsApp:
                                     connection: str,
                                     topic_name: str,
                                     subscription_name: str,
-                                    data_type: Optional[
-                                        DataType] = DataType.UNDEFINED,
-                                    access_rights: Optional[
-                                        AccessRights] = AccessRights.MANAGE,
-                                    is_sessions_enabled: Optional[bool] = False,
-                                    cardinality: Optional[
-                                        Cardinality] = Cardinality.ONE):
+                                    data_type: DataType = DataType.UNDEFINED,
+                                    access_rights: AccessRights =
+                                    AccessRights.MANAGE,
+                                    is_sessions_enabled: bool = False,
+                                    cardinality: Cardinality = Cardinality.ONE):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -350,10 +340,9 @@ class FunctionsApp:
                                 connection: str,
                                 topic_name: str,
                                 subscription_name: str,
-                                data_type: Optional[
-                                    DataType] = DataType.UNDEFINED,
-                                access_rights: Optional[
-                                    AccessRights] = AccessRights.MANAGE):
+                                data_type: DataType = DataType.UNDEFINED,
+                                access_rights: AccessRights =
+                                AccessRights.MANAGE):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -375,7 +364,7 @@ class FunctionsApp:
                         name: str,
                         queue_name: str,
                         connection: str,
-                        data_type: Optional[DataType] = DataType.UNDEFINED):
+                        data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -394,7 +383,7 @@ class FunctionsApp:
                     name: str,
                     queue_name: str,
                     connection: str,
-                    data_type: Optional[DataType] = DataType.UNDEFINED):
+                    data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -413,10 +402,9 @@ class FunctionsApp:
                              name: str,
                              connection: str,
                              event_hub_name: str,
-                             data_type: Optional[DataType] = DataType.UNDEFINED,
-                             cardinality: Optional[
-                                 Cardinality] = Cardinality.MANY,
-                             consumer_group: Optional[str] = "$Default"):
+                             data_type: DataType = DataType.UNDEFINED,
+                             cardinality: Cardinality = Cardinality.MANY,
+                             consumer_group: str = "$Default"):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -436,7 +424,7 @@ class FunctionsApp:
                                 name: str,
                                 connection: str,
                                 event_hub_name: str,
-                                data_type: Optional[DataType] =
+                                data_type: DataType =
                                 DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
@@ -462,18 +450,18 @@ class FunctionsApp:
                             lease_database_name: Optional[str] = None,
                             create_lease_collection_if_not_exists: Optional[
                                 bool] = False,
-                            leases_collection_throughput: Optional[int] = -1,
+                            leases_collection_throughput: int = -1,
                             lease_collection_prefix: Optional[str] = None,
-                            checkpoint_interval: Optional[int] = -1,
-                            checkpoint_document_count: Optional[int] = -1,
-                            feed_poll_delay: Optional[int] = 5000,
-                            lease_renew_interval: Optional[int] = 17000,
-                            lease_acquire_interval: Optional[int] = 13000,
-                            lease_expiration_interval: Optional[int] = 60000,
-                            max_items_per_invocation: Optional[int] = -1,
-                            start_from_beginning: Optional[bool] = False,
+                            checkpoint_interval: int = -1,
+                            checkpoint_document_count: int = -1,
+                            feed_poll_delay: int = 5000,
+                            lease_renew_interval: int = 17000,
+                            lease_acquire_interval: int = 13000,
+                            lease_expiration_interval: int = 60000,
+                            max_items_per_invocation: int = -1,
+                            start_from_beginning: bool = False,
                             preferred_locations: Optional[str] = None,
-                            data_type: Optional[DataType] = DataType.UNDEFINED):
+                            data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -521,14 +509,12 @@ class FunctionsApp:
                                   database_name: str,
                                   collection_name: str,
                                   connection_string_setting: str,
-                                  create_if_not_exists: Optional[bool] = False,
+                                  create_if_not_exists: bool = False,
                                   partition_key: Optional[str] = None,
-                                  collection_throughput: Optional[int] = -1,
-                                  use_multiple_write_locations: Optional[
-                                      bool] = False,
+                                  collection_throughput: int = -1,
+                                  use_multiple_write_locations: bool = False,
                                   preferred_locations: Optional[str] = None,
-                                  data_type: Optional[
-                                      DataType] = DataType.UNDEFINED):
+                                  data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():
@@ -562,8 +548,7 @@ class FunctionsApp:
                                  document_id: Optional[str] = None,
                                  sql_query: Optional[str] = None,
                                  partitions: Optional[str] = None,
-                                 data_type: Optional[
-                                     DataType] = DataType.UNDEFINED):
+                                 data_type: DataType = DataType.UNDEFINED):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():

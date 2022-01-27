@@ -15,7 +15,8 @@ class TestHttp(unittest.TestCase):
                           HttpMethod.OPTIONS])
 
     def test_http_trigger_valid_creation_with_methods(self):
-        http_trigger = HttpTrigger(name='req', methods={HttpMethod.GET},
+        http_trigger = HttpTrigger(name='req',
+                                   methods=(HttpMethod.GET, HttpMethod.POST),
                                    data_type=DataType.UNDEFINED,
                                    auth_level=AuthLevel.ANONYMOUS,
                                    route='dummy')
@@ -28,7 +29,7 @@ class TestHttp(unittest.TestCase):
             "name": 'req',
             "dataType": DataType.UNDEFINED.value,
             "route": 'dummy',
-            "methods": [str(HttpMethod.GET)]
+            "methods": [str(HttpMethod.GET), str(HttpMethod.POST)]
         })
 
     def test_http_output_valid_creation(self):

@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Optional, Set
+from typing import Tuple, Optional
 
 from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
     StringifyEnum, DataType
@@ -23,10 +23,10 @@ class HttpTrigger(Trigger):
 
     def __init__(self,
                  name,
-                 methods: Set[HttpMethod],
+                 methods: Tuple[HttpMethod],
                  data_type: DataType,
                  auth_level: AuthLevel,
-                 route: str) -> None:
+                 route: Optional[str] = None) -> None:
         self._auth_level = auth_level
         self._route = route
         self._methods = methods
@@ -70,7 +70,7 @@ class HttpTrigger(Trigger):
 
     @methods.setter
     def methods(self,
-                methods: Set[HttpMethod]):
+                methods: Tuple[HttpMethod]):
         self._methods = methods
 
 
@@ -79,7 +79,9 @@ class HttpOutput(OutputBinding):
     def get_binding_name():
         return "http"
 
-    def __init__(self, name: str, data_type: DataType) -> None:
+    def __init__(self,
+                 name: str,
+                 data_type: DataType) -> None:
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):
