@@ -23,6 +23,12 @@ class DataType(StringifyEnum):
     STREAM = 3
 
 
+class AuthLevel(StringifyEnum):
+    FUNCTION = "function"
+    ANONYMOUS = "anonymous"
+    ADMIN = "admin"
+
+
 class Binding(ABC):
     @staticmethod
     @abstractmethod
@@ -31,8 +37,8 @@ class Binding(ABC):
 
     def __init__(self, name: str,
                  direction: BindingDirection,
-                 data_type: DataType = DataType.UNDEFINED,
-                 is_trigger: bool = False):
+                 data_type: DataType,
+                 is_trigger: bool):
         self._type = self.get_binding_name()
         self.is_trigger = is_trigger
         self._name = name
@@ -80,9 +86,3 @@ class OutputBinding(Binding, metaclass=ABCMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, is_trigger=False)
-
-
-class AuthLevel(StringifyEnum):
-    FUNCTION = "function"
-    ANONYMOUS = "anonymous"
-    ADMIN = "admin"

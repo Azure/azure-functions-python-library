@@ -2,13 +2,12 @@
 #  Licensed under the MIT License.
 
 import json
-from types import MethodType
-from typing import Callable, Dict, List, Optional, Union, Tuple, Set
+from typing import Callable, Dict, List, Optional, Union, Set
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel
-from azure.functions.decorators.cosmosdb import CosmosDBTrigger, CosmosDBOutput, \
-    CosmosDBInput
+from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
+    CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
@@ -48,7 +47,8 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self, function_name: str = None):
+    def set_function_name(self,
+                          function_name: str = None):
         if function_name:
             self._name = function_name
 
@@ -87,15 +87,16 @@ class Function(object):
 class FunctionBuilder(object):
     def __init__(self,
                  func,
-                 app_script_file):
-        self._function = Function(func, app_script_file)
+                 function_script_file):
+        self._function = Function(func, function_script_file)
 
     def __call__(self,
                  *args,
                  **kwargs):
         pass
 
-    def configure_function_name(self, function_name: str):
+    def configure_function_name(self,
+                                function_name: str):
         self._function.set_function_name(function_name)
 
         return self
@@ -110,12 +111,28 @@ class FunctionBuilder(object):
         self._function.add_binding(binding=binding)
         return self
 
-    def __validate_function(self) -> bool:
-        return self._function.get_trigger() is not None
+    def __validate_function(self) -> None:
+        function_name = self._function.get_function_name()
+        if function_name is None:
+            raise ValueError("Function name is missing.")
+
+        trigger = self._function.get_trigger()
+        if trigger is None:
+            raise ValueError(
+                f"Function ${function_name} does not have a trigger.")
+
+        bindings = self._function.get_bindings()
+        if not bindings:
+            raise ValueError(
+                f"Function ${bindings} does not have bindings.")
+
+        if trigger not in bindings:
+            raise ValueError(
+                f"Function ${function_name} trigger ${trigger} not present"
+                f" in bindings ${bindings}")
 
     def build(self):
-        if not self.__validate_function():
-            raise ValueError("Invalid function!")
+        self.__validate_function()
 
         if isinstance(self._function.get_trigger(), HttpTrigger):
             self._function.get_trigger().route = \
@@ -144,7 +161,8 @@ class FunctionsApp:
             raise ValueError("WTF Trigger!")
         return fb
 
-    def __configure_function_builder(self, wrap):
+    def __configure_function_builder(self,
+                                     wrap):
         def decorator(func):
             fb = self.__validate_type(func)
             self._function_builders.append(fb)
@@ -152,7 +170,8 @@ class FunctionsApp:
 
         return decorator
 
-    def function_name(self, name: str):
+    def function_name(self,
+                      name: str):
         @self.__configure_function_builder
         def wrap(fb):
             def decorator():

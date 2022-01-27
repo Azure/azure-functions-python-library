@@ -5,8 +5,7 @@ import unittest
 from typing import Dict
 
 from azure.functions.decorators.core import BindingDirection, DataType, \
-    InputBinding, \
-    OutputBinding, Trigger
+    InputBinding, OutputBinding, Trigger, AuthLevel
 
 
 class DummyTrigger(Trigger):
@@ -15,10 +14,17 @@ class DummyTrigger(Trigger):
         return "Dummy"
 
     def get_dict_repr(self) -> Dict[str, str]:
-        return {"dummy": "trigger"}
+        return {
+            "type": self.type,
+            "direction": self.direction,
+            "name": self.name,
+            "dataType": self.data_type
+        }
 
-    def __init__(self):
-        super(DummyTrigger, self).__init__(name="Dummy")
+    def __init__(self,
+                 name: str,
+                 data_type: DataType = DataType.UNDEFINED):
+        super().__init__(name=name, data_type=data_type)
 
 
 class DummyInputBinding(InputBinding):
@@ -27,10 +33,17 @@ class DummyInputBinding(InputBinding):
         return "DummyInputBinding"
 
     def get_dict_repr(self) -> Dict[str, str]:
-        return {"dummy": "input"}
+        return {
+            "type": self.type,
+            "direction": self.direction,
+            "name": self.name,
+            "dataType": self.data_type
+        }
 
-    def __init__(self):
-        super(DummyInputBinding, self).__init__(name="DummyInputBinding")
+    def __init__(self,
+                 name: str,
+                 data_type: DataType = DataType.UNDEFINED):
+        super().__init__(name=name, data_type=data_type)
 
 
 class DummyOutputBinding(OutputBinding):
@@ -39,21 +52,71 @@ class DummyOutputBinding(OutputBinding):
         return "DummyOutputBinding"
 
     def get_dict_repr(self) -> Dict[str, str]:
-        return {"dummy": "output"}
+        return {
+            "type": self.type,
+            "direction": self.direction,
+            "name": self.name,
+            "dataType": self.data_type
+        }
 
-    def __init__(self):
-        super(DummyOutputBinding, self).__init__(name="DummyOutputBinding")
+    def __init__(self,
+                 name: str,
+                 data_type: DataType = DataType.UNDEFINED):
+        super().__init__(name=name, data_type=data_type)
 
 
 class TestTriggers(unittest.TestCase):
+    def test_binding_direction_all_values(self):
+        self.assertEqual([e for e in BindingDirection],
+                         [BindingDirection.IN, BindingDirection.OUT,
+                          BindingDirection.INOUT])
+
+    def test_data_type_all_values(self):
+        self.assertEqual([e for e in DataType],
+                         [DataType.UNDEFINED, DataType.STRING, DataType.BINARY,
+                          DataType.STREAM])
+
+    def test_auth_level_all_values(self):
+        self.assertEqual([e for e in AuthLevel],
+                         [AuthLevel.FUNCTION, AuthLevel.ANONYMOUS,
+                          AuthLevel.ADMIN])
+
     def test_trigger_creation(self):
         """Testing if the trigger creation sets the correct values by default
         """
-        test_trigger = DummyTrigger()
+        test_trigger = DummyTrigger(name="dummy", data_type=DataType.UNDEFINED)
 
         self.assertTrue(test_trigger.is_trigger)
-        self.assertEqual(test_trigger._name, "Dummy")
-        self.assertEqual(test_trigger.type, "Dummy")
-        self.assertEqual(test_trigger.get_dict_repr(), {"dummy": "trigger"})
-        self.assertEqual(test_trigger.direction, BindingDirection.IN.value)
-        self.assertEqual(test_trigger.data_type, DataType.UNDEFINED.value)
+        self.assertEqual(test_trigger.get_dict_repr(),
+                         {'dataType': DataType.UNDEFINED.value,
+                          'direction': BindingDirection.IN.value,
+                          'name': 'dummy',
+                          'type': 'Dummy'})
+
+    def test_input_creation(self):
+        """Testing if the input creation sets the correct values by default
+        """
+        test_input = DummyInputBinding(name="dummy",
+                                       data_type=DataType.UNDEFINED)
+
+        self.assertFalse(test_input.is_trigger)
+        self.assertEqual(test_input.get_dict_repr(),
+                         {'dataType': DataType.UNDEFINED.value,
+                          'direction': BindingDirection.IN.value,
+                          'name': 'dummy',
+                          'type': 'DummyInputBinding'})
+
+    def test_output_creation(self):
+        """Testing if the output creation sets the correct values by default
+        """
+        test_output = DummyOutputBinding(name="dummy",
+                                         data_type=DataType.UNDEFINED)
+
+        self.assertFalse(test_output.is_trigger)
+        self.assertEqual(test_output.get_dict_repr(),
+                         {'dataType': DataType.UNDEFINED.value,
+                          'direction': BindingDirection.OUT.value,
+                          'name': 'dummy',
+                          'type': 'DummyOutputBinding'})
+
+

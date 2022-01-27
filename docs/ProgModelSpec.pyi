@@ -186,7 +186,7 @@ class FunctionsApp(object):
                                  connection_string_setting: str,
                                  document_id: Optional[str] = None,
                                  sql_query: Optional[str] = None,
-                                 partitions: Optional[str] = None,
+                                 partition_key: Optional[str] = None,
                                  data_type: Optional[
                                      DataType] = DataType.UNDEFINED):
         pass
