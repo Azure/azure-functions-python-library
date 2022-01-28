@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional
 
 from azure.functions.decorators.core import Trigger, DataType, OutputBinding
 from azure.functions.decorators.servicebus import Cardinality

@@ -82,7 +82,7 @@ class CosmosDBOutput(OutputBinding):
                  use_multiple_write_locations: bool,
                  preferred_locations: Optional[str] = None,
                  partition_key: Optional[str] = None,
-                 data_type: Optional[DataType] = DataType.UNDEFINED):
+                 data_type: DataType = DataType.UNDEFINED):
         self._database_name = database_name
         self._collection_name = collection_name
         self._connection_string_setting = connection_string_setting

@@ -100,15 +100,8 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_function_builder_creation(self):
         self.assertTrue(callable(self.fb))
         func = getattr(self.fb, "_function")
-        self.assertEqual(func.function_script_file, "dummy.py")
+        self.assertEqual(self.fb._function.function_script_file, "dummy.py")
         self.assertEqual(func.get_user_function(), self.dummy)
-
-    def test_validate_function_name(self):
-        with self.assertRaises(ValueError) as err:
-            self.fb.build()
-
-        self.assertEqual(err.exception.args[0],
-                         "Function name is missing.")
 
     def test_validate_function_missing_trigger(self):
         with self.assertRaises(ValueError) as err:
@@ -116,7 +109,7 @@ class TestFunctionBuilder(unittest.TestCase):
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
-                         "Function dummy does not have a trigger.")
+                         "Function dummy does not have a trigger")
 
     def test_validate_function_trigger_not_in_bindings(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
@@ -130,7 +123,7 @@ class TestFunctionBuilder(unittest.TestCase):
 
         self.assertEqual(err.exception.args[0],
                          f"Function dummy trigger {trigger} not present"
-                         f" in bindings []")
+                         f" in bindings {[]}")
 
     def test_validate_function_working(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
@@ -145,7 +138,7 @@ class TestFunctionBuilder(unittest.TestCase):
                               auth_level=AuthLevel.ANONYMOUS)
         self.fb.configure_function_name('dummy_route').add_trigger(trigger)
         func = self.fb.build()
-        
+
         self.assertEqual(func.get_trigger().route, "dummy_route")
 
     def test_build_function_with_name_and_bindings(self):
@@ -185,81 +178,33 @@ class TestFunctionBuilder(unittest.TestCase):
 
 class TestFunctionsApp(unittest.TestCase):
     def setUp(self):
-        self.func_app = FunctionsApp(app_script_file='dummy.py')
+        def dummy_func():
+            pass
+
+        self.dummy_func = dummy_func
+        self.func_app = FunctionsApp()
 
     def test_get_no_functions(self):
+        self.assertEqual(self.func_app.app_script_file, "function_app.py")
         self.assertEqual(self.func_app.get_functions(), [])
 
-    def test_route_no_args(self):
-        app = self.func_app
+    def test_invalid_decorated_type(self):
+        with self.assertRaises(ValueError) as err:
+            self.func_app._validate_type(object())
 
-        @app.function_name(name="dummy")
-        @app.route()
-        def dummy():
-            pass
+        self.assertEqual(err.exception.args[0], "Unsupported type for "
+                                                "function app decorator "
+                                                "found.")
 
-        self.assertEqual(len(app.get_functions()), 1)
+    def test_callable_decorated_type(self):
+        fb = self.func_app._validate_type(self.dummy_func)
+        self.assertTrue(isinstance(fb, FunctionBuilder))
+        self.assertEqual(fb._function.get_user_function(), self.dummy_func)
 
-        func = app.get_functions()[0]
-        self.assertEqual(func.get_user_function().__name__, "dummy")
-        self.assertEqual(str(func), json.dumps({
-            "scriptFile": "dummy.py",
-            "bindings": [
-                {
-                    "authLevel": "ANONYMOUS",
-                    "type": "httpTrigger",
-                    "direction": BindingDirection.IN.value,
-                    "name": "req",
-                    "dataType": DataType.UNDEFINED.value,
-                    "route": "dummy",
-                    "methods": [
-                        "GET", "POST"
-                    ]
-                },
-                {
-                    "type": "http",
-                    "direction": BindingDirection.OUT.value,
-                    "name": "$return",
-                    "dataType": DataType.UNDEFINED.value
-                }
-            ]
-        }))
+    def test_function_builder_decorated_type(self):
+        fb = FunctionBuilder(self.dummy_func, "dummy.py")
+        self.func_app._function_builders.append(fb)
 
-    def test_route_with_all_args(self):
-        app = self.func_app
-
-        @app.function_name(name="dummy")
-        @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
-                   trigger_arg_data_type=DataType.STRING,
-                   output_arg_data_type=DataType.STRING,
-                   methods=(HttpMethod.GET, HttpMethod.PATCH),
-                   auth_level=AuthLevel.FUNCTION, route='dummy_route')
-        def dummy():
-            pass
-
-        self.assertEqual(len(app.get_functions()), 1)
-        func = app.get_functions()[0]
-        self.assertEqual(func.get_user_function().__name__, "dummy")
-
-        self.assertEqual(str(func), json.dumps({
-            "scriptFile": "dummy.py",
-            "bindings": [
-                {
-                    "authLevel": "FUNCTION",
-                    "type": "httpTrigger",
-                    "direction": BindingDirection.IN.value,
-                    "name": "trigger_name",
-                    "dataType": DataType.STRING.value,
-                    "route": "dummy_route",
-                    "methods": [
-                        "GET", "PATCH"
-                    ]
-                },
-                {
-                    "type": "http",
-                    "direction": BindingDirection.OUT.value,
-                    "name": "out",
-                    "dataType": DataType.STRING.value
-                }
-            ]
-        }))
+        fb = self.func_app._validate_type(fb)
+        self.assertTrue(isinstance(fb, FunctionBuilder))
+        self.assertEqual(fb._function.get_user_function(), self.dummy_func)

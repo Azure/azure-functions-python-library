@@ -24,22 +24,7 @@ class AuthLevel(Enum):
 
 
 class FunctionsApp(object):
-    def function_name(self,
-                      name: str):
-        pass
-
-    def on_http_request(self,
-                        name: str = 'req',
-                        data_type: Optional[DataType] = DataType.UNDEFINED,
-                        methods: Tuple[HttpMethod] = (
-                                HttpMethod.GET, HttpMethod.POST),
-                        auth_level: Optional[AuthLevel] = AuthLevel.ANONYMOUS,
-                        route: Optional[str] = None):
-        pass
-
-    def write_http(self,
-                   name: str = '$return',
-                   data_type: DataType = DataType.UNDEFINED):
+    def function_name(self, name: str):
         pass
 
     def route(self,
@@ -48,15 +33,15 @@ class FunctionsApp(object):
               trigger_arg_data_type: DataType = DataType.UNDEFINED,
               output_arg_data_type: DataType = DataType.UNDEFINED,
               methods: Tuple[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
-              auth_level: AuthLevel = AuthLevel.ANONYMOUS,
+              auth_level: Optional[AuthLevel] = None,
               route: Optional[str] = None):
         pass
 
     def schedule(self,
                  name: str,
                  schedule: str,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None,
+                 run_on_startup: bool = False,
+                 use_monitor: bool = False,
                  data_type: DataType = DataType.UNDEFINED):
         pass
 
@@ -142,8 +127,7 @@ class FunctionsApp(object):
                             lease_connection_string_setting: Optional[
                                 str] = None,
                             lease_database_name: Optional[str] = None,
-                            create_lease_collection_if_not_exists: Optional[
-                                bool] = False,
+                            create_lease_collection_if_not_exists: bool = False,
                             leases_collection_throughput: int = -1,
                             lease_collection_prefix: Optional[str] = None,
                             checkpoint_interval: int = -1,

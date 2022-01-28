@@ -14,8 +14,8 @@ class TimerTrigger(Trigger):
                  name: str,
                  schedule: str,
                  data_type: DataType,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None) -> None:
+                 run_on_startup: bool,
+                 use_monitor: bool) -> None:
         self._schedule = schedule
         self._run_on_startup = run_on_startup
         self._use_monitor = use_monitor

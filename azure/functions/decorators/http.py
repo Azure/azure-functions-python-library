@@ -28,8 +28,8 @@ class HttpTrigger(Trigger):
                  auth_level: AuthLevel,
                  route: Optional[str] = None) -> None:
         self._auth_level = auth_level
-        self._route = route
         self._methods = methods
+        self._route = route
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self):

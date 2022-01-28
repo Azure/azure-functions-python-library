@@ -11,7 +11,9 @@ class TestTimer(unittest.TestCase):
     def test_timer_trigger_valid_creation(self):
         trigger = TimerTrigger(name="req",
                                schedule="dummy_schedule",
-                               data_type=DataType.UNDEFINED)
+                               data_type=DataType.UNDEFINED,
+                               run_on_startup=False,
+                               use_monitor=False)
 
         self.assertEqual(trigger.get_binding_name(), "timerTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
@@ -20,6 +22,6 @@ class TestTimer(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED.value,
             "schedule": "dummy_schedule",
-            "runOnStartup": None,
-            "useMonitor": None
+            "runOnStartup": False,
+            "useMonitor": False
         })
