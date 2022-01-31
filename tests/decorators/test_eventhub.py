@@ -2,7 +2,8 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType, Cardinality
+from azure.functions import DataType
+from azure.functions.decorators import Cardinality
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 
@@ -21,8 +22,8 @@ class TestEventHub(unittest.TestCase):
                          {"cardinality": str(Cardinality.ONE),
                           "connection": "dummy_connection",
                           "consumerGroup": "dummy_group",
-                          "data_type": DataType.UNDEFINED.value,
-                          "direction": BindingDirection.IN.value,
+                          "dataType": str(DataType.UNDEFINED),
+                          "direction": str(BindingDirection.IN),
                           "eventHubName": "dummy_event_hub",
                           "name": "req",
                           "type": "eventHubTrigger"})
@@ -36,8 +37,8 @@ class TestEventHub(unittest.TestCase):
         self.assertEqual(output.get_binding_name(), "eventHub")
         self.assertEqual(output.get_dict_repr(),
                          {'connection': 'dummy_connection',
-                          'dataType': DataType.UNDEFINED.value,
-                          'direction': BindingDirection.OUT.value,
+                          'dataType': str(DataType.UNDEFINED),
+                          'direction': str(BindingDirection.OUT),
                           'eventHubName': 'dummy_event_hub',
                           'name': 'res',
                           'type': 'eventHub'})

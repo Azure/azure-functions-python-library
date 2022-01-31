@@ -4,12 +4,16 @@
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 
+# Constants
+SCRIPT_FILE_LOCATION = "function_app.py"
+
 
 class StringifyEnum(Enum):
     def __str__(self):
         return str(self.name)
 
 
+# Enums
 class BindingDirection(StringifyEnum):
     IN = 0
     OUT = 1
@@ -29,6 +33,27 @@ class AuthLevel(StringifyEnum):
     ADMIN = "admin"
 
 
+class Cardinality(StringifyEnum):
+    ONE = "one"
+    MANY = "many"
+
+
+class AccessRights(StringifyEnum):
+    MANAGE = "manage"
+    LISTEN = "listen"
+
+
+class HttpMethod(StringifyEnum):
+    GET = "GET"
+    POST = "POST"
+    DELETE = "DELETE"
+    HEAD = "HEAD"
+    PATCH = "PATCH"
+    PUT = "PUT"
+    OPTIONS = "OPTIONS"
+
+
+# Binding types
 class Binding(ABC):
     @staticmethod
     @abstractmethod
@@ -47,20 +72,20 @@ class Binding(ABC):
         self._data_type = data_type
 
     @property
-    def type(self):
-        return self._type
-
-    @property
     def name(self):
         return self._name
 
     @property
+    def type(self):
+        return self._type
+
+    @property
     def data_type(self):
-        return self._data_type.value
+        return str(self._data_type)
 
     @property
     def direction(self):
-        return self._direction.value
+        return str(self._direction)
 
     @abstractmethod
     def get_dict_repr(self):

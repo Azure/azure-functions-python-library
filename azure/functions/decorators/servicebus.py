@@ -1,19 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional
-
-from azure.functions.decorators.core import Trigger, StringifyEnum, \
-    OutputBinding, DataType
-
-
-class AccessRights(StringifyEnum):
-    MANAGE = "manage"
-    LISTEN = "listen"
-
-
-class Cardinality(StringifyEnum):
-    ONE = "one"
-    MANY = "many"
+from azure.functions.decorators import Cardinality, AccessRights
+from azure.functions.decorators.core import Trigger, OutputBinding, DataType
 
 
 class ServiceBusQueueTrigger(Trigger):
@@ -68,9 +56,9 @@ class ServiceBusQueueTrigger(Trigger):
             "connection": self.connection,
             "queueName": self.queue_name,
             "dataType": self.data_type,
-            "accessRights": str(self.access_rights),
+            "accessRights": str(self.access_rights.value),
             "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": str(self.cardinality)
+            "cardinality": str(self.cardinality.value)
         }
 
 
@@ -114,7 +102,7 @@ class ServiceBusQueueOutput(OutputBinding):
             "connection": self.connection,
             "queueName": self.queue_name,
             "dataType": self.data_type,
-            "accessRights": str(self.access_rights)
+            "accessRights": str(self.access_rights.value)
         }
 
 
@@ -173,9 +161,9 @@ class ServiceBusTopicTrigger(Trigger):
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
             "dataType": self.data_type,
-            "accessRights": str(self.access_rights),
+            "accessRights": str(self.access_rights.value),
             "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": str(self.cardinality)
+            "cardinality": str(self.cardinality.value)
         }
 
 
@@ -222,5 +210,5 @@ class ServiceBusTopicOutput(OutputBinding):
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
             "dataType": self.data_type,
-            "accessRights": str(self.access_rights)
+            "accessRights": str(self.access_rights.value)
         }

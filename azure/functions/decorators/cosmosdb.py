@@ -79,7 +79,7 @@ class CosmosDBOutput(OutputBinding):
                  connection_string_setting: str,
                  create_if_not_exists: bool,
                  collection_throughput: int,
-                 use_multiple_write_locations: bool,
+                 use_multiple_write_loc: bool,
                  preferred_locations: Optional[str] = None,
                  partition_key: Optional[str] = None,
                  data_type: DataType = DataType.UNDEFINED):
@@ -89,7 +89,7 @@ class CosmosDBOutput(OutputBinding):
         self._create_if_not_exists = create_if_not_exists
         self._partition_key = partition_key
         self._collection_throughput = collection_throughput
-        self._use_multiple_write_locations = use_multiple_write_locations
+        self._use_multiple_write_locations = use_multiple_write_loc
         self._preferred_locations = preferred_locations
         super().__init__(name=name, data_type=data_type)
 
@@ -152,7 +152,7 @@ class CosmosDBTrigger(Trigger):
                  database_name: str,
                  collection_name: str,
                  connection_string_setting: str,
-                 leases_collection_throughput: int,
+                 lease_coll_throughput: int,
                  checkpoint_interval: int,
                  checkpoint_document_count: int,
                  feed_poll_delay: int,
@@ -161,20 +161,20 @@ class CosmosDBTrigger(Trigger):
                  lease_expiration_interval: int,
                  max_items_per_invocation: int,
                  start_from_beginning: bool,
-                 create_lease_collection_if_not_exists: bool,
+                 create_lease_coll_if_unset: bool,
                  preferred_locations: str,
                  data_type: DataType,
                  lease_collection_name: Optional[str] = None,
-                 lease_connection_string_setting: Optional[str] = None,
+                 lease_conn_str_setting: Optional[str] = None,
                  lease_database_name: Optional[str] = None,
                  lease_collection_prefix: Optional[str] = None,
                  ):
         self._lease_collection_name = lease_collection_name
-        self._lease_connection_string_setting = lease_connection_string_setting
+        self._lease_connection_string_setting = lease_conn_str_setting
         self._lease_database_name = lease_database_name
         self._create_lease_collection_if_not_exists = \
-            create_lease_collection_if_not_exists
-        self._leases_collection_throughput = leases_collection_throughput
+            create_lease_coll_if_unset
+        self._leases_collection_throughput = lease_coll_throughput
         self._lease_collection_prefix = lease_collection_prefix
         self._checkpoint_interval = checkpoint_interval
         self._checkpoint_document_count = checkpoint_document_count

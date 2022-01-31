@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Optional, Tuple
 
 from azure.functions import DataType
-from azure.functions.decorators.servicebus import AccessRights, Cardinality
+from azure.functions.decorators import Cardinality, AccessRights
 
 
 class HttpMethod(Enum):

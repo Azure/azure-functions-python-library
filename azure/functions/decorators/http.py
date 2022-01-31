@@ -2,18 +2,8 @@
 # Licensed under the MIT License.
 from typing import Tuple, Optional
 
-from azure.functions.decorators.core import AuthLevel, Trigger, OutputBinding, \
-    StringifyEnum, DataType
-
-
-class HttpMethod(StringifyEnum):
-    GET = "GET"
-    POST = "POST"
-    DELETE = "DELETE"
-    HEAD = "HEAD"
-    PATCH = "PATCH"
-    PUT = "PUT"
-    OPTIONS = "OPTIONS"
+from azure.functions.decorators.core import AuthLevel, Trigger, \
+    OutputBinding, DataType, HttpMethod
 
 
 class HttpTrigger(Trigger):
@@ -23,7 +13,7 @@ class HttpTrigger(Trigger):
 
     def __init__(self,
                  name,
-                 methods: Tuple[HttpMethod],
+                 methods: Tuple[HttpMethod, ...],
                  data_type: DataType,
                  auth_level: AuthLevel,
                  route: Optional[str] = None) -> None:
@@ -34,7 +24,7 @@ class HttpTrigger(Trigger):
 
     def get_dict_repr(self):
         dict_repr = {
-            "authLevel": str(self.auth_level),
+            "authLevel": str(self.auth_level.value),
             "type": self.type,
             "direction": self.direction,
             "name": self.name,

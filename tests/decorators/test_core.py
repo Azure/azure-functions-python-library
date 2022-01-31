@@ -88,8 +88,8 @@ class TestTriggers(unittest.TestCase):
 
         self.assertTrue(test_trigger.is_trigger)
         self.assertEqual(test_trigger.get_dict_repr(),
-                         {'dataType': DataType.UNDEFINED.value,
-                          'direction': BindingDirection.IN.value,
+                         {'dataType': str(DataType.UNDEFINED),
+                          'direction': str(BindingDirection.IN),
                           'name': 'dummy',
                           'type': 'Dummy'})
 
@@ -101,8 +101,8 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(test_input.is_trigger)
         self.assertEqual(test_input.get_dict_repr(),
-                         {'dataType': DataType.UNDEFINED.value,
-                          'direction': BindingDirection.IN.value,
+                         {'dataType': str(DataType.UNDEFINED),
+                          'direction': str(BindingDirection.IN),
                           'name': 'dummy',
                           'type': 'DummyInputBinding'})
 
@@ -114,9 +114,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(test_output.is_trigger)
         self.assertEqual(test_output.get_dict_repr(),
-                         {'dataType': DataType.UNDEFINED.value,
-                          'direction': BindingDirection.OUT.value,
+                         {'dataType': str(DataType.UNDEFINED),
+                          'direction': str(BindingDirection.OUT),
                           'name': 'dummy',
                           'type': 'DummyOutputBinding'})
-
-

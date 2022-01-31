@@ -13,7 +13,7 @@ class TestCosmosDB(unittest.TestCase):
         trigger = CosmosDBTrigger(name="req", database_name="dummy_db",
                                   collection_name="dummy_collection",
                                   connection_string_setting="dummy_str",
-                                  leases_collection_throughput=1,
+                                  lease_coll_throughput=1,
                                   checkpoint_interval=2,
                                   checkpoint_document_count=3,
                                   feed_poll_delay=4,
@@ -22,52 +22,55 @@ class TestCosmosDB(unittest.TestCase):
                                   lease_expiration_interval=7,
                                   max_items_per_invocation=8,
                                   start_from_beginning=False,
-                                  create_lease_collection_if_not_exists=False,
+                                  create_lease_coll_if_unset=False,
                                   preferred_locations="dummy_loc",
                                   data_type=DataType.UNDEFINED)
 
         self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
-        self.assertEqual(trigger.get_dict_repr(), {"checkpointDocumentCount": 3,
-                                                   "checkpointInterval": 2,
-                                                   "collectionName":
-                                                       "dummy_collection",
-                                                   "connectionStringSetting":
-                                                       "dummy_str",
-                                                   "createLeaseCollection"
-                                                   "IfNotExists":
-                                                       False,
-                                                   "dataType":
-                                                       DataType.UNDEFINED.value,
-                                                   "databaseName": "dummy_db",
-                                                   "direction": BindingDirection
-                                                                .IN.value,
-                                                   "feedPollDelay": 4,
-                                                   "leaseAcquireInterval": 6,
-                                                   "leaseCollectionName": None,
-                                                   "leaseCollectionPrefix":
-                                                       None,
-                                                   "leaseConnection"
-                                                   "StringSetting":
-                                                       None,
-                                                   "leaseDatabaseName": None,
-                                                   "leaseExpirationInterval": 7,
-                                                   "leaseRenewInterval": 5,
-                                                   "leasesCollectionThroughput":
-                                                       1,
-                                                   "maxItemsPerInvocation": 8,
-                                                   "name": "req",
-                                                   "preferredLocations":
-                                                       "dummy_loc",
-                                                   "startFromBeginning": False,
-                                                   "type": "cosmosDBTrigger"})
+        self.assertEqual(trigger.get_dict_repr(),
+                         {"checkpointDocumentCount": 3,
+                          "checkpointInterval": 2,
+                          "collectionName":
+                              "dummy_collection",
+                          "connectionStringSetting":
+                              "dummy_str",
+                          "createLeaseCollection"
+                          "IfNotExists":
+                              False,
+                          "dataType":
+                              str(DataType.UNDEFINED),
+                          "databaseName": "dummy_db",
+                          "direction": str(
+                              BindingDirection
+                                  .IN),
+                          "feedPollDelay": 4,
+                          "leaseAcquireInterval": 6,
+                          "leaseCollectionName": None,
+                          "leaseCollectionPrefix":
+                              None,
+                          "leaseConnection"
+                          "StringSetting":
+                              None,
+                          "leaseDatabaseName": None,
+                          "leaseExpirationInterval": 7,
+                          "leaseRenewInterval": 5,
+                          "leasesCollectionThroughput":
+                              1,
+                          "maxItemsPerInvocation": 8,
+                          "name": "req",
+                          "preferredLocations":
+                              "dummy_loc",
+                          "startFromBeginning": False,
+                          "type": "cosmosDBTrigger"})
 
     def test_cosmos_db_output_valid_creation(self):
-        output = CosmosDBOutput(name="req", database_name="dummy_db",
+        output = CosmosDBOutput(name="req",
+                                database_name="dummy_db",
                                 collection_name="dummy_collection",
                                 connection_string_setting="dummy_str",
                                 create_if_not_exists=False,
                                 collection_throughput=1,
-                                use_multiple_write_locations=False)
+                                use_multiple_write_loc=False)
 
         self.assertEqual(output.get_binding_name(), "cosmosDB")
         self.assertEqual(output.get_dict_repr(),
@@ -75,9 +78,9 @@ class TestCosmosDB(unittest.TestCase):
                           'collectionThroughput': 1,
                           'connectionStringSetting': 'dummy_str',
                           'createIfNotExists': False,
-                          'dataType': DataType.UNDEFINED.value,
+                          'dataType': str(DataType.UNDEFINED),
                           'databaseName': 'dummy_db',
-                          'direction': BindingDirection.OUT.value,
+                          'direction': str(BindingDirection.OUT),
                           'name': 'req',
                           'partitionKey': None,
                           'preferredLocations': None,
@@ -88,17 +91,17 @@ class TestCosmosDB(unittest.TestCase):
         cosmosdb_input = CosmosDBInput(name="req", database_name="dummy_db",
                                        collection_name="dummy_collection",
                                        connection_string_setting="dummy_str",
-                                       document_id="dummy_id", sql_query=
-                                       "dummy_query",
+                                       document_id="dummy_id",
+                                       sql_query="dummy_query",
                                        partition_key="dummy_partitions",
                                        data_type=DataType.UNDEFINED)
         self.assertEqual(cosmosdb_input.get_binding_name(), "cosmosDB")
         self.assertEqual(cosmosdb_input.get_dict_repr(),
                          {'collectionName': 'dummy_collection',
                           'collectionStringSetting': 'dummy_str',
-                          'dataType': DataType.UNDEFINED.value,
+                          'dataType': str(DataType.UNDEFINED),
                           'databaseName': 'dummy_db',
-                          'direction': BindingDirection.IN.value,
+                          'direction': str(BindingDirection.IN),
                           'document_id': 'dummy_id',
                           'name': 'req',
                           'partitionKey': 'dummy_partitions',

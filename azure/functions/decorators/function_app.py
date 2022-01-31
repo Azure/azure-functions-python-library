@@ -4,22 +4,24 @@ import json
 from typing import Callable, Dict, List, Optional, Union, Tuple
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel
+    AuthLevel, HttpMethod, SCRIPT_FILE_LOCATION
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
+from azure.functions.decorators.http import HttpTrigger, HttpOutput
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
-    AccessRights, Cardinality, ServiceBusQueueOutput, ServiceBusTopicTrigger, \
+    ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
+from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.timer import TimerTrigger
+
+GET = HttpMethod.GET
+POST = HttpMethod.POST
 
 
 class Function(object):
-    def __init__(self,
-                 func: Callable,
-                 script_file):
+    def __init__(self, func: Callable, script_file):
         self._name = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
@@ -27,17 +29,15 @@ class Function(object):
 
         self.function_script_file = script_file
 
-    def add_binding(self,
-                    binding: Binding):
+    def add_binding(self, binding: Binding):
         self._bindings.append(binding)
 
-    def add_trigger(self,
-                    trigger: Trigger):
+    def add_trigger(self, trigger: Trigger):
         if self._trigger:
             raise ValueError("A trigger was already registered to this "
                              "function. Adding another trigger is not the "
-                             "correct behavior as a function can only have one "
-                             "trigger. Existing registered trigger "
+                             "correct behavior as a function can only have one"
+                             " trigger. Existing registered trigger "
                              f"is {self._trigger} and New trigger "
                              f"being added is {trigger}")
 
@@ -47,8 +47,7 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self,
-                          function_name: str = None):
+    def set_function_name(self, function_name: str = None):
         if function_name:
             self._name = function_name
 
@@ -85,29 +84,22 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    def __init__(self,
-                 func,
-                 function_script_file):
+    def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)
 
-    def __call__(self,
-                 *args,
-                 **kwargs):
+    def __call__(self, *args, **kwargs):
         pass
 
-    def configure_function_name(self,
-                                function_name: str):
+    def configure_function_name(self, function_name: str):
         self._function.set_function_name(function_name)
 
         return self
 
-    def add_trigger(self,
-                    trigger: Trigger):
+    def add_trigger(self, trigger: Trigger):
         self._function.add_trigger(trigger=trigger)
         return self
 
-    def add_binding(self,
-                    binding: Binding):
+    def add_binding(self, binding: Binding):
         self._function.add_binding(binding=binding)
         return self
 
@@ -135,7 +127,7 @@ class FunctionBuilder(object):
 class FunctionsApp:
     def __init__(self, auth_level: AuthLevel = AuthLevel.FUNCTION):
         self._function_builders: List[FunctionBuilder] = []
-        self._app_script_file = "function_app.py"
+        self._app_script_file = SCRIPT_FILE_LOCATION
         self._auth_level = auth_level
 
     @property
@@ -150,8 +142,7 @@ class FunctionsApp:
         return [function_builder.build() for function_builder
                 in self._function_builders]
 
-    def _validate_type(self,
-                       func):
+    def _validate_type(self, func):
         if isinstance(func, FunctionBuilder):
             fb = self._function_builders.pop()
         elif callable(func):
@@ -161,8 +152,7 @@ class FunctionsApp:
                 f"Unsupported type for function app decorator found.")
         return fb
 
-    def _configure_function_builder(self,
-                                    wrap):
+    def _configure_function_builder(self, wrap):
         def decorator(func):
             fb = self._validate_type(func)
             self._function_builders.append(fb)
@@ -170,8 +160,7 @@ class FunctionsApp:
 
         return decorator
 
-    def function_name(self,
-                      name: str):
+    def function_name(self, name: str):
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
@@ -187,7 +176,7 @@ class FunctionsApp:
               binding_arg_name: str = '$return',
               trigger_arg_data_type: DataType = DataType.UNDEFINED,
               output_arg_data_type: DataType = DataType.UNDEFINED,
-              methods: Tuple[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
+              methods: Tuple[HttpMethod, ...] = (GET, POST),
               auth_level: Optional[AuthLevel] = None,
               route: Optional[str] = None):
         @self._configure_function_builder
@@ -197,15 +186,15 @@ class FunctionsApp:
                 if auth_level is None:
                     auth_level = self.auth_level
 
-                fb.add_trigger(trigger=HttpTrigger(name=trigger_arg_name,
-                                                   data_type=
-                                                   trigger_arg_data_type,
-                                                   methods=methods,
-                                                   auth_level=auth_level,
-                                                   route=route))
-                fb.add_binding(binding=HttpOutput(name=binding_arg_name,
-                                                  data_type=
-                                                  output_arg_data_type))
+                fb.add_trigger(trigger=HttpTrigger(
+                    name=trigger_arg_name,
+                    data_type=trigger_arg_data_type,
+                    methods=methods,
+                    auth_level=auth_level,
+                    route=route))
+                fb.add_binding(binding=HttpOutput(
+                    name=binding_arg_name,
+                    data_type=output_arg_data_type))
                 return fb
 
             return decorator()
@@ -213,7 +202,7 @@ class FunctionsApp:
         return wrap
 
     def schedule(self,
-                 name: str,
+                 arg_name: str,
                  schedule: str,
                  run_on_startup: bool = False,
                  use_monitor: bool = False,
@@ -222,7 +211,7 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=TimerTrigger(name=name,
+                    trigger=TimerTrigger(name=arg_name,
                                          schedule=schedule,
                                          run_on_startup=run_on_startup,
                                          use_monitor=use_monitor,
@@ -233,27 +222,28 @@ class FunctionsApp:
 
         return wrap
 
-    def on_service_bus_queue_change(self,
-                                    name: str,
-                                    connection: str,
-                                    queue_name: str,
-                                    data_type: DataType = DataType.UNDEFINED,
-                                    access_rights: AccessRights =
-                                    AccessRights.MANAGE,
-                                    is_sessions_enabled: bool = False,
-                                    cardinality: Cardinality = Cardinality.ONE):
+    def on_service_bus_queue_change(
+            self,
+            arg_name: str,
+            connection: str,
+            queue_name: str,
+            data_type: DataType = DataType.UNDEFINED,
+            access_rights: AccessRights =
+            AccessRights.MANAGE,
+            is_sessions_enabled: bool = False,
+            cardinality: Cardinality = Cardinality.ONE):
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=ServiceBusQueueTrigger(name=name,
-                                                   connection=connection,
-                                                   queue_name=queue_name,
-                                                   data_type=data_type,
-                                                   access_rights=access_rights,
-                                                   is_sessions_enabled=
-                                                   is_sessions_enabled,
-                                                   cardinality=cardinality))
+                    trigger=ServiceBusQueueTrigger(
+                        name=arg_name,
+                        connection=connection,
+                        queue_name=queue_name,
+                        data_type=data_type,
+                        access_rights=access_rights,
+                        is_sessions_enabled=is_sessions_enabled,
+                        cardinality=cardinality))
                 return fb
 
             return decorator()
@@ -261,7 +251,7 @@ class FunctionsApp:
         return wrap
 
     def write_service_bus_queue(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 queue_name: str,
                                 data_type: DataType = DataType.UNDEFINED,
@@ -271,7 +261,7 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=ServiceBusQueueOutput(name=name,
+                    binding=ServiceBusQueueOutput(name=arg_name,
                                                   connection=connection,
                                                   queue_name=queue_name,
                                                   data_type=data_type,
@@ -282,30 +272,30 @@ class FunctionsApp:
 
         return wrap
 
-    def on_service_bus_topic_change(self,
-                                    name: str,
-                                    connection: str,
-                                    topic_name: str,
-                                    subscription_name: str,
-                                    data_type: DataType = DataType.UNDEFINED,
-                                    access_rights: AccessRights =
-                                    AccessRights.MANAGE,
-                                    is_sessions_enabled: bool = False,
-                                    cardinality: Cardinality = Cardinality.ONE):
+    def on_service_bus_topic_change(
+            self,
+            arg_name: str,
+            connection: str,
+            topic_name: str,
+            subscription_name: str,
+            data_type: DataType = DataType.UNDEFINED,
+            access_rights: AccessRights =
+            AccessRights.MANAGE,
+            is_sessions_enabled: bool = False,
+            cardinality: Cardinality = Cardinality.ONE):
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=ServiceBusTopicTrigger(name=name,
-                                                   connection=connection,
-                                                   topic_name=topic_name,
-                                                   subscription_name=
-                                                   subscription_name,
-                                                   data_type=data_type,
-                                                   access_rights=access_rights,
-                                                   is_sessions_enabled=
-                                                   is_sessions_enabled,
-                                                   cardinality=cardinality))
+                    trigger=ServiceBusTopicTrigger(
+                        name=arg_name,
+                        connection=connection,
+                        topic_name=topic_name,
+                        subscription_name=subscription_name,
+                        data_type=data_type,
+                        access_rights=access_rights,
+                        is_sessions_enabled=is_sessions_enabled,
+                        cardinality=cardinality))
                 return fb
 
             return decorator()
@@ -313,7 +303,7 @@ class FunctionsApp:
         return wrap
 
     def write_service_bus_topic(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 topic_name: str,
                                 subscription_name: str,
@@ -324,13 +314,13 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=ServiceBusTopicOutput(name=name,
-                                                  connection=connection,
-                                                  topic_name=topic_name,
-                                                  subscription_name=
-                                                  subscription_name,
-                                                  data_type=data_type,
-                                                  access_rights=access_rights))
+                    binding=ServiceBusTopicOutput(
+                        name=arg_name,
+                        connection=connection,
+                        topic_name=topic_name,
+                        subscription_name=subscription_name,
+                        data_type=data_type,
+                        access_rights=access_rights))
                 return fb
 
             return decorator()
@@ -338,7 +328,7 @@ class FunctionsApp:
         return wrap
 
     def on_queue_change(self,
-                        name: str,
+                        arg_name: str,
                         queue_name: str,
                         connection: str,
                         data_type: DataType = DataType.UNDEFINED):
@@ -346,7 +336,7 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=QueueTrigger(name=name,
+                    trigger=QueueTrigger(name=arg_name,
                                          queue_name=queue_name,
                                          connection=connection,
                                          data_type=data_type))
@@ -357,7 +347,7 @@ class FunctionsApp:
         return wrap
 
     def write_queue(self,
-                    name: str,
+                    arg_name: str,
                     queue_name: str,
                     connection: str,
                     data_type: DataType = DataType.UNDEFINED):
@@ -365,7 +355,7 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=QueueOutput(name=name,
+                    binding=QueueOutput(name=arg_name,
                                         queue_name=queue_name,
                                         connection=connection,
                                         data_type=data_type))
@@ -376,7 +366,7 @@ class FunctionsApp:
         return wrap
 
     def on_event_hub_message(self,
-                             name: str,
+                             arg_name: str,
                              connection: str,
                              event_hub_name: str,
                              data_type: DataType = DataType.UNDEFINED,
@@ -386,7 +376,8 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=EventHubTrigger(name=name, connection=connection,
+                    trigger=EventHubTrigger(name=arg_name,
+                                            connection=connection,
                                             event_hub_name=event_hub_name,
                                             data_type=data_type,
                                             cardinality=cardinality,
@@ -398,7 +389,7 @@ class FunctionsApp:
         return wrap
 
     def write_event_hub_message(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 event_hub_name: str,
                                 data_type: DataType =
@@ -407,7 +398,8 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EventHubOutput(name=name, connection=connection,
+                    binding=EventHubOutput(name=arg_name,
+                                           connection=connection,
                                            event_hub_name=event_hub_name,
                                            data_type=data_type))
                 return fb
@@ -417,7 +409,7 @@ class FunctionsApp:
         return wrap
 
     def on_cosmos_db_update(self,
-                            name: str,
+                            arg_name: str,
                             database_name: str,
                             collection_name: str,
                             connection_string_setting: str,
@@ -437,44 +429,34 @@ class FunctionsApp:
                             lease_expiration_interval: int = 60000,
                             max_items_per_invocation: int = -1,
                             start_from_beginning: bool = False,
-                            preferred_locations: Optional[str] = None,
+                            preferred_locations: str = "",
                             data_type: DataType = DataType.UNDEFINED):
+        trigger = CosmosDBTrigger(
+            name=arg_name,
+            database_name=database_name,
+            collection_name=collection_name,
+            connection_string_setting=connection_string_setting,
+            lease_collection_name=lease_collection_name,
+            lease_conn_str_setting=lease_connection_string_setting,
+            lease_database_name=lease_database_name,
+            create_lease_coll_if_unset=create_lease_collection_if_not_exists,
+            lease_coll_throughput=leases_collection_throughput,
+            lease_collection_prefix=lease_collection_prefix,
+            checkpoint_interval=checkpoint_interval,
+            checkpoint_document_count=checkpoint_document_count,
+            feed_poll_delay=feed_poll_delay,
+            lease_renew_interval=lease_renew_interval,
+            lease_acquire_interval=lease_acquire_interval,
+            lease_expiration_interval=lease_expiration_interval,
+            max_items_per_invocation=max_items_per_invocation,
+            start_from_beginning=start_from_beginning,
+            preferred_locations=preferred_locations,
+            data_type=data_type)
+
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
-                fb.add_trigger(
-                    trigger=
-                    CosmosDBTrigger(name=name,
-                                    database_name=database_name,
-                                    collection_name=collection_name,
-                                    connection_string_setting=
-                                    connection_string_setting,
-                                    lease_collection_name=
-                                    lease_collection_name,
-                                    lease_connection_string_setting=
-                                    lease_connection_string_setting,
-                                    lease_database_name=
-                                    lease_database_name,
-                                    create_lease_collection_if_not_exists=
-                                    create_lease_collection_if_not_exists,
-                                    leases_collection_throughput=
-                                    leases_collection_throughput,
-                                    lease_collection_prefix=
-                                    lease_collection_prefix,
-                                    checkpoint_interval=checkpoint_interval,
-                                    checkpoint_document_count=
-                                    checkpoint_document_count,
-                                    feed_poll_delay=feed_poll_delay,
-                                    lease_renew_interval=lease_renew_interval,
-                                    lease_acquire_interval=
-                                    lease_acquire_interval,
-                                    lease_expiration_interval=
-                                    lease_expiration_interval,
-                                    max_items_per_invocation=
-                                    max_items_per_invocation,
-                                    start_from_beginning=start_from_beginning,
-                                    preferred_locations=preferred_locations,
-                                    data_type=data_type))
+                fb.add_trigger(trigger=trigger)
                 return fb
 
             return decorator()
@@ -482,7 +464,7 @@ class FunctionsApp:
         return wrap
 
     def write_cosmos_db_documents(self,
-                                  name: str,
+                                  arg_name: str,
                                   database_name: str,
                                   collection_name: str,
                                   connection_string_setting: str,
@@ -496,21 +478,17 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBOutput(name=name,
-                                           database_name=database_name,
-                                           collection_name=collection_name,
-                                           connection_string_setting=
-                                           connection_string_setting,
-                                           create_if_not_exists=
-                                           create_if_not_exists,
-                                           partition_key=partition_key,
-                                           collection_throughput=
-                                           collection_throughput,
-                                           use_multiple_write_locations=
-                                           use_multiple_write_locations,
-                                           preferred_locations=
-                                           preferred_locations,
-                                           data_type=data_type))
+                    binding=CosmosDBOutput(
+                        name=arg_name,
+                        database_name=database_name,
+                        collection_name=collection_name,
+                        connection_string_setting=connection_string_setting,
+                        create_if_not_exists=create_if_not_exists,
+                        partition_key=partition_key,
+                        collection_throughput=collection_throughput,
+                        use_multiple_write_loc=use_multiple_write_locations,
+                        preferred_locations=preferred_locations,
+                        data_type=data_type))
                 return fb
 
             return decorator()
@@ -518,7 +496,7 @@ class FunctionsApp:
         return wrap
 
     def read_cosmos_db_documents(self,
-                                 name: str,
+                                 arg_name: str,
                                  database_name: str,
                                  collection_name: str,
                                  connection_string_setting: str,
@@ -530,53 +508,17 @@ class FunctionsApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBInput(name=name,
-                                          database_name=database_name,
-                                          collection_name=collection_name,
-                                          connection_string_setting=
-                                          connection_string_setting,
-                                          document_id=document_id,
-                                          sql_query=sql_query,
-                                          partition_key=partition_key,
-                                          data_type=data_type))
+                    binding=CosmosDBInput(
+                        name=arg_name,
+                        database_name=database_name,
+                        collection_name=collection_name,
+                        connection_string_setting=connection_string_setting,
+                        document_id=document_id,
+                        sql_query=sql_query,
+                        partition_key=partition_key,
+                        data_type=data_type))
                 return fb
 
             return decorator()
 
         return wrap
-
-# Uncomment to test the http decorators working as expected
-# app = FunctionsApp("hello.txt")
-#
-#
-# @app.function_name(name="test1")
-# @app.http_trigger(name="req")
-# @app.http_output_binding(name="resp")
-# def hello_world(req) -> object:
-#     print("hello")
-#     resp = object()
-#     return resp
-#
-# print(app.get_functions()[0].get_trigger())
-# print(app.get_functions()[0].get_function_name())
-# app.get_functions()[0].get_user_function()("hh")
-
-
-# app2 = FunctionsApp("hello.txt")
-# #
-# #
-# @app2.function_name("hello")
-# @app2.route()
-# def hello_world(req) -> object:
-#     print("hello")
-#     resp = object()
-#     return resp
-#
-#
-# print(app2.get_functions()[0].get_trigger())
-# print(app2.get_functions()[0].get_function_name())
-# app2.get_functions()[0].get_user_function()("hh")
-
-
-# ta = DataType.UNDEFINED
-# print(ta)

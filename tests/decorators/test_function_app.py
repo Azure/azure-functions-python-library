@@ -5,10 +5,10 @@ import unittest
 
 from azure.functions import Function
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection
+    BindingDirection, HttpMethod
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionsApp
-from azure.functions.decorators.http import HttpTrigger, HttpMethod, HttpOutput
+from azure.functions.decorators.http import HttpTrigger, HttpOutput
 
 
 class TestFunction(unittest.TestCase):
@@ -51,8 +51,8 @@ class TestFunction(unittest.TestCase):
             self.assertEqual(err.exception,
                              "A trigger was already registered to this "
                              "function. Adding another trigger is not the "
-                             "correct behavior as a function can only have one "
-                             "trigger. Existing registered trigger "
+                             "correct behavior as a function can only have one"
+                             " trigger. Existing registered trigger "
                              f"is {trigger1} and New trigger "
                              f"being added is {trigger2}")
 
@@ -72,16 +72,16 @@ class TestFunction(unittest.TestCase):
             "bindings": [
                 {
                     "type": "http",
-                    "direction": BindingDirection.OUT.value,
+                    "direction": str(BindingDirection.OUT),
                     "name": "out",
-                    "dataType": DataType.UNDEFINED.value
+                    "dataType": str(DataType.UNDEFINED)
                 },
                 {
-                    "authLevel": "ANONYMOUS",
+                    "authLevel": "anonymous",
                     "type": "httpTrigger",
-                    "direction": BindingDirection.IN.value,
+                    "direction": str(BindingDirection.IN),
                     "name": "req",
-                    "dataType": DataType.UNDEFINED.value,
+                    "dataType": str(DataType.UNDEFINED),
                     "route": "dummy",
                     "methods": [str(HttpMethod.GET), str(HttpMethod.POST)]
                 }
@@ -156,11 +156,11 @@ class TestFunctionBuilder(unittest.TestCase):
             "scriptFile": "dummy.py",
             "bindings": [
                 {
-                    "authLevel": "ANONYMOUS",
+                    "authLevel": "anonymous",
                     "type": "httpTrigger",
-                    "direction": BindingDirection.IN.value,
+                    "direction": str(BindingDirection.IN),
                     "name": "req",
-                    "dataType": DataType.UNDEFINED.value,
+                    "dataType": str(DataType.UNDEFINED),
                     "route": "dummy",
                     "methods": [
                         "GET"
@@ -168,9 +168,9 @@ class TestFunctionBuilder(unittest.TestCase):
                 },
                 {
                     "type": "http",
-                    "direction": BindingDirection.OUT.value,
+                    "direction": str(BindingDirection.OUT),
                     "name": "out",
-                    "dataType": DataType.UNDEFINED.value
+                    "dataType": str(DataType.UNDEFINED)
                 }
             ]
         }))

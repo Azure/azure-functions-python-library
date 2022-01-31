@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional
 
 from azure.functions.decorators.core import Trigger, OutputBinding, DataType
 
@@ -67,5 +66,5 @@ class QueueOutput(OutputBinding):
             "name": self.name,
             "dataType": self.data_type,
             "queueName": self.queue_name,
-            "connection": self.connection,
+            "connection": self.connection
         }

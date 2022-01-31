@@ -118,8 +118,7 @@ class ExtensionMeta(abc.ABCMeta):
     @classmethod
     def _get_extension_scope(cls, extension) -> ExtensionScope:
         """Return the scope of an extension"""
-        return getattr(extension, '_scope',  # type: ignore
-                       ExtensionScope.UNKNOWN)
+        return getattr(extension, '_scope', ExtensionScope.UNKNOWN)
 
     @classmethod
     def _set_hooks_for_function(cls, trigger_name: str, ext):

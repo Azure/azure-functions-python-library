@@ -1,15 +1,17 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+from .core import BindingDirection, Cardinality, AccessRights, HttpMethod
 from .function_app import FunctionsApp, Function, Binding, DataType, \
-    AuthLevel, AccessRights, Cardinality
+    AuthLevel
 
 __all__ = [
     'FunctionsApp',
     'Function',
     'Binding',
+    'BindingDirection',
     'DataType',
     'AuthLevel',
+    'Cardinality',
     'AccessRights',
-    'Cardinality'
+    'HttpMethod'
 ]

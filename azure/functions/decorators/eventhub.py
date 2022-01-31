@@ -2,7 +2,7 @@
 #  Licensed under the MIT License.
 
 from azure.functions.decorators.core import Trigger, DataType, OutputBinding
-from azure.functions.decorators.servicebus import Cardinality
+from azure.functions.decorators import Cardinality
 
 
 class EventHubTrigger(Trigger):
@@ -45,7 +45,7 @@ class EventHubTrigger(Trigger):
             "type": self.type,
             "direction": self.direction,
             "name": self.name,
-            "data_type": self.data_type,
+            "dataType": self.data_type,
             "connection": self.connection,
             "eventHubName": self.event_hub_name,
             "cardinality": str(self.cardinality),
