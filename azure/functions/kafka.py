@@ -21,7 +21,8 @@ class KafkaEvent(AbstractKafkaEvent):
                  offset: typing.Optional[int] = None,
                  partition: typing.Optional[int] = None,
                  topic: typing.Optional[str] = None,
-                 timestamp: typing.Optional[str] = None) -> None:
+                 timestamp: typing.Optional[str] = None,
+                 headers: typing.Optional[list]) -> None:
         self.__body = body
         self.__trigger_metadata = trigger_metadata
         self.__key = key
@@ -29,6 +30,7 @@ class KafkaEvent(AbstractKafkaEvent):
         self.__partition = partition
         self.__topic = topic
         self.__timestamp = timestamp
+        self.__headers = headers
 
         # Cache for trigger metadata after Python object conversion
         self._trigger_metadata_pyobj: typing.Optional[
@@ -56,6 +58,10 @@ class KafkaEvent(AbstractKafkaEvent):
     @property
     def timestamp(self) -> typing.Optional[str]:
         return self.__timestamp
+
+    @property
+    def headers(self) -> typing.Optional[list]:
+        return self.__headers
 
     @property
     def metadata(self) -> typing.Optional[typing.Mapping[str, typing.Any]]:
@@ -199,6 +205,8 @@ class KafkaTriggerConverter(KafkaConverter,
                 trigger_metadata, 'Offset', python_type=int),
             topic=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Topic', python_type=str),
+            headers=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'Headers', python_type=list),
             trigger_metadata=trigger_metadata
         )
 
