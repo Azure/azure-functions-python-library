@@ -5,7 +5,7 @@ from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
 
 # Constants
-SCRIPT_FILE_LOCATION = "function_app.py"
+SCRIPT_FILE_NAME = "function_app.py"
 
 
 class StringifyEnum(Enum):
@@ -86,6 +86,10 @@ class Binding(ABC):
     @property
     def direction(self):
         return str(self._direction)
+
+    @direction.setter
+    def direction(self, direction):
+        self._direction = direction
 
     @abstractmethod
     def get_dict_repr(self):

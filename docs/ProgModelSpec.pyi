@@ -1,29 +1,19 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 
-from enum import Enum
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License.
 from typing import Optional, Tuple
 
-from azure.functions import DataType
 from azure.functions.decorators import Cardinality, AccessRights
+from azure.functions.decorators.core import DataType, \
+    AuthLevel, HttpMethod
+
+GET = HttpMethod.GET
+POST = HttpMethod.POST
 
 
-class HttpMethod(Enum):
-    """This Enum defines all the supported Http methods.
-    """
-    GET = "GET"
-    POST = "POST"
-    PATCH = "PATCH"
-    PUT = "PUT"
-
-
-class AuthLevel(Enum):
-    FUNCTION = "function"
-    ANONYMOUS = "anonymous"
-    ADMIN = "admin"
-
-
-class FunctionsApp(object):
+class FunctionsApp:
     def function_name(self, name: str):
         pass
 
@@ -32,44 +22,33 @@ class FunctionsApp(object):
               binding_arg_name: str = '$return',
               trigger_arg_data_type: DataType = DataType.UNDEFINED,
               output_arg_data_type: DataType = DataType.UNDEFINED,
-              methods: Tuple[HttpMethod] = (HttpMethod.GET, HttpMethod.POST),
+              methods: Tuple[HttpMethod, ...] = (GET, POST),
               auth_level: Optional[AuthLevel] = None,
               route: Optional[str] = None):
         pass
 
     def schedule(self,
-                 name: str,
+                 arg_name: str,
                  schedule: str,
                  run_on_startup: bool = False,
                  use_monitor: bool = False,
                  data_type: DataType = DataType.UNDEFINED):
         pass
 
-    def on_service_bus_queue_change(self,
-                                    name: str,
-                                    connection: str,
-                                    queue_name: str,
-                                    data_type: DataType = DataType.UNDEFINED,
-                                    access_rights: AccessRights =
-                                    AccessRights.MANAGE,
-                                    is_sessions_enabled: bool = False,
-                                    cardinality: Cardinality = Cardinality.ONE):
-        pass
-
-    def on_service_bus_topic_change(self,
-                                    name: str,
-                                    connection: str,
-                                    topic_name: str,
-                                    subscription_name: str,
-                                    data_type: DataType = DataType.UNDEFINED,
-                                    access_rights: AccessRights =
-                                    AccessRights.MANAGE,
-                                    is_sessions_enabled: bool = False,
-                                    cardinality: Cardinality = Cardinality.ONE):
+    def on_service_bus_queue_change(
+            self,
+            arg_name: str,
+            connection: str,
+            queue_name: str,
+            data_type: DataType = DataType.UNDEFINED,
+            access_rights: AccessRights =
+            AccessRights.MANAGE,
+            is_sessions_enabled: bool = False,
+            cardinality: Cardinality = Cardinality.ONE):
         pass
 
     def write_service_bus_queue(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 queue_name: str,
                                 data_type: DataType = DataType.UNDEFINED,
@@ -77,8 +56,21 @@ class FunctionsApp(object):
                                 AccessRights.MANAGE):
         pass
 
+    def on_service_bus_topic_change(
+            self,
+            arg_name: str,
+            connection: str,
+            topic_name: str,
+            subscription_name: str,
+            data_type: DataType = DataType.UNDEFINED,
+            access_rights: AccessRights =
+            AccessRights.MANAGE,
+            is_sessions_enabled: bool = False,
+            cardinality: Cardinality = Cardinality.ONE):
+        pass
+
     def write_service_bus_topic(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 topic_name: str,
                                 subscription_name: str,
@@ -88,21 +80,21 @@ class FunctionsApp(object):
         pass
 
     def on_queue_change(self,
-                        name: str,
+                        arg_name: str,
                         queue_name: str,
                         connection: str,
                         data_type: DataType = DataType.UNDEFINED):
         pass
 
     def write_queue(self,
-                    name: str,
+                    arg_name: str,
                     queue_name: str,
                     connection: str,
                     data_type: DataType = DataType.UNDEFINED):
         pass
 
     def on_event_hub_message(self,
-                             name: str,
+                             arg_name: str,
                              connection: str,
                              event_hub_name: str,
                              data_type: DataType = DataType.UNDEFINED,
@@ -111,7 +103,7 @@ class FunctionsApp(object):
         pass
 
     def write_event_hub_message(self,
-                                name: str,
+                                arg_name: str,
                                 connection: str,
                                 event_hub_name: str,
                                 data_type: DataType =
@@ -119,7 +111,7 @@ class FunctionsApp(object):
         pass
 
     def on_cosmos_db_update(self,
-                            name: str,
+                            arg_name: str,
                             database_name: str,
                             collection_name: str,
                             connection_string_setting: str,
@@ -127,7 +119,8 @@ class FunctionsApp(object):
                             lease_connection_string_setting: Optional[
                                 str] = None,
                             lease_database_name: Optional[str] = None,
-                            create_lease_collection_if_not_exists: bool = False,
+                            create_lease_collection_if_not_exists:
+                            bool = False,
                             leases_collection_throughput: int = -1,
                             lease_collection_prefix: Optional[str] = None,
                             checkpoint_interval: int = -1,
@@ -138,12 +131,12 @@ class FunctionsApp(object):
                             lease_expiration_interval: int = 60000,
                             max_items_per_invocation: int = -1,
                             start_from_beginning: bool = False,
-                            preferred_locations: Optional[str] = None,
+                            preferred_locations: str = "",
                             data_type: DataType = DataType.UNDEFINED):
         pass
 
     def write_cosmos_db_documents(self,
-                                  name: str,
+                                  arg_name: str,
                                   database_name: str,
                                   collection_name: str,
                                   connection_string_setting: str,
@@ -156,12 +149,12 @@ class FunctionsApp(object):
         pass
 
     def read_cosmos_db_documents(self,
-                                 name: str,
+                                 arg_name: str,
                                  database_name: str,
                                  collection_name: str,
                                  connection_string_setting: str,
                                  document_id: Optional[str] = None,
                                  sql_query: Optional[str] = None,
-                                 partitions: Optional[str] = None,
+                                 partition_key: Optional[str] = None,
                                  data_type: DataType = DataType.UNDEFINED):
         pass

@@ -4,7 +4,7 @@ import json
 from typing import Callable, Dict, List, Optional, Union, Tuple
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, HttpMethod, SCRIPT_FILE_LOCATION
+    AuthLevel, HttpMethod, SCRIPT_FILE_NAME
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
@@ -127,7 +127,7 @@ class FunctionBuilder(object):
 class FunctionsApp:
     def __init__(self, auth_level: AuthLevel = AuthLevel.FUNCTION):
         self._function_builders: List[FunctionBuilder] = []
-        self._app_script_file = SCRIPT_FILE_LOCATION
+        self._app_script_file = SCRIPT_FILE_NAME
         self._auth_level = auth_level
 
     @property
