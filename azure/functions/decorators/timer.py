@@ -36,8 +36,8 @@ class TimerTrigger(Trigger):
         return {
             "name": self.name,
             "type": self.type,
-            "dataType": self.data_type,
-            "direction": self.direction,
+            "dataType": self.data_type.name,
+            "direction": self.direction.name,
             "schedule": self.schedule,
             "runOnStartup": self.run_on_startup,
             "useMonitor": self.use_monitor

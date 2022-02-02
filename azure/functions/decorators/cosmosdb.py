@@ -55,9 +55,9 @@ class CosmosDBInput(InputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "databaseName": self.database_name,
             "collectionName": self.collection_name,
             "collectionStringSetting": self.connection_string_setting,
@@ -128,9 +128,9 @@ class CosmosDBOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "databaseName": self.database_name,
             "collectionName": self.collection_name,
             "connectionStringSetting": self.connection_string_setting,
@@ -266,8 +266,8 @@ class CosmosDBTrigger(Trigger):
         return {
             "type": self.type,
             "name": self.name,
-            "direction": self.direction,
-            "dataType": self.data_type,
+            "direction": self.direction.name,
+            "dataType": self.data_type.name,
             "leaseCollectionName": self.lease_collection_name,
             "leaseConnectionStringSetting":
                 self.lease_connection_string_setting,

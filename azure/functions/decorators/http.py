@@ -26,9 +26,9 @@ class HttpTrigger(Trigger):
         dict_repr = {
             "authLevel": str(self.auth_level.value),
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "route": self.route
         }
         if self._methods is not None:
@@ -77,7 +77,7 @@ class HttpOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type
+            "dataType": self.data_type.name
         }

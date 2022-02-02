@@ -51,11 +51,11 @@ class ServiceBusQueueTrigger(Trigger):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
             "connection": self.connection,
             "queueName": self.queue_name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "accessRights": str(self.access_rights.value),
             "isSessionsEnabled": self.is_sessions_enabled,
             "cardinality": str(self.cardinality.value)
@@ -97,11 +97,11 @@ class ServiceBusQueueOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
             "connection": self.connection,
             "queueName": self.queue_name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "accessRights": str(self.access_rights.value)
         }
 
@@ -155,12 +155,12 @@ class ServiceBusTopicTrigger(Trigger):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
             "connection": self.connection,
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "accessRights": str(self.access_rights.value),
             "isSessionsEnabled": self.is_sessions_enabled,
             "cardinality": str(self.cardinality.value)
@@ -204,11 +204,11 @@ class ServiceBusTopicOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
             "connection": self.connection,
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "accessRights": str(self.access_rights.value)
         }

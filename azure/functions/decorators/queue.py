@@ -29,9 +29,9 @@ class QueueTrigger(Trigger):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "queueName": self.queue_name,
             "connection": self.connection
         }
@@ -62,9 +62,9 @@ class QueueOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self.data_type,
+            "dataType": self.data_type.name,
             "queueName": self.queue_name,
             "connection": self.connection
         }
