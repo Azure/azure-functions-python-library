@@ -43,9 +43,9 @@ class EventHubTrigger(Trigger):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction.name,
+            "direction": self._direction.name,
             "name": self.name,
-            "dataType": self.data_type.name,
+            "dataType": self._data_type.name,
             "connection": self.connection,
             "eventHubName": self.event_hub_name,
             "cardinality": str(self.cardinality),
@@ -79,9 +79,9 @@ class EventHubOutput(OutputBinding):
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self.direction.name,
+            "direction": self._direction.name,
             "name": self._name,
-            "dataType": self.data_type.name,
+            "dataType": self._data_type.name,
             "connection": self.connection,
             "eventHubName": self.event_hub_name
         }

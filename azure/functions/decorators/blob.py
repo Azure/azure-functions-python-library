@@ -22,7 +22,7 @@
 #             "type": self.get_binding_name(),
 #             "direction": self.get_binding_direction(),
 #             "name": self._name,
-#             "dataType": self.data_type.name,
+#             "dataType": self._data_type.name,
 #             "path": self.path,
 #             "connection": self.connection
 #         }
@@ -45,7 +45,7 @@
 #             "type": self.get_binding_name(),
 #             "direction": self.get_binding_direction(),
 #             "name": self._name,
-#             "dataType": self.data_type.name,
+#             "dataType": self._data_type.name,
 #             "path": self.path,
 #             "connection": self.connection
 #         }
@@ -69,7 +69,7 @@
 #             "type": self.get_binding_name(),
 #             "direction": self.get_binding_direction(),
 #             "name": self._name,
-#             "dataType": self.data_type.name,
+#             "dataType": self._data_type.name,
 #             "path": self.path,
 #             "connection": self.connection
 #         }

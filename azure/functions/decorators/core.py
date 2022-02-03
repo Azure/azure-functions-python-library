@@ -81,11 +81,11 @@ class Binding(ABC):
 
     @property
     def data_type(self):
-        return self._data_type
+        return self._data_type.value
 
     @property
     def direction(self):
-        return self._direction
+        return self._direction.value
 
     @abstractmethod
     def get_dict_repr(self):
