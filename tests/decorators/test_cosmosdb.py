@@ -98,7 +98,7 @@ class TestCosmosDB(unittest.TestCase):
         self.assertEqual(cosmosdb_input.get_binding_name(), "cosmosDB")
         self.assertEqual(cosmosdb_input.get_dict_repr(),
                          {'collectionName': 'dummy_collection',
-                          'collectionStringSetting': 'dummy_str',
+                          'connectionStringSetting': 'dummy_str',
                           'dataType': str(DataType.UNDEFINED),
                           'databaseName': 'dummy_db',
                           'direction': str(BindingDirection.IN),

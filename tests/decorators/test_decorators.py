@@ -580,7 +580,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "dataType": str(DataType.STRING),
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
-                                     "collectionStringSetting": "dummy_str",
+                                     "connectionStringSetting": "dummy_str",
                                      "document_id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"
@@ -659,7 +659,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "dataType": str(DataType.UNDEFINED),
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
-                                     "collectionStringSetting": "dummy_str",
+                                     "connectionStringSetting": "dummy_str",
                                      "document_id": None,
                                      "sqlQuery": None,
                                      "partitionKey": None
@@ -787,7 +787,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "dataType": str(DataType.STRING),
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
-                                     "collectionStringSetting": "dummy_str",
+                                     "connectionStringSetting": "dummy_str",
                                      "document_id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"
@@ -799,7 +799,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "dataType": str(DataType.STRING),
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
-                                     "collectionStringSetting": "dummy_str",
+                                     "connectionStringSetting": "dummy_str",
                                      "document_id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"

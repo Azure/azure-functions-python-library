@@ -60,7 +60,7 @@ class CosmosDBInput(InputBinding):
             "dataType": self._data_type.name,
             "databaseName": self.database_name,
             "collectionName": self.collection_name,
-            "collectionStringSetting": self.connection_string_setting,
+            "connectionStringSetting": self.connection_string_setting,
             "document_id": self.document_id,
             "sqlQuery": self.sql_query,
             "partitionKey": self.partition_key
