@@ -1,6 +1,8 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
+import operator
+from functools import reduce
 from typing import Callable, Dict, List, Optional, Union, Tuple
 
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
@@ -15,6 +17,9 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.timer import TimerTrigger
+from azure.functions.http import HttpRequest
+from azure.functions._http import HttpResponse
+from azure.functions._http_wsgi import WsgiMiddleware, Context
 
 GET = HttpMethod.GET
 POST = HttpMethod.POST
@@ -170,6 +175,18 @@ class FunctionsApp:
             return decorator()
 
         return wrap
+
+    def flask(self, app, auth_level: Optional[AuthLevel] = None):
+
+        methods = reduce(operator.or_,
+                         [rule.methods for rule in
+                          app.url_map.iter_rules()])
+        methods = tuple(HttpMethod(m.upper()) for m in methods if
+                        m.upper() in HttpMethod.__members__)
+
+        @self.route(methods=methods, auth_level=auth_level, route="/{*route}")
+        def main(req: HttpRequest, context: Context) -> HttpResponse:
+            return WsgiMiddleware(app.wsgi_app).handle(req, context)
 
     def route(self,
               trigger_arg_name: str = 'req',
