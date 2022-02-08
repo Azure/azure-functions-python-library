@@ -228,6 +228,7 @@ class KafkaTriggerConverter(KafkaConverter,
         partition_props = trigger_metadata.get('PartitionArray')
         offset_props = trigger_metadata.get('OffsetArray')
         topic_props = trigger_metadata.get('TopicArray')
+        header_props = trigger_metadata.get('HeadersArray')
 
         parsed_timestamp_props: List[Any] = cls.get_parsed_props(
             timestamp_props, parsed_data)
@@ -249,6 +250,11 @@ class KafkaTriggerConverter(KafkaConverter,
         if topic_props is not None:
             parsed_topic_props = [v for v in topic_props.value.string]
 
+        parsed_headers_props: List[Any]
+        if header_props is not None:
+            parsed_headers_list = cls.get_parsed_props(header_props, parsed_data)
+            parsed_headers_props = [v for v in parsed_headers_list]
+
         events = []
 
         for i in range(len(parsed_data)):
@@ -260,6 +266,7 @@ class KafkaTriggerConverter(KafkaConverter,
                 partition=parsed_partition_props[i],
                 offset=parsed_offset_props[i],
                 topic=parsed_topic_props[i],
+                headers= parsed_headers_props[i],
                 trigger_metadata=trigger_metadata
             )
             events.append(event)
