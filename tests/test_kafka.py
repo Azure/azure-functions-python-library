@@ -15,14 +15,17 @@ from .testutils import CollectionBytes, CollectionString, CollectionSint64
 
 class Kafka(unittest.TestCase):
     SINGLE_KAFKA_DATAUM = '{"Offset":1,"Partition":0,"Topic":"users",'\
-        '"Timestamp":"2020-06-20T04:43:28.998Z","Value":"hello", "Headers":[{"Key":"test","Value":"1"}]}'
+        '"Timestamp":"2020-06-20T04:43:28.998Z","Value":"hello", ' \
+                          '"Headers":[{"Key":"test","Value":"1"}]}'
     SINGLE_KAFKA_TIMESTAMP = "2020-06-20T04:43:28.998Z"
     MULTIPLE_KAFKA_TIMESTAMP_0 = "2020-06-20T05:06:25.139Z"
     MULTIPLE_KAFKA_TIMESTAMP_1 = "2020-06-20T05:06:25.945Z"
     MULTIPLE_KAFKA_DATA_0 = '{"Offset":62,"Partition":1,"Topic":"message",'\
-        '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a", "Headers":[{"Key":"test","Value":"1"}]}'
+        '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a", ' \
+                            '"Headers":[{"Key":"test","Value":"1"}]}'
     MULTIPLE_KAFKA_DATA_1 = '{"Offset":63,"Partition":1,"Topic":"message",'\
-        '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a", "Headers":[{"Key":"test2","Value":"2"}]}'
+        '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a", ' \
+                            '"Headers":[{"Key":"test2","Value":"2"}]}'
 
     def test_kafka_input_type(self):
         check_input_type = (
@@ -202,9 +205,11 @@ class Kafka(unittest.TestCase):
 
     def _generate_multiple_kafka_data(self, data_type='json'):
         data = '[{"Offset":62,"Partition":1,"Topic":"message",'\
-               '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a", "Headers":[{"Key":"test","Value":"1"}]},'\
+               '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a",' \
+               ' "Headers":[{"Key":"test","Value":"1"}]},'\
                ' {"Offset":63,"Partition":1,"Topic":"message",'\
-               '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a", "Headers":[{"Key":"test2","Value":"2"}]}]'
+               '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a", ' \
+               '"Headers":[{"Key":"test2","Value":"2"}]}]'
         if data_type == 'collection_bytes':
             data = list(
                 map(lambda x: json.dumps(x).encode('utf-8'),
@@ -268,7 +273,8 @@ class Kafka(unittest.TestCase):
                 CollectionString(['message', 'message']), "collection_string"
             ),
             'HeadersArray': meta.Datum(
-                json.dumps([['{"Key":"test","Value":"1"}'], ['{"Key":"test2","Value":"2"}']]), 'json'
+                json.dumps([['{"Key":"test","Value":"1"}'],
+                            ['{"Key":"test2","Value":"2"}']]), 'json'
             ),
             'sys': meta.Datum(
                 '{"MethodName":"KafkaTriggerMany",'
