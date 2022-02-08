@@ -22,7 +22,7 @@ class KafkaEvent(AbstractKafkaEvent):
                  partition: typing.Optional[int] = None,
                  topic: typing.Optional[str] = None,
                  timestamp: typing.Optional[str] = None,
-                 headers: typing.Optional[list]) -> None:
+                 headers: typing.Optional[list] = None) -> None:
         self.__body = body
         self.__trigger_metadata = trigger_metadata
         self.__key = key
