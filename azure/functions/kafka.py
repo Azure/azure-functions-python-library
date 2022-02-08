@@ -252,7 +252,8 @@ class KafkaTriggerConverter(KafkaConverter,
 
         parsed_headers_props: List[Any]
         if header_props is not None:
-            parsed_headers_list = cls.get_parsed_props(header_props, parsed_data)
+            parsed_headers_list = cls.get_parsed_props(header_props,
+                                                       parsed_data)
             parsed_headers_props = [v for v in parsed_headers_list]
 
         events = []
@@ -266,7 +267,7 @@ class KafkaTriggerConverter(KafkaConverter,
                 partition=parsed_partition_props[i],
                 offset=parsed_offset_props[i],
                 topic=parsed_topic_props[i],
-                headers= parsed_headers_props[i],
+                headers=parsed_headers_props[i],
                 trigger_metadata=trigger_metadata
             )
             events.append(event)
