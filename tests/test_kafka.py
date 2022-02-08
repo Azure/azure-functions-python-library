@@ -255,7 +255,6 @@ class Kafka(unittest.TestCase):
         timestamp_array = ["2020-06-20T05:06:25.139Z",
                            "2020-06-20T05:06:25.945Z"]
 
-
         return {
             'KeyArray': meta.Datum(
                 json.dumps(key_array), 'json'
