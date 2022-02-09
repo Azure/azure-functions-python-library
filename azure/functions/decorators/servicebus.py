@@ -1,12 +1,14 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+from typing import Dict
+
 from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.core import Trigger, OutputBinding, DataType
 
 
 class ServiceBusQueueTrigger(Trigger):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "serviceBusTrigger"
 
     def __init__(self,
@@ -25,30 +27,30 @@ class ServiceBusQueueTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def connection(self):
+    def connection(self) -> str:
         return self._connection
 
     @property
-    def queue_name(self):
+    def queue_name(self) -> str:
         return self._queue_name
 
     @property
-    def access_rights(self):
+    def access_rights(self) -> AccessRights:
         return self._access_rights
 
     @property
-    def is_sessions_enabled(self):
+    def is_sessions_enabled(self) -> bool:
         return self._is_sessions_enabled
 
     @property
-    def cardinality(self):
+    def cardinality(self) -> Cardinality:
         return self._cardinality
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> dict:
         return {
             "type": self.type,
             "direction": self._direction.name,
@@ -64,7 +66,7 @@ class ServiceBusQueueTrigger(Trigger):
 
 class ServiceBusQueueOutput(OutputBinding):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "serviceBus"
 
     def __init__(self,
@@ -79,22 +81,22 @@ class ServiceBusQueueOutput(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def connection(self):
+    def connection(self) -> str:
         return self._connection
 
     @property
-    def queue_name(self):
+    def queue_name(self) -> str:
         return self._queue_name
 
     @property
-    def access_rights(self):
+    def access_rights(self) -> AccessRights:
         return self._access_rights
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> dict:
         return {
             "type": self.type,
             "direction": self._direction.name,
@@ -129,30 +131,30 @@ class ServiceBusTopicTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def connection(self):
+    def connection(self) -> str:
         return self._connection
 
     @property
-    def topic_name(self):
+    def topic_name(self) -> str:
         return self._topic_name
 
     @property
-    def subscription_name(self):
+    def subscription_name(self) -> str:
         return self._subscription_name
 
     @property
-    def access_rights(self):
+    def access_rights(self) -> AccessRights:
         return self._access_rights
 
     @property
-    def is_sessions_enabled(self):
+    def is_sessions_enabled(self) -> bool:
         return self._is_sessions_enabled
 
     @property
-    def cardinality(self):
+    def cardinality(self) -> Cardinality:
         return self._cardinality
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "direction": self._direction.name,

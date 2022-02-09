@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+from typing import Dict
 
 from azure.functions.decorators.core import Trigger, DataType, OutputBinding
 from azure.functions.decorators import Cardinality
@@ -8,7 +9,7 @@ from azure.functions.decorators import Cardinality
 class EventHubTrigger(Trigger):
 
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "eventHubTrigger"
 
     def __init__(self,
@@ -25,22 +26,22 @@ class EventHubTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def connection(self):
+    def connection(self) -> str:
         return self._connection
 
     @property
-    def event_hub_name(self):
+    def event_hub_name(self) -> str:
         return self._event_hub_name
 
     @property
-    def cardinality(self):
+    def cardinality(self) -> Cardinality:
         return self._cardinality
 
     @property
-    def consumer_group(self):
+    def consumer_group(self) -> str:
         return self._consumer_group
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "direction": self._direction.name,
@@ -56,7 +57,7 @@ class EventHubTrigger(Trigger):
 class EventHubOutput(OutputBinding):
 
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "eventHub"
 
     def __init__(self,
@@ -69,14 +70,14 @@ class EventHubOutput(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def connection(self):
+    def connection(self) -> str:
         return self._connection
 
     @property
-    def event_hub_name(self):
+    def event_hub_name(self) -> str:
         return self._event_hub_name
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "direction": self._direction.name,

@@ -6,7 +6,7 @@ from azure.functions.decorators.core import Trigger, DataType
 
 class TimerTrigger(Trigger):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "timerTrigger"
 
     def __init__(self,
@@ -21,18 +21,18 @@ class TimerTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def schedule(self):
+    def schedule(self) -> str:
         return self._schedule
 
     @property
-    def run_on_startup(self):
+    def run_on_startup(self) -> bool:
         return self._run_on_startup
 
     @property
-    def use_monitor(self):
+    def use_monitor(self) -> bool:
         return self._use_monitor
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> dict:
         return {
             "name": self.name,
             "type": self.type,

@@ -1,6 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional
+from typing import Optional, Dict
 
 from azure.functions.decorators.core import DataType, InputBinding, \
     OutputBinding, Trigger
@@ -8,7 +8,7 @@ from azure.functions.decorators.core import DataType, InputBinding, \
 
 class CosmosDBInput(InputBinding):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "cosmosDB"
 
     def __init__(self,
@@ -29,30 +29,30 @@ class CosmosDBInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         return self._database_name
 
     @property
-    def collection_name(self):
+    def collection_name(self) -> str:
         return self._collection_name
 
     @property
-    def connection_string_setting(self):
+    def connection_string_setting(self) -> str:
         return self._connection_string_setting
 
     @property
-    def document_id(self):
+    def document_id(self) -> Optional[str]:
         return self._document_id
 
     @property
-    def sql_query(self):
+    def sql_query(self) -> Optional[str]:
         return self._sql_query
 
     @property
-    def partition_key(self):
+    def partition_key(self) -> Optional[str]:
         return self._partition_key
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "direction": self._direction.name,
@@ -61,7 +61,7 @@ class CosmosDBInput(InputBinding):
             "databaseName": self.database_name,
             "collectionName": self.collection_name,
             "connectionStringSetting": self.connection_string_setting,
-            "document_id": self.document_id,
+            "id": self.document_id,
             "sqlQuery": self.sql_query,
             "partitionKey": self.partition_key
         }
@@ -69,7 +69,7 @@ class CosmosDBInput(InputBinding):
 
 class CosmosDBOutput(OutputBinding):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "cosmosDB"
 
     def __init__(self,
@@ -94,38 +94,38 @@ class CosmosDBOutput(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         return self._database_name
 
     @property
-    def collection_name(self):
+    def collection_name(self) -> str:
         return self._collection_name
 
     @property
-    def connection_string_setting(self):
+    def connection_string_setting(self) -> str:
         return self._connection_string_setting
 
     @property
-    def create_if_not_exists(self):
+    def create_if_not_exists(self) -> bool:
         return self._create_if_not_exists
 
     @property
-    def partition_key(self):
+    def partition_key(self) -> Optional[str]:
         return self._partition_key
 
     @property
-    def collection_throughput(self):
+    def collection_throughput(self) -> int:
         return self._collection_throughput
 
     @property
-    def use_multiple_write_locations(self):
+    def use_multiple_write_locations(self) -> bool:
         return self._use_multiple_write_locations
 
     @property
-    def preferred_locations(self):
+    def preferred_locations(self) -> Optional[str]:
         return self._preferred_locations
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "direction": self._direction.name,
@@ -144,7 +144,7 @@ class CosmosDBOutput(OutputBinding):
 
 class CosmosDBTrigger(Trigger):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return "cosmosDBTrigger"
 
     def __init__(self,
@@ -191,78 +191,78 @@ class CosmosDBTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
     @property
-    def lease_collection_name(self):
+    def lease_collection_name(self) -> Optional[str]:
         return self._lease_collection_name
 
     @property
-    def lease_connection_string_setting(self):
+    def lease_connection_string_setting(self) -> Optional[str]:
         return self._lease_connection_string_setting
 
     @property
-    def lease_database_name(self):
+    def lease_database_name(self) -> Optional[str]:
         return self._lease_database_name
 
     @property
-    def create_lease_collection_if_not_exists(self):
+    def create_lease_collection_if_not_exists(self) -> bool:
         return self._create_lease_collection_if_not_exists
 
     @property
-    def leases_collection_throughput(self):
+    def leases_collection_throughput(self) -> int:
         return self._leases_collection_throughput
 
     @property
-    def lease_collection_prefix(self):
+    def lease_collection_prefix(self) -> Optional[str]:
         return self._lease_collection_prefix
 
     @property
-    def checkpoint_interval(self):
+    def checkpoint_interval(self) -> int:
         return self._checkpoint_interval
 
     @property
-    def checkpoint_document_count(self):
+    def checkpoint_document_count(self) -> int:
         return self._checkpoint_document_count
 
     @property
-    def feed_poll_delay(self):
+    def feed_poll_delay(self) -> int:
         return self._feed_poll_delay
 
     @property
-    def lease_renew_interval(self):
+    def lease_renew_interval(self) -> int:
         return self._lease_renew_interval
 
     @property
-    def lease_acquire_interval(self):
+    def lease_acquire_interval(self) -> int:
         return self._lease_acquire_interval
 
     @property
-    def lease_expiration_interval(self):
+    def lease_expiration_interval(self) -> int:
         return self._lease_expiration_interval
 
     @property
-    def max_items_per_invocation(self):
+    def max_items_per_invocation(self) -> int:
         return self._max_items_per_invocation
 
     @property
-    def start_from_beginning(self):
+    def start_from_beginning(self) -> bool:
         return self._start_from_beginning
 
     @property
-    def preferred_locations(self):
+    def preferred_locations(self) -> str:
         return self._preferred_locations
 
     @property
-    def connection_string_setting(self):
+    def connection_string_setting(self) -> str:
         return self._connection_string_setting
 
     @property
-    def database_name(self):
+    def database_name(self) -> str:
         return self._database_name
 
     @property
-    def collection_name(self):
+    def collection_name(self) -> str:
         return self._collection_name
 
-    def get_dict_repr(self):
+    def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
             "name": self.name,

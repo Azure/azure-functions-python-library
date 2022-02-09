@@ -47,7 +47,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.function_name("dummy_function")
-        @app.route(route="dummy")
+        @app.route("dummy")
         def dummy_func():
             pass
 
@@ -581,7 +581,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
                                      "connectionStringSetting": "dummy_str",
-                                     "document_id": "dummy_id",
+                                     "id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"
                                  },
@@ -660,7 +660,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
                                      "connectionStringSetting": "dummy_str",
-                                     "document_id": None,
+                                     "id": None,
                                      "sqlQuery": None,
                                      "partitionKey": None
                                  },
@@ -788,7 +788,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
                                      "connectionStringSetting": "dummy_str",
-                                     "document_id": "dummy_id",
+                                     "id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"
                                  },
@@ -800,7 +800,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      "databaseName": "dummy_in_db",
                                      "collectionName": "dummy_in_collection",
                                      "connectionStringSetting": "dummy_str",
-                                     "document_id": "dummy_id",
+                                     "id": "dummy_id",
                                      "sqlQuery": "dummy_query",
                                      "partitionKey": "dummy_partitions"
                                  },

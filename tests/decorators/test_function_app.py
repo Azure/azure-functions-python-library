@@ -3,11 +3,10 @@
 import json
 import unittest
 
-from azure.functions import Function
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, HttpMethod
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionsApp
+    FunctionsApp, Function
 from azure.functions.decorators.http import HttpTrigger, HttpOutput
 
 

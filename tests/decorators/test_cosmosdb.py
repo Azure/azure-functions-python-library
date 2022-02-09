@@ -102,7 +102,7 @@ class TestCosmosDB(unittest.TestCase):
                           'dataType': str(DataType.UNDEFINED),
                           'databaseName': 'dummy_db',
                           'direction': str(BindingDirection.IN),
-                          'document_id': 'dummy_id',
+                          'id': 'dummy_id',
                           'name': 'req',
                           'partitionKey': 'dummy_partitions',
                           'sqlQuery': 'dummy_query',

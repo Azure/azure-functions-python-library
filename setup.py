@@ -4,6 +4,17 @@
 from setuptools import find_packages, setup
 from azure.functions import __version__
 
+EXTRA_REQUIRES = {
+    'dev': [
+        'flake8~=3.7.9',
+        'mypy',
+        'pytest',
+        'pytest-cov',
+        'requests==2.*',
+        'coverage'
+    ]
+}
+
 with open("README.md") as readme:
     long_description = readme.read()
 
@@ -36,16 +47,7 @@ setup(
     package_data={
         'azure.functions': ['py.typed']
     },
-    extras_require={
-        'dev': [
-            'flake8~=3.7.9',
-            'mypy',
-            'pytest',
-            'pytest-cov',
-            'requests==2.*',
-            'coverage'
-        ]
-    },
+    extras_require=EXTRA_REQUIRES,
     include_package_data=True,
     test_suite='tests'
 )

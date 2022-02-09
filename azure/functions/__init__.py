@@ -5,7 +5,7 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from .decorators import FunctionsApp, Function, Binding, DataType, AuthLevel, \
+from .decorators import FunctionsApp, Function, DataType, AuthLevel, \
     Cardinality, BindingDirection, AccessRights, HttpMethod
 from ._durable_functions import OrchestrationContext, EntityContext
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -70,7 +70,6 @@ __all__ = (
     # PyStein implementation
     'FunctionsApp',
     'Function',
-    'Binding',
     'BindingDirection',
     'DataType',
     'AuthLevel',
