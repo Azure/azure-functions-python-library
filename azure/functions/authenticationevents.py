@@ -1,6 +1,8 @@
 from importlib import import_module
 import json
+from azure.functions import HttpRequest
 import typing
+from enum import Enum
 
 from . import meta
 
@@ -62,6 +64,8 @@ def _deserialize_custom_object(obj: dict) -> object:
     ----------
     TypeError
         If the decoded object does not contain a `from_json` function
+
+        testing
     """
     if ("__class__" in obj) and ("__module__" in obj) and ("__data__" in obj):
         class_name = obj.pop("__class__")
@@ -79,6 +83,25 @@ def _deserialize_custom_object(obj: dict) -> object:
         # Initialize the object using its `from_json` deserializer
         obj = class_.from_json(obj_data)
     return obj
+
+class RequestStatus(Enum):
+     Failed = auto()
+     TokenInvalid = auto()
+     Successful = auto()
+
+
+class IEventRequest():
+    def __init__(self,
+                HttpRequestMessage: HttpRequest,
+                StatusMessage: str,
+                RequestStatus: RequestStatus):
+        self._HttpRequestMessage=HttpRequestMessage
+        self._StatusMessage=StatusMessage
+        self._RequestStatus=RequestStatus
+
+
+
+
 
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
