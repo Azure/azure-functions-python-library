@@ -128,6 +128,9 @@ class HttpResponse(_abc.HttpResponse):
         """Response body as a bytes object."""
         return self.__body
 
+import typing
+print(type(typing.List))
+print(type(type(typing.Tuple)))
 
 class HttpRequest(_abc.HttpRequest):
     """An HTTP request object.

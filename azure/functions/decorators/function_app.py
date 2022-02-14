@@ -130,10 +130,15 @@ class FunctionBuilder(object):
 
 
 class FunctionsApp:
-    def __init__(self, auth_level: AuthLevel = AuthLevel.FUNCTION):
+    def __init__(self, wsgi_app=None,
+                 auth_level: AuthLevel = AuthLevel.FUNCTION):
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file = SCRIPT_FILE_NAME
         self._auth_level = auth_level
+
+        if wsgi_app is not None:
+            wsgi_middleware = WsgiMiddleware(wsgi_app.wsgi_app)
+            self._flask(wsgi_app, wsgi_middleware, auth_level)
 
     @property
     def app_script_file(self):
@@ -176,7 +181,8 @@ class FunctionsApp:
 
         return wrap
 
-    def flask(self, app, auth_level: Optional[AuthLevel] = None):
+    def _flask(self, app, wsgi_middleware: WsgiMiddleware,
+               auth_level: Optional[AuthLevel] = None):
 
         methods = reduce(operator.or_,
                          [rule.methods for rule in
@@ -186,7 +192,7 @@ class FunctionsApp:
 
         @self.route(methods=methods, auth_level=auth_level, route="/{*route}")
         def main(req: HttpRequest, context: Context) -> HttpResponse:
-            return WsgiMiddleware(app.wsgi_app).handle(req, context)
+            return wsgi_middleware.handle(req, context)
 
     def route(self,
               trigger_arg_name: str = 'req',

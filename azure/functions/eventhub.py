@@ -8,6 +8,14 @@ from azure.functions import _eventhub
 
 from . import meta
 
+class CollectionString:
+    """The CollectionString class is used for generating a mock
+    'collection_string' meta.Datum in testing. The common usage of it is
+    new_datum = meta.Datum(type='collection_string',
+                           value=CollectionString(['a', 'b']))
+    """
+    def __init__(self, data: List[str]):
+        self.string = data
 
 class EventHubConverter(meta.InConverter, meta.OutConverter,
                         binding='eventHub'):
@@ -89,6 +97,10 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
 
         elif isinstance(obj, list):
             data = meta.Datum(type='json', value=json.dumps(obj))
+
+        elif isinstance(obj, tuple):
+            data = meta.Datum(type='collection_string',
+                              value=CollectionString(list(obj)))
 
         return data
 
