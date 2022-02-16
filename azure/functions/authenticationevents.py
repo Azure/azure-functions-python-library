@@ -1,15 +1,15 @@
 from importlib import import_module
 import json
-<<<<<<< Updated upstream
+from logging import exception
+import pickle
 from azure.functions import HttpRequest
-=======
 import jsonschema
 from jsonschema import validate
 from azure.functions import HttpResponse
 from http.client import HTTPResponse
->>>>>>> Stashed changes
+import http.client
 import typing
-from enum import Enum
+from enum import Enum, auto
 
 from . import meta
 
@@ -90,31 +90,14 @@ def _deserialize_custom_object(obj: dict) -> object:
         # Initialize the object using its `from_json` deserializer
         obj = class_.from_json(obj_data)
     return obj
-<<<<<<< Updated upstream
 
 class RequestStatus(Enum):
      Failed = auto()
      TokenInvalid = auto()
      Successful = auto()
 
-
-class IEventRequest():
-    def __init__(self,
-                HttpRequestMessage: HttpRequest,
-                StatusMessage: str,
-                RequestStatus: RequestStatus):
-        self._HttpRequestMessage=HttpRequestMessage
-        self._StatusMessage=StatusMessage
-        self._RequestStatus=RequestStatus
-
-
-
-
-
-=======
-    
 class IEventResponse():
-    def __init__(self, HttpResponseMessage: HTTPResponse,
+    def __init__(self, HttpResponseMessage: HttpResponse,
                  Schema : str,
                  Body: str,
                  JsonBody):
@@ -129,7 +112,7 @@ class IEventResponse():
 
     def set_Body(self,value):
         if self.HttpResponseMessage is None:
-            self.HttpResponseMessage = HTTPResponse()
+            self.HttpResponseMessage = HttpResponse()
             self.HttpResponseMessage.__set_body(value)
 
     def invalidate():
@@ -167,8 +150,72 @@ class IEventResponse():
         response.Schema = schema
         response.Body = body
         return response
+
+class IEventData():
+    def __init__(self):
+        pass
+    @classmethod
+    def GetCustomJsonConverters():
+        return
+    @classmethod
+    def FromJson(json:str) -> IEventData:
+        jsonString = json.loads(json)
+        return IEventData(**jsonString)
+
+    @staticmethod
+    def CreateInstance(Type,json:str) -> IEventData:
+        data = IEventData(Type())
+        return data if not json else data.FromJson(json)
+
+
+class IEventRequest():
+    def __init__(self,
+                HttpRequestMessage: HttpRequest,
+                StatusMessage: str,
+                RequestStatus: RequestStatus,
+                response: IEventResponse,
+                payload: IEventData):
+        self._HttpRequestMessage=HttpRequestMessage
+        self._StatusMessage=StatusMessage
+        self._RequestStatus=RequestStatus
+        self.response=response
+        self.payload=payload
+
+    def ToString(self):
+        return pickle.dumps(self)
+    
+    def InstanceCreated(args):
+        pass
+
+    def Failed(message: str):
+        response=HttpResponse()
+        response.status_code=400
+        response.__set_body(message)
+        return response
+
+    def Completed(self, response: IEventResponse):
+        try:
+            if self._RequestStatus == RequestStatus.TokenInvalid:
+                return HttpResponse(status_code=401)
+            if self._RequestStatus == RequestStatus.Failed:
+              return self.Failed()
+            response.Validate()
+            return HttpResponse(status_code=200,body=response.JsonBody)
+        except exception as ex:
+            return self.Failed(ex.msg)
+
+
+
+
+
+
+
+
+    
+
+
+
         
->>>>>>> Stashed changes
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
                                meta.OutConverter,
