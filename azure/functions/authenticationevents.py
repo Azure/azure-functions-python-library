@@ -3,8 +3,8 @@ import json
 from logging import exception
 import pickle
 from azure.functions import HttpRequest
-import jsonschema
-from jsonschema import validate
+#import jsonschema
+#from jsonschema import validate
 from azure.functions import HttpResponse
 from http.client import HTTPResponse
 import http.client
@@ -138,11 +138,11 @@ class IEventResponse():
         current[path] = value
         body = str(payload)
     
-    def Validate(self):
-        try:
-            validate(instance=self.JsonBody, schema=self.Schema)
-        except jsonschema.exceptions.ValidationError as err:
-            raise Exception("Json is not valid")
+    # def Validate(self):
+    #     try:
+    #         validate(instance=self.JsonBody, schema=self.Schema)
+    #     except jsonschema.exceptions.ValidationError as err:
+    #         raise Exception("Json is not valid")
     
     @staticmethod
     def CreateInstance(type : type, schema : str, body : str):
@@ -158,12 +158,12 @@ class IEventData():
     def GetCustomJsonConverters():
         return
     @classmethod
-    def FromJson(json:str) -> IEventData:
+    def FromJson(json:str) :
         jsonString = json.loads(json)
         return IEventData(**jsonString)
 
     @staticmethod
-    def CreateInstance(Type,json:str) -> IEventData:
+    def CreateInstance(Type,json:str):
         data = IEventData(Type())
         return data if not json else data.FromJson(json)
 
@@ -199,7 +199,7 @@ class IEventRequest():
                 return HttpResponse(status_code=401)
             if self._RequestStatus == RequestStatus.Failed:
               return self.Failed()
-            response.Validate()
+            # response.Validate()
             return HttpResponse(status_code=200,body=response.JsonBody)
         except exception as ex:
             return self.Failed(ex.msg)
