@@ -1,6 +1,13 @@
 from importlib import import_module
 import json
+<<<<<<< Updated upstream
 from azure.functions import HttpRequest
+=======
+import jsonschema
+from jsonschema import validate
+from azure.functions import HttpResponse
+from http.client import HTTPResponse
+>>>>>>> Stashed changes
 import typing
 from enum import Enum
 
@@ -83,6 +90,7 @@ def _deserialize_custom_object(obj: dict) -> object:
         # Initialize the object using its `from_json` deserializer
         obj = class_.from_json(obj_data)
     return obj
+<<<<<<< Updated upstream
 
 class RequestStatus(Enum):
      Failed = auto()
@@ -103,6 +111,64 @@ class IEventRequest():
 
 
 
+=======
+    
+class IEventResponse():
+    def __init__(self, HttpResponseMessage: HTTPResponse,
+                 Schema : str,
+                 Body: str,
+                 JsonBody):
+                 self.HttpResponseMessage=HttpResponseMessage
+                 self.Schema= Schema
+                 self.Body=Body
+                 self.JsonBody=JsonBody
+
+    
+    def get_Body(self):
+        return self.HttpResponseMessage.get_body        
+
+    def set_Body(self,value):
+        if self.HttpResponseMessage is None:
+            self.HttpResponseMessage = HTTPResponse()
+            self.HttpResponseMessage.__set_body(value)
+
+    def invalidate():
+        pass
+
+
+    def get_JsonBody(self):
+        return json.dump(self.Body)
+
+    def set_JsonBody(self, value):
+        self.Body = str(value)
+
+    def set_JsonValue(self, paths, value):
+        payload = json.dumps(self.Body)
+        current = payload
+        last=""
+        for path in paths:
+            current=current[path]
+            last=path
+            if current is None:
+                pass #Throw exception
+        
+        current[path] = value
+        body = str(payload)
+    
+    def Validate(self):
+        try:
+            validate(instance=self.JsonBody, schema=self.Schema)
+        except jsonschema.exceptions.ValidationError as err:
+            raise Exception("Json is not valid")
+    
+    @staticmethod
+    def CreateInstance(type : type, schema : str, body : str):
+        response =IEventResponse(type())
+        response.Schema = schema
+        response.Body = body
+        return response
+        
+>>>>>>> Stashed changes
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
                                meta.OutConverter,
