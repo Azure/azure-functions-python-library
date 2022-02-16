@@ -1,6 +1,15 @@
 from importlib import import_module
 import json
+from logging import exception
+import pickle
+from azure.functions import HttpRequest
+import jsonschema
+from jsonschema import validate
+from azure.functions import HttpResponse
+from http.client import HTTPResponse
+import http.client
 import typing
+from enum import Enum, auto
 
 from . import meta
 
@@ -62,6 +71,8 @@ def _deserialize_custom_object(obj: dict) -> object:
     ----------
     TypeError
         If the decoded object does not contain a `from_json` function
+
+        testing
     """
     if ("__class__" in obj) and ("__module__" in obj) and ("__data__" in obj):
         class_name = obj.pop("__class__")
@@ -80,6 +91,131 @@ def _deserialize_custom_object(obj: dict) -> object:
         obj = class_.from_json(obj_data)
     return obj
 
+class RequestStatus(Enum):
+     Failed = auto()
+     TokenInvalid = auto()
+     Successful = auto()
+
+class IEventResponse():
+    def __init__(self, HttpResponseMessage: HttpResponse,
+                 Schema : str,
+                 Body: str,
+                 JsonBody):
+                 self.HttpResponseMessage=HttpResponseMessage
+                 self.Schema= Schema
+                 self.Body=Body
+                 self.JsonBody=JsonBody
+
+    
+    def get_Body(self):
+        return self.HttpResponseMessage.get_body        
+
+    def set_Body(self,value):
+        if self.HttpResponseMessage is None:
+            self.HttpResponseMessage = HttpResponse()
+            self.HttpResponseMessage.__set_body(value)
+
+    def invalidate():
+        pass
+
+
+    def get_JsonBody(self):
+        return json.dump(self.Body)
+
+    def set_JsonBody(self, value):
+        self.Body = str(value)
+
+    def set_JsonValue(self, paths, value):
+        payload = json.dumps(self.Body)
+        current = payload
+        last=""
+        for path in paths:
+            current=current[path]
+            last=path
+            if current is None:
+                pass #Throw exception
+        
+        current[path] = value
+        body = str(payload)
+    
+    def Validate(self):
+        try:
+            validate(instance=self.JsonBody, schema=self.Schema)
+        except jsonschema.exceptions.ValidationError as err:
+            raise Exception("Json is not valid")
+    
+    @staticmethod
+    def CreateInstance(type : type, schema : str, body : str):
+        response =IEventResponse(type())
+        response.Schema = schema
+        response.Body = body
+        return response
+
+class IEventData():
+    def __init__(self):
+        pass
+    @classmethod
+    def GetCustomJsonConverters():
+        return
+    @classmethod
+    def FromJson(json:str) -> IEventData:
+        jsonString = json.loads(json)
+        return IEventData(**jsonString)
+
+    @staticmethod
+    def CreateInstance(Type,json:str) -> IEventData:
+        data = IEventData(Type())
+        return data if not json else data.FromJson(json)
+
+
+class IEventRequest():
+    def __init__(self,
+                HttpRequestMessage: HttpRequest,
+                StatusMessage: str,
+                RequestStatus: RequestStatus,
+                response: IEventResponse,
+                payload: IEventData):
+        self._HttpRequestMessage=HttpRequestMessage
+        self._StatusMessage=StatusMessage
+        self._RequestStatus=RequestStatus
+        self.response=response
+        self.payload=payload
+
+    def ToString(self):
+        return pickle.dumps(self)
+    
+    def InstanceCreated(args):
+        pass
+
+    def Failed(message: str):
+        response=HttpResponse()
+        response.status_code=400
+        response.__set_body(message)
+        return response
+
+    def Completed(self, response: IEventResponse):
+        try:
+            if self._RequestStatus == RequestStatus.TokenInvalid:
+                return HttpResponse(status_code=401)
+            if self._RequestStatus == RequestStatus.Failed:
+              return self.Failed()
+            response.Validate()
+            return HttpResponse(status_code=200,body=response.JsonBody)
+        except exception as ex:
+            return self.Failed(ex.msg)
+
+
+
+
+
+
+
+
+    
+
+
+
+        
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
                                meta.OutConverter,
