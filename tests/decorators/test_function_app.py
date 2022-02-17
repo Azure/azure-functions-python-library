@@ -1,7 +1,9 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import unittest
+from unittest import mock
 
+from azure.functions import WsgiMiddleware, AsgiMiddleware
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
@@ -228,3 +230,72 @@ class TestFunctionApp(unittest.TestCase):
         fb = self.func_app._validate_type(fb)
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
+
+    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+                '._add_http_app')
+    def test_add_asgi(self, add_http_app_mock):
+        mock_asgi_app = object()
+        FunctionApp(asgi_app=mock_asgi_app)
+
+        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+                              AsgiMiddleware)
+        self.assertEqual(add_http_app_mock.call_args.args[1], {})
+
+    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+                '._add_http_app')
+    def test_add_wsgi(self, add_http_app_mock):
+        mock_wsgi_app = object()
+        FunctionApp(wsgi_app=mock_wsgi_app)
+
+        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+                              WsgiMiddleware)
+        self.assertEqual(add_http_app_mock.call_args.args[1], {})
+
+    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+                '._add_http_app')
+    def test_add_http_args(self, add_http_app_mock):
+        mock_wsgi_app = object()
+        app_kwargs = {"methods": ["GET"]}
+        FunctionApp(wsgi_app=mock_wsgi_app, app_kwargs=app_kwargs)
+
+        self.assertEqual(add_http_app_mock.call_args.args[1], app_kwargs)
+
+    def test_add_http_app(self):
+        app = FunctionApp(asgi_app=object(),
+                          app_kwargs={"methods": ["GET"],
+                                      "auth_level": "ANONYMOUS",
+                                      "trigger_arg_data_type":
+                                          DataType.UNDEFINED,
+                                      "output_arg_data_type":
+                                          DataType.UNDEFINED})
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+        func = funcs[0]
+
+        self.assertEqual(func.get_function_name(), "http_app_func")
+        self.assertEqual(func.get_raw_bindings(), [
+            '{"direction": "IN", "dataType": "UNDEFINED", "type": '
+            '"httpTrigger", "name": '
+            '"req", "methods": ["GET"], "authLevel": "ANONYMOUS", "route": '
+            '"/{*route}"}',
+            '{"direction": "OUT", "dataType": "UNDEFINED", "type": "http", '
+            '"name": '
+            '"$return"}'])
+        self.assertEqual(func.get_bindings_dict(), {
+            "bindings": [
+                {
+                    "authLevel": AuthLevel.ANONYMOUS,
+                    "dataType": DataType.UNDEFINED,
+                    "direction": BindingDirection.IN,
+                    "methods": [HttpMethod.GET],
+                    "name": "req",
+                    "route": "/{*route}",
+                    "type": "httpTrigger"
+                },
+                {
+                    "dataType": DataType.UNDEFINED,
+                    "direction": BindingDirection.OUT,
+                    "name": "$return",
+                    "type": "http"
+                }
+            ]})

@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
+import typing
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions.decorators import Cardinality, AccessRights
@@ -17,6 +18,9 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, CustomJsonEncoder
+from azure.functions.http import HttpRequest
+from .._http_asgi import AsgiMiddleware
+from .._http_wsgi import WsgiMiddleware, Context
 
 
 class Function(object):
@@ -185,9 +189,17 @@ class FunctionApp:
     Ref: https://aka.ms/azure-function-ref
     """
 
-    def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+    def __init__(self,
+                 wsgi_app=None,
+                 asgi_app=None,
+                 app_kwargs: typing.Dict = {},
+                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`FunctionApp` object.
 
+        :param wsgi_app: wsgi app object, defaults to None.
+        :param asgi_app: asgi app object, defaults to None.
+        :param app_kwargs: dict of :meth:`route` param names and values for
+        custom configuration of wsgi/asgi app, default to {}.
         :param auth_level: defaults to AuthLevel.FUNCTION, takes str or
         AuthLevel
         """
@@ -195,6 +207,12 @@ class FunctionApp:
         self._app_script_file: str = SCRIPT_FILE_NAME
         self._auth_level = AuthLevel[auth_level] \
             if isinstance(auth_level, str) else auth_level
+
+        if wsgi_app is not None:
+            self._add_http_app(WsgiMiddleware(wsgi_app), app_kwargs)
+
+        if asgi_app is not None:
+            self._add_http_app(AsgiMiddleware(asgi_app), app_kwargs)
 
     @property
     def app_script_file(self) -> str:
@@ -272,6 +290,33 @@ class FunctionApp:
             return decorator()
 
         return wrap
+
+    def _add_http_app(self,
+                      http_middleware: Union[AsgiMiddleware, WsgiMiddleware],
+                      app_kwargs: typing.Dict) -> None:
+        """Add a Wsgi or Asgi app integrated http function.
+
+        :param http_middleware: :class:`AsgiMiddleware` or
+        :class:`WsgiMiddleware` instance.
+        :param app_kwargs: dict of :meth:`route` param names and values for
+        custom configuration of wsgi/asgi app.
+
+        :return: None
+        """
+        methods = app_kwargs.get('methods', (method for method in HttpMethod))
+        trigger_arg_data_type = app_kwargs.get('trigger_arg_data_type',
+                                               None)
+        output_arg_data_type = app_kwargs.get('output_arg_data_type',
+                                              None)
+        auth_level = app_kwargs.get('auth_level', None)
+
+        @self.route(methods=methods,
+                    auth_level=auth_level,
+                    trigger_arg_data_type=trigger_arg_data_type,
+                    output_arg_data_type=output_arg_data_type,
+                    route="/{*route}")
+        def http_app_func(req: HttpRequest, context: Context):
+            return http_middleware.handle(req, context)
 
     def route(self,
               route: Optional[str] = None,
