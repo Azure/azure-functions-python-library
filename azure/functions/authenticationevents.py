@@ -327,6 +327,21 @@ class TokenIssuanceStartData(IEventData):
                 self.EventVersion=EventVersion
                 self.EventTime=EventTime
                 self.EventId=EventId
+
+
+
+class TokenIssuanceStartRequest(IEventRequest):
+    def __init__(self,
+                response: TokenIssuanceStartResponse,
+                payload: TokenIssuanceStartData,
+                TokenClaims: dict[str,str]):
+                self.TokenClaims=TokenClaims
+                self.response=response
+                self.payload=payload
+
+    def InstanceCreated(self,args: list):
+        self.TokenClaims=args[0]
+        
                 
 
         
