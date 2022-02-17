@@ -2,12 +2,10 @@ from importlib import import_module
 import json
 from logging import exception
 import pickle
+from typing_extensions import Self
 from azure.functions import HttpRequest
-#import jsonschema
-#from jsonschema import validate
 from azure.functions import HttpResponse
-from http.client import HTTPResponse
-import http.client
+
 import typing
 from enum import Enum, auto
 
@@ -138,12 +136,6 @@ class IEventResponse():
         current[path] = value
         body = str(payload)
     
-    # def Validate(self):
-    #     try:
-    #         validate(instance=self.JsonBody, schema=self.Schema)
-    #     except jsonschema.exceptions.ValidationError as err:
-    #         raise Exception("Json is not valid")
-    
     @staticmethod
     def CreateInstance(type : type, schema : str, body : str):
         response =IEventResponse(type())
@@ -174,12 +166,14 @@ class IEventRequest():
                 StatusMessage: str,
                 RequestStatus: RequestStatus,
                 response: IEventResponse,
-                payload: IEventData):
+                payload: IEventData,
+                name: str):
         self._HttpRequestMessage=HttpRequestMessage
         self._StatusMessage=StatusMessage
         self._RequestStatus=RequestStatus
         self.response=response
         self.payload=payload
+        self.name=name
 
     def ToString(self):
         return pickle.dumps(self)
@@ -203,16 +197,6 @@ class IEventRequest():
             return HttpResponse(status_code=200,body=response.JsonBody)
         except exception as ex:
             return self.Failed(ex.msg)
-
-
-
-
-
-
-
-
-    
-
 
 
         
