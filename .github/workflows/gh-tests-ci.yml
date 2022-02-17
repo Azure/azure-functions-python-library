@@ -25,9 +25,13 @@ jobs:
         python -m pip install -U -e .[dev]
     - name: Test with pytest
       run: |
-        pytest --cov=./azure --cov-report=xml --cov-branch tests
+        pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
+    - name: Test with pytest for CodeCoverage reporting
+      if: ${{ matrix.python-version }} == 3.9
+      run: |
+        pytest --cache-clear --cov=./azure --cov-branch tests > pytest-coverage.txt
     - name: Codecov
-      if: matrix.python-version == 3.9
+      if: ${{ matrix.python-version }} == 3.9
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
@@ -38,4 +42,4 @@ jobs:
     - name: pytest-coverage-commentator
       uses: coroo/pytest-coverage-commentator@v1.0.2
       with:
-        pytest-coverage: coverage.xml
+        pytest-coverage: pytest-coverage.txt
