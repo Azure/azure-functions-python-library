@@ -2,12 +2,16 @@ from importlib import import_module
 import json
 from logging import exception
 import pickle
+from re import I
 from typing_extensions import Self
+from xmlrpc.client import DateTime
 from azure.functions import HttpRequest
 from azure.functions import HttpResponse
 
 import typing
+import urllib
 from enum import Enum, auto
+import uuid
 
 from . import meta
 
@@ -198,6 +202,132 @@ class IEventRequest():
         except exception as ex:
             return self.Failed(ex.msg)
 
+class TokenIssuanceStartResponse(IEventResponse):
+    def __init__(self,
+                Description: str):
+                self.Description=Description
+    
+    def get_Description(self):
+        return self.Description
+    
+    def set_Description(self,value):
+        self.Description=value
+
+    def invalidate(self):
+        self.set_JsonValue(["addition","description"], self.Description)
+
+class AuthProtocol():
+    def __init__(self,
+                Type: str,
+                TenantId: uuid):
+                self.Type=Type
+                self.TenantId=TenantId
+class Client():
+    def __init__(self,
+                Ip: str):
+                self.Ip=Ip
+
+
+class Role():
+    def __init__(self,
+                Id: uuid,
+                Value: str):
+                self.Id=Id
+                self.Value=Value
+
+class ServicePrincipalName():
+    def __init__(self,
+                Url: str,
+                Uuid: uuid):
+                self.Url=Url
+                self.Uuid=Uuid
+
+listOfServicePrincipalName= list[ServicePrincipalName]
+
+class ServicePrincipal():
+    def __init__(self,
+                Id: uuid,
+                AppId: uuid,
+                AppDisplayName: str,
+                DisplayName: str,
+                ServicePrincipalNames: listOfServicePrincipalName):
+                self.Id=Id
+                self.AppId=AppId
+                self.AppDisplayName=AppDisplayName
+                self.DisplayName=DisplayName
+                self.ServicePrincipalNames=ServicePrincipalNames
+
+class User():
+    def __init__(self,
+                AgeGroup:str,
+                CompanyName:str,
+                Country:str,
+                CreatedDateTime:DateTime,
+                CreationType:str,
+                Department:str,
+                DisplayName:str,
+                GivenName:str,
+                LastPasswordChangeDateTime:DateTime,
+                Mail:str,
+                OnPremisesSamAccountName:str,
+                OnPremisesSecurityIdentifier:str,
+                OnPremiseUserPrincipalName:str,
+                PreferredDataLocation:str,
+                PreferredLanguage:str,
+                Surname:str,
+                UserPrincipalName:str,
+                UserType:str):
+                self.UserType=UserType
+                self.UserPrincipalName=UserPrincipalName
+                self.Surname=Surname
+                self.PreferredLanguage=PreferredLanguage
+                self.AgeGroup=AgeGroup
+                self.CompanyName=CompanyName
+                self.Country=Country
+                self.CreatedDateTime=CreatedDateTime
+                self.CreationType=CreationType
+                self.Department=Department
+                self.DisplayName=DisplayName
+                self.GivenName=GivenName
+                self.LastPasswordChangeDateTime=LastPasswordChangeDateTime
+                self.Mail=Mail
+                self.OnPremisesSamAccountName=OnPremisesSamAccountName
+                self.OnPremisesSecurityIdentifier=OnPremisesSecurityIdentifier
+                self.OnPremiseUserPrincipalName=OnPremiseUserPrincipalName
+                self.PreferredDataLocation=PreferredDataLocation
+
+Roles=list[Role]
+
+class Context():
+    def __init__(self,
+                CorrelationId:uuid,
+                Client:Client,
+                AuthProtocol:AuthProtocol,
+                ClientServicePrincipal: ServicePrincipal,
+                ResourceServicePrincipal: ServicePrincipal,
+                Roles: Roles,
+                User: User):
+                self.User=User
+                self.Roles=Roles
+                self.ResourceServicePrincipal=ResourceServicePrincipal
+                self.ClientServicePrincipal=ClientServicePrincipal
+                self.AuthProtocol=AuthProtocol
+                self.Client=Client
+                self.CorrelationId=CorrelationId
+
+class TokenIssuanceStartData(IEventData):
+    def __init__(self,
+                EventId: uuid,
+                EventTime: DateTime,
+                EventVersion: str,
+                EventType: str,
+                Context: str):
+                self.Context=Context
+                self.EventType=EventType
+                self.EventVersion=EventVersion
+                self.EventTime=EventTime
+                self.EventId=EventId
+                
 
         
 # Authentication Event Trigger
