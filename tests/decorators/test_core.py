@@ -16,9 +16,9 @@ class DummyTrigger(Trigger):
     def get_dict_repr(self) -> Dict[str, str]:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self._data_type.name
+            "dataType": self.data_type.name
         }
 
     def __init__(self,
@@ -35,9 +35,9 @@ class DummyInputBinding(InputBinding):
     def get_dict_repr(self) -> Dict[str, str]:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self._data_type.name
+            "dataType": self.data_type.name
         }
 
     def __init__(self,
@@ -54,9 +54,9 @@ class DummyOutputBinding(OutputBinding):
     def get_dict_repr(self) -> Dict[str, str]:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction.name,
             "name": self.name,
-            "dataType": self._data_type.name
+            "dataType": self.data_type.name
         }
 
     def __init__(self,

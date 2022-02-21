@@ -1,23 +1,22 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
-from typing import Callable, Dict, List, Optional, Union, Tuple
+from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, HttpMethod, SCRIPT_FILE_NAME
+    AuthLevel, SCRIPT_FILE_NAME
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
-from azure.functions.decorators.http import HttpTrigger, HttpOutput
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators.timer import TimerTrigger
-
-GET = HttpMethod.GET
-POST = HttpMethod.POST
+from azure.functions.decorators.utils import parse_singular_param, \
+    parse_iterable_param, EnumEncoder
 
 
 class Function(object):
@@ -84,15 +83,16 @@ class Function(object):
         """
         return self._bindings
 
+    def get_raw_bindings(self) -> List[str]:
+        return [json.dumps(i, cls=EnumEncoder) for i in
+                self.get_bindings_dict()["bindings"]]
+
     def get_bindings_dict(self) -> Dict:
         """Get dictionary representation of the bindings of the function.
 
         :return: Dictionary representation of the bindings.
         """
-        stub_bindings_f_json: Dict[str, List[Dict]] = {"bindings": []}
-        for b in self._bindings:
-            stub_bindings_f_json["bindings"].append(b.get_dict_repr())
-        return stub_bindings_f_json
+        return {"bindings": [b.get_dict_repr() for b in self._bindings]}
 
     def get_dict_repr(self) -> Dict:
         """Get the dictionary representation of the function.
@@ -124,7 +124,7 @@ class Function(object):
 
         :return: The json stringified form of function.
         """
-        return json.dumps(self.get_dict_repr())
+        return json.dumps(self.get_dict_repr(), cls=EnumEncoder)
 
     def __str__(self):
         return self.get_function_json()
@@ -171,8 +171,8 @@ class FunctionBuilder(object):
         return self._function
 
 
-class FunctionsApp:
-    """FunctionsApp object used by worker function indexing model captures
+class FunctionApp:
+    """FunctionApp object used by worker function indexing model captures
     user defined functions and metadata.
 
     Ref: https://aka.ms/azure-function-ref
@@ -265,10 +265,11 @@ class FunctionsApp:
               route: Optional[str] = None,
               trigger_arg_name: str = 'req',
               binding_arg_name: str = '$return',
-              trigger_arg_data_type: DataType = DataType.UNDEFINED,
-              output_arg_data_type: DataType = DataType.UNDEFINED,
-              methods: Tuple[HttpMethod, ...] = (GET, POST),
-              auth_level: Optional[AuthLevel] = None) -> Callable:
+              trigger_arg_data_type: Optional[Union[DataType, str]] = None,
+              output_arg_data_type: Optional[Union[DataType, str]] = None,
+              methods: Optional[
+                  Union[Iterable[str], Iterable[HttpMethod]]] = None,
+              auth_level: Optional[Union[AuthLevel, str]] = None) -> Callable:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -292,7 +293,7 @@ class FunctionsApp:
         responds, defaults to (GET, POST).
         :param auth_level: Determines what keys, if any, need to be present
         on the request in order to invoke the function. If not specified,
-        it will be set to :class:`FunctionsApp` object auth level.
+        it will be set to :class:`FunctionApp` object auth level.
         :return: Decorator function.
         """
 
@@ -305,13 +306,15 @@ class FunctionsApp:
 
                 fb.add_trigger(trigger=HttpTrigger(
                     name=trigger_arg_name,
-                    data_type=trigger_arg_data_type,
-                    methods=methods,
-                    auth_level=auth_level,
+                    data_type=parse_singular_param(trigger_arg_data_type,
+                                                   DataType),
+                    methods=parse_iterable_param(methods, HttpMethod),
+                    auth_level=parse_singular_param(auth_level, AuthLevel),
                     route=route))
                 fb.add_binding(binding=HttpOutput(
                     name=binding_arg_name,
-                    data_type=output_arg_data_type))
+                    data_type=parse_singular_param(output_arg_data_type,
+                                                   DataType)))
                 return fb
 
             return decorator()
@@ -965,3 +968,18 @@ class FunctionsApp:
             return decorator()
 
         return wrap
+
+
+app = FunctionApp()
+
+
+@app.route()
+def sss():
+    pass
+
+
+print(app.get_functions()[0].get_raw_bindings())
+# print(app.get_functions()[0].get_bindings_dict())
+
+# output = HttpOutput(name='ss')
+# print(app.get_functions()[0].get_bindings_dict())

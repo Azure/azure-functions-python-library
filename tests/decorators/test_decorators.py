@@ -5,15 +5,15 @@ import unittest
 
 from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection, HttpMethod
-from azure.functions.decorators.function_app import FunctionsApp
-from azure.functions.decorators.http import HttpTrigger
+    BindingDirection
+from azure.functions.decorators.function_app import FunctionApp
+from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
 
 
 class TestFunctionsApp(unittest.TestCase):
     def setUp(self):
-        self.func_app = FunctionsApp()
+        self.func_app = FunctionApp()
 
     def test_route_is_function_name(self):
         app = self.func_app
@@ -817,7 +817,7 @@ class TestFunctionsApp(unittest.TestCase):
                          }))
 
     def test_set_auth_level_for_http_functions(self):
-        app = FunctionsApp(auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
 
         @app.route(auth_level=AuthLevel.ADMIN)
         def specify_auth_level():

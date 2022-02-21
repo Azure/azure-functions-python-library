@@ -1,13 +1,13 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-
+from azure.functions.decorators.constants import TIMER_TRIGGER
 from azure.functions.decorators.core import Trigger, DataType
 
 
 class TimerTrigger(Trigger):
     @staticmethod
     def get_binding_name() -> str:
-        return "timerTrigger"
+        return TIMER_TRIGGER
 
     def __init__(self,
                  name: str,
@@ -15,29 +15,17 @@ class TimerTrigger(Trigger):
                  data_type: DataType,
                  run_on_startup: bool,
                  use_monitor: bool) -> None:
-        self._schedule = schedule
-        self._run_on_startup = run_on_startup
-        self._use_monitor = use_monitor
+        self.schedule = schedule
+        self.run_on_startup = run_on_startup
+        self.use_monitor = use_monitor
         super().__init__(name=name, data_type=data_type)
-
-    @property
-    def schedule(self) -> str:
-        return self._schedule
-
-    @property
-    def run_on_startup(self) -> bool:
-        return self._run_on_startup
-
-    @property
-    def use_monitor(self) -> bool:
-        return self._use_monitor
 
     def get_dict_repr(self) -> dict:
         return {
             "name": self.name,
             "type": self.type,
-            "dataType": self._data_type.name,
-            "direction": self._direction.name,
+            "dataType": self.data_type,
+            "direction": self.direction,
             "schedule": self.schedule,
             "runOnStartup": self.run_on_startup,
             "useMonitor": self.use_monitor

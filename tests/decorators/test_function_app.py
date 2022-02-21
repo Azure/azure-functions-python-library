@@ -4,10 +4,10 @@ import json
 import unittest
 
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection, HttpMethod
+    BindingDirection
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionsApp, Function
-from azure.functions.decorators.http import HttpTrigger, HttpOutput
+    FunctionApp, Function
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
 
 
 class TestFunction(unittest.TestCase):
@@ -175,13 +175,13 @@ class TestFunctionBuilder(unittest.TestCase):
         }))
 
 
-class TestFunctionsApp(unittest.TestCase):
+class TestFunctionApp(unittest.TestCase):
     def setUp(self):
         def dummy_func():
             pass
 
         self.dummy_func = dummy_func
-        self.func_app = FunctionsApp()
+        self.func_app = FunctionApp()
 
     def test_get_no_functions(self):
         self.assertEqual(self.func_app.app_script_file, "function_app.py")

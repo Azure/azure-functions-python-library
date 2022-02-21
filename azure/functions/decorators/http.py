@@ -1,83 +1,65 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Tuple, Optional, Dict
+from typing import Optional, Dict, Iterable
 
+from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP
 from azure.functions.decorators.core import AuthLevel, Trigger, \
-    OutputBinding, DataType, HttpMethod
+    OutputBinding, DataType, StringifyEnum, JsonDumpMeta
+
+
+class HttpMethod(StringifyEnum):
+    """All http methods Azure Python function supports."""
+    GET = "GET"
+    POST = "POST"
+    DELETE = "DELETE"
+    HEAD = "HEAD"
+    PATCH = "PATCH"
+    PUT = "PUT"
+    OPTIONS = "OPTIONS"
 
 
 class HttpTrigger(Trigger):
     @staticmethod
     def get_binding_name() -> str:
-        return "httpTrigger"
+        return HTTP_TRIGGER
 
     def __init__(self,
                  name,
-                 methods: Tuple[HttpMethod, ...],
-                 data_type: DataType,
-                 auth_level: AuthLevel,
+                 methods: Optional[Iterable[HttpMethod]] = None,
+                 data_type: Optional[DataType] = None,
+                 auth_level: Optional[AuthLevel] = None,
                  route: Optional[str] = None) -> None:
-        self._auth_level = auth_level
-        self._methods = methods
-        self._route = route
+        self.auth_level = auth_level
+        self.methods = methods
+        self.route = route
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self) -> Dict:
-        dict_repr: Dict = {
-            "authLevel": str(self.auth_level.value),
+        return {
+            "authLevel": self.auth_level,
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
-            "dataType": self._data_type.name,
-            "route": self.route
+            "dataType": self.data_type,
+            "route": self.route,
+            "methods": self.methods
         }
-        if self._methods is not None:
-            dict_repr["methods"] = [str(m) for m in self.methods]
-
-        return dict_repr
-
-    @property
-    def auth_level(self) -> AuthLevel:
-        return self._auth_level
-
-    @auth_level.setter
-    def auth_level(self,
-                   auth_level: AuthLevel) -> None:
-        self._auth_level = auth_level
-
-    @property
-    def route(self) -> Optional[str]:
-        return self._route
-
-    @route.setter
-    def route(self,
-              route: str) -> None:
-        self._route = route
-
-    @property
-    def methods(self) -> Tuple[HttpMethod, ...]:
-        return self._methods
-
-    @methods.setter
-    def methods(self,
-                methods: Tuple[HttpMethod, ...]) -> None:
-        self._methods = methods
 
 
-class HttpOutput(OutputBinding):
+class HttpOutput(OutputBinding, metaclass=JsonDumpMeta):
     @staticmethod
     def get_binding_name() -> str:
-        return "http"
+        return HTTP
 
     def __init__(self,
                  name: str,
-                 data_type: DataType) -> None:
+                 data_type: Optional[DataType] = None) -> None:
         super().__init__(name=name, data_type=data_type)
 
     def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
-            "dataType": self._data_type.name
+            "dataType": self.data_type
         }

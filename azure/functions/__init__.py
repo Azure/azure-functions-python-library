@@ -5,8 +5,8 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from .decorators import FunctionsApp, Function, DataType, AuthLevel, \
-    Cardinality, BindingDirection, AccessRights, HttpMethod
+from .decorators import (FunctionApp, Function, DataType, AuthLevel,
+                         Cardinality, AccessRights, HttpMethod)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
@@ -19,7 +19,7 @@ from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 
 # Import binding implementations to register them
-from . import blob, Cardinality, AccessRights  # NoQA
+from . import blob  # NoQA
 from . import cosmosdb  # NoQA
 from . import eventgrid  # NoQA
 from . import eventhub  # NoQA
@@ -68,9 +68,8 @@ __all__ = (
     'FunctionExtensionException',
 
     # PyStein implementation
-    'FunctionsApp',
+    'FunctionApp',
     'Function',
-    'BindingDirection',
     'DataType',
     'AuthLevel',
     'Cardinality',

@@ -10,8 +10,8 @@ GET = HttpMethod.GET
 POST = HttpMethod.POST
 
 
-class FunctionsApp:
-    """FunctionsApp object used by worker function indexing model captures
+class FunctionApp:
+    """FunctionApp object used by worker function indexing model captures
     user defined functions and metadata.
 
     Ref: https://aka.ms/azure-function-ref
@@ -57,7 +57,7 @@ class FunctionsApp:
         responds, defaults to (GET, POST).
         :param auth_level: Determines what keys, if any, need to be present
         on the request in order to invoke the function. If not specified,
-        it will be set to :class:`FunctionsApp` object auth level.
+        it will be set to :class:`FunctionApp` object auth level.
         :return: Decorator function.
         """
 

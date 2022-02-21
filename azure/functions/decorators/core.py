@@ -3,8 +3,6 @@
 
 from abc import ABC, ABCMeta, abstractmethod
 from enum import Enum
-
-# Constants
 from typing import Dict
 
 SCRIPT_FILE_NAME = "function_app.py"
@@ -15,6 +13,45 @@ class StringifyEnum(Enum):
 
     def __str__(self):
         return str(self.name)
+
+
+class JsonDumpMeta(type):
+    def __new__(mcs, name, bases, dct):
+        cls = super().__new__(mcs, name, bases, dct)
+        # setattr(cls, 'say_hi', cls.skip_none(cls.__dict__['say_hi']))
+        cls.get_dict_repr = cls.skip_none(cls.get_dict_repr)
+        return cls
+
+    @staticmethod
+    def skip_none(func):
+        def wrapper(*args, **kw):
+            res = func(*args, **kw)
+            return JsonDumpMeta.clean_nones(res)
+
+        return wrapper
+
+    @staticmethod
+    def clean_nones(value):
+        """
+        Recursively remove all None values from dictionaries and lists,
+        and returns
+        the result as a new dictionary or list.
+        """
+        if isinstance(value, list):
+            return [JsonDumpMeta.clean_nones(x) for x in value if
+                    x is not None]
+        elif isinstance(value, dict):
+            return {
+                key: JsonDumpMeta.clean_nones(val)
+                for key, val in value.items()
+                if val is not None
+            }
+        else:
+            return value
+
+
+class FinalMeta(ABCMeta, JsonDumpMeta):
+    pass
 
 
 # Enums
@@ -40,7 +77,7 @@ class DataType(StringifyEnum):
 
 
 class AuthLevel(StringifyEnum):
-    """Azure HTTP authorization level, Determines what keys, if any, need to
+    """Azure HTTP authorization level, determines what keys, if any, need to
     be present on the request in order to invoke the function. """
     FUNCTION = "function"
     """A function-specific API key is required. This is the default value if
@@ -72,18 +109,6 @@ class AccessRights(StringifyEnum):
     and all related message handling. """
 
 
-class HttpMethod(StringifyEnum):
-    """All http methods Azure Python function supports."""
-    GET = "GET"
-    POST = "POST"
-    DELETE = "DELETE"
-    HEAD = "HEAD"
-    PATCH = "PATCH"
-    PUT = "PUT"
-    OPTIONS = "OPTIONS"
-
-
-# Binding types
 class Binding(ABC):
     @staticmethod
     @abstractmethod
@@ -94,27 +119,11 @@ class Binding(ABC):
                  direction: BindingDirection,
                  data_type: DataType,
                  is_trigger: bool):
-        self._type = self.get_binding_name()
+        self.type = self.get_binding_name()
         self.is_trigger = is_trigger
-        self._name = name
-        self._direction = direction
-        self._data_type = data_type
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def type(self) -> str:
-        return self._type
-
-    @property
-    def data_type(self) -> int:
-        return self._data_type.value
-
-    @property
-    def direction(self) -> int:
-        return self._direction.value
+        self.name = name
+        self.direction = direction
+        self.data_type = data_type
 
     @abstractmethod
     def get_dict_repr(self) -> Dict:
@@ -124,19 +133,19 @@ class Binding(ABC):
         return str(self.get_dict_repr())
 
 
-class Trigger(Binding, metaclass=ABCMeta):
+class Trigger(Binding, metaclass=FinalMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=True)
 
 
-class InputBinding(Binding, metaclass=ABCMeta):
+class InputBinding(Binding, metaclass=FinalMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=False)
 
 
-class OutputBinding(Binding, metaclass=ABCMeta):
+class OutputBinding(Binding, metaclass=FinalMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, is_trigger=False)

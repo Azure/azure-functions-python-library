@@ -3,13 +3,15 @@
 from typing import Dict
 
 from azure.functions.decorators import Cardinality, AccessRights
+from azure.functions.decorators.constants import SERVICE_BUS_TRIGGER, \
+    SERVICE_BUS
 from azure.functions.decorators.core import Trigger, OutputBinding, DataType
 
 
 class ServiceBusQueueTrigger(Trigger):
     @staticmethod
     def get_binding_name() -> str:
-        return "serviceBusTrigger"
+        return SERVICE_BUS_TRIGGER
 
     def __init__(self,
                  name: str,
@@ -19,55 +21,31 @@ class ServiceBusQueueTrigger(Trigger):
                  access_rights: AccessRights,
                  is_sessions_enabled: bool,
                  cardinality: Cardinality):
-        self._connection = connection
-        self._queue_name = queue_name
-        self._access_rights = access_rights
-        self._is_sessions_enabled = is_sessions_enabled
-        self._cardinality = cardinality
+        self.connection = connection
+        self.queue_name = queue_name
+        self.access_rights = access_rights
+        self.is_sessions_enabled = is_sessions_enabled
+        self.cardinality = cardinality
         super().__init__(name=name, data_type=data_type)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def connection(self) -> str:
-        return self._connection
-
-    @property
-    def queue_name(self) -> str:
-        return self._queue_name
-
-    @property
-    def access_rights(self) -> AccessRights:
-        return self._access_rights
-
-    @property
-    def is_sessions_enabled(self) -> bool:
-        return self._is_sessions_enabled
-
-    @property
-    def cardinality(self) -> Cardinality:
-        return self._cardinality
 
     def get_dict_repr(self) -> dict:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
             "connection": self.connection,
             "queueName": self.queue_name,
-            "dataType": self._data_type.name,
-            "accessRights": str(self.access_rights.value),
+            "dataType": self.data_type,
+            "accessRights": self.access_rights.value,
             "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": str(self.cardinality.value)
+            "cardinality": self.cardinality.value
         }
 
 
 class ServiceBusQueueOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
-        return "serviceBus"
+        return SERVICE_BUS
 
     def __init__(self,
                  name: str,
@@ -75,43 +53,27 @@ class ServiceBusQueueOutput(OutputBinding):
                  queue_name: str,
                  data_type: DataType,
                  access_rights: AccessRights):
-        self._connection = connection
-        self._queue_name = queue_name
-        self._access_rights = access_rights
+        self.connection = connection
+        self.queue_name = queue_name
+        self.access_rights = access_rights
         super().__init__(name=name, data_type=data_type)
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def connection(self) -> str:
-        return self._connection
-
-    @property
-    def queue_name(self) -> str:
-        return self._queue_name
-
-    @property
-    def access_rights(self) -> AccessRights:
-        return self._access_rights
 
     def get_dict_repr(self) -> dict:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
             "connection": self.connection,
             "queueName": self.queue_name,
-            "dataType": self._data_type.name,
-            "accessRights": str(self.access_rights.value)
+            "dataType": self.data_type,
+            "accessRights": self.access_rights.value
         }
 
 
 class ServiceBusTopicTrigger(Trigger):
     @staticmethod
     def get_binding_name():
-        return "serviceBusTrigger"
+        return SERVICE_BUS_TRIGGER
 
     def __init__(self,
                  name: str,
@@ -122,57 +84,33 @@ class ServiceBusTopicTrigger(Trigger):
                  access_rights: AccessRights,
                  is_sessions_enabled: bool,
                  cardinality: Cardinality):
-        self._connection = connection
-        self._topic_name = topic_name
-        self._subscription_name = subscription_name
-        self._access_rights = access_rights
-        self._is_sessions_enabled = is_sessions_enabled
-        self._cardinality = cardinality
+        self.connection = connection
+        self.topic_name = topic_name
+        self.subscription_name = subscription_name
+        self.access_rights = access_rights
+        self.is_sessions_enabled = is_sessions_enabled
+        self.cardinality = cardinality
         super().__init__(name=name, data_type=data_type)
-
-    @property
-    def connection(self) -> str:
-        return self._connection
-
-    @property
-    def topic_name(self) -> str:
-        return self._topic_name
-
-    @property
-    def subscription_name(self) -> str:
-        return self._subscription_name
-
-    @property
-    def access_rights(self) -> AccessRights:
-        return self._access_rights
-
-    @property
-    def is_sessions_enabled(self) -> bool:
-        return self._is_sessions_enabled
-
-    @property
-    def cardinality(self) -> Cardinality:
-        return self._cardinality
 
     def get_dict_repr(self) -> Dict:
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
             "connection": self.connection,
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
-            "dataType": self._data_type.name,
-            "accessRights": str(self.access_rights.value),
+            "dataType": self.data_type,
+            "accessRights": self.access_rights.value,
             "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": str(self.cardinality.value)
+            "cardinality": self.cardinality.value
         }
 
 
 class ServiceBusTopicOutput(OutputBinding):
     @staticmethod
     def get_binding_name():
-        return "serviceBus"
+        return SERVICE_BUS
 
     def __init__(self,
                  name: str,
@@ -181,36 +119,20 @@ class ServiceBusTopicOutput(OutputBinding):
                  subscription_name: str,
                  data_type: DataType,
                  access_rights: AccessRights):
-        self._connection = connection
-        self._topic_name = topic_name
-        self._subscription_name = subscription_name
-        self._access_rights = access_rights
+        self.connection = connection
+        self.topic_name = topic_name
+        self.subscription_name = subscription_name
+        self.access_rights = access_rights
         super().__init__(name=name, data_type=data_type)
-
-    @property
-    def connection(self):
-        return self._connection
-
-    @property
-    def topic_name(self):
-        return self._topic_name
-
-    @property
-    def subscription_name(self):
-        return self._subscription_name
-
-    @property
-    def access_rights(self):
-        return self._access_rights
 
     def get_dict_repr(self):
         return {
             "type": self.type,
-            "direction": self._direction.name,
+            "direction": self.direction,
             "name": self.name,
             "connection": self.connection,
             "topicName": self.topic_name,
             "subscriptionName": self.subscription_name,
-            "dataType": self._data_type.name,
-            "accessRights": str(self.access_rights.value)
+            "dataType": self.data_type,
+            "accessRights": self.access_rights.value
         }
