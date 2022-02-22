@@ -242,7 +242,7 @@ class FunctionApp:
             fb = FunctionBuilder(func, self._app_script_file)
         else:
             raise ValueError(
-                f"Unsupported type for function app decorator found.")
+                "Unsupported type for function app decorator found.")
         return fb
 
     def _configure_function_builder(self, wrap) -> Callable:
