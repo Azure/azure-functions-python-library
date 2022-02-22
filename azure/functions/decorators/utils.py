@@ -9,8 +9,8 @@ from azure.functions.decorators.core import StringifyEnum
 T = TypeVar("T", bound=Enum)
 
 
-def parse_singular_param(param: Optional[Union[T, str]],
-                         class_name: Type[T]) -> Optional[T]:
+def parse_singular_param_to_enum(param: Optional[Union[T, str]],
+                                 class_name: Type[T]) -> Optional[T]:
     if param is None:
         return None
     if isinstance(param, str):
@@ -19,7 +19,7 @@ def parse_singular_param(param: Optional[Union[T, str]],
     return param
 
 
-def parse_iterable_param(
+def parse_iterable_param_to_enum(
         param_values: Optional[Union[Iterable[str], Iterable[T]]],
         class_name: Type[T]) -> Optional[Iterable[T]]:
     if param_values is None:
@@ -29,17 +29,14 @@ def parse_iterable_param(
             param_values]
 
 
-class EnumEncoder(JSONEncoder):
+def camel_case(snake_case: str):
+    words = snake_case.split('_')
+    return words[0] + ''.join(ele.title() for ele in words[1:])
+
+
+class CustomJsonEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, StringifyEnum):
             return str(o)
 
         return super().default(o)
-
-
-enum_encoder = EnumEncoder()
-# print(isinstance(HttpMethod.HEAD, Enum))
-# print(parse_param('GET', HttpMethod))
-# print(type(parse_param('GET', HttpMethod)))
-# print(parse_iterable_param(['GET', 'POST'], HttpMethod))
-# print(type(parse_iterable_param(['GET', 'POST'], HttpMethod)))

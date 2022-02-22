@@ -15,8 +15,8 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators.timer import TimerTrigger
-from azure.functions.decorators.utils import parse_singular_param, \
-    parse_iterable_param, EnumEncoder
+from azure.functions.decorators.utils import parse_singular_param_to_enum, \
+    parse_iterable_param_to_enum, CustomJsonEncoder
 
 
 class Function(object):
@@ -26,6 +26,11 @@ class Function(object):
     """
 
     def __init__(self, func: Callable, script_file: str):
+        """Constructor of :class:`FunctionBuilder` object.
+
+        :param func: User defined python function instance.
+        :param script_file: File name indexed by worker to find function.
+        """
         self._name: str = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
@@ -46,12 +51,14 @@ class Function(object):
         :raises ValueError: Raises trigger already exists error if a trigger is
              being added to a function which has trigger attached.
         """
+
         if self._trigger:
             raise ValueError("A trigger was already registered to this "
                              "function. Adding another trigger is not the "
                              "correct behavior as a function can only have one"
                              " trigger. Existing registered trigger "
-                             f"is {self._trigger} and New trigger "
+                             f"is {self._trigger} and New "
+                             f"trigger "
                              f"being added is {trigger}")
 
         self._trigger = trigger
@@ -84,7 +91,7 @@ class Function(object):
         return self._bindings
 
     def get_raw_bindings(self) -> List[str]:
-        return [json.dumps(i, cls=EnumEncoder) for i in
+        return [json.dumps(i, cls=CustomJsonEncoder) for i in
                 self.get_bindings_dict()["bindings"]]
 
     def get_bindings_dict(self) -> Dict:
@@ -124,7 +131,7 @@ class Function(object):
 
         :return: The json stringified form of function.
         """
-        return json.dumps(self.get_dict_repr(), cls=EnumEncoder)
+        return json.dumps(self.get_dict_repr(), cls=CustomJsonEncoder)
 
     def __str__(self):
         return self.get_function_json()
@@ -178,10 +185,15 @@ class FunctionApp:
     Ref: https://aka.ms/azure-function-ref
     """
 
-    def __init__(self, auth_level: AuthLevel = AuthLevel.FUNCTION):
+    def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+        """Constructor of :class:`FunctionApp` object.
+
+        :param auth_level: defaults to AuthLevel.FUNCTION, takes str or AuthLevel
+        """
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
-        self._auth_level = auth_level
+        self._auth_level = AuthLevel[auth_level] \
+            if isinstance(auth_level, str) else auth_level
 
     @property
     def app_script_file(self) -> str:
@@ -290,7 +302,7 @@ class FunctionApp:
         :param output_arg_data_type: Defines how Functions runtime should
         treat the binding_arg_name value, defaults to DataType.UNDEFINED.
         :param methods: A tuple of the HTTP methods to which the function
-        responds, defaults to (GET, POST).
+        responds.
         :param auth_level: Determines what keys, if any, need to be present
         on the request in order to invoke the function. If not specified,
         it will be set to :class:`FunctionApp` object auth level.
@@ -306,15 +318,18 @@ class FunctionApp:
 
                 fb.add_trigger(trigger=HttpTrigger(
                     name=trigger_arg_name,
-                    data_type=parse_singular_param(trigger_arg_data_type,
-                                                   DataType),
-                    methods=parse_iterable_param(methods, HttpMethod),
-                    auth_level=parse_singular_param(auth_level, AuthLevel),
+                    data_type=parse_singular_param_to_enum(
+                        trigger_arg_data_type,
+                        DataType),
+                    methods=parse_iterable_param_to_enum(methods, HttpMethod),
+                    auth_level=parse_singular_param_to_enum(auth_level,
+                                                            AuthLevel),
                     route=route))
                 fb.add_binding(binding=HttpOutput(
                     name=binding_arg_name,
-                    data_type=parse_singular_param(output_arg_data_type,
-                                                   DataType)))
+                    data_type=parse_singular_param_to_enum(
+                        output_arg_data_type,
+                        DataType)))
                 return fb
 
             return decorator()
@@ -324,9 +339,9 @@ class FunctionApp:
     def schedule(self,
                  arg_name: str,
                  schedule: str,
-                 run_on_startup: bool = False,
-                 use_monitor: bool = False,
-                 data_type: DataType = DataType.UNDEFINED) -> Callable:
+                 run_on_startup: Optional[bool] = None,
+                 use_monitor: Optional[bool] = None,
+                 data_type: Optional[Union[DataType, str]] = None) -> Callable:
         """The schedule decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -353,11 +368,13 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=TimerTrigger(name=arg_name,
-                                         schedule=schedule,
-                                         run_on_startup=run_on_startup,
-                                         use_monitor=use_monitor,
-                                         data_type=data_type))
+                    trigger=TimerTrigger(
+                        name=arg_name,
+                        schedule=schedule,
+                        run_on_startup=run_on_startup,
+                        use_monitor=use_monitor,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
@@ -369,11 +386,10 @@ class FunctionApp:
             arg_name: str,
             connection: str,
             queue_name: str,
-            data_type: DataType = DataType.UNDEFINED,
-            access_rights: AccessRights =
-            AccessRights.MANAGE,
-            is_sessions_enabled: bool = False,
-            cardinality: Cardinality = Cardinality.ONE) -> Callable:
+            data_type: Optional[Union[DataType, str]] = None,
+            access_rights: Optional[Union[AccessRights, str]] = None,
+            is_sessions_enabled: Optional[bool] = None,
+            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -408,10 +424,14 @@ class FunctionApp:
                         name=arg_name,
                         connection=connection,
                         queue_name=queue_name,
-                        data_type=data_type,
-                        access_rights=access_rights,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        access_rights=parse_singular_param_to_enum(
+                            access_rights,
+                            AccessRights),
                         is_sessions_enabled=is_sessions_enabled,
-                        cardinality=cardinality))
+                        cardinality=parse_singular_param_to_enum(cardinality,
+                                                                 Cardinality)))
                 return fb
 
             return decorator()
@@ -422,9 +442,10 @@ class FunctionApp:
                                 arg_name: str,
                                 connection: str,
                                 queue_name: str,
-                                data_type: DataType = DataType.UNDEFINED,
-                                access_rights: AccessRights =
-                                AccessRights.MANAGE) -> Callable:
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                access_rights: Optional[Union[
+                                    AccessRights, str]] = None) -> Callable:
         """The write_service_bus_queue decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -450,11 +471,14 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=ServiceBusQueueOutput(name=arg_name,
-                                                  connection=connection,
-                                                  queue_name=queue_name,
-                                                  data_type=data_type,
-                                                  access_rights=access_rights))
+                    binding=ServiceBusQueueOutput(
+                        name=arg_name,
+                        connection=connection,
+                        queue_name=queue_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        access_rights=parse_singular_param_to_enum(
+                            access_rights, AccessRights)))
                 return fb
 
             return decorator()
@@ -467,11 +491,10 @@ class FunctionApp:
             connection: str,
             topic_name: str,
             subscription_name: str,
-            data_type: DataType = DataType.UNDEFINED,
-            access_rights: AccessRights =
-            AccessRights.MANAGE,
-            is_sessions_enabled: bool = False,
-            cardinality: Cardinality = Cardinality.ONE) -> Callable:
+            data_type: Optional[Union[DataType, str]] = None,
+            access_rights: Optional[Union[AccessRights, str]] = None,
+            is_sessions_enabled: Optional[bool] = None,
+            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -508,10 +531,14 @@ class FunctionApp:
                         connection=connection,
                         topic_name=topic_name,
                         subscription_name=subscription_name,
-                        data_type=data_type,
-                        access_rights=access_rights,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        access_rights=parse_singular_param_to_enum(
+                            access_rights,
+                            AccessRights),
                         is_sessions_enabled=is_sessions_enabled,
-                        cardinality=cardinality))
+                        cardinality=parse_singular_param_to_enum(cardinality,
+                                                                 Cardinality)))
                 return fb
 
             return decorator()
@@ -522,10 +549,11 @@ class FunctionApp:
                                 arg_name: str,
                                 connection: str,
                                 topic_name: str,
-                                subscription_name: str,
-                                data_type: DataType = DataType.UNDEFINED,
-                                access_rights: AccessRights =
-                                AccessRights.MANAGE) -> Callable:
+                                subscription_name: Optional[str] = None,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                access_rights: Optional[Union[
+                                    AccessRights, str]] = None) -> Callable:
         """The write_service_bus_topic decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -557,8 +585,11 @@ class FunctionApp:
                         connection=connection,
                         topic_name=topic_name,
                         subscription_name=subscription_name,
-                        data_type=data_type,
-                        access_rights=access_rights))
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        access_rights=parse_singular_param_to_enum(
+                            access_rights,
+                            AccessRights)))
                 return fb
 
             return decorator()
@@ -569,7 +600,7 @@ class FunctionApp:
                         arg_name: str,
                         queue_name: str,
                         connection: str,
-                        data_type: DataType = DataType.UNDEFINED) -> Callable:
+                        data_type: Optional[DataType] = None) -> Callable:
         """The on_queue_change decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -593,10 +624,12 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=QueueTrigger(name=arg_name,
-                                         queue_name=queue_name,
-                                         connection=connection,
-                                         data_type=data_type))
+                    trigger=QueueTrigger(
+                        name=arg_name,
+                        queue_name=queue_name,
+                        connection=connection,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
@@ -607,7 +640,7 @@ class FunctionApp:
                     arg_name: str,
                     queue_name: str,
                     connection: str,
-                    data_type: DataType = DataType.UNDEFINED) -> Callable:
+                    data_type: Optional[DataType] = None) -> Callable:
         """The write_queue decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -635,7 +668,8 @@ class FunctionApp:
                     binding=QueueOutput(name=arg_name,
                                         queue_name=queue_name,
                                         connection=connection,
-                                        data_type=data_type))
+                                        data_type=parse_singular_param_to_enum(
+                                            data_type, DataType)))
                 return fb
 
             return decorator()
@@ -646,9 +680,10 @@ class FunctionApp:
                              arg_name: str,
                              connection: str,
                              event_hub_name: str,
-                             data_type: DataType = DataType.UNDEFINED,
-                             cardinality: Cardinality = Cardinality.MANY,
-                             consumer_group: str = "$Default") -> Callable:
+                             data_type: Optional[Union[DataType, str]] = None,
+                             cardinality: Optional[
+                                 Union[Cardinality, str]] = None,
+                             consumer_group: Optional[str] = None) -> Callable:
         """The on_event_hub_message decorator adds :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -678,12 +713,15 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=EventHubTrigger(name=arg_name,
-                                            connection=connection,
-                                            event_hub_name=event_hub_name,
-                                            data_type=data_type,
-                                            cardinality=cardinality,
-                                            consumer_group=consumer_group))
+                    trigger=EventHubTrigger(
+                        name=arg_name,
+                        connection=connection,
+                        event_hub_name=event_hub_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        cardinality=parse_singular_param_to_enum(cardinality,
+                                                                 Cardinality),
+                        consumer_group=consumer_group))
                 return fb
 
             return decorator()
@@ -694,8 +732,8 @@ class FunctionApp:
                                 arg_name: str,
                                 connection: str,
                                 event_hub_name: str,
-                                data_type: DataType =
-                                DataType.UNDEFINED) -> Callable:
+                                data_type: Optional[
+                                    Union[DataType, str]] = None) -> Callable:
         """The write_event_hub_message decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -719,10 +757,12 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EventHubOutput(name=arg_name,
-                                           connection=connection,
-                                           event_hub_name=event_hub_name,
-                                           data_type=data_type))
+                    binding=EventHubOutput(
+                        name=arg_name,
+                        connection=connection,
+                        event_hub_name=event_hub_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
@@ -738,20 +778,21 @@ class FunctionApp:
                             lease_connection_string_setting: Optional[
                                 str] = None,
                             lease_database_name: Optional[str] = None,
-                            create_lease_collection_if_not_exists:
-                            bool = False,
-                            leases_collection_throughput: int = -1,
+                            create_lease_collection_if_not_exists: Optional[
+                                bool] = None,
+                            leases_collection_throughput: Optional[int] = None,
                             lease_collection_prefix: Optional[str] = None,
-                            checkpoint_interval: int = -1,
-                            checkpoint_document_count: int = -1,
-                            feed_poll_delay: int = 5000,
-                            lease_renew_interval: int = 17000,
-                            lease_acquire_interval: int = 13000,
-                            lease_expiration_interval: int = 60000,
-                            max_items_per_invocation: int = -1,
-                            start_from_beginning: bool = False,
-                            preferred_locations: str = "",
-                            data_type: DataType = DataType.UNDEFINED) -> \
+                            checkpoint_interval: Optional[int] = None,
+                            checkpoint_document_count: Optional[int] = None,
+                            feed_poll_delay: Optional[int] = None,
+                            lease_renew_interval: Optional[int] = None,
+                            lease_acquire_interval: Optional[int] = None,
+                            lease_expiration_interval: Optional[int] = None,
+                            max_items_per_invocation: Optional[int] = None,
+                            start_from_beginning: Optional[bool] = None,
+                            preferred_locations: Optional[str] = None,
+                            data_type: Optional[
+                                Union[DataType, str]] = None) -> \
             Callable:
         """The on_cosmos_db_update decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
@@ -822,10 +863,11 @@ class FunctionApp:
             collection_name=collection_name,
             connection_string_setting=connection_string_setting,
             lease_collection_name=lease_collection_name,
-            lease_conn_str_setting=lease_connection_string_setting,
+            lease_connection_string_setting=lease_connection_string_setting,
             lease_database_name=lease_database_name,
-            create_lease_coll_if_unset=create_lease_collection_if_not_exists,
-            lease_coll_throughput=leases_collection_throughput,
+            create_lease_collection_if_not_exists # NoQA
+            =create_lease_collection_if_not_exists,
+            leases_collection_throughput=leases_collection_throughput,
             lease_collection_prefix=lease_collection_prefix,
             checkpoint_interval=checkpoint_interval,
             checkpoint_document_count=checkpoint_document_count,
@@ -836,7 +878,7 @@ class FunctionApp:
             max_items_per_invocation=max_items_per_invocation,
             start_from_beginning=start_from_beginning,
             preferred_locations=preferred_locations,
-            data_type=data_type)
+            data_type=parse_singular_param_to_enum(data_type, DataType))
 
         @self._configure_function_builder
         def wrap(fb):
@@ -853,12 +895,14 @@ class FunctionApp:
                                   database_name: str,
                                   collection_name: str,
                                   connection_string_setting: str,
-                                  create_if_not_exists: bool = False,
+                                  create_if_not_exists: Optional[bool] = None,
                                   partition_key: Optional[str] = None,
-                                  collection_throughput: int = -1,
-                                  use_multiple_write_locations: bool = False,
+                                  collection_throughput: Optional[int] = None,
+                                  use_multiple_write_locations: Optional[
+                                      bool] = None,
                                   preferred_locations: Optional[str] = None,
-                                  data_type: DataType = DataType.UNDEFINED) \
+                                  data_type: Optional[
+                                      Union[DataType, str]] = None) \
             -> Callable:
         """The write_cosmos_db_documents decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
@@ -905,9 +949,11 @@ class FunctionApp:
                         create_if_not_exists=create_if_not_exists,
                         partition_key=partition_key,
                         collection_throughput=collection_throughput,
-                        use_multiple_write_loc=use_multiple_write_locations,
+                        use_multiple_write_locations # NoQA
+                        =use_multiple_write_locations,
                         preferred_locations=preferred_locations,
-                        data_type=data_type))
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
@@ -919,10 +965,11 @@ class FunctionApp:
                                  database_name: str,
                                  collection_name: str,
                                  connection_string_setting: str,
-                                 document_id: Optional[str] = None,
+                                 id: Optional[str] = None,
                                  sql_query: Optional[str] = None,
                                  partition_key: Optional[str] = None,
-                                 data_type: DataType = DataType.UNDEFINED) \
+                                 data_type: Optional[
+                                     Union[DataType, str]] = None) \
             -> Callable:
         """The read_cosmos_db_documents decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
@@ -939,7 +986,7 @@ class FunctionApp:
         document.
         :param connection_string_setting: The name of the app setting
         containing your Azure Cosmos DB connection string.
-        :param document_id: The ID of the document to retrieve, defaults to
+        :param id: The ID of the document to retrieve, defaults to
         None.
         :param sql_query: An Azure Cosmos DB SQL query used for retrieving
         multiple documents, defaults to None.
@@ -959,27 +1006,13 @@ class FunctionApp:
                         database_name=database_name,
                         collection_name=collection_name,
                         connection_string_setting=connection_string_setting,
-                        document_id=document_id,
+                        id=id,
                         sql_query=sql_query,
                         partition_key=partition_key,
-                        data_type=data_type))
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
 
         return wrap
-
-
-app = FunctionApp()
-
-
-@app.route()
-def sss():
-    pass
-
-
-print(app.get_functions()[0].get_raw_bindings())
-# print(app.get_functions()[0].get_bindings_dict())
-
-# output = HttpOutput(name='ss')
-# print(app.get_functions()[0].get_bindings_dict())

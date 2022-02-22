@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Optional, Dict, Iterable
+from typing import Optional, Iterable
 
 from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP
 from azure.functions.decorators.core import AuthLevel, Trigger, \
-    OutputBinding, DataType, StringifyEnum, JsonDumpMeta
+    OutputBinding, DataType, StringifyEnum
 
 
 class HttpMethod(StringifyEnum):
@@ -34,19 +34,8 @@ class HttpTrigger(Trigger):
         self.route = route
         super().__init__(name=name, data_type=data_type)
 
-    def get_dict_repr(self) -> Dict:
-        return {
-            "authLevel": self.auth_level,
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "dataType": self.data_type,
-            "route": self.route,
-            "methods": self.methods
-        }
 
-
-class HttpOutput(OutputBinding, metaclass=JsonDumpMeta):
+class HttpOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
         return HTTP
@@ -55,11 +44,3 @@ class HttpOutput(OutputBinding, metaclass=JsonDumpMeta):
                  name: str,
                  data_type: Optional[DataType] = None) -> None:
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> Dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "dataType": self.data_type
-        }

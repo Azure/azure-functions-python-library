@@ -13,16 +13,20 @@ class TestCosmosDB(unittest.TestCase):
         trigger = CosmosDBTrigger(name="req", database_name="dummy_db",
                                   collection_name="dummy_collection",
                                   connection_string_setting="dummy_str",
-                                  lease_coll_throughput=1,
+                                  leases_collection_throughput=1,
                                   checkpoint_interval=2,
                                   checkpoint_document_count=3,
                                   feed_poll_delay=4,
                                   lease_renew_interval=5,
                                   lease_acquire_interval=6,
                                   lease_expiration_interval=7,
+                                  lease_collection_name='coll_name',
+                                  lease_collection_prefix='prefix',
+                                  lease_connection_string_setting='setting',
+                                  lease_database_name='db',
                                   max_items_per_invocation=8,
                                   start_from_beginning=False,
-                                  create_lease_coll_if_unset=False,
+                                  create_lease_collection_if_not_exists=False,
                                   preferred_locations="dummy_loc",
                                   data_type=DataType.UNDEFINED)
 
@@ -37,21 +41,15 @@ class TestCosmosDB(unittest.TestCase):
                           "createLeaseCollection"
                           "IfNotExists":
                               False,
-                          "dataType":
-                              str(DataType.UNDEFINED),
+                          "dataType": DataType.UNDEFINED,
                           "databaseName": "dummy_db",
-                          "direction": str(
-                              BindingDirection
-                                  .IN),
+                          "direction": BindingDirection.IN,
                           "feedPollDelay": 4,
                           "leaseAcquireInterval": 6,
-                          "leaseCollectionName": None,
-                          "leaseCollectionPrefix":
-                              None,
-                          "leaseConnection"
-                          "StringSetting":
-                              None,
-                          "leaseDatabaseName": None,
+                          "leaseCollectionName": 'coll_name',
+                          "leaseCollectionPrefix": 'prefix',
+                          "leaseConnectionStringSetting": 'setting',
+                          "leaseDatabaseName": 'db',
                           "leaseExpirationInterval": 7,
                           "leaseRenewInterval": 5,
                           "leasesCollectionThroughput":
@@ -70,7 +68,10 @@ class TestCosmosDB(unittest.TestCase):
                                 connection_string_setting="dummy_str",
                                 create_if_not_exists=False,
                                 collection_throughput=1,
-                                use_multiple_write_loc=False)
+                                use_multiple_write_locations=False,
+                                data_type=DataType.UNDEFINED,
+                                partition_key='key',
+                                preferred_locations='locs')
 
         self.assertEqual(output.get_binding_name(), "cosmosDB")
         self.assertEqual(output.get_dict_repr(),
@@ -78,12 +79,12 @@ class TestCosmosDB(unittest.TestCase):
                           'collectionThroughput': 1,
                           'connectionStringSetting': 'dummy_str',
                           'createIfNotExists': False,
-                          'dataType': str(DataType.UNDEFINED),
+                          'dataType': DataType.UNDEFINED,
                           'databaseName': 'dummy_db',
-                          'direction': str(BindingDirection.OUT),
+                          'direction': BindingDirection.OUT,
                           'name': 'req',
-                          'partitionKey': None,
-                          'preferredLocations': None,
+                          'partitionKey': 'key',
+                          'preferredLocations': 'locs',
                           'type': 'cosmosDB',
                           'useMultipleWriteLocations': False})
 
@@ -91,7 +92,7 @@ class TestCosmosDB(unittest.TestCase):
         cosmosdb_input = CosmosDBInput(name="req", database_name="dummy_db",
                                        collection_name="dummy_collection",
                                        connection_string_setting="dummy_str",
-                                       document_id="dummy_id",
+                                       id="dummy_id",
                                        sql_query="dummy_query",
                                        partition_key="dummy_partitions",
                                        data_type=DataType.UNDEFINED)

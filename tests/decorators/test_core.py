@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import unittest
-from typing import Dict
 
 from azure.functions.decorators.core import BindingDirection, DataType, \
     InputBinding, OutputBinding, Trigger, AuthLevel
@@ -12,14 +11,6 @@ class DummyTrigger(Trigger):
     @staticmethod
     def get_binding_name() -> str:
         return "Dummy"
-
-    def get_dict_repr(self) -> Dict[str, str]:
-        return {
-            "type": self.type,
-            "direction": self.direction.name,
-            "name": self.name,
-            "dataType": self.data_type.name
-        }
 
     def __init__(self,
                  name: str,
@@ -32,14 +23,6 @@ class DummyInputBinding(InputBinding):
     def get_binding_name() -> str:
         return "DummyInputBinding"
 
-    def get_dict_repr(self) -> Dict[str, str]:
-        return {
-            "type": self.type,
-            "direction": self.direction.name,
-            "name": self.name,
-            "dataType": self.data_type.name
-        }
-
     def __init__(self,
                  name: str,
                  data_type: DataType = DataType.UNDEFINED):
@@ -50,14 +33,6 @@ class DummyOutputBinding(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
         return "DummyOutputBinding"
-
-    def get_dict_repr(self) -> Dict[str, str]:
-        return {
-            "type": self.type,
-            "direction": self.direction.name,
-            "name": self.name,
-            "dataType": self.data_type.name
-        }
 
     def __init__(self,
                  name: str,
@@ -88,8 +63,8 @@ class TestTriggers(unittest.TestCase):
 
         self.assertTrue(test_trigger.is_trigger)
         self.assertEqual(test_trigger.get_dict_repr(),
-                         {'dataType': str(DataType.UNDEFINED),
-                          'direction': str(BindingDirection.IN),
+                         {'dataType': DataType.UNDEFINED,
+                          'direction': BindingDirection.IN,
                           'name': 'dummy',
                           'type': 'Dummy'})
 
@@ -101,8 +76,8 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(test_input.is_trigger)
         self.assertEqual(test_input.get_dict_repr(),
-                         {'dataType': str(DataType.UNDEFINED),
-                          'direction': str(BindingDirection.IN),
+                         {'dataType': DataType.UNDEFINED,
+                          'direction': BindingDirection.IN,
                           'name': 'dummy',
                           'type': 'DummyInputBinding'})
 
@@ -114,7 +89,7 @@ class TestTriggers(unittest.TestCase):
 
         self.assertFalse(test_output.is_trigger)
         self.assertEqual(test_output.get_dict_repr(),
-                         {'dataType': str(DataType.UNDEFINED),
-                          'direction': str(BindingDirection.OUT),
+                         {'dataType': DataType.UNDEFINED,
+                          'direction': BindingDirection.OUT,
                           'name': 'dummy',
                           'type': 'DummyOutputBinding'})

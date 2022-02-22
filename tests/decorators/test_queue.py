@@ -17,9 +17,9 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(trigger.get_binding_name(), "queueTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": "queueTrigger",
-            "direction": str(BindingDirection.IN),
+            "direction": BindingDirection.IN,
             "name": "req",
-            "dataType": str(DataType.UNDEFINED),
+            "dataType": DataType.UNDEFINED,
             "queueName": "dummy_queue",
             "connection": "dummy_connection"
         })
@@ -33,9 +33,9 @@ class TestQueue(unittest.TestCase):
         self.assertEqual(output.get_binding_name(), "queue")
         self.assertEqual(output.get_dict_repr(), {
             "type": "queue",
-            "direction": str(BindingDirection.OUT),
+            "direction": BindingDirection.OUT,
             "name": "res",
-            "dataType": str(DataType.UNDEFINED),
+            "dataType": DataType.UNDEFINED,
             "queueName": "dummy_queue_out",
             "connection": "dummy_connection"
         })

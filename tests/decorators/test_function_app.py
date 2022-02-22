@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 import unittest
 
 from azure.functions.decorators.core import DataType, AuthLevel, \
@@ -8,6 +7,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
+from tests.decorators.test_util import assert_json
 
 
 class TestFunction(unittest.TestCase):
@@ -66,26 +66,27 @@ class TestFunction(unittest.TestCase):
         self.func.set_function_name("func_name")
 
         self.assertEqual(self.func.get_function_name(), "func_name")
-        self.assertEqual(str(self.func), json.dumps({
-            "scriptFile": "dummy.py",
-            "bindings": [
-                {
-                    "type": "http",
-                    "direction": str(BindingDirection.OUT),
-                    "name": "out",
-                    "dataType": str(DataType.UNDEFINED)
-                },
-                {
-                    "authLevel": "anonymous",
-                    "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
-                    "name": "req",
-                    "dataType": str(DataType.UNDEFINED),
-                    "route": "dummy",
-                    "methods": [str(HttpMethod.GET), str(HttpMethod.POST)]
-                }
-            ]
-        }))
+        assert_json(self, self.func, {"scriptFile": "dummy.py",
+                                      "bindings": [
+                                          {
+                                              "type": "http",
+                                              "direction":
+                                                  BindingDirection.OUT,
+                                              "name": "out",
+                                              "dataType": DataType.UNDEFINED
+                                          },
+                                          {
+                                              "authLevel": AuthLevel.ANONYMOUS,
+                                              "type": "httpTrigger",
+                                              "direction": BindingDirection.IN,
+                                              "name": "req",
+                                              "dataType": DataType.UNDEFINED,
+                                              "route": "dummy",
+                                              "methods": [HttpMethod.GET,
+                                                          HttpMethod.POST]
+                                          }
+                                      ]
+                                      })
 
 
 class TestFunctionBuilder(unittest.TestCase):
@@ -151,28 +152,28 @@ class TestFunctionBuilder(unittest.TestCase):
             test_trigger).add_binding(test_input).build()
 
         self.assertEqual(func.get_function_name(), "func_name")
-        self.assertEqual(str(func), json.dumps({
+        assert_json(self, func, {
             "scriptFile": "dummy.py",
             "bindings": [
                 {
-                    "authLevel": "anonymous",
+                    "authLevel": AuthLevel.ANONYMOUS,
                     "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
+                    "direction": BindingDirection.IN,
                     "name": "req",
-                    "dataType": str(DataType.UNDEFINED),
+                    "dataType": DataType.UNDEFINED,
                     "route": "dummy",
                     "methods": [
-                        "GET"
+                        HttpMethod.GET
                     ]
                 },
                 {
                     "type": "http",
-                    "direction": str(BindingDirection.OUT),
+                    "direction": BindingDirection.OUT,
                     "name": "out",
-                    "dataType": str(DataType.UNDEFINED)
+                    "dataType": DataType.UNDEFINED
                 }
             ]
-        }))
+        })
 
 
 class TestFunctionApp(unittest.TestCase):

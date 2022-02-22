@@ -1,6 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Dict
+from typing import Optional
 
 from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.constants import SERVICE_BUS_TRIGGER, \
@@ -17,29 +17,16 @@ class ServiceBusQueueTrigger(Trigger):
                  name: str,
                  connection: str,
                  queue_name: str,
-                 data_type: DataType,
-                 access_rights: AccessRights,
-                 is_sessions_enabled: bool,
-                 cardinality: Cardinality):
+                 data_type: Optional[DataType] = None,
+                 access_rights: Optional[AccessRights] = None,
+                 is_sessions_enabled: Optional[bool] = None,
+                 cardinality: Optional[Cardinality] = None):
         self.connection = connection
         self.queue_name = queue_name
         self.access_rights = access_rights
         self.is_sessions_enabled = is_sessions_enabled
         self.cardinality = cardinality
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "connection": self.connection,
-            "queueName": self.queue_name,
-            "dataType": self.data_type,
-            "accessRights": self.access_rights.value,
-            "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": self.cardinality.value
-        }
 
 
 class ServiceBusQueueOutput(OutputBinding):
@@ -51,23 +38,12 @@ class ServiceBusQueueOutput(OutputBinding):
                  name: str,
                  connection: str,
                  queue_name: str,
-                 data_type: DataType,
-                 access_rights: AccessRights):
+                 data_type: Optional[DataType] = None,
+                 access_rights: Optional[AccessRights] = None):
         self.connection = connection
         self.queue_name = queue_name
         self.access_rights = access_rights
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "connection": self.connection,
-            "queueName": self.queue_name,
-            "dataType": self.data_type,
-            "accessRights": self.access_rights.value
-        }
 
 
 class ServiceBusTopicTrigger(Trigger):
@@ -80,10 +56,10 @@ class ServiceBusTopicTrigger(Trigger):
                  connection: str,
                  topic_name: str,
                  subscription_name: str,
-                 data_type: DataType,
-                 access_rights: AccessRights,
-                 is_sessions_enabled: bool,
-                 cardinality: Cardinality):
+                 data_type: Optional[DataType] = None,
+                 access_rights: Optional[AccessRights] = None,
+                 is_sessions_enabled: Optional[bool] = None,
+                 cardinality: Optional[Cardinality] = None):
         self.connection = connection
         self.topic_name = topic_name
         self.subscription_name = subscription_name
@@ -91,20 +67,6 @@ class ServiceBusTopicTrigger(Trigger):
         self.is_sessions_enabled = is_sessions_enabled
         self.cardinality = cardinality
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> Dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "connection": self.connection,
-            "topicName": self.topic_name,
-            "subscriptionName": self.subscription_name,
-            "dataType": self.data_type,
-            "accessRights": self.access_rights.value,
-            "isSessionsEnabled": self.is_sessions_enabled,
-            "cardinality": self.cardinality.value
-        }
 
 
 class ServiceBusTopicOutput(OutputBinding):
@@ -116,23 +78,11 @@ class ServiceBusTopicOutput(OutputBinding):
                  name: str,
                  connection: str,
                  topic_name: str,
-                 subscription_name: str,
-                 data_type: DataType,
-                 access_rights: AccessRights):
+                 subscription_name: Optional[str] = None,
+                 data_type: Optional[DataType] = None,
+                 access_rights: Optional[AccessRights] = None):
         self.connection = connection
         self.topic_name = topic_name
         self.subscription_name = subscription_name
         self.access_rights = access_rights
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self):
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "connection": self.connection,
-            "topicName": self.topic_name,
-            "subscriptionName": self.subscription_name,
-            "dataType": self.data_type,
-            "accessRights": self.access_rights.value
-        }

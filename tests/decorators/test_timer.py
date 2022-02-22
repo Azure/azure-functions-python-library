@@ -18,9 +18,9 @@ class TestTimer(unittest.TestCase):
         self.assertEqual(trigger.get_binding_name(), "timerTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": "timerTrigger",
-            "direction": str(BindingDirection.IN),
+            "direction": BindingDirection.IN,
             "name": "req",
-            "dataType": str(DataType.UNDEFINED),
+            "dataType": DataType.UNDEFINED,
             "schedule": "dummy_schedule",
             "runOnStartup": False,
             "useMonitor": False

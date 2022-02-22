@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 import unittest
 
 from azure.functions.decorators import Cardinality, AccessRights
@@ -9,6 +8,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
+from tests.decorators.test_util import assert_json
 
 
 class TestFunctionsApp(unittest.TestCase):
@@ -66,20 +66,17 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
         self.assertEqual(func.get_function_name(), "dummy_func")
-        self.assertEqual(str(func), json.dumps({
+        assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
                     "name": "req",
                     "type": "timerTrigger",
-                    "dataType": str(DataType.UNDEFINED),
-                    "direction": str(BindingDirection.IN),
-                    "schedule": "dummy_schedule",
-                    "runOnStartup": False,
-                    "useMonitor": False
+                    "direction": BindingDirection.IN,
+                    "schedule": "dummy_schedule"
                 }
             ]
-        }))
+        })
 
     def test_timer_trigger_full_args(self):
         app = self.func_app
@@ -91,20 +88,20 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_func(app)
-        self.assertEqual(str(func), json.dumps({
+        assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
                     "name": "req",
                     "type": "timerTrigger",
-                    "dataType": str(DataType.STRING),
-                    "direction": str(BindingDirection.IN),
+                    "dataType": DataType.STRING,
+                    "direction": BindingDirection.IN,
                     "schedule": "dummy_schedule",
                     "runOnStartup": False,
                     "useMonitor": False
                 }
             ]
-        }))
+        })
 
     def test_route_default_args(self):
         app = self.func_app
@@ -114,28 +111,23 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_func(app)
-        self.assertEqual(str(func), json.dumps({
+        assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
-                    "authLevel": "function",
+                    "direction": BindingDirection.IN,
                     "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
                     "name": "req",
-                    "dataType": str(DataType.UNDEFINED),
-                    "route": "dummy",
-                    "methods": [
-                        "GET", "POST"
-                    ]
+                    "authLevel": AuthLevel.FUNCTION,
+                    "route": "dummy"
                 },
                 {
+                    "direction": BindingDirection.OUT,
                     "type": "http",
-                    "direction": str(BindingDirection.OUT),
-                    "name": "$return",
-                    "dataType": str(DataType.UNDEFINED)
+                    "name": "$return"
                 }
             ]
-        }))
+        })
 
     def test_route_with_all_args(self):
         app = self.func_app
@@ -149,28 +141,28 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_func(app)
-        self.assertEqual(str(func), json.dumps({
+        assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
-                    "authLevel": "function",
+                    "direction": BindingDirection.IN,
                     "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
+                    "dataType": DataType.STRING,
                     "name": "trigger_name",
-                    "dataType": str(DataType.STRING),
+                    "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy_route",
                     "methods": [
                         "GET", "PATCH"
                     ]
                 },
                 {
+                    "direction": BindingDirection.OUT,
+                    "dataType": DataType.STRING,
                     "type": "http",
-                    "direction": str(BindingDirection.OUT),
                     "name": "out",
-                    "dataType": str(DataType.STRING)
                 }
             ]
-        }))
+        })
 
     def test_queue_default_args(self):
         app = self.func_app
@@ -184,29 +176,22 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({"scriptFile": "function_app.py",
-                                     "bindings": [
-                                         {
-                                             "type": "queue",
-                                             "direction":
-                                                 str(BindingDirection.OUT),
-                                             "name": "out",
-                                             "dataType":
-                                                 str(DataType.UNDEFINED),
-                                             "queueName": "dummy_out_queue",
-                                             "connection": "dummy_out_conn"
-                                         },
-                                         {
-                                             "type": "queueTrigger",
-                                             "direction":
-                                                 str(BindingDirection.IN),
-                                             "name": "req",
-                                             "dataType":
-                                                 str(DataType.UNDEFINED),
-                                             "queueName": "dummy_queue",
-                                             "connection": "dummy_conn"
-                                         }]}))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "queue",
+                                         "name": "out",
+                                         "queueName": "dummy_out_queue",
+                                         "connection": "dummy_out_conn"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "queueTrigger",
+                                         "name": "req",
+                                         "queueName": "dummy_queue",
+                                         "connection": "dummy_conn"
+                                     }]})
 
     def test_queue_full_args(self):
         app = self.func_app
@@ -222,27 +207,24 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({"scriptFile": "function_app.py",
-                                     "bindings": [
-                                         {
-                                             "type": "queue",
-                                             "direction":
-                                                 str(BindingDirection.OUT),
-                                             "name": "out",
-                                             "dataType": str(DataType.STRING),
-                                             "queueName": "dummy_out_queue",
-                                             "connection": "dummy_out_conn"
-                                         },
-                                         {
-                                             "type": "queueTrigger",
-                                             "direction":
-                                                 str(BindingDirection.IN),
-                                             "name": "req",
-                                             "dataType": str(DataType.STRING),
-                                             "queueName": "dummy_queue",
-                                             "connection": "dummy_conn"
-                                         }]}))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "dataType": DataType.STRING,
+                                         "type": "queue",
+                                         "name": "out",
+                                         "queueName": "dummy_out_queue",
+                                         "connection": "dummy_out_conn"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STRING,
+                                         "type": "queueTrigger",
+                                         "name": "req",
+                                         "queueName": "dummy_queue",
+                                         "connection": "dummy_conn"
+                                     }]})
 
     def test_service_bus_queue_default_args(self):
         app = self.func_app
@@ -258,32 +240,24 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "serviceBus",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "connection": "dummy_out_conn",
-                                     "queueName": "dummy_out_queue",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "accessRights": "manage"
-                                 },
-                                 {
-                                     "type": "serviceBusTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "connection": "dummy_conn",
-                                     "queueName": "dummy_queue",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "accessRights": "manage",
-                                     "isSessionsEnabled": False,
-                                     "cardinality": "one"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "serviceBus",
+                                         "name": "res",
+                                         "connection": "dummy_out_conn",
+                                         "queueName": "dummy_out_queue"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "serviceBusTrigger",
+                                         "name": "req",
+                                         "connection": "dummy_conn",
+                                         "queueName": "dummy_queue"
+                                     }
+                                 ]
+                                 })
 
     def test_service_bus_queue_full_args(self):
         app = self.func_app
@@ -305,32 +279,30 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "serviceBus",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "connection": "dummy_out_conn",
-                                     "queueName": "dummy_out_queue",
-                                     "dataType": str(DataType.STREAM),
-                                     "accessRights": "manage"
-                                 },
-                                 {
-                                     "type": "serviceBusTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "connection": "dummy_conn",
-                                     "queueName": "dummy_queue",
-                                     "dataType": str(DataType.STREAM),
-                                     "accessRights": "manage",
-                                     "isSessionsEnabled": True,
-                                     "cardinality": "many"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "dataType": DataType.STREAM,
+                                         "type": "serviceBus",
+                                         "name": "res",
+                                         "connection": "dummy_out_conn",
+                                         "queueName": "dummy_out_queue",
+                                         "accessRights": AccessRights.MANAGE
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STREAM,
+                                         "type": "serviceBusTrigger",
+                                         "name": "req",
+                                         "connection": "dummy_conn",
+                                         "queueName": "dummy_queue",
+                                         "accessRights": AccessRights.MANAGE,
+                                         "isSessionsEnabled": True,
+                                         "cardinality": Cardinality.MANY
+                                     }
+                                 ]
+                                 })
 
     def test_service_bus_topic_default_args(self):
         app = self.func_app
@@ -347,34 +319,26 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "serviceBus",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "connection": "dummy_conn",
-                                     "topicName": "dummy_topic",
-                                     "subscriptionName": "dummy_sub",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "accessRights": "manage"
-                                 },
-                                 {
-                                     "type": "serviceBusTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "connection": "dummy_conn",
-                                     "topicName": "dummy_topic",
-                                     "subscriptionName": "dummy_sub",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "accessRights": "manage",
-                                     "isSessionsEnabled": False,
-                                     "cardinality": "one"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "type": "serviceBus",
+                                         "direction": BindingDirection.OUT,
+                                         "name": "res",
+                                         "connection": "dummy_conn",
+                                         "topicName": "dummy_topic",
+                                         "subscriptionName": "dummy_sub"
+                                     },
+                                     {
+                                         "type": "serviceBusTrigger",
+                                         "direction": BindingDirection.IN,
+                                         "name": "req",
+                                         "connection": "dummy_conn",
+                                         "topicName": "dummy_topic",
+                                         "subscriptionName": "dummy_sub"
+                                     }
+                                 ]
+                                 })
 
     def test_service_bus_topic_full_args(self):
         app = self.func_app
@@ -397,34 +361,32 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "serviceBus",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "connection": "dummy_conn",
-                                     "topicName": "dummy_topic",
-                                     "subscriptionName": "dummy_sub",
-                                     "dataType": str(DataType.STRING),
-                                     "accessRights": "listen"
-                                 },
-                                 {
-                                     "type": "serviceBusTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "connection": "dummy_conn",
-                                     "topicName": "dummy_topic",
-                                     "subscriptionName": "dummy_sub",
-                                     "dataType": str(DataType.STRING),
-                                     "accessRights": "listen",
-                                     "isSessionsEnabled": False,
-                                     "cardinality": "many"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "type": "serviceBus",
+                                         "direction": BindingDirection.OUT,
+                                         "name": "res",
+                                         "connection": "dummy_conn",
+                                         "topicName": "dummy_topic",
+                                         "subscriptionName": "dummy_sub",
+                                         "dataType": DataType.STRING,
+                                         "accessRights": AccessRights.LISTEN
+                                     },
+                                     {
+                                         "type": "serviceBusTrigger",
+                                         "direction": BindingDirection.IN,
+                                         "name": "req",
+                                         "connection": "dummy_conn",
+                                         "topicName": "dummy_topic",
+                                         "subscriptionName": "dummy_sub",
+                                         "dataType": DataType.STRING,
+                                         "accessRights": AccessRights.LISTEN,
+                                         "isSessionsEnabled": False,
+                                         "cardinality": Cardinality.MANY
+                                     }
+                                 ]
+                                 })
 
     def test_event_hub_default_args(self):
         app = self.func_app
@@ -440,30 +402,24 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "eventHub",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "connection": "dummy_connection",
-                                     "eventHubName": "dummy_event_hub"
-                                 },
-                                 {
-                                     "type": "eventHubTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "connection": "dummy_connection",
-                                     "eventHubName": "dummy_event_hub",
-                                     "cardinality": "MANY",
-                                     "consumerGroup": "$Default"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "eventHub",
+                                         "name": "res",
+                                         "connection": "dummy_connection",
+                                         "eventHubName": "dummy_event_hub"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "eventHubTrigger",
+                                         "name": "req",
+                                         "connection": "dummy_connection",
+                                         "eventHubName": "dummy_event_hub"
+                                     }
+                                 ]
+                                 })
 
     def test_event_hub_full_args(self):
         app = self.func_app
@@ -483,30 +439,29 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "eventHub",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "connection": "dummy_connection",
-                                     "eventHubName": "dummy_event_hub"
-                                 },
-                                 {
-                                     "type": "eventHubTrigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "req",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "connection": "dummy_connection",
-                                     "eventHubName": "dummy_event_hub",
-                                     "cardinality": "ONE",
-                                     "consumerGroup": "dummy_group"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    "dataType": DataType.UNDEFINED,
+                    "type": "eventHub",
+                    "name": "res",
+                    "connection": "dummy_connection",
+                    "eventHubName": "dummy_event_hub"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "dataType": DataType.UNDEFINED,
+                    "type": "eventHubTrigger",
+                    "name": "req",
+                    "connection": "dummy_connection",
+                    "eventHubName": "dummy_event_hub",
+                    "cardinality": Cardinality.ONE,
+                    "consumerGroup": "dummy_group"
+                }
+            ]
+        })
 
     def test_cosmosdb_full_args(self):
         app = self.func_app
@@ -536,7 +491,7 @@ class TestFunctionsApp(unittest.TestCase):
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
                                       connection_string_setting="dummy_str",
-                                      document_id="dummy_id",
+                                      id="dummy_id",
                                       sql_query="dummy_query",
                                       partition_key="dummy_partitions",
                                       data_type=DataType.STRING)
@@ -555,65 +510,70 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "out",
-                                     "dataType": str(DataType.STRING),
-                                     "databaseName": "dummy_out_db",
-                                     "collectionName": "dummy_out_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "createIfNotExists": False,
-                                     "partitionKey": "dummy_part_key",
-                                     "collectionThroughput": 1,
-                                     "useMultipleWriteLocations": False,
-                                     "preferredLocations": "dummy_location"
-                                 },
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "in",
-                                     "dataType": str(DataType.STRING),
-                                     "databaseName": "dummy_in_db",
-                                     "collectionName": "dummy_in_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "id": "dummy_id",
-                                     "sqlQuery": "dummy_query",
-                                     "partitionKey": "dummy_partitions"
-                                 },
-                                 {
-                                     "type": "cosmosDBTrigger",
-                                     "name": "trigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "dataType": str(DataType.STRING),
-                                     "leaseCollectionName":
-                                         "dummy_lease_col",
-                                     "leaseConnectionStringSetting":
-                                         "dummy_lease_conn_str",
-                                     "leaseDatabaseName": "dummy_lease_db",
-                                     "createLeaseCollectionIfNotExists": False,
-                                     "leasesCollectionThroughput": 1,
-                                     "leaseCollectionPrefix":
-                                         "dummy_lease_collection_prefix",
-                                     "checkpointInterval": 2,
-                                     "checkpointDocumentCount": 3,
-                                     "feedPollDelay": 4,
-                                     "leaseRenewInterval": 5,
-                                     "leaseAcquireInterval": 6,
-                                     "leaseExpirationInterval": 7,
-                                     "maxItemsPerInvocation": 8,
-                                     "startFromBeginning": False,
-                                     "preferredLocations": "dummy_loc",
-                                     "connectionStringSetting": "dummy_str",
-                                     "databaseName": "dummy_db",
-                                     "collectionName": "dummy_collection"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "dataType": DataType.STRING,
+                                         "type": "cosmosDB",
+                                         "name": "out",
+                                         "databaseName": "dummy_out_db",
+                                         "collectionName":
+                                             "dummy_out_collection",
+                                         "connectionStringSetting":
+                                             "dummy_str",
+                                         "createIfNotExists": False,
+                                         "collectionThroughput": 1,
+                                         "useMultipleWriteLocations": False,
+                                         "preferredLocations":
+                                             "dummy_location",
+                                         "partitionKey": "dummy_part_key"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STRING,
+                                         "type": "cosmosDB",
+                                         "name": "in",
+                                         "databaseName": "dummy_in_db",
+                                         "collectionName":
+                                             "dummy_in_collection",
+                                         "connectionStringSetting":
+                                             "dummy_str",
+                                         "id": "dummy_id",
+                                         "sqlQuery": "dummy_query",
+                                         "partitionKey": "dummy_partitions"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STRING,
+                                         "type": "cosmosDBTrigger",
+                                         "name": "trigger",
+                                         "databaseName": "dummy_db",
+                                         "collectionName": "dummy_collection",
+                                         "connectionStringSetting":
+                                             "dummy_str",
+                                         "leasesCollectionThroughput": 1,
+                                         "checkpointInterval": 2,
+                                         "checkpointDocumentCount": 3,
+                                         "feedPollDelay": 4,
+                                         "leaseRenewInterval": 5,
+                                         "leaseAcquireInterval": 6,
+                                         "leaseExpirationInterval": 7,
+                                         "maxItemsPerInvocation": 8,
+                                         "startFromBeginning": False,
+                                         "createLeaseCollectionIfNotExists":
+                                             False,
+                                         "preferredLocations": "dummy_loc",
+                                         "leaseCollectionName":
+                                             "dummy_lease_col",
+                                         "leaseConnectionStringSetting":
+                                             "dummy_lease_conn_str",
+                                         "leaseDatabaseName": "dummy_lease_db",
+                                         "leaseCollectionPrefix":
+                                             "dummy_lease_collection_prefix"
+                                     }
+                                 ]
+                                 })
 
     def test_cosmosdb_default_args(self):
         app = self.func_app
@@ -634,85 +594,54 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "out",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "databaseName": "dummy_out_db",
-                                     "collectionName": "dummy_out_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "createIfNotExists": False,
-                                     "partitionKey": None,
-                                     "collectionThroughput": -1,
-                                     "useMultipleWriteLocations": False,
-                                     "preferredLocations": None
-                                 },
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "in",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "databaseName": "dummy_in_db",
-                                     "collectionName": "dummy_in_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "id": None,
-                                     "sqlQuery": None,
-                                     "partitionKey": None
-                                 },
-                                 {
-                                     "type": "cosmosDBTrigger",
-                                     "name": "trigger",
-                                     "direction": str(BindingDirection.IN),
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "leaseCollectionName": None,
-                                     "leaseConnectionStringSetting": None,
-                                     "leaseDatabaseName": None,
-                                     "createLeaseCollectionIfNotExists": False,
-                                     "leasesCollectionThroughput": -1,
-                                     "leaseCollectionPrefix": None,
-                                     "checkpointInterval": -1,
-                                     "checkpointDocumentCount": -1,
-                                     "feedPollDelay": 5000,
-                                     "leaseRenewInterval": 17000,
-                                     "leaseAcquireInterval": 13000,
-                                     "leaseExpirationInterval": 60000,
-                                     "maxItemsPerInvocation": -1,
-                                     "startFromBeginning": False,
-                                     "preferredLocations": "",
-                                     "connectionStringSetting": "dummy_str",
-                                     "databaseName": "dummy_db",
-                                     "collectionName": "dummy_collection"
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "cosmosDB",
+                                         "name": "out",
+                                         "databaseName": "dummy_out_db",
+                                         "collectionName":
+                                             "dummy_out_collection",
+                                         "connectionStringSetting": "dummy_str"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "cosmosDB",
+                                         "name": "in",
+                                         "databaseName": "dummy_in_db",
+                                         "collectionName":
+                                             "dummy_in_collection",
+                                         "connectionStringSetting": "dummy_str"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "cosmosDBTrigger",
+                                         "name": "trigger",
+                                         "databaseName": "dummy_db",
+                                         "collectionName": "dummy_collection",
+                                         "connectionStringSetting": "dummy_str"
+                                     }
+                                 ]
+                                 })
 
     def test_multiple_triggers(self):
         app = self.func_app
         with self.assertRaises(ValueError) as err:
-            trigger1 = TimerTrigger(name="req1", schedule="dummy_schedule",
-                                    run_on_startup=False, use_monitor=False,
-                                    data_type=DataType.UNDEFINED)
-            trigger2 = TimerTrigger(name="req2", schedule="dummy_schedule",
-                                    run_on_startup=False, use_monitor=False,
-                                    data_type=DataType.UNDEFINED)
+            trigger1 = TimerTrigger(name="req1", schedule="dummy_schedule")
+            trigger2 = TimerTrigger(name="req2", schedule="dummy_schedule")
 
             @app.schedule(arg_name="req1", schedule="dummy_schedule")
             @app.schedule(arg_name="req2", schedule="dummy_schedule")
             def dummy():
                 pass
-
         self.assertEqual(err.exception.args[0],
                          "A trigger was already registered to this "
                          "function. Adding another trigger is not the "
                          "correct behavior as a function can only have one "
                          "trigger. Existing registered trigger "
-                         f"is {trigger2} and New trigger "
-                         f"being added is {trigger1}")
+                         f"is {str(trigger2)} and New trigger "
+                         f"being added is {str(trigger1)}")
 
     def test_no_trigger(self):
         app = self.func_app
@@ -736,7 +665,7 @@ class TestFunctionsApp(unittest.TestCase):
             database_name="dummy_in_db",
             collection_name="dummy_in_collection",
             connection_string_setting="dummy_str",
-            document_id="dummy_id",
+            id="dummy_id",
             sql_query="dummy_query",
             partition_key="dummy_partitions",
             data_type=DataType.STRING)
@@ -745,7 +674,7 @@ class TestFunctionsApp(unittest.TestCase):
             database_name="dummy_in_db",
             collection_name="dummy_in_collection",
             connection_string_setting="dummy_str",
-            document_id="dummy_id",
+            id="dummy_id",
             sql_query="dummy_query",
             partition_key="dummy_partitions",
             data_type=DataType.STRING)
@@ -760,61 +689,58 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        self.assertEqual(str(func),
-                         json.dumps({
-                             "scriptFile": "function_app.py",
-                             "bindings": [
-                                 {
-                                     "type": "eventHub",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "res",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "connection": "dummy_connection",
-                                     "eventHubName": "dummy_event_hub"
-                                 },
-                                 {
-                                     "type": "queue",
-                                     "direction": str(BindingDirection.OUT),
-                                     "name": "out1",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "queueName": "dummy_out_queue",
-                                     "connection": "dummy_out_conn"
-                                 },
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "in2",
-                                     "dataType": str(DataType.STRING),
-                                     "databaseName": "dummy_in_db",
-                                     "collectionName": "dummy_in_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "id": "dummy_id",
-                                     "sqlQuery": "dummy_query",
-                                     "partitionKey": "dummy_partitions"
-                                 },
-                                 {
-                                     "type": "cosmosDB",
-                                     "direction": str(BindingDirection.IN),
-                                     "name": "in1",
-                                     "dataType": str(DataType.STRING),
-                                     "databaseName": "dummy_in_db",
-                                     "collectionName": "dummy_in_collection",
-                                     "connectionStringSetting": "dummy_str",
-                                     "id": "dummy_id",
-                                     "sqlQuery": "dummy_query",
-                                     "partitionKey": "dummy_partitions"
-                                 },
-                                 {
-                                     "name": "req1",
-                                     "type": "timerTrigger",
-                                     "dataType": str(DataType.UNDEFINED),
-                                     "direction": str(BindingDirection.IN),
-                                     "schedule": "dummy_schedule",
-                                     "runOnStartup": False,
-                                     "useMonitor": False
-                                 }
-                             ]
-                         }))
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "eventHub",
+                                         "name": "res",
+                                         "connection": "dummy_connection",
+                                         "eventHubName": "dummy_event_hub"
+                                     },
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": "queue",
+                                         "name": "out1",
+                                         "queueName": "dummy_out_queue",
+                                         "connection": "dummy_out_conn"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STRING,
+                                         "type": "cosmosDB",
+                                         "name": "in2",
+                                         "databaseName": "dummy_in_db",
+                                         "collectionName":
+                                             "dummy_in_collection",
+                                         "connectionStringSetting":
+                                             "dummy_str",
+                                         "id": "dummy_id",
+                                         "sqlQuery": "dummy_query",
+                                         "partitionKey": "dummy_partitions"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "dataType": DataType.STRING,
+                                         "type": "cosmosDB",
+                                         "name": "in1",
+                                         "databaseName": "dummy_in_db",
+                                         "collectionName":
+                                             "dummy_in_collection",
+                                         "connectionStringSetting":
+                                             "dummy_str",
+                                         "id": "dummy_id",
+                                         "sqlQuery": "dummy_query",
+                                         "partitionKey": "dummy_partitions"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": "timerTrigger",
+                                         "name": "req1",
+                                         "schedule": "dummy_schedule"
+                                     }
+                                 ]
+                                 })
 
     def test_set_auth_level_for_http_functions(self):
         app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
@@ -837,51 +763,44 @@ class TestFunctionsApp(unittest.TestCase):
         self.assertEqual(http_func_2.get_user_function().__name__,
                          "default_auth_level")
 
-        self.assertEqual(str(http_func_1), json.dumps({
-            "scriptFile": "function_app.py",
-            "bindings": [
-                {
-                    "authLevel": "admin",
-                    "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
-                    "name": "req",
-                    "dataType": str(DataType.UNDEFINED),
-                    "route": "specify_auth_level",
-                    "methods": [
-                        "GET", "POST"
-                    ]
-                },
-                {
-                    "type": "http",
-                    "direction": str(BindingDirection.OUT),
-                    "name": "$return",
-                    "dataType": str(DataType.UNDEFINED)
-                }
-            ]
-        }))
+        assert_json(self, http_func_1, {"scriptFile": "function_app.py",
+                                        "bindings": [
+                                            {
+                                                "authLevel": AuthLevel.ADMIN,
+                                                "type": "httpTrigger",
+                                                "direction":
+                                                    BindingDirection.IN,
+                                                "name": "req",
+                                                "route": "specify_auth_level"
+                                            },
+                                            {
+                                                "type": "http",
+                                                "direction":
+                                                    BindingDirection.OUT,
+                                                "name": "$return"
+                                            }
+                                        ]
+                                        })
 
-        self.assertEqual(str(http_func_2), json.dumps({
-            "scriptFile": "function_app.py",
-            "bindings": [
-                {
-                    "authLevel": "anonymous",
-                    "type": "httpTrigger",
-                    "direction": str(BindingDirection.IN),
-                    "name": "req",
-                    "dataType": str(DataType.UNDEFINED),
-                    "route": "default_auth_level",
-                    "methods": [
-                        "GET", "POST"
-                    ]
-                },
-                {
-                    "type": "http",
-                    "direction": str(BindingDirection.OUT),
-                    "name": "$return",
-                    "dataType": str(DataType.UNDEFINED)
-                }
-            ]
-        }))
+        assert_json(self, http_func_2, {"scriptFile": "function_app.py",
+                                        "bindings": [
+                                            {
+                                                "authLevel":
+                                                    AuthLevel.ANONYMOUS,
+                                                "type": "httpTrigger",
+                                                "direction":
+                                                    BindingDirection.IN,
+                                                "name": "req",
+                                                "route": "default_auth_level"
+                                            },
+                                            {
+                                                "type": "http",
+                                                "direction":
+                                                    BindingDirection.OUT,
+                                                "name": "$return"
+                                            }
+                                        ]
+                                        })
 
     def _get_func(self, app):
         funcs = app.get_functions()

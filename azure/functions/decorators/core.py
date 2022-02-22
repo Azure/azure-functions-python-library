@@ -1,57 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import json
+from abc import ABC, abstractmethod
+from typing import Dict, Optional
 
-from abc import ABC, ABCMeta, abstractmethod
-from enum import Enum
-from typing import Dict
+from azure.functions.decorators.constants import StringifyEnum, \
+    ABCBuildDictMeta
+from azure.functions.decorators.utils import CustomJsonEncoder, camel_case
 
+# script file name
 SCRIPT_FILE_NAME = "function_app.py"
-
-
-class StringifyEnum(Enum):
-    """This class output name of enum object when printed as string."""
-
-    def __str__(self):
-        return str(self.name)
-
-
-class JsonDumpMeta(type):
-    def __new__(mcs, name, bases, dct):
-        cls = super().__new__(mcs, name, bases, dct)
-        # setattr(cls, 'say_hi', cls.skip_none(cls.__dict__['say_hi']))
-        cls.get_dict_repr = cls.skip_none(cls.get_dict_repr)
-        return cls
-
-    @staticmethod
-    def skip_none(func):
-        def wrapper(*args, **kw):
-            res = func(*args, **kw)
-            return JsonDumpMeta.clean_nones(res)
-
-        return wrapper
-
-    @staticmethod
-    def clean_nones(value):
-        """
-        Recursively remove all None values from dictionaries and lists,
-        and returns
-        the result as a new dictionary or list.
-        """
-        if isinstance(value, list):
-            return [JsonDumpMeta.clean_nones(x) for x in value if
-                    x is not None]
-        elif isinstance(value, dict):
-            return {
-                key: JsonDumpMeta.clean_nones(val)
-                for key, val in value.items()
-                if val is not None
-            }
-        else:
-            return value
-
-
-class FinalMeta(ABCMeta, JsonDumpMeta):
-    pass
 
 
 # Enums
@@ -117,35 +75,56 @@ class Binding(ABC):
 
     def __init__(self, name: str,
                  direction: BindingDirection,
-                 data_type: DataType,
-                 is_trigger: bool):
+                 is_trigger: bool,
+                 data_type: Optional[DataType] = None):
         self.type = self.get_binding_name()
         self.is_trigger = is_trigger
         self.name = name
-        self.direction = direction
-        self.data_type = data_type
+        self._direction = direction
+        self._data_type = data_type
+        self._dict = {
+            "direction": self._direction,
+            "dataType": self._data_type,
+            "type": self.type
+        }
 
-    @abstractmethod
+    @property
+    def data_type(self) -> Optional[int]:
+        if self._data_type is None:
+            return self._data_type
+        return self._data_type.value
+
+    @property
+    def direction(self) -> int:
+        return self._direction.value
+
     def get_dict_repr(self) -> Dict:
-        pass
+        for p in getattr(self, 'init_params', []):
+            if p not in ['data_type']:
+                self._dict[camel_case(p)] = getattr(self, p, None)
 
-    def __str__(self) -> str:
-        return str(self.get_dict_repr())
+        return self._dict
+
+    def get_binding_json(self) -> str:
+        return json.dumps(self.get_dict_repr(), cls=CustomJsonEncoder)
+
+    def __str__(self):
+        return self.get_binding_json()
 
 
-class Trigger(Binding, metaclass=FinalMeta):
+class Trigger(Binding, ABC, metaclass=ABCBuildDictMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=True)
 
 
-class InputBinding(Binding, metaclass=FinalMeta):
+class InputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=False)
 
 
-class OutputBinding(Binding, metaclass=FinalMeta):
+class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, is_trigger=False)

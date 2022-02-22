@@ -22,14 +22,14 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": "serviceBusTrigger",
-            "direction": str(BindingDirection.IN),
+            "direction": BindingDirection.IN,
             "name": "req",
             "connection": "dummy_conn",
             "queueName": "dummy_queue",
-            "dataType": str(DataType.UNDEFINED),
-            "accessRights": str(AccessRights.MANAGE.value),
+            "dataType": DataType.UNDEFINED,
+            "accessRights": AccessRights.MANAGE,
             "isSessionsEnabled": True,
-            "cardinality": str(Cardinality.ONE.value)
+            "cardinality": Cardinality.ONE
         })
 
     def test_service_bus_queue_output_valid_creation(self):
@@ -44,12 +44,12 @@ class TestServiceBus(unittest.TestCase):
                          "serviceBus")
         self.assertEqual(service_bus_queue_output.get_dict_repr(), {
             "type": "serviceBus",
-            "direction": str(BindingDirection.OUT),
+            "direction": BindingDirection.OUT,
             "name": "res",
-            "dataType": str(DataType.UNDEFINED),
+            "dataType": DataType.UNDEFINED,
             "connection": "dummy_conn",
             "queueName": "dummy_queue",
-            "accessRights": str(AccessRights.MANAGE.value)
+            "accessRights": AccessRights.MANAGE
         })
 
     def test_service_bus_topic_trigger_valid_creation(self):
@@ -64,15 +64,15 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": "serviceBusTrigger",
-            "direction": str(BindingDirection.IN),
+            "direction": BindingDirection.IN,
             "name": "req",
             "connection": "dummy_conn",
             "topicName": "dummy_topic",
             "subscriptionName": "dummy_sub",
-            "dataType": str(DataType.UNDEFINED),
-            "accessRights": str(AccessRights.MANAGE.value),
+            "dataType": DataType.UNDEFINED,
+            "accessRights": AccessRights.MANAGE,
             "isSessionsEnabled": True,
-            "cardinality": str(Cardinality.ONE.value)
+            "cardinality": Cardinality.ONE
         })
 
     def test_service_bus_topic_output_valid_creation(self):
@@ -85,11 +85,11 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(output.get_binding_name(), "serviceBus")
         self.assertEqual(output.get_dict_repr(), {
             "type": "serviceBus",
-            "direction": str(BindingDirection.OUT),
+            "direction": BindingDirection.OUT,
             "name": "res",
-            "dataType": str(DataType.UNDEFINED),
+            "dataType": DataType.UNDEFINED,
             "connection": "dummy_conn",
             "topicName": "dummy_topic",
             "subscriptionName": "dummy_sub",
-            "accessRights": str(AccessRights.MANAGE.value)
+            "accessRights": AccessRights.MANAGE
         })

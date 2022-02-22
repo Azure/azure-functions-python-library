@@ -1,10 +1,10 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Dict
+from typing import Optional
 
+from azure.functions.decorators import Cardinality
 from azure.functions.decorators.constants import EVENT_HUB_TRIGGER, EVENT_HUB
 from azure.functions.decorators.core import Trigger, DataType, OutputBinding
-from azure.functions.decorators import Cardinality
 
 
 class EventHubTrigger(Trigger):
@@ -17,26 +17,14 @@ class EventHubTrigger(Trigger):
                  name: str,
                  connection: str,
                  event_hub_name: str,
-                 data_type: DataType,
-                 cardinality: Cardinality,
-                 consumer_group: str):
+                 data_type: Optional[DataType] = None,
+                 cardinality: Optional[Cardinality] = None,
+                 consumer_group: Optional[str] = None):
         self.connection = connection
         self.event_hub_name = event_hub_name
         self.cardinality = cardinality
         self.consumer_group = consumer_group
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> Dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "dataType": self.data_type,
-            "connection": self.connection,
-            "eventHubName": self.event_hub_name,
-            "cardinality": self.cardinality,
-            "consumerGroup": self.consumer_group
-        }
 
 
 class EventHubOutput(OutputBinding):
@@ -49,17 +37,7 @@ class EventHubOutput(OutputBinding):
                  name: str,
                  connection: str,
                  event_hub_name: str,
-                 data_type: DataType):
+                 data_type: Optional[DataType] = None):
         self.connection = connection
         self.event_hub_name = event_hub_name
         super().__init__(name=name, data_type=data_type)
-
-    def get_dict_repr(self) -> Dict:
-        return {
-            "type": self.type,
-            "direction": self.direction,
-            "name": self.name,
-            "dataType": self.data_type,
-            "connection": self.connection,
-            "eventHubName": self.event_hub_name
-        }
