@@ -188,7 +188,8 @@ class FunctionApp:
     def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`FunctionApp` object.
 
-        :param auth_level: defaults to AuthLevel.FUNCTION, takes str or AuthLevel
+        :param auth_level: defaults to AuthLevel.FUNCTION, takes str or
+        AuthLevel
         """
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
