@@ -16,7 +16,7 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
-    parse_iterable_param_to_enum, CustomJsonEncoder
+    parse_iterable_param_to_enums, CustomJsonEncoder
 
 
 class Function(object):
@@ -208,8 +208,7 @@ class FunctionApp:
     @property
     def auth_level(self) -> AuthLevel:
         """Authorization level of the function app. Will be applied to the http
-         trigger functions which
-        do not have authorization level specified.
+         trigger functions which does not have authorization level specified.
 
         :return: Authorization level of the function app.
         """
@@ -289,6 +288,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining HttpTrigger
         and HttpOutput binding in the function.json which enables your
         function be triggered when http requests hit the specified route.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-http
 
@@ -299,14 +300,13 @@ class FunctionApp:
         :param binding_arg_name: Argument name for :class:`HttpResponse`,
         defaults to '$return'.
         :param trigger_arg_data_type: Defines how Functions runtime should
-        treat the trigger_arg_name value, defaults to DataType.UNDEFINED.
+        treat the trigger_arg_name value.
         :param output_arg_data_type: Defines how Functions runtime should
-        treat the binding_arg_name value, defaults to DataType.UNDEFINED.
+        treat the binding_arg_name value.
         :param methods: A tuple of the HTTP methods to which the function
         responds.
         :param auth_level: Determines what keys, if any, need to be present
-        on the request in order to invoke the function. If not specified,
-        it will be set to :class:`FunctionApp` object auth level.
+        on the request in order to invoke the function.
         :return: Decorator function.
         """
 
@@ -322,7 +322,7 @@ class FunctionApp:
                     data_type=parse_singular_param_to_enum(
                         trigger_arg_data_type,
                         DataType),
-                    methods=parse_iterable_param_to_enum(methods, HttpMethod),
+                    methods=parse_iterable_param_to_enums(methods, HttpMethod),
                     auth_level=parse_singular_param_to_enum(auth_level,
                                                             AuthLevel),
                     route=route))
@@ -349,6 +349,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining TimerTrigger
         in the function.json which enables your function be triggered on the
         specified schedule.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-timer
 
@@ -357,11 +359,11 @@ class FunctionApp:
         :param schedule: A string representing a CRON expression that will
         be used to schedule a function to run.
         :param run_on_startup: If true, the function is invoked when the
-        runtime starts, defaults to False.
+        runtime starts.
         :param use_monitor: Set to true or false to indicate whether the
-        schedule should be monitored, defaults to False.
+        schedule should be monitored.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
 
@@ -397,6 +399,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining ServiceBusQueueTrigger
         in the function.json which enables your function be triggered when
         new message(s) are sent to the service bus queue.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
@@ -406,14 +410,11 @@ class FunctionApp:
         that specifies how to connect to Service Bus.
         :param queue_name: Name of the queue to monitor.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string,
-        defaults to AccessRights.MANAGE
+        parameter value.
+        :param access_rights: Access rights for the connection string.
         :param is_sessions_enabled: True if connecting to a session-aware
-        queue or subscription, defaults to False
-        :param cardinality: Set to many in order to enable batching. If
-        omitted or set to one, a single message is passed to the function,
-        defaults to Cardinality.ONE.
+        queue or subscription.
+        :param cardinality: Set to many in order to enable batching.
         :return: Decorator function.
         """
 
@@ -453,6 +454,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining ServiceBusQueueOutput
         in the function.json which enables function to write message(s) to
         the service bus queue.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
@@ -462,9 +465,8 @@ class FunctionApp:
         that specifies how to connect to Service Bus.
         :param queue_name: Name of the queue to monitor.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string,
-        defaults to AccessRights.MANAGE
+        parameter value.
+        :param access_rights: Access rights for the connection string.
         :return: Decorator function.
         """
 
@@ -502,6 +504,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining ServiceBusTopicTrigger
         in the function.json which enables function to be triggered when new
         message(s) are sent to the service bus topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
@@ -512,14 +516,11 @@ class FunctionApp:
         :param topic_name: Name of the topic to monitor.
         :param subscription_name: Name of the subscription to monitor.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string,
-        defaults to AccessRights.MANAGE
+        parameter value.
+        :param access_rights: Access rights for the connection string.
         :param is_sessions_enabled: True if connecting to a session-aware
-        queue or subscription, defaults to False
-        :param cardinality: Set to many in order to enable batching. If
-        omitted or set to one, a single message is passed to the function,
-        defaults to Cardinality.ONE.
+        queue or subscription.
+        :param cardinality: Set to many in order to enable batching.
         :return: Decorator function.
         """
 
@@ -561,6 +562,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining ServiceBusTopicOutput
         in the function.json which enables function to write message(s) to
         the service bus topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
@@ -572,8 +575,7 @@ class FunctionApp:
         :param subscription_name: Name of the subscription to monitor.
         :param data_type: Defines how Functions runtime should treat the
         parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string,
-        defaults to AccessRights.MANAGE
+        :param access_rights: Access rights for the connection string.
         :return: Decorator function.
         """
 
@@ -608,6 +610,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining QueueTrigger
         in the function.json which enables function to be triggered when new
         message(s) are sent to the storage queue.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-queue
 
@@ -617,7 +621,7 @@ class FunctionApp:
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Queues.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
 
@@ -648,6 +652,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining QueueOutput
         in the function.json which enables function to write message(s) to
         the storage queue.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-queue
 
@@ -656,9 +662,7 @@ class FunctionApp:
         :param queue_name: The name of the queue to poll.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Queues.
-        :param data_type: Set to many in order to enable batching. If
-        omitted or set to one, a single message is passed to the function,
-        defaults to Cardinality.ONE.
+        :param data_type: Set to many in order to enable batching.
         :return: Decorator function.
         """
 
@@ -691,6 +695,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining EventHubTrigger
         in the function.json which enables function to be triggered when new
         message(s) are sent to the event hub.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-event-hubs
 
@@ -700,13 +706,10 @@ class FunctionApp:
         that specifies how to connect to Event Hubs.
         :param event_hub_name: The name of the event hub.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param cardinality: Set to many in order to enable batching. If
-        omitted or set to one, a single message is passed to the function,
-        defaults to Cardinality.MANY.
+        parameter value.
+        :param cardinality: Set to many in order to enable batching.
         :param consumer_group: An optional property that sets the consumer
-        group used to subscribe to events in the hub. If omitted,
-        the $Default consumer group is used.
+        group used to subscribe to events in the hub.
         :return: Decorator function.
         """
 
@@ -741,6 +744,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining EventHubOutput
         in the function.json which enables function to write message(s) to
         the event hub.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-event-hubs
 
@@ -750,7 +755,7 @@ class FunctionApp:
         that specifies how to connect to Event Hub.
         :param event_hub_name: The name of the event hub.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
 
@@ -801,6 +806,8 @@ class FunctionApp:
         indexing model. This is equivalent to defining CosmosDBTrigger
         in the function.json which enables function to be triggered when
         CosmosDB data is changed.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
 
@@ -821,12 +828,12 @@ class FunctionApp:
         collection used to store leases.
         :param create_lease_collection_if_not_exists: When set to true,
         the leases collection is automatically created when it doesn't
-        already exist, defaults to False.
+        already exist.
         :param leases_collection_throughput: Defines the number of Request
-        Units to assign when the leases collection is created, defaults to -1.
+        Units to assign when the leases collection is created.
         :param lease_collection_prefix: When set, the value is added as a
         prefix to the leases created in the Lease collection for this
-        Function, defaults to None.
+        Function.
         :param checkpoint_interval: When set, it defines, in milliseconds,
         the interval between lease checkpoints. Default is always after a
         Function call.
@@ -834,28 +841,25 @@ class FunctionApp:
         between lease checkpoints. Default is always after a Function call.
         :param feed_poll_delay: The time (in milliseconds) for the delay
         between polling a partition for new changes on the feed, after all
-        current changes are drained. Default is 5,000 milliseconds,
-        or 5 seconds.
+        current changes are drained.
         :param lease_renew_interval: When set, it defines, in milliseconds,
         the renew interval for all leases for partitions currently held by
-        an instance. Default is 17000 (17 seconds).
+        an instance.
         :param lease_acquire_interval: When set, it defines,
         in milliseconds, the interval to kick off a task to compute if
         partitions are distributed evenly among known host instances.
-        Default is 13000 (13 seconds).
         :param lease_expiration_interval: When set, it defines,
         in milliseconds, the interval for which the lease is taken on a
-        lease representing a partition. Default is 60000 (60 seconds).
+        lease representing a partition.
         :param max_items_per_invocation: When set, this property sets the
-        maximum number of items received per Function call, defaults to -1.
+        maximum number of items received per Function call.
         :param start_from_beginning: This option tells the Trigger to read
         changes from the beginning of the collection's change history
-        instead of starting at the current time, defaults to False.
+        instead of starting at the current time.
         :param preferred_locations: Defines preferred locations (regions)
-        for geo-replicated database accounts in the Azure Cosmos DB service,
-        defaults to "".
+        for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
         trigger = CosmosDBTrigger(
@@ -866,7 +870,7 @@ class FunctionApp:
             lease_collection_name=lease_collection_name,
             lease_connection_string_setting=lease_connection_string_setting,
             lease_database_name=lease_database_name,
-            create_lease_collection_if_not_exists # NoQA
+            create_lease_collection_if_not_exists  # NoQA
             =create_lease_collection_if_not_exists,
             leases_collection_throughput=leases_collection_throughput,
             lease_collection_prefix=lease_collection_prefix,
@@ -910,6 +914,8 @@ class FunctionApp:
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
 
@@ -922,19 +928,18 @@ class FunctionApp:
         setting collection that specifies how to connect to the Azure Cosmos
         DB account being monitored.
         :param create_if_not_exists: A boolean value to indicate whether the
-        collection is created when it doesn't exist, defaults to False.
+        collection is created when it doesn't exist.
         :param partition_key: When CreateIfNotExists is true, it defines the
-        partition key path for the created collection, defaults to None.
+        partition key path for the created collection.
         :param collection_throughput: When CreateIfNotExists is true,
-        it defines the throughput of the created collection, defaults to -1.
+        it defines the throughput of the created collection.
         :param use_multiple_write_locations: When set to true along with
         PreferredLocations, it can leverage multi-region writes in the Azure
-        Cosmos DB service, defaults to False
+        Cosmos DB service.
         :param preferred_locations: Defines preferred locations (regions)
-        for geo-replicated database accounts in the Azure Cosmos DB service,
-        defaults to None.
+        for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
 
@@ -950,7 +955,7 @@ class FunctionApp:
                         create_if_not_exists=create_if_not_exists,
                         partition_key=partition_key,
                         collection_throughput=collection_throughput,
-                        use_multiple_write_locations # NoQA
+                        use_multiple_write_locations  # NoQA
                         =use_multiple_write_locations,
                         preferred_locations=preferred_locations,
                         data_type=parse_singular_param_to_enum(data_type,
@@ -977,6 +982,8 @@ class FunctionApp:
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBInput
         in the function.json which enables function to read from CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
 
         Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
 
@@ -987,14 +994,13 @@ class FunctionApp:
         document.
         :param connection_string_setting: The name of the app setting
         containing your Azure Cosmos DB connection string.
-        :param id: The ID of the document to retrieve, defaults to
-        None.
+        :param id: The ID of the document to retrieve.
         :param sql_query: An Azure Cosmos DB SQL query used for retrieving
-        multiple documents, defaults to None.
+        multiple documents.
         :param partition_key: Specifies the partition key value for the
-        lookup, defaults to None.
+        lookup.
         :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
+        parameter value.
         :return: Decorator function.
         """
 

@@ -8,7 +8,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
-from tests.decorators.test_util import assert_json
+from tests.decorators.testutils import assert_json, get_func
 
 
 class TestFunctionsApp(unittest.TestCase):
@@ -24,7 +24,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         self.assertEqual(func.get_function_name(), test_func_name)
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -37,7 +37,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         self.assertEqual(func.get_function_name(), "dummy_func")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -51,7 +51,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         self.assertEqual(func.get_function_name(), "dummy_function")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -64,7 +64,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
         self.assertEqual(func.get_function_name(), "dummy_func")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
@@ -87,7 +87,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -110,7 +110,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -140,7 +140,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -174,7 +174,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -205,7 +205,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -238,7 +238,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -277,7 +277,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -317,7 +317,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -359,7 +359,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -400,7 +400,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -437,7 +437,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {
             "scriptFile": "function_app.py",
@@ -508,7 +508,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -592,7 +592,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -687,7 +687,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = get_func(self, app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -801,9 +801,3 @@ class TestFunctionsApp(unittest.TestCase):
                                             }
                                         ]
                                         })
-
-    def _get_func(self, app):
-        funcs = app.get_functions()
-        self.assertEqual(len(funcs), 1)
-        func = funcs[0]
-        return func

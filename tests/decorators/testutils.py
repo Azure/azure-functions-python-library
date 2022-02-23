@@ -5,6 +5,13 @@ import json
 from azure.functions.decorators.utils import CustomJsonEncoder
 
 
+def get_func(self, app):
+    funcs = app.get_functions()
+    self.assertEqual(len(funcs), 1)
+    func = funcs[0]
+    return func
+
+
 def assert_json(self, func, expected_dict):
     self.assertEqual(json.dumps(json.loads(str(func)), sort_keys=True,
                                 cls=CustomJsonEncoder),

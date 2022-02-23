@@ -4,9 +4,9 @@ import json
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from azure.functions.decorators.constants import StringifyEnum, \
+from azure.functions.decorators.constants import StringifyEnum
+from azure.functions.decorators.utils import CustomJsonEncoder, camel_case, \
     ABCBuildDictMeta
-from azure.functions.decorators.utils import CustomJsonEncoder, camel_case
 
 # script file name
 SCRIPT_FILE_NAME = "function_app.py"
@@ -68,6 +68,13 @@ class AccessRights(StringifyEnum):
 
 
 class Binding(ABC):
+    """Abstract binding class which captures common attributes and
+    functions. :meth:`get_dict_repr` can auto generate the function.json for
+    every binding, the only restriction is please ensure __init__ parameter
+    names of any binding class are snake case form of corresponding
+    attribute in function.json when new binding classes are created.
+    Ref: https://aka.ms/azure-function-binding-http """
+
     @staticmethod
     @abstractmethod
     def get_binding_name() -> str:
@@ -99,8 +106,9 @@ class Binding(ABC):
         return self._direction.value
 
     def get_dict_repr(self) -> Dict:
+        #
         for p in getattr(self, 'init_params', []):
-            if p not in ['data_type']:
+            if p not in ['data_type', 'self']:
                 self._dict[camel_case(p)] = getattr(self, p, None)
 
         return self._dict

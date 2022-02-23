@@ -3,11 +3,11 @@
 import unittest
 
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection
+    BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
-from tests.decorators.test_util import assert_json
+from tests.decorators.testutils import assert_json
 
 
 class TestFunction(unittest.TestCase):
@@ -66,6 +66,7 @@ class TestFunction(unittest.TestCase):
         self.func.set_function_name("func_name")
 
         self.assertEqual(self.func.get_function_name(), "func_name")
+        self.assertEqual(self.func.get_user_function(), self.dummy)
         assert_json(self, self.func, {"scriptFile": "dummy.py",
                                       "bindings": [
                                           {
@@ -87,6 +88,12 @@ class TestFunction(unittest.TestCase):
                                           }
                                       ]
                                       })
+        self.assertEqual(self.func.get_raw_bindings(), [
+            '{"direction": "OUT", "dataType": "UNDEFINED", "type": "http", '
+            '"name": "out"}',
+            '{"direction": "IN", "dataType": "UNDEFINED", "type": '
+            '"httpTrigger", "name": "req", "methods": ["GET", "POST"], '
+            '"authLevel": "ANONYMOUS", "route": "dummy"}'])
 
 
 class TestFunctionBuilder(unittest.TestCase):
@@ -183,6 +190,19 @@ class TestFunctionApp(unittest.TestCase):
 
         self.dummy_func = dummy_func
         self.func_app = FunctionApp()
+
+    def test_default_auth_level_function(self):
+        self.assertEqual(self.func_app.auth_level, AuthLevel.FUNCTION)
+
+    def test_default_script_file_path(self):
+        self.assertEqual(self.func_app.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_auth_level(self):
+        self.func_app = FunctionApp(auth_level='ANONYMOUS')
+        self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
+
+        self.func_app = FunctionApp(auth_level=AuthLevel.ADMIN)
+        self.assertEqual(self.func_app.auth_level, AuthLevel.ADMIN)
 
     def test_get_no_functions(self):
         self.assertEqual(self.func_app.app_script_file, "function_app.py")
