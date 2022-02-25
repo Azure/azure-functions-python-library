@@ -237,9 +237,10 @@ class TestFunctionApp(unittest.TestCase):
         mock_asgi_app = object()
         FunctionApp(asgi_app=mock_asgi_app)
 
-        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+        add_http_app_mock.assert_called_once()
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args.args[1], {})
+        self.assertEqual(add_http_app_mock.call_args[0][1], {})
 
     @mock.patch('azure.functions.decorators.function_app.FunctionApp'
                 '._add_http_app')
@@ -247,9 +248,10 @@ class TestFunctionApp(unittest.TestCase):
         mock_wsgi_app = object()
         FunctionApp(wsgi_app=mock_wsgi_app)
 
-        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+        add_http_app_mock.assert_called_once()
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args.args[1], {})
+        self.assertEqual(add_http_app_mock.call_args[0][1], {})
 
     @mock.patch('azure.functions.decorators.function_app.FunctionApp'
                 '._add_http_app')
@@ -258,7 +260,7 @@ class TestFunctionApp(unittest.TestCase):
         app_kwargs = {"methods": ["GET"]}
         FunctionApp(wsgi_app=mock_wsgi_app, app_kwargs=app_kwargs)
 
-        self.assertEqual(add_http_app_mock.call_args.args[1], app_kwargs)
+        self.assertEqual(add_http_app_mock.call_args[0][1], app_kwargs)
 
     def test_add_http_app(self):
         app = FunctionApp(asgi_app=object(),
