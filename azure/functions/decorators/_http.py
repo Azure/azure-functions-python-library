@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 from typing import Optional, Iterable
 
-from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP
+from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP_OUTPUT
 from azure.functions.decorators.core import AuthLevel, Trigger, \
     OutputBinding, DataType, StringifyEnum
 
@@ -38,7 +38,7 @@ class HttpTrigger(Trigger):
 class HttpOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
-        return HTTP
+        return HTTP_OUTPUT
 
     def __init__(self,
                  name: str,

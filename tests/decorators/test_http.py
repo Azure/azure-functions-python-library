@@ -4,7 +4,8 @@ import unittest
 
 from azure.functions import DataType, AuthLevel
 from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, HttpMethod
+from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
+    HttpMethod
 
 
 class TestHttp(unittest.TestCase):

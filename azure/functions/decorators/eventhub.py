@@ -2,9 +2,9 @@
 #  Licensed under the MIT License.
 from typing import Optional
 
-from azure.functions.decorators import Cardinality
 from azure.functions.decorators.constants import EVENT_HUB_TRIGGER, EVENT_HUB
-from azure.functions.decorators.core import Trigger, DataType, OutputBinding
+from azure.functions.decorators.core import Trigger, DataType, OutputBinding, \
+    Cardinality
 
 
 class EventHubTrigger(Trigger):

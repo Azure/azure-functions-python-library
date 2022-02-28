@@ -3,11 +3,11 @@
 import unittest
 
 from azure.functions import DataType
-from azure.functions.decorators.core import BindingDirection
+from azure.functions.decorators.core import BindingDirection, AccessRights, \
+    Cardinality
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
-from azure.functions.decorators import Cardinality, AccessRights
 
 
 class TestServiceBus(unittest.TestCase):

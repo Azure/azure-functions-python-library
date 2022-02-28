@@ -6,9 +6,14 @@ from enum import Enum
 from json import JSONEncoder
 from typing import TypeVar, Optional, Union, Iterable, Type, Callable
 
-from azure.functions.decorators.core import StringifyEnum
-
 T = TypeVar("T", bound=Enum)
+
+
+class StringifyEnum(Enum):
+    """This class output name of enum object when printed as string."""
+
+    def __str__(self):
+        return str(self.name)
 
 
 class BuildDictMeta(type):

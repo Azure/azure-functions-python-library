@@ -3,8 +3,7 @@
 import unittest
 
 from azure.functions import DataType
-from azure.functions.decorators import Cardinality
-from azure.functions.decorators.core import BindingDirection
+from azure.functions.decorators.core import BindingDirection, Cardinality
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 
 

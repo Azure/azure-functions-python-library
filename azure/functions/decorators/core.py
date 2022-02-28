@@ -4,9 +4,8 @@ import json
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from azure.functions.decorators.constants import StringifyEnum
 from azure.functions.decorators.utils import CustomJsonEncoder, camel_case, \
-    ABCBuildDictMeta
+    ABCBuildDictMeta, StringifyEnum
 
 # script file name
 SCRIPT_FILE_NAME = "function_app.py"
@@ -70,7 +69,7 @@ class AccessRights(StringifyEnum):
 class Binding(ABC):
     """Abstract binding class which captures common attributes and
     functions. :meth:`get_dict_repr` can auto generate the function.json for
-    every binding, the only restriction is please ensure __init__ parameter
+    every binding, the only restriction is ***ENSURE*** __init__ parameter
     names of any binding class are snake case form of corresponding
     attribute in function.json when new binding classes are created.
     Ref: https://aka.ms/azure-function-binding-http """
@@ -97,16 +96,19 @@ class Binding(ABC):
 
     @property
     def data_type(self) -> Optional[int]:
-        if self._data_type is None:
-            return self._data_type
-        return self._data_type.value
+        return self._data_type.value if self._data_type else None
 
     @property
     def direction(self) -> int:
         return self._direction.value
 
     def get_dict_repr(self) -> Dict:
-        #
+        """Build a dictionary of a particular binding. The keys are camel
+        cased binding field names defined in `init_params` list and
+        :class:`Binding` class.
+
+        :return: Dictionary representation of the binding.
+        """
         for p in getattr(self, 'init_params', []):
             if p not in ['data_type', 'self']:
                 self._dict[camel_case(p)] = getattr(self, p, None)
@@ -121,18 +123,27 @@ class Binding(ABC):
 
 
 class Trigger(Binding, ABC, metaclass=ABCBuildDictMeta):
+    """Class representation of Azure Function Trigger. \n
+    Ref: https://aka.ms/functions-triggers-bindings-overview
+    """
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=True)
 
 
 class InputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
+    """Class representation of Azure Function Input Binding. \n
+    Ref: https://aka.ms/functions-triggers-bindings-overview
+    """
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.IN,
                          name=name, data_type=data_type, is_trigger=False)
 
 
 class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
+    """Class representation of Azure Function Output Binding. \n
+    Ref: https://aka.ms/functions-triggers-bindings-overview
+    """
     def __init__(self, name, data_type) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, is_trigger=False)

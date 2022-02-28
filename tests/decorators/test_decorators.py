@@ -2,11 +2,10 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection
+    BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
-from azure.functions.decorators.http import HttpTrigger, HttpMethod
+from azure.functions.decorators._http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
 from tests.decorators.testutils import assert_json, get_func
 

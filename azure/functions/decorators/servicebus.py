@@ -2,10 +2,10 @@
 #  Licensed under the MIT License.
 from typing import Optional
 
-from azure.functions.decorators import Cardinality, AccessRights
 from azure.functions.decorators.constants import SERVICE_BUS_TRIGGER, \
     SERVICE_BUS
-from azure.functions.decorators.core import Trigger, OutputBinding, DataType
+from azure.functions.decorators.core import Trigger, OutputBinding, DataType, \
+    Cardinality, AccessRights
 
 
 class ServiceBusQueueTrigger(Trigger):
