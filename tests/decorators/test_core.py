@@ -5,7 +5,6 @@ import unittest
 
 from azure.functions.decorators.core import BindingDirection, DataType, \
     InputBinding, OutputBinding, Trigger
-from tests.decorators.testutils import assert_json
 
 
 class DummyTrigger(Trigger):

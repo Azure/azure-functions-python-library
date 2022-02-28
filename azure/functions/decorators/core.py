@@ -1,10 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import json
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from azure.functions.decorators.utils import CustomJsonEncoder, camel_case, \
+from azure.functions.decorators.utils import camel_case, \
     ABCBuildDictMeta, StringifyEnum
 
 # script file name
