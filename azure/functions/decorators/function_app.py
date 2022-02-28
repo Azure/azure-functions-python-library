@@ -61,9 +61,9 @@ class Function(object):
                              "function. Adding another trigger is not the "
                              "correct behavior as a function can only have one"
                              " trigger. Existing registered trigger "
-                             f"is {self._trigger} and New "
+                             f"is {self._trigger.get_dict_repr()} and New "
                              f"trigger "
-                             f"being added is {trigger}")
+                             f"being added is {trigger.get_dict_repr()}")
 
         self._trigger = trigger
 
@@ -217,7 +217,9 @@ class FunctionApp:
     @property
     def app_script_file(self) -> str:
         """Name of function app script file in which all the functions
-         are defined.
+         are defined. \n
+         Script file defined here is for placeholder purpose, please refer to
+         worker defined script file path as the single point of truth.
 
         :return: Script file name.
         """

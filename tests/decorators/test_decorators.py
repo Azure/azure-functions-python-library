@@ -639,8 +639,8 @@ class TestFunctionsApp(unittest.TestCase):
                          "function. Adding another trigger is not the "
                          "correct behavior as a function can only have one "
                          "trigger. Existing registered trigger "
-                         f"is {str(trigger2)} and New trigger "
-                         f"being added is {str(trigger1)}")
+                         f"is {trigger2.get_dict_repr()} and New trigger "
+                         f"being added is {trigger1.get_dict_repr()}")
 
     def test_no_trigger(self):
         app = self.func_app

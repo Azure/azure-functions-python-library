@@ -24,6 +24,7 @@ class BindingDirection(StringifyEnum):
 
 class DataType(StringifyEnum):
     """Data type of the binding used in function.json"""
+    """Parse binding argument as undefined."""
     UNDEFINED = 0
     """Parse binding argument as string."""
     STRING = 1
@@ -105,7 +106,9 @@ class Binding(ABC):
     def get_dict_repr(self) -> Dict:
         """Build a dictionary of a particular binding. The keys are camel
         cased binding field names defined in `init_params` list and
-        :class:`Binding` class.
+        :class:`Binding` class. \n
+        This method is invoked in function :meth:`get_raw_bindings` of class
+        :class:`Function` to generate json dict for each binding.
 
         :return: Dictionary representation of the binding.
         """
@@ -114,12 +117,6 @@ class Binding(ABC):
                 self._dict[camel_case(p)] = getattr(self, p, None)
 
         return self._dict
-
-    def get_binding_json(self) -> str:
-        return json.dumps(self.get_dict_repr(), cls=CustomJsonEncoder)
-
-    def __str__(self):
-        return self.get_binding_json()
 
 
 class Trigger(Binding, ABC, metaclass=ABCBuildDictMeta):

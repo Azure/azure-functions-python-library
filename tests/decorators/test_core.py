@@ -55,7 +55,6 @@ class TestBindings(unittest.TestCase):
                          'type': 'Dummy'}
         self.assertEqual(test_trigger.get_binding_name(), "Dummy")
         self.assertEqual(test_trigger.get_dict_repr(), expected_dict)
-        assert_json(self, str(test_trigger), expected_dict)
 
     def test_input_creation(self):
         """Testing if the input creation sets the correct values by default
@@ -71,7 +70,6 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(test_input.get_binding_name(), "DummyInputBinding")
         self.assertFalse(test_input.is_trigger)
         self.assertEqual(test_input.get_dict_repr(), expected_dict)
-        assert_json(self, str(test_input), expected_dict)
 
     def test_output_creation(self):
         """Testing if the output creation sets the correct values by default
@@ -87,4 +85,3 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(test_output.get_binding_name(), "DummyOutputBinding")
         self.assertFalse(test_output.is_trigger)
         self.assertEqual(test_output.get_dict_repr(), expected_dict)
-        assert_json(self, str(test_output), expected_dict)
