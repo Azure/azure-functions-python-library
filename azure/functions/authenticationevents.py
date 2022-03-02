@@ -1,7 +1,13 @@
+from abc import ABC, abstractmethod
+from http import client
 from importlib import import_module
 import json
 from logging import exception
 import pickle
+from re import T
+from this import d
+from urllib import request
+
 
 
 from xmlrpc.client import DateTime
@@ -98,7 +104,7 @@ class RequestStatus(Enum):
      TokenInvalid = auto()
      Successful = auto()
 
-class IEventResponse():
+class IEventResponse(ABC):
     def __init__(self, HttpResponseMessage: HttpResponse,
                  Schema : str,
                  Body: str,
@@ -147,7 +153,69 @@ class IEventResponse():
         response.Body = body
         return response
 
-class IEventData():
+class IActionable(ABC):
+
+        abstractmethod    
+        def InvalidateActions():
+            pass
+    
+class IEventAction(ABC):
+    def __init__(self,
+                ActionType: str):
+                self.ActionType=ActionType
+    
+    def BuildActionBody():
+        pass
+
+class ITokenIssuanceAction(IEventAction):
+    def __init__(self,
+                ActionType):
+                self.ActionType=ActionType
+    
+    abstractmethod
+    def BuildActionBody():
+        pass
+
+class Claim():
+    def __init__(self,
+                Id: str,
+                Values: list[str]):
+                self.Id=Id
+                self.Values=Values
+
+class ProvideClaimsForToken(ITokenIssuanceAction):
+    def __init__(self,
+                Claims: list[Claim]):
+                self.ActionType="ProvideClaimsForToken"
+                self.Claims=Claims
+
+    def AddClaim(self,id: str, values: list[str]):
+        self.Claims.append(Claim(Id=id,Values=values))
+
+    def BuildActionBody(self):
+        temp:dict
+        for item in self.Claims:
+            temp[item.Id]=item.Values
+        return json.dumps(temp)
+
+class IActionableResponse(IEventResponse,IActionable):
+    def __init__(self,
+                Actions: list[IEventAction]):
+                self.Actions=Actions
+
+    def InvalidateActions(self):
+        actionElement = "actions"
+        typeProperty = "type"
+        Payload = self.JsonBody
+        
+
+    def Invalidate(self):
+        self.InvalidateActions()
+
+    
+
+
+class IEventData(ABC):
     def __init__(self):
         pass
     @classmethod
@@ -163,8 +231,9 @@ class IEventData():
         data = IEventData(Type())
         return data if not json else data.FromJson(json)
 
+    
 
-class IEventRequest():
+class IEventRequest(ABC):
     def __init__(self,
                 HttpRequestMessage: HttpRequest,
                 StatusMessage: str,
@@ -182,7 +251,8 @@ class IEventRequest():
     def ToString(self):
         return pickle.dumps(self)
     
-    def InstanceCreated(args):
+    abstractmethod
+    def CreateInstance(result:dict):
         pass
 
     def Failed(message: str):
@@ -202,105 +272,110 @@ class IEventRequest():
         except exception as ex:
             return self.Failed(ex.msg)
 
-class TokenIssuanceStartResponse(IEventResponse):
-    def __init__(self,
-                Description: str):
-                self.Description=Description
-    
-    def get_Description(self):
-        return self.Description
-    
-    def set_Description(self,value):
-        self.Description=value
-
-    def invalidate(self):
-        self.set_JsonValue(["addition","description"], self.Description)
+    def populate(result: dict):
+        if result.get("payload").get('type') =='onTokenIssuanceStartCustomExtension' and result.get('payload').get("apiSchemaVersion") == "10-01-2021-preview":
+            return preview_10_01_2021.TokenIssuanceStartRequest.CreateInstance(result=result)
 
 class AuthProtocol():
     def __init__(self,
-                Type: str,
-                TenantId: uuid):
-                self.Type=Type
-                self.TenantId=TenantId
+                type: str,
+                tenantId: str):
+                self.type=type
+                self.tenantId=tenantId
+
+    def populate(authProtocol: dict):
+        return AuthProtocol(**authProtocol)
 class Client():
     def __init__(self,
-                Ip: str):
-                self.Ip=Ip
+                ip: str):
+                self.ip=ip
+    def populate(client: dict):
+        return Client(**client)
 
 
 class Role():
     def __init__(self,
-                Id: uuid,
-                Value: str):
-                self.Id=Id
-                self.Value=Value
+                id: str,
+                value: str):
+                self.id=id
+                self.value=value
 
 class ServicePrincipalName():
     def __init__(self,
-                Url: str,
-                Uuid: uuid):
-                self.Url=Url
-                self.Uuid=Uuid
+                url: str,
+                uuid: uuid):
+                self.url=url
+                self.uuid=uuid
 
 listOfServicePrincipalName= list[ServicePrincipalName]
 
 class ServicePrincipal():
     def __init__(self,
-                Id: uuid,
-                AppId: uuid,
-                AppDisplayName: str,
-                DisplayName: str,
-                ServicePrincipalNames: listOfServicePrincipalName):
-                self.Id=Id
-                self.AppId=AppId
-                self.AppDisplayName=AppDisplayName
-                self.DisplayName=DisplayName
-                self.ServicePrincipalNames=ServicePrincipalNames
+                id: str,
+                appId: str,
+                appDisplayName: str,
+                displayName: str,
+                servicePrincipalNames: list[str]):
+                self.id=id
+                self.appId=appId
+                self.appDisplayName=appDisplayName
+                self.displayName=displayName
+                self.servicePrincipalNames=servicePrincipalNames
+    def populate(servicePrincipal: dict):
+        return ServicePrincipal(**servicePrincipal)
 
 class User():
     def __init__(self,
-                AgeGroup:str,
-                CompanyName:str,
-                Country:str,
-                CreatedDateTime:DateTime,
-                CreationType:str,
-                Department:str,
-                DisplayName:str,
-                GivenName:str,
-                LastPasswordChangeDateTime:DateTime,
-                Mail:str,
-                OnPremisesSamAccountName:str,
-                OnPremisesSecurityIdentifier:str,
-                OnPremiseUserPrincipalName:str,
-                PreferredDataLocation:str,
-                PreferredLanguage:str,
-                Surname:str,
-                UserPrincipalName:str,
-                UserType:str):
-                self.UserType=UserType
-                self.UserPrincipalName=UserPrincipalName
-                self.Surname=Surname
-                self.PreferredLanguage=PreferredLanguage
-                self.AgeGroup=AgeGroup
-                self.CompanyName=CompanyName
-                self.Country=Country
-                self.CreatedDateTime=CreatedDateTime
-                self.CreationType=CreationType
-                self.Department=Department
-                self.DisplayName=DisplayName
-                self.GivenName=GivenName
-                self.LastPasswordChangeDateTime=LastPasswordChangeDateTime
-                self.Mail=Mail
-                self.OnPremisesSamAccountName=OnPremisesSamAccountName
-                self.OnPremisesSecurityIdentifier=OnPremisesSecurityIdentifier
-                self.OnPremiseUserPrincipalName=OnPremiseUserPrincipalName
-                self.PreferredDataLocation=PreferredDataLocation
+                ageGroup:str,
+                companyName:str,
+                country:str,
+                createdDateTime:str,
+                creationType:str,
+                department:str,
+                displayName:str,
+                givenName:str,
+                lastPasswordChangeDateTime:str,
+                mail:str,
+                onPremisesSamAccountName:str,
+                onPremisesSecurityIdentifier:str,
+                onPremiseUserPrincipalName:str,
+                preferredDataLocation:str,
+                preferredLanguage:str,
+                surname:str,
+                userPrincipalName:str,
+                userType:str,
+                id:str):
+                self.id=id
+                self.userType=userType
+                self.userPrincipalName=userPrincipalName
+                self.surname=surname
+                self.preferredLanguage=preferredLanguage
+                self.ageGroup=ageGroup
+                self.companyName=companyName
+                self.country=country
+                self.createdDateTime=createdDateTime
+                self.creationType=creationType
+                self.department=department
+                self.displayName=displayName
+                self.givenName=givenName
+                self.lastPasswordChangeDateTime=lastPasswordChangeDateTime
+                self.mail=mail
+                self.onPremisesSamAccountName=onPremisesSamAccountName
+                self.onPremisesSecurityIdentifier=onPremisesSecurityIdentifier
+                self.onPremiseUserPrincipalName=onPremiseUserPrincipalName
+                self.preferredDataLocation=preferredDataLocation
+
+    def populate(user: dict):
+        return User(**user)
+
+                
 
 Roles=list[Role]
 
+
 class Context():
     def __init__(self,
-                CorrelationId:uuid,
+                CorrelationId:str,
                 Client:Client,
                 AuthProtocol:AuthProtocol,
                 ClientServicePrincipal: ServicePrincipal,
@@ -314,37 +389,57 @@ class Context():
                 self.AuthProtocol=AuthProtocol
                 self.Client=Client
                 self.CorrelationId=CorrelationId
+    
+    def populate(context: dict):
+        return Context(CorrelationId=context.get('correlationId'),
+        User=User.populate(context.get('user')),
+        Client=Client.populate(context.get('client')),
+        ClientServicePrincipal=ServicePrincipal.populate(context.get('clientServicePrincipal')),
+        ResourceServicePrincipal=ServicePrincipal.populate(context.get('resourceServicePrincipal')),
+        Roles=context.get('roles'),
+        AuthProtocol=AuthProtocol.populate(context.get('authProtocol')))
 
-class TokenIssuanceStartData(IEventData):
-    def __init__(self,
-                EventId: uuid,
-                EventTime: DateTime,
-                EventVersion: str,
-                EventType: str,
-                Context: str):
-                self.Context=Context
-                self.EventType=EventType
-                self.EventVersion=EventVersion
-                self.EventTime=EventTime
-                self.EventId=EventId
+class preview_10_01_2021():
+    class TokenIssuanceStartResponse(IEventResponse):
+        def __init__(self):
+            pass
+                    # super().__init__(kargs)
+                    
+
+    class TokenIssuanceStartData(IEventData):
+        def __init__(self,
+                    EventId: str,
+                    EventTime: DateTime,
+                    EventVersion: str,
+                    EventType: str,
+                    Context: Context):
+                    self.Context=Context
+                    self.EventType=EventType
+                    self.EventVersion=EventVersion
+                    self.EventTime=EventTime
+                    self.EventId=EventId
+
+        def CreateInstance(payload: dict):
+            context=Context.populate(payload.get('context'))
+            return preview_10_01_2021.TokenIssuanceStartData(EventId=payload.get('eventListenerId'),EventTime=payload.get('time'),EventType=payload.get('type'),EventVersion=payload.get('apiSchemaVersion'),Context=context)
 
 
+    class TokenIssuanceStartRequest(IEventRequest):
+        def __init__(self,
+                    response: IEventResponse,
+                    payload: IEventData,
+                    TokenClaims: dict[str,str]):
+                    self.TokenClaims=TokenClaims
+                    self.response=response
+                    self.payload=payload
 
-class TokenIssuanceStartRequest(IEventRequest):
-    def __init__(self,
-                response: TokenIssuanceStartResponse,
-                payload: TokenIssuanceStartData,
-                TokenClaims: dict[str,str]):
-                self.TokenClaims=TokenClaims
-                self.response=response
-                self.payload=payload
-
-    def InstanceCreated(self,args: list):
-        self.TokenClaims=args[0]
-        
-                
-
-        
+        def CreateInstance(result:dict):
+            response=preview_10_01_2021.TokenIssuanceStartResponse()
+            data=preview_10_01_2021.TokenIssuanceStartData.CreateInstance(payload=result.get('payload'))
+            tokenclaims=result.get('tokenClaims') 
+            return preview_10_01_2021.TokenIssuanceStartRequest(payload=data,response=response,TokenClaims=tokenclaims)
+            
+ 
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
                                meta.OutConverter,
@@ -364,14 +459,18 @@ class AuthenticationEventTriggerConverter(meta.InConverter,
     def decode(cls,
                data: meta.Datum, *,
                trigger_metadata) -> typing.Any:
+        # result=demo1.TokenIssuanceStartRequest()
         data_type = data.type
 
         # Durable functions extension always returns a string of json
         # See durable functions library's call_activity_task docs
         if data_type in ['string', 'json']:
             try:
-                callback = _deserialize_custom_object
-                result = json.loads(data.value, object_hook=callback)
+                # callback = _deserialize_custom_object
+                result = json.loads(data.value)
+                test=IEventRequest.populate(result=result)
+                # populate(result=result)
+                # test=IEventRequest.populate(result=result)
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
