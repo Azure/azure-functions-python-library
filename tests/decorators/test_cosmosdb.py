@@ -3,6 +3,7 @@
 import unittest
 
 from azure.functions import DataType
+from azure.functions.decorators.constants import COSMOS_DB_TRIGGER, COSMOS_DB
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
@@ -59,7 +60,7 @@ class TestCosmosDB(unittest.TestCase):
                           "preferredLocations":
                               "dummy_loc",
                           "startFromBeginning": False,
-                          "type": "cosmosDBTrigger"})
+                          "type": COSMOS_DB_TRIGGER})
 
     def test_cosmos_db_output_valid_creation(self):
         output = CosmosDBOutput(name="req",
@@ -85,7 +86,7 @@ class TestCosmosDB(unittest.TestCase):
                           'name': 'req',
                           'partitionKey': 'key',
                           'preferredLocations': 'locs',
-                          'type': 'cosmosDB',
+                          'type': COSMOS_DB,
                           'useMultipleWriteLocations': False})
 
     def test_cosmos_db_input_valid_creation(self):
@@ -107,4 +108,4 @@ class TestCosmosDB(unittest.TestCase):
                           'name': 'req',
                           'partitionKey': 'dummy_partitions',
                           'sqlQuery': 'dummy_query',
-                          'type': 'cosmosDB'})
+                          'type': COSMOS_DB})

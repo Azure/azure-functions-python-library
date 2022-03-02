@@ -3,6 +3,8 @@
 import unittest
 
 from azure.functions import DataType
+from azure.functions.decorators.constants import SERVICE_BUS_TRIGGER, \
+    SERVICE_BUS
 from azure.functions.decorators.core import BindingDirection, AccessRights, \
     Cardinality
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
@@ -21,7 +23,7 @@ class TestServiceBus(unittest.TestCase):
 
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
-            "type": "serviceBusTrigger",
+            "type": SERVICE_BUS_TRIGGER,
             "direction": BindingDirection.IN,
             "name": "req",
             "connection": "dummy_conn",
@@ -43,7 +45,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(service_bus_queue_output.get_binding_name(),
                          "serviceBus")
         self.assertEqual(service_bus_queue_output.get_dict_repr(), {
-            "type": "serviceBus",
+            "type": SERVICE_BUS,
             "direction": BindingDirection.OUT,
             "name": "res",
             "dataType": DataType.UNDEFINED,
@@ -63,7 +65,7 @@ class TestServiceBus(unittest.TestCase):
 
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
-            "type": "serviceBusTrigger",
+            "type": SERVICE_BUS_TRIGGER,
             "direction": BindingDirection.IN,
             "name": "req",
             "connection": "dummy_conn",
@@ -84,7 +86,7 @@ class TestServiceBus(unittest.TestCase):
 
         self.assertEqual(output.get_binding_name(), "serviceBus")
         self.assertEqual(output.get_dict_repr(), {
-            "type": "serviceBus",
+            "type": SERVICE_BUS,
             "direction": BindingDirection.OUT,
             "name": "res",
             "dataType": DataType.UNDEFINED,

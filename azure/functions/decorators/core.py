@@ -3,10 +3,9 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional
 
-from azure.functions.decorators.utils import camel_case, \
+from azure.functions.decorators.utils import to_camel_case, \
     ABCBuildDictMeta, StringifyEnum
 
-# script file name
 SCRIPT_FILE_NAME = "function_app.py"
 
 
@@ -113,7 +112,7 @@ class Binding(ABC):
         """
         for p in getattr(self, 'init_params', []):
             if p not in ['data_type', 'self']:
-                self._dict[camel_case(p)] = getattr(self, p, None)
+                self._dict[to_camel_case(p)] = getattr(self, p, None)
 
         return self._dict
 

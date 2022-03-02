@@ -17,7 +17,7 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
-    parse_iterable_param_to_enums, CustomJsonEncoder
+    parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
@@ -95,7 +95,7 @@ class Function(object):
         return self._bindings
 
     def get_raw_bindings(self) -> List[str]:
-        return [json.dumps(i, cls=CustomJsonEncoder) for i in
+        return [json.dumps(i, cls=StringifyEnumJsonEncoder) for i in
                 self.get_bindings_dict()["bindings"]]
 
     def get_bindings_dict(self) -> Dict:
@@ -135,7 +135,7 @@ class Function(object):
 
         :return: The json stringified form of function.
         """
-        return json.dumps(self.get_dict_repr(), cls=CustomJsonEncoder)
+        return json.dumps(self.get_dict_repr(), cls=StringifyEnumJsonEncoder)
 
     def __str__(self):
         return self.get_function_json()
@@ -166,7 +166,8 @@ class FunctionBuilder(object):
         trigger = self._function.get_trigger()
         if trigger is None:
             raise ValueError(
-                f"Function {function_name} does not have a trigger")
+                f"Function {function_name} does not have a trigger. A valid "
+                f"function must have one and only one trigger registered.")
 
         bindings = self._function.get_bindings()
         if trigger not in bindings:

@@ -2,18 +2,11 @@
 #  Licensed under the MIT License.
 import json
 
-from azure.functions.decorators.utils import CustomJsonEncoder
-
-
-def get_func(self, app):
-    funcs = app.get_functions()
-    self.assertEqual(len(funcs), 1)
-    func = funcs[0]
-    return func
+from azure.functions.decorators.utils import StringifyEnumJsonEncoder
 
 
 def assert_json(self, func, expected_dict):
     self.assertEqual(json.dumps(json.loads(str(func)), sort_keys=True,
-                                cls=CustomJsonEncoder),
+                                cls=StringifyEnumJsonEncoder),
                      json.dumps(expected_dict, sort_keys=True,
-                                cls=CustomJsonEncoder))
+                                cls=StringifyEnumJsonEncoder))

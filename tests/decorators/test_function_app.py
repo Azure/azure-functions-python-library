@@ -4,6 +4,7 @@ import unittest
 from unittest import mock
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
+from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
@@ -73,7 +74,7 @@ class TestFunction(unittest.TestCase):
         assert_json(self, self.func, {"scriptFile": "dummy.py",
                                       "bindings": [
                                           {
-                                              "type": "http",
+                                              "type": HTTP_OUTPUT,
                                               "direction":
                                                   BindingDirection.OUT,
                                               "name": "out",
@@ -81,7 +82,7 @@ class TestFunction(unittest.TestCase):
                                           },
                                           {
                                               "authLevel": AuthLevel.ANONYMOUS,
-                                              "type": "httpTrigger",
+                                              "type": HTTP_TRIGGER,
                                               "direction": BindingDirection.IN,
                                               "name": "req",
                                               "dataType": DataType.UNDEFINED,
@@ -119,7 +120,9 @@ class TestFunctionBuilder(unittest.TestCase):
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
-                         "Function dummy does not have a trigger")
+                         "Function dummy does not have a trigger. A valid "
+                         "function must have one and only one trigger "
+                         "registered.")
 
     def test_validate_function_trigger_not_in_bindings(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
@@ -167,7 +170,7 @@ class TestFunctionBuilder(unittest.TestCase):
             "bindings": [
                 {
                     "authLevel": AuthLevel.ANONYMOUS,
-                    "type": "httpTrigger",
+                    "type": HTTP_TRIGGER,
                     "direction": BindingDirection.IN,
                     "name": "req",
                     "dataType": DataType.UNDEFINED,
@@ -177,7 +180,7 @@ class TestFunctionBuilder(unittest.TestCase):
                     ]
                 },
                 {
-                    "type": "http",
+                    "type": HTTP_OUTPUT,
                     "direction": BindingDirection.OUT,
                     "name": "out",
                     "dataType": DataType.UNDEFINED
@@ -293,12 +296,12 @@ class TestFunctionApp(unittest.TestCase):
                     "methods": [HttpMethod.GET],
                     "name": "req",
                     "route": "/{*route}",
-                    "type": "httpTrigger"
+                    "type": HTTP_TRIGGER
                 },
                 {
                     "dataType": DataType.UNDEFINED,
                     "direction": BindingDirection.OUT,
                     "name": "$return",
-                    "type": "http"
+                    "type": HTTP_OUTPUT
                 }
             ]})

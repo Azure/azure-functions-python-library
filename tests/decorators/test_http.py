@@ -3,6 +3,7 @@
 import unittest
 
 from azure.functions import DataType, AuthLevel
+from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP_OUTPUT
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
     HttpMethod
@@ -22,10 +23,10 @@ class TestHttp(unittest.TestCase):
                                    auth_level=AuthLevel.ANONYMOUS,
                                    route='dummy')
 
-        self.assertEqual(http_trigger.get_binding_name(), "httpTrigger")
+        self.assertEqual(http_trigger.get_binding_name(), HTTP_TRIGGER)
         self.assertEqual(http_trigger.get_dict_repr(), {
             "authLevel": AuthLevel.ANONYMOUS,
-            "type": "httpTrigger",
+            "type": HTTP_TRIGGER,
             "direction": BindingDirection.IN,
             "name": 'req',
             "dataType": DataType.UNDEFINED,
@@ -36,9 +37,9 @@ class TestHttp(unittest.TestCase):
     def test_http_output_valid_creation(self):
         http_output = HttpOutput(name='req', data_type=DataType.UNDEFINED)
 
-        self.assertEqual(http_output.get_binding_name(), "http")
+        self.assertEqual(http_output.get_binding_name(), HTTP_OUTPUT)
         self.assertEqual(http_output.get_dict_repr(), {
-            "type": "http",
+            "type": HTTP_OUTPUT,
             "direction": BindingDirection.OUT,
             "name": "req",
             "dataType": DataType.UNDEFINED,

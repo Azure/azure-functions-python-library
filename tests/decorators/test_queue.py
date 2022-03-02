@@ -3,6 +3,7 @@
 import unittest
 
 from azure.functions import DataType
+from azure.functions.decorators.constants import QUEUE_TRIGGER, QUEUE
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 
@@ -16,7 +17,7 @@ class TestQueue(unittest.TestCase):
 
         self.assertEqual(trigger.get_binding_name(), "queueTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
-            "type": "queueTrigger",
+            "type": QUEUE_TRIGGER,
             "direction": BindingDirection.IN,
             "name": "req",
             "dataType": DataType.UNDEFINED,
@@ -32,7 +33,7 @@ class TestQueue(unittest.TestCase):
 
         self.assertEqual(output.get_binding_name(), "queue")
         self.assertEqual(output.get_dict_repr(), {
-            "type": "queue",
+            "type": QUEUE,
             "direction": BindingDirection.OUT,
             "name": "res",
             "dataType": DataType.UNDEFINED,

@@ -1,12 +1,16 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import inspect
+import re
 from abc import ABCMeta
 from enum import Enum
 from json import JSONEncoder
 from typing import TypeVar, Optional, Union, Iterable, Type, Callable
 
 T = TypeVar("T", bound=Enum)
+SNAKE_CASE_RE = re.compile(r'^([a-z]+\d*_[a-z\d_]*|_+[a-z\d]+[a-z\d_]*)$',
+                           re.IGNORECASE)
+WORD_RE = re.compile(r'^([a-z]+\d*)$', re.IGNORECASE)
 
 
 class StringifyEnum(Enum):
@@ -106,18 +110,58 @@ def parse_iterable_param_to_enums(
                 value in param_values]
     except KeyError:
         raise KeyError(
-            f"Can not parse '{param_values}' to Optional[Iterable["
-            f"{class_name.__name__}]]. "
+            f"Can not parse '{param_values}' to "
+            f"Optional[Iterable[{class_name.__name__}]]. "
             f"Please ensure param all list elements exist in "
             f"{[e.name for e in class_name]}")
 
 
-def camel_case(snake_case: str):
-    words = snake_case.split('_')
+def to_camel_case(snake_case_str: str):
+    if snake_case_str is None or len(snake_case_str) == 0:
+        raise ValueError(
+            f"Please ensure arg name {snake_case_str} is not empty!")
+
+    if not is_snake_case(snake_case_str) and not is_word(snake_case_str):
+        raise ValueError(
+            f"Please ensure {snake_case_str} is a word or snake case "
+            f"string with underscore as separator.")
+    words = snake_case_str.split('_')
     return words[0] + ''.join(ele.title() for ele in words[1:])
 
 
-class CustomJsonEncoder(JSONEncoder):
+def is_snake_case(input_string: str) -> bool:
+    """
+    Checks if a string is formatted as "snake case".
+    A string is considered snake case when:
+    - it's composed only by lowercase/uppercase letters and digits
+    - it contains at least one underscore
+    - it does not start with a number
+    *Examples:*
+    >>> is_snake_case('foo_bar_baz') # returns true
+    >>> is_snake_case('foo') # returns false
+    :param input_string: String to test.
+    :return: True for a snake case string, false otherwise.
+    """
+    return SNAKE_CASE_RE.match(input_string) is not None
+
+
+def is_word(input_string: str) -> bool:
+    """
+    Checks if a string is one word.
+    A string is considered one word when:
+    - it's composed only by lowercase/uppercase letters and digits
+    - it does not start with a number
+    *Examples:*
+    >>> is_word('1foo') # returns false
+    >>> is_word('foo_') # returns false
+    >>> is_word('foo') # returns true
+    :param input_string: String to test.
+    :return: True for one word string, false otherwise.
+    """
+    return WORD_RE.match(input_string) is not None
+
+
+class StringifyEnumJsonEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, StringifyEnum):
             return str(o)

@@ -3,6 +3,7 @@
 import unittest
 
 from azure.functions import DataType
+from azure.functions.decorators.constants import EVENT_HUB_TRIGGER, EVENT_HUB
 from azure.functions.decorators.core import BindingDirection, Cardinality
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 
@@ -25,7 +26,7 @@ class TestEventHub(unittest.TestCase):
                           "direction": BindingDirection.IN,
                           "eventHubName": "dummy_event_hub",
                           "name": "req",
-                          "type": "eventHubTrigger"})
+                          "type": EVENT_HUB_TRIGGER})
 
     def test_event_hub_output_valid_creation(self):
         output = EventHubOutput(name="res",
@@ -40,4 +41,4 @@ class TestEventHub(unittest.TestCase):
                           'direction': BindingDirection.OUT,
                           'eventHubName': 'dummy_event_hub',
                           'name': 'res',
-                          'type': 'eventHub'})
+                          'type': EVENT_HUB})

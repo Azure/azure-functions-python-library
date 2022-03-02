@@ -4,7 +4,8 @@ import unittest
 
 from azure.functions import DataType, HttpMethod
 from azure.functions.decorators import utils
-from azure.functions.decorators.utils import camel_case, BuildDictMeta
+from azure.functions.decorators.utils import to_camel_case, BuildDictMeta, \
+    is_snake_case, is_word
 
 
 class TestUtils(unittest.TestCase):
@@ -61,19 +62,67 @@ class TestUtils(unittest.TestCase):
                          f"{[e.name for e in HttpMethod]}")
 
     def test_snake_case_to_camel_case_multi(self):
-        self.assertEqual(camel_case("data_type"), "dataType")
+        self.assertEqual(to_camel_case("data_type"), "dataType")
 
     def test_snake_case_to_camel_case_trailing_underscore(self):
-        self.assertEqual(camel_case("data_type_"), "dataType")
+        self.assertEqual(to_camel_case("data_type_"), "dataType")
 
     def test_snake_case_to_camel_case_leading_underscore(self):
-        self.assertEqual(camel_case("_dataType"), "Datatype")
+        self.assertEqual(to_camel_case("_dataType"), "Datatype")
 
     def test_snake_case_to_camel_case_single(self):
-        self.assertEqual(camel_case("dataType"), "dataType")
+        self.assertEqual(to_camel_case("dataType"), "dataType")
 
     def test_snake_case_to_camel_case_empty_str(self):
-        self.assertEqual(camel_case(""), "")
+        with self.assertRaises(ValueError) as err:
+            to_camel_case("")
+        self.assertEqual(err.exception.args[0],
+                         'Please ensure arg name  is not '
+                         'empty!')
+
+    def test_snake_case_to_camel_case_none(self):
+        with self.assertRaises(ValueError) as err:
+            to_camel_case(None)
+        self.assertEqual(err.exception.args[0],
+                         'Please ensure arg name None is not '
+                         'empty!')
+
+    def test_snake_case_to_camel_case_not_one_word_nor_snake_case(self):
+        with self.assertRaises(ValueError) as err:
+            to_camel_case("data-type")
+        self.assertEqual(err.exception.args[0],
+                         'Please ensure data-type is a word or snake case '
+                         'string with underscore as separator.')
+
+    def test_is_snake_case_letters_only(self):
+        self.assertTrue(is_snake_case("dataType_foo"))
+
+    def test_is_snake_case_lowercase_with_digit(self):
+        self.assertTrue(is_snake_case("data_type_233"))
+
+    def test_is_snake_case_uppercase_with_digit(self):
+        self.assertTrue(is_snake_case("Data_Type_233"))
+
+    def test_is_snake_case_leading_digit(self):
+        self.assertFalse(is_snake_case("233_Data_Type_233"))
+
+    def test_is_snake_case_no_separator(self):
+        self.assertFalse(is_snake_case("DataType233"))
+
+    def test_is_snake_case_invalid_separator(self):
+        self.assertFalse(is_snake_case("Data-Type-233"))
+
+    def test_is_word_letters_only(self):
+        self.assertTrue(is_word("dataType"))
+
+    def test_is_word_letters_with_digits(self):
+        self.assertTrue(is_word("dataType233"))
+
+    def test_is_word_leading_digits(self):
+        self.assertFalse(is_word("233dataType"))
+
+    def test_is_word_invalid_symbol(self):
+        self.assertFalse(is_word("233!dataType"))
 
     def test_clean_nones_none(self):
         self.assertEqual(BuildDictMeta.clean_nones(None), None)

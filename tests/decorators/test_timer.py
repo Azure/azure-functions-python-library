@@ -3,6 +3,7 @@
 import unittest
 
 from azure.functions import DataType
+from azure.functions.decorators.constants import TIMER_TRIGGER
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.timer import TimerTrigger
 
@@ -17,7 +18,7 @@ class TestTimer(unittest.TestCase):
 
         self.assertEqual(trigger.get_binding_name(), "timerTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
-            "type": "timerTrigger",
+            "type": TIMER_TRIGGER,
             "direction": BindingDirection.IN,
             "name": "req",
             "dataType": DataType.UNDEFINED,
