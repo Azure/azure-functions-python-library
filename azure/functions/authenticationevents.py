@@ -1,15 +1,6 @@
-from abc import ABC, abstractmethod
-from http import client
 from importlib import import_module
 import json
-from logging import exception
-import pickle
-from re import T
-from this import d
-from urllib import request
-import azure.functions._abc as _abc
 import azure.functions._authenticationevents as _authenticationevents
-
 
 
 import typing
@@ -19,7 +10,9 @@ import uuid
 
 from . import meta
 
-#Utilities
+# Utilities
+
+
 def _serialize_custom_object(obj):
     """Serialize a user-defined object to JSON.
 
@@ -98,12 +91,11 @@ def _deserialize_custom_object(obj: dict) -> object:
     return obj
 
 
- 
 # Authentication Event Trigger
 class AuthenticationEventTriggerConverter(meta.InConverter,
-                               meta.OutConverter,
-                               binding='authenticationEventTrigger',
-                               trigger=True):
+                                          meta.OutConverter,
+                                          binding='authenticationEventTrigger',
+                                          trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
         # Activity Trigger's arguments should accept any types
@@ -127,9 +119,9 @@ class AuthenticationEventTriggerConverter(meta.InConverter,
             try:
                 # callback = _deserialize_custom_object
                 response = json.loads(data.value)
-                if response.get("payload").get('type') =='onTokenIssuanceStartCustomExtension' and response.get('payload').get("apiSchemaVersion") == "10-01-2021-preview":
+                if response.get("payload").get('type') == 'onTokenIssuanceStartCustomExtension' and response.get('payload').get("apiSchemaVersion") == "10-01-2021-preview":
                     return _authenticationevents.preview_10_01_2021.TokenIssuanceStartRequest.create_instance(result=response)
-            
+
                 # test=IEventRequest.populate(result=result)
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
@@ -159,5 +151,3 @@ class AuthenticationEventTriggerConverter(meta.InConverter,
     @classmethod
     def has_implicit_output(cls) -> bool:
         return True
-
-
