@@ -1,7 +1,7 @@
 from importlib import import_module
 import json
 import azure.functions._authenticationevents as _authenticationevents
-
+import azure.functions._abc as _abc
 
 import typing
 import urllib
@@ -140,6 +140,11 @@ class AuthenticationEventTriggerConverter(meta.InConverter,
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         try:
+            if isinstance(obj, _abc.IAuthenticationEventResponse):
+                obj.invalidate()
+                pass
+            
+            #convert response to json and build actions
             callback = _serialize_custom_object
             result = json.dumps(obj, default=callback)
         except TypeError:
