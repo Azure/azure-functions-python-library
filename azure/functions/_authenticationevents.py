@@ -1,11 +1,18 @@
 from abc import abstractmethod
 import json
+from urllib import request
 import azure.functions._abc as _abc
 from xmlrpc.client import DateTime
 import uuid
 
 
-class ITokenIssuanceAction(_abc.IAuthenticationEventAction):
+class RequestStatus(_abc.AuthenticationEventRequestStatus):
+    Failed = 'Failed'
+    TokenInvalid = 'TokenInvalid'
+    Successful = 'Successful'
+
+
+class ITokenIssuanceAction():
     def __init__(self,
                  actionType):
         self.actionType = actionType
@@ -202,24 +209,26 @@ class preview_10_01_2021():
                      context: Context,
                      customExtensionId: str):
             self.context = context
-            super.__init__(eventListenerId=eventListenerId, time=time, type=type,
-                           apiSchemaVersion=apiSchemaVersion, customExtensionId=customExtensionId)
+            super().__init__(eventListenerId=eventListenerId, time=time, type=type,
+                             apiSchemaVersion=apiSchemaVersion, customExtensionId=customExtensionId)
 
         def create_instance(payload: dict):
             return preview_10_01_2021.TokenIssuanceStartData(eventListenerId=payload.get('eventListenerId'), time=payload.get('time'), type=payload.get('type'), apiSchemaVersion=payload.get('apiSchemaVersion'), context=Context.populate(payload.get('context')), customExtensionId=payload.get('customExtensionId'))
 
     class TokenIssuanceStartRequest(_abc.IAuthenticationEventRequest):
         def __init__(self,
+                     statusMessage: str,
+                     requestStatus: _abc.AuthenticationEventRequestStatus,
                      response: _abc.IAuthenticationEventResponse,
                      payload: _abc.IAuthenticationEventData,
                      tokenClaims: dict[str, str]):
             self.tokenClaims = tokenClaims
-            self.response = response
-            self.payload = payload
+            super().__init__(statusMessage=statusMessage,
+                             requestStatus=requestStatus, response=response, payload=payload)
 
         def create_instance(result: dict):
             response = preview_10_01_2021.TokenIssuanceStartResponse()
             data = preview_10_01_2021.TokenIssuanceStartData.create_instance(
                 payload=result.get('payload'))
             tokenclaims = result.get('tokenClaims')
-            return preview_10_01_2021.TokenIssuanceStartRequest(payload=data, response=response, tokenClaims=tokenclaims)
+            return preview_10_01_2021.TokenIssuanceStartRequest(statusMessage=result.get("statusMessage"), requestStatus=RequestStatus(result.get("requestStatus")), response=response, payload=data, tokenClaims=tokenclaims)

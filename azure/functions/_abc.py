@@ -426,11 +426,7 @@ class OrchestrationContext(abc.ABC):
 
 
 class AuthenticationEventRequestStatus(Enum):
-    Failed = auto()
-    TokenInvalid = auto()
-    Successful = auto()
-
-
+    pass
 class IAuthenticationEventResponse(abc.ABC):
     def __init__(self,
                  schema: typing.Optional[str],
@@ -499,13 +495,11 @@ class IAuthenticationEventRequest(abc.ABC):
                  statusMessage: str,
                  requestStatus: AuthenticationEventRequestStatus,
                  response: IAuthenticationEventResponse,
-                 payload: IAuthenticationEventData,
-                 name: str):
+                 payload: IAuthenticationEventData):
         self.statusMessage = statusMessage
         self.requestStatus = requestStatus
         self.response = response
         self.payload = payload
-        self.name = name
 
     abc.abstractmethod
 
