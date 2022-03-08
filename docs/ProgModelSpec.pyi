@@ -533,3 +533,88 @@ class FunctionApp:
         :return: Decorator function.
         """
         pass
+
+    def on_blob_change(self,
+                       arg_name: str,
+                       path: str,
+                       connection: str,
+                       data_type: Optional[DataType] = None) -> Callable:
+        """
+        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobTrigger
+        in the function.json which enables function to be triggered when new
+        message(s) are sent to the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the
+        :class:`InputStream` object in function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+        pass
+
+    def read_blob(self,
+                  arg_name: str,
+                  path: str,
+                  connection: str,
+                  data_type: Optional[DataType] = None) -> Callable:
+        """
+        The read_blob decorator adds :class:`BlobInput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobInput
+        in the function.json which enables function to write message(s) to
+        the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the blob in
+         function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+        pass
+
+    def write_blob(self,
+                   arg_name: str,
+                   path: str,
+                   connection: str,
+                   data_type: Optional[DataType] = None) -> Callable:
+        """
+        The write_blob decorator adds :class:`BlobOutput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobOutput
+        in the function.json which enables function to write message(s) to
+        the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the blob in
+         function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+         that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+        pass
+

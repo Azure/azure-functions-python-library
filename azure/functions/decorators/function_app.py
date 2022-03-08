@@ -4,13 +4,14 @@ import json
 import typing
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
+from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
+    HttpMethod
+from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
-from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
-    HttpMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -710,7 +711,8 @@ class FunctionApp:
         :param queue_name: The name of the queue to poll.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Queues.
-        :param data_type: Set to many in order to enable batching.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
         :return: Decorator function.
         """
 
@@ -1064,6 +1066,137 @@ class FunctionApp:
                         id=id,
                         sql_query=sql_query,
                         partition_key=partition_key,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def on_blob_change(self,
+                       arg_name: str,
+                       path: str,
+                       connection: str,
+                       data_type: Optional[DataType] = None) -> Callable:
+        """
+        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobTrigger
+        in the function.json which enables function to be triggered when new
+        message(s) are sent to the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the
+        :class:`InputStream` object in function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=BlobTrigger(
+                        name=arg_name,
+                        path=path,
+                        connection=connection,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def read_blob(self,
+                  arg_name: str,
+                  path: str,
+                  connection: str,
+                  data_type: Optional[DataType] = None) -> Callable:
+
+        """
+        The read_blob decorator adds :class:`BlobInput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobInput
+        in the function.json which enables function to write message(s) to
+        the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the blob in
+         function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=BlobInput(
+                        name=arg_name,
+                        path=path,
+                        connection=connection,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def write_blob(self,
+                   arg_name: str,
+                   path: str,
+                   connection: str,
+                   data_type: Optional[DataType] = None) -> Callable:
+
+        """
+        The write_blob decorator adds :class:`BlobOutput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining BlobOutput
+        in the function.json which enables function to write message(s) to
+        the storage blobs.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-storage-blob
+
+        :param arg_name: The name of the variable that represents the blob in
+         function code.
+        :param path: The path to the blob.
+        :param connection: The name of an app setting or setting collection
+         that specifies how to connect to Azure Blobs.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=BlobOutput(
+                        name=arg_name,
+                        path=path,
+                        connection=connection,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType)))
                 return fb
