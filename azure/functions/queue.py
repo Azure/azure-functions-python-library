@@ -75,7 +75,7 @@ class QueueMessageInConverter(meta.InConverter,
 
         if trigger_metadata is None:
             raise NotImplementedError(
-                f'missing trigger metadata for queue input')
+                'missing trigger metadata for queue input')
 
         return QueueMessage(
             id=cls._decode_trigger_metadata_field(
