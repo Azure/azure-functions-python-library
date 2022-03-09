@@ -37,7 +37,7 @@ class AsgiRequest(WsgiRequest):
             "method": self.request_method,
             "scheme": "https",
             "path": self.path_info,
-            "raw_path": self.path_info.encode("utf-8"),  # type: ignore
+            "raw_path": self.path_info.encode("utf-8"),
             "query_string": self.query_string.encode("utf-8"),  # type: ignore
             "root_path": self.script_name,
             "headers": self._get_encoded_http_headers(),
