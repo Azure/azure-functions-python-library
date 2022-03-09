@@ -238,7 +238,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
 
         if trigger_metadata is None:
             raise NotImplementedError(
-                f'missing trigger metadata for ServiceBus message input')
+                'missing trigger metadata for ServiceBus message input')
 
         return ServiceBusMessage(
             body=body,
