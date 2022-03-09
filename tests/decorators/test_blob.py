@@ -2,9 +2,8 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType
 from azure.functions.decorators.blob import BlobTrigger, BlobOutput, BlobInput
-from azure.functions.decorators.core import BindingDirection
+from azure.functions.decorators.core import BindingDirection, DataType
 
 
 class TestBlob(unittest.TestCase):

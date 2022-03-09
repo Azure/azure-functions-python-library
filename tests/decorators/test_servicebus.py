@@ -2,11 +2,10 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType
 from azure.functions.decorators.constants import SERVICE_BUS_TRIGGER, \
     SERVICE_BUS
 from azure.functions.decorators.core import BindingDirection, AccessRights, \
-    Cardinality
+    Cardinality, DataType
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput

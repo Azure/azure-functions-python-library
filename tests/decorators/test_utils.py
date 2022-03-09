@@ -2,8 +2,9 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType, HttpMethod
+from azure.functions import HttpMethod
 from azure.functions.decorators import utils
+from azure.functions.decorators.core import DataType
 from azure.functions.decorators.utils import to_camel_case, BuildDictMeta, \
     is_snake_case, is_word
 

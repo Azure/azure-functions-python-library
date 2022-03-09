@@ -2,9 +2,8 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType
 from azure.functions.decorators.constants import QUEUE_TRIGGER, QUEUE
-from azure.functions.decorators.core import BindingDirection
+from azure.functions.decorators.core import BindingDirection, DataType
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 
 

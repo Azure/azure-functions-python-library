@@ -2,13 +2,13 @@
 #  Licensed under the MIT License.
 import unittest
 
+from azure.functions.decorators._http import HttpTrigger, HttpMethod
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
-from azure.functions.decorators._http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
 from tests.decorators.testutils import assert_json
 
