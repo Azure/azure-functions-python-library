@@ -4,7 +4,7 @@ import typing
 from typing import Callable, Optional, Union, Iterable
 
 from azure.functions import AsgiMiddleware, WsgiMiddleware
-from azure.functions.decorators._http import HttpMethod
+from azure.functions.decorators.http import HttpMethod
 from azure.functions.decorators.core import DataType, \
     AuthLevel, Cardinality, AccessRights
 

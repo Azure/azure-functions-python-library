@@ -2,7 +2,7 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP_OUTPUT
 from azure.functions.decorators.core import BindingDirection, DataType, \

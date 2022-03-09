@@ -4,7 +4,7 @@ import json
 import typing
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
-from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
