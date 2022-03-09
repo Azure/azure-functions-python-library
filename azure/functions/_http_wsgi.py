@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Any
 import logging
 from io import BytesIO, StringIO
 from os import linesep
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote_to_bytes
 from wsgiref.headers import Headers
 
 from ._abc import Context
@@ -30,7 +30,7 @@ class WsgiRequest:
         # Implement interfaces for PEP 3333 environ
         self.request_method = getattr(func_req, 'method', None)
         self.script_name = ''
-        self.path_info = getattr(url, 'path', None)
+        self.path_info = unquote_to_bytes(getattr(url, 'path', None)).decode('latin-1')
         self.query_string = getattr(url, 'query', None)
         self.content_type = self._lowercased_headers.get('content-type')
         self.content_length = str(len(func_req_body))
