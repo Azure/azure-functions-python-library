@@ -4,14 +4,13 @@ import unittest
 from unittest import mock
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
-    HttpMethod
-from azure.functions.decorators.blob import BlobTrigger
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
+    HttpMethod
 from tests.decorators.testutils import assert_json
 
 

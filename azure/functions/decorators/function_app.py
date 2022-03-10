@@ -4,14 +4,14 @@ import json
 import typing
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
-    HttpMethod
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
+    HttpMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \

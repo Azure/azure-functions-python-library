@@ -2,11 +2,11 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
-    HttpMethod
 from azure.functions.decorators.constants import HTTP_TRIGGER, HTTP_OUTPUT
 from azure.functions.decorators.core import BindingDirection, DataType, \
     AuthLevel
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
+    HttpMethod
 
 
 class TestHttp(unittest.TestCase):
