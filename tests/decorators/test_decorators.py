@@ -850,15 +850,59 @@ class TestFunctionsApp(unittest.TestCase):
                                          "connection": "dummy_conn"
                                      }]})
 
-    def test_blob_full_args(self):
+    def test_blob_trigger(self):
         app = self.func_app
 
         @app.on_blob_change(arg_name="req", path="dummy_path",
-                            connection="dummy_conn",
-                            data_type=DataType.STRING)
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+    def test_blob_input_binding(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
         @app.read_blob(arg_name="file", path="dummy_in_path",
                        connection="dummy_in_conn",
                        data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "file",
+            "path": "dummy_in_path",
+            "connection": "dummy_in_conn"
+        })
+
+    def test_blob_output_binding(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
         @app.write_blob(arg_name="out", path="dummy_out_path",
                         connection="dummy_out_conn",
                         data_type=DataType.STRING)
@@ -867,29 +911,13 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        assert_json(self, func, {"scriptFile": "function_app.py",
-                                 "bindings": [
-                                     {
-                                         "direction": BindingDirection.OUT,
-                                         "dataType": DataType.STRING,
-                                         "type": BLOB,
-                                         "name": "out",
-                                         "path": "dummy_out_path",
-                                         "connection": "dummy_out_conn"
-                                     },
-                                     {
-                                         "direction": BindingDirection.IN,
-                                         "dataType": DataType.STRING,
-                                         "type": BLOB,
-                                         "name": "file",
-                                         "path": "dummy_in_path",
-                                         "connection": "dummy_in_conn"
-                                     },
-                                     {
-                                         "direction": BindingDirection.IN,
-                                         "dataType": DataType.STRING,
-                                         "type": BLOB_TRIGGER,
-                                         "name": "req",
-                                         "path": "dummy_path",
-                                         "connection": "dummy_conn"
-                                     }]})
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
