@@ -2,9 +2,8 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType
 from azure.functions.decorators.constants import COSMOS_DB_TRIGGER, COSMOS_DB
-from azure.functions.decorators.core import BindingDirection
+from azure.functions.decorators.core import BindingDirection, DataType
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 

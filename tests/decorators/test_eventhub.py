@@ -2,9 +2,9 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions import DataType
 from azure.functions.decorators.constants import EVENT_HUB_TRIGGER, EVENT_HUB
-from azure.functions.decorators.core import BindingDirection, Cardinality
+from azure.functions.decorators.core import BindingDirection, Cardinality, \
+    DataType
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 
 

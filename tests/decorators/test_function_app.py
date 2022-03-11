@@ -9,7 +9,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function
-from azure.functions.decorators._http import HttpTrigger, HttpOutput, \
+from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.testutils import assert_json
 

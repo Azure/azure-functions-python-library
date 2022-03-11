@@ -4,11 +4,12 @@ import unittest
 
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
-    EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER
+    EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
+    BLOB_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
-from azure.functions.decorators._http import HttpTrigger, HttpMethod
+from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
 from tests.decorators.testutils import assert_json
 
@@ -810,3 +811,113 @@ class TestFunctionsApp(unittest.TestCase):
                                             }
                                         ]
                                         })
+
+    def test_blob_default_args(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            connection="dummy_conn")
+        @app.read_blob(arg_name="file", path="dummy_path",
+                       connection="dummy_conn")
+        @app.write_blob(arg_name="out", path="dummy_out_path",
+                        connection="dummy_out_conn")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": BLOB,
+                                         "name": "out",
+                                         "path": "dummy_out_path",
+                                         "connection": "dummy_out_conn"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": BLOB,
+                                         "name": "file",
+                                         "path": "dummy_path",
+                                         "connection": "dummy_conn"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": BLOB_TRIGGER,
+                                         "name": "req",
+                                         "path": "dummy_path",
+                                         "connection": "dummy_conn"
+                                     }]})
+
+    def test_blob_trigger(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+    def test_blob_input_binding(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
+        @app.read_blob(arg_name="file", path="dummy_in_path",
+                       connection="dummy_in_conn",
+                       data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "file",
+            "path": "dummy_in_path",
+            "connection": "dummy_in_conn"
+        })
+
+    def test_blob_output_binding(self):
+        app = self.func_app
+
+        @app.on_blob_change(arg_name="req", path="dummy_path",
+                            data_type=DataType.STRING,
+                            connection="dummy_conn")
+        @app.write_blob(arg_name="out", path="dummy_out_path",
+                        connection="dummy_out_conn",
+                        data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
