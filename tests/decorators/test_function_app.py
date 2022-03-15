@@ -1,9 +1,11 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import inspect
 import unittest
 from unittest import mock
 
-from azure.functions import WsgiMiddleware, AsgiMiddleware
+from azure.functions import WsgiMiddleware, AsgiMiddleware, Context
+from azure.functions._abc import RetryContext
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
@@ -11,6 +13,7 @@ from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.durable import DurableOrchestrationContext
 from tests.decorators.testutils import assert_json
 
 
@@ -265,6 +268,17 @@ class TestFunctionApp(unittest.TestCase):
         FunctionApp(wsgi_app=mock_wsgi_app, app_kwargs=app_kwargs)
 
         self.assertEqual(add_http_app_mock.call_args[0][1], app_kwargs)
+
+    def test_durable_function(self):
+        app = FunctionApp()
+
+        @app.on_orchestration_change(name="context")
+        def hello():
+            print("hello")
+
+        print()
+        print(app.get_functions()[0].get_user_function().__name__)
+        print(app.get_functions()[0].get_function_json())
 
     def test_add_http_app(self):
         app = FunctionApp(asgi_app=object(),
