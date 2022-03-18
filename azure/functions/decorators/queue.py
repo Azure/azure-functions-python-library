@@ -15,7 +15,8 @@ class QueueTrigger(Trigger):
                  name: str,
                  queue_name: str,
                  connection: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.queue_name = queue_name
         self.connection = connection
         super().__init__(name=name, data_type=data_type)
@@ -30,7 +31,8 @@ class QueueOutput(OutputBinding):
                  name: str,
                  queue_name: str,
                  connection: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.queue_name = queue_name
         self.connection = connection
         super().__init__(name=name, data_type=data_type)

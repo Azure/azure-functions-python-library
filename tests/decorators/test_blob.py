@@ -11,12 +11,14 @@ class TestBlob(unittest.TestCase):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
-                              data_type=DataType.UNDEFINED)
+                              data_type=DataType.UNDEFINED,
+                              dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "blobTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": "blobTrigger",
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
@@ -27,12 +29,14 @@ class TestBlob(unittest.TestCase):
         blob_input = BlobInput(name="res",
                                path="dummy_path",
                                connection="dummy_connection",
-                               data_type=DataType.UNDEFINED)
+                               data_type=DataType.UNDEFINED,
+                               dummy_field="dummy")
 
         self.assertEqual(blob_input.get_binding_name(), "blob")
         self.assertEqual(blob_input.get_dict_repr(), {
             "type": "blob",
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "res",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
@@ -43,12 +47,14 @@ class TestBlob(unittest.TestCase):
         blob_output = BlobOutput(name="res",
                                  path="dummy_path",
                                  connection="dummy_connection",
-                                 data_type=DataType.UNDEFINED)
+                                 data_type=DataType.UNDEFINED,
+                                 dummy_field="dummy")
 
         self.assertEqual(blob_output.get_binding_name(), "blob")
         self.assertEqual(blob_output.get_dict_repr(), {
             "type": "blob",
             "direction": BindingDirection.OUT,
+            'dummyField': 'dummy',
             "name": "res",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",

@@ -28,22 +28,20 @@ class TestCosmosDB(unittest.TestCase):
                                   start_from_beginning=False,
                                   create_lease_collection_if_not_exists=False,
                                   preferred_locations="dummy_loc",
-                                  data_type=DataType.UNDEFINED)
+                                  data_type=DataType.UNDEFINED,
+                                  dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
         self.assertEqual(trigger.get_dict_repr(),
                          {"checkpointDocumentCount": 3,
                           "checkpointInterval": 2,
-                          "collectionName":
-                              "dummy_collection",
-                          "connectionStringSetting":
-                              "dummy_str",
-                          "createLeaseCollection"
-                          "IfNotExists":
-                              False,
+                          "collectionName": "dummy_collection",
+                          "connectionStringSetting": "dummy_str",
+                          "createLeaseCollectionIfNotExists": False,
                           "dataType": DataType.UNDEFINED,
                           "databaseName": "dummy_db",
                           "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
                           "feedPollDelay": 4,
                           "leaseAcquireInterval": 6,
                           "leaseCollectionName": 'coll_name',
@@ -52,12 +50,10 @@ class TestCosmosDB(unittest.TestCase):
                           "leaseDatabaseName": 'db',
                           "leaseExpirationInterval": 7,
                           "leaseRenewInterval": 5,
-                          "leasesCollectionThroughput":
-                              1,
+                          "leasesCollectionThroughput": 1,
                           "maxItemsPerInvocation": 8,
                           "name": "req",
-                          "preferredLocations":
-                              "dummy_loc",
+                          "preferredLocations": "dummy_loc",
                           "startFromBeginning": False,
                           "type": COSMOS_DB_TRIGGER})
 
@@ -71,7 +67,8 @@ class TestCosmosDB(unittest.TestCase):
                                 use_multiple_write_locations=False,
                                 data_type=DataType.UNDEFINED,
                                 partition_key='key',
-                                preferred_locations='locs')
+                                preferred_locations='locs',
+                                dummy_field="dummy")
 
         self.assertEqual(output.get_binding_name(), "cosmosDB")
         self.assertEqual(output.get_dict_repr(),
@@ -82,6 +79,7 @@ class TestCosmosDB(unittest.TestCase):
                           'dataType': DataType.UNDEFINED,
                           'databaseName': 'dummy_db',
                           'direction': BindingDirection.OUT,
+                          'dummyField': 'dummy',
                           'name': 'req',
                           'partitionKey': 'key',
                           'preferredLocations': 'locs',
@@ -95,7 +93,8 @@ class TestCosmosDB(unittest.TestCase):
                                        id="dummy_id",
                                        sql_query="dummy_query",
                                        partition_key="dummy_partitions",
-                                       data_type=DataType.UNDEFINED)
+                                       data_type=DataType.UNDEFINED,
+                                       dummy_field="dummy")
         self.assertEqual(cosmosdb_input.get_binding_name(), "cosmosDB")
         self.assertEqual(cosmosdb_input.get_dict_repr(),
                          {'collectionName': 'dummy_collection',
@@ -103,6 +102,7 @@ class TestCosmosDB(unittest.TestCase):
                           'dataType': DataType.UNDEFINED,
                           'databaseName': 'dummy_db',
                           'direction': BindingDirection.IN,
+                          'dummyField': 'dummy',
                           'id': 'dummy_id',
                           'name': 'req',
                           'partitionKey': 'dummy_partitions',

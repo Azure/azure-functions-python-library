@@ -61,7 +61,10 @@ class FunctionApp:
               binding_arg_name: str = '$return',
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
-              auth_level: Optional[Union[AuthLevel, str]] = None) -> Callable:
+              auth_level: Optional[Union[AuthLevel, str]] = None,
+              trigger_extra_fields: typing.Dict = {},
+              binding_extra_fields: typing.Dict = {}
+              ) -> Callable:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -88,6 +91,10 @@ class FunctionApp:
         :param auth_level: Determines what keys, if any, need to be present
         on the request in order to invoke the function.
         :return: Decorator function.
+        :param binding_extra_fields: Keyword arguments for specifying
+        additional binding fields to include in the binding json.
+        :param trigger_extra_fields: Keyword arguments for specifying
+        additional binding fields to include in the trigger json.
         """
         pass
 
@@ -96,7 +103,8 @@ class FunctionApp:
                  schedule: str,
                  run_on_startup: Optional[bool] = None,
                  use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None) -> Callable:
+                 data_type: Optional[Union[DataType, str]] = None,
+                 **kwargs) -> Callable:
         """The schedule decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -118,6 +126,9 @@ class FunctionApp:
         schedule should be monitored.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
         pass
@@ -130,7 +141,8 @@ class FunctionApp:
             data_type: Optional[Union[DataType, str]] = None,
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
-            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
+            cardinality: Optional[Union[Cardinality, str]] = None,
+            **kwargs) -> Callable:
         """The service_bus_queue_trigger decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -153,6 +165,9 @@ class FunctionApp:
         :param is_sessions_enabled: True if connecting to a session-aware
         queue or subscription.
         :param cardinality: Set to many in order to enable batching.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
         pass
@@ -164,7 +179,8 @@ class FunctionApp:
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> Callable:
         """The write_service_bus_queue decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -184,7 +200,11 @@ class FunctionApp:
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param access_rights: Access rights for the connection string.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -197,7 +217,8 @@ class FunctionApp:
             data_type: Optional[Union[DataType, str]] = None,
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
-            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
+            cardinality: Optional[Union[Cardinality, str]] = None,
+            **kwargs) -> Callable:
         """The service_bus_topic_trigger decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -221,7 +242,11 @@ class FunctionApp:
         :param is_sessions_enabled: True if connecting to a session-aware
         queue or subscription.
         :param cardinality: Set to many in order to enable batching.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -233,7 +258,8 @@ class FunctionApp:
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> Callable:
         """The write_service_bus_topic decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -254,7 +280,11 @@ class FunctionApp:
         :param data_type: Defines how Functions runtime should treat the
         parameter value, defaults to DataType.UNDEFINED.
         :param access_rights: Access rights for the connection string.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -262,8 +292,9 @@ class FunctionApp:
                         arg_name: str,
                         queue_name: str,
                         connection: str,
-                        data_type: Optional[DataType] = None) -> Callable:
-        """The queue_trigger decorator adds :class:`QueueTrigger` to the
+                        data_type: Optional[DataType] = None,
+                        **kwargs) -> Callable:
+        """The on_queue_change decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining QueueTrigger
@@ -281,7 +312,11 @@ class FunctionApp:
         that specifies how to connect to Azure Queues.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -289,7 +324,8 @@ class FunctionApp:
                     arg_name: str,
                     queue_name: str,
                     connection: str,
-                    data_type: Optional[DataType] = None) -> Callable:
+                    data_type: Optional[DataType] = None,
+                    **kwargs) -> Callable:
         """The write_queue decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -307,7 +343,11 @@ class FunctionApp:
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Queues.
         :param data_type: Set to many in order to enable batching.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -318,8 +358,9 @@ class FunctionApp:
                              data_type: Optional[Union[DataType, str]] = None,
                              cardinality: Optional[
                                  Union[Cardinality, str]] = None,
-                             consumer_group: Optional[str] = None) -> Callable:
-        """The event_hub_message_trigger decorator adds :class:`EventHubTrigger`
+                             consumer_group: Optional[str] = None,
+                             **kwargs) -> Callable:
+        """The on_event_hub_message decorator adds :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining EventHubTrigger
@@ -340,7 +381,11 @@ class FunctionApp:
         :param cardinality: Set to many in order to enable batching.
         :param consumer_group: An optional property that sets the consumer
         group used to subscribe to events in the hub.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -349,7 +394,8 @@ class FunctionApp:
                                 connection: str,
                                 event_hub_name: str,
                                 data_type: Optional[
-                                    Union[DataType, str]] = None) -> Callable:
+                                    Union[DataType, str]] = None,
+                                **kwargs) -> Callable:
         """The write_event_hub_message decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -368,7 +414,11 @@ class FunctionApp:
         :param event_hub_name: The name of the event hub.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -395,7 +445,8 @@ class FunctionApp:
                             start_from_beginning: Optional[bool] = None,
                             preferred_locations: Optional[str] = None,
                             data_type: Optional[
-                                Union[DataType, str]] = None) -> \
+                                Union[DataType, str]] = None,
+                            **kwargs) -> \
             Callable:
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
@@ -457,7 +508,11 @@ class FunctionApp:
         for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -473,7 +528,8 @@ class FunctionApp:
                                       bool] = None,
                                   preferred_locations: Optional[str] = None,
                                   data_type: Optional[
-                                      Union[DataType, str]] = None) \
+                                      Union[DataType, str]] = None,
+                                  **kwargs) \
             -> Callable:
         """The write_cosmos_db_documents decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
@@ -506,7 +562,11 @@ class FunctionApp:
         for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -519,7 +579,8 @@ class FunctionApp:
                                  sql_query: Optional[str] = None,
                                  partition_key: Optional[str] = None,
                                  data_type: Optional[
-                                     Union[DataType, str]] = None) \
+                                     Union[DataType, str]] = None,
+                                 **kwargs) \
             -> Callable:
         """The read_cosmos_db_documents decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
@@ -545,7 +606,11 @@ class FunctionApp:
         lookup.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -553,7 +618,8 @@ class FunctionApp:
                             arg_name: str,
                             path: str,
                             connection: str,
-                            data_type: Optional[DataType] = None) -> Callable:
+                            data_type: Optional[DataType] = None,
+                            **kwargs) -> Callable:
         """
         The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
@@ -573,7 +639,11 @@ class FunctionApp:
         that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -581,7 +651,8 @@ class FunctionApp:
                   arg_name: str,
                   path: str,
                   connection: str,
-                  data_type: Optional[DataType] = None) -> Callable:
+                  data_type: Optional[DataType] = None,
+                  **kwargs) -> Callable:
         """
         The read_blob decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -601,7 +672,11 @@ class FunctionApp:
         that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
+
         """
         pass
 
@@ -609,7 +684,8 @@ class FunctionApp:
                    arg_name: str,
                    path: str,
                    connection: str,
-                   data_type: Optional[DataType] = None) -> Callable:
+                   data_type: Optional[DataType] = None,
+                   **kwargs) -> Callable:
         """
         The write_blob decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -629,7 +705,98 @@ class FunctionApp:
          that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+
+        """
+        pass
+
+
+    def custom_input_binding(self,
+                             arg_name: str,
+                             type: str,
+                             data_type: Optional[Union[DataType, str]] = None,
+                             **kwargs
+                             ) -> Callable:
+        """
+        The custom_input_binding decorator adds :class:`CustomInputBinding`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a custom input binding in the
+        function.json which enables function to read data from a
+        custom defined input source.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of input parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
         pass
 
+    def custom_output_binding(self,
+                              arg_name: str,
+                              type: str,
+                              data_type: Optional[Union[DataType, str]] = None,
+                              **kwargs
+                              ) -> Callable:
+        """
+        The custom_output_binding decorator adds :class:`CustomOutputBinding`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a custom output binding in the
+        function.json which enables function to write data from a
+        custom defined output source.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of output parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+        pass
+
+    def custom_trigger(self,
+                       arg_name: str,
+                       type: str,
+                       data_type: Optional[Union[DataType, str]] = None,
+                       **kwargs
+                       ) -> Callable:
+        """
+        The custom_trigger decorator adds :class:`CustomTrigger`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a custom trigger in the
+        function.json which triggers function to execute when custom trigger
+        events are received by host.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of trigger parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+        pass
