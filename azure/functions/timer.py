@@ -1,6 +1,3 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-
 import json
 import typing
 
@@ -11,13 +8,22 @@ from . import meta
 
 class TimerRequest(azf_abc.TimerRequest):
 
-    def __init__(self, *, past_due: bool) -> None:
+    def __init__(self, *, past_due: bool, schedulestatus:dict , schedule:dict) -> None:
         self.__past_due = past_due
+        self.__schedulestatus = schedulestatus
+        self.__schedule = schedule
 
     @property
     def past_due(self):
         return self.__past_due
 
+    @property
+    def schedulestatus(self):
+        return self.__schedulestatus
+
+    @property
+    def schedule(self):
+        return self.__schedule
 
 class TimerRequestConverter(meta.InConverter,
                             binding='timerTrigger', trigger=True):
@@ -32,5 +38,8 @@ class TimerRequestConverter(meta.InConverter,
             raise NotImplementedError
 
         info = json.loads(data.value)
+
         return TimerRequest(
-            past_due=info.get('IsPastDue', False))
+            past_due=info.get('IsPastDue', False),
+            schedulestatus=info["ScheduleStatus"],
+            schedule=info["Schedule"])
