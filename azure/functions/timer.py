@@ -2,13 +2,13 @@ import json
 import typing
 
 from azure.functions import _abc as azf_abc
-
 from . import meta
 
 
 class TimerRequest(azf_abc.TimerRequest):
 
-    def __init__(self, *, past_due: bool, schedulestatus: dict, schedule: dict) -> None:
+    def __init__(self, *, past_due: bool, schedulestatus: dict,
+                 schedule: dict) -> None:
         self.__past_due = past_due
         self.__schedulestatus = schedulestatus
         self.__schedule = schedule
