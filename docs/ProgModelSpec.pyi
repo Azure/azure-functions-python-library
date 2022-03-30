@@ -16,6 +16,23 @@ class FunctionApp:
     Ref: https://aka.ms/azure-function-ref
     """
 
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 **kwargs):
+        """Constructor of :class:`FunctionApp` object.
+        To integrate your asgi or wsgi application into python function,
+        specify either of below variables as a keyword argument:
+        `asgi_app` - the actual asgi application to integrate into python
+        function.
+        `wsgi_app` - the actual wsgi application to integrate into python
+        function.
+
+        :param http_auth_level: defaults to AuthLevel.FUNCTION, takes str or
+        AuthLevel.
+        :param kwargs: Extra arguments passed to :func:`__init__`.
+        """
+        pass
+
     def function_name(self, name: str) -> Callable:
         """Set name of the :class:`Function` object.
 
@@ -42,8 +59,6 @@ class FunctionApp:
               route: Optional[str] = None,
               trigger_arg_name: str = 'req',
               binding_arg_name: str = '$return',
-              trigger_arg_data_type: Optional[Union[DataType, str]] = None,
-              output_arg_data_type: Optional[Union[DataType, str]] = None,
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None) -> Callable:
@@ -107,7 +122,7 @@ class FunctionApp:
         """
         pass
 
-    def on_service_bus_queue_change(
+    def service_bus_queue_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -116,7 +131,7 @@ class FunctionApp:
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
-        """The on_service_bus_queue_change decorator adds
+        """The service_bus_queue_trigger decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusQueueTrigger
@@ -173,7 +188,7 @@ class FunctionApp:
         """
         pass
 
-    def on_service_bus_topic_change(
+    def service_bus_topic_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -183,7 +198,7 @@ class FunctionApp:
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
-        """The on_service_bus_topic_change decorator adds
+        """The service_bus_topic_trigger decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusTopicTrigger
@@ -248,7 +263,7 @@ class FunctionApp:
                         queue_name: str,
                         connection: str,
                         data_type: Optional[DataType] = None) -> Callable:
-        """The on_queue_change decorator adds :class:`QueueTrigger` to the
+        """The queue_trigger decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining QueueTrigger
@@ -296,7 +311,7 @@ class FunctionApp:
         """
         pass
 
-    def on_event_hub_message(self,
+    def event_hub_message_trigger(self,
                              arg_name: str,
                              connection: str,
                              event_hub_name: str,
@@ -304,7 +319,7 @@ class FunctionApp:
                              cardinality: Optional[
                                  Union[Cardinality, str]] = None,
                              consumer_group: Optional[str] = None) -> Callable:
-        """The on_event_hub_message decorator adds :class:`EventHubTrigger`
+        """The event_hub_message_trigger decorator adds :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining EventHubTrigger
@@ -357,7 +372,7 @@ class FunctionApp:
         """
         pass
 
-    def on_cosmos_db_update(self,
+    def cosmos_db_trigger(self,
                             arg_name: str,
                             database_name: str,
                             collection_name: str,
@@ -382,7 +397,7 @@ class FunctionApp:
                             data_type: Optional[
                                 Union[DataType, str]] = None) -> \
             Callable:
-        """The on_cosmos_db_update decorator adds :class:`CosmosDBTrigger`
+        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBTrigger
@@ -534,13 +549,13 @@ class FunctionApp:
         """
         pass
 
-    def on_blob_change(self,
-                       arg_name: str,
-                       path: str,
-                       connection: str,
-                       data_type: Optional[DataType] = None) -> Callable:
+    def blob_change_trigger(self,
+                            arg_name: str,
+                            path: str,
+                            connection: str,
+                            data_type: Optional[DataType] = None) -> Callable:
         """
-        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobTrigger

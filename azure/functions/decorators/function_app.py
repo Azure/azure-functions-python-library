@@ -1,7 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
-import typing
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
@@ -192,29 +191,33 @@ class FunctionApp:
     """
 
     def __init__(self,
-                 wsgi_app=None,
-                 asgi_app=None,
-                 app_kwargs: typing.Dict = {},
-                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 **kwargs):
         """Constructor of :class:`FunctionApp` object.
+        To integrate your asgi or wsgi application into python function,
+        specify either of below variables as a keyword argument:
+        `asgi_app` - the actual asgi application to integrate into python
+        function.
+        `wsgi_app` - the actual wsgi application to integrate into python
+        function.
 
-        :param wsgi_app: wsgi app object, defaults to None.
-        :param asgi_app: asgi app object, defaults to None.
-        :param app_kwargs: dict of :meth:`route` param names and values for
-        custom configuration of wsgi/asgi app, default to {}.
-        :param auth_level: defaults to AuthLevel.FUNCTION, takes str or
-        AuthLevel
+        :param http_auth_level: defaults to AuthLevel.FUNCTION, takes str or
+        AuthLevel.
+        :param kwargs: Extra arguments passed to :func:`__init__`.
         """
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
-        self._auth_level = AuthLevel[auth_level] \
-            if isinstance(auth_level, str) else auth_level
+        self._auth_level = AuthLevel[http_auth_level] \
+            if isinstance(http_auth_level, str) else http_auth_level
+
+        wsgi_app = kwargs.get("wsgi_app", None)
+        asgi_app = kwargs.get("asgi_app", None)
 
         if wsgi_app is not None:
-            self._add_http_app(WsgiMiddleware(wsgi_app), app_kwargs)
+            self._add_http_app(WsgiMiddleware(wsgi_app))
 
         if asgi_app is not None:
-            self._add_http_app(AsgiMiddleware(asgi_app), app_kwargs)
+            self._add_http_app(AsgiMiddleware(asgi_app))
 
     @property
     def app_script_file(self) -> str:
@@ -296,28 +299,18 @@ class FunctionApp:
         return wrap
 
     def _add_http_app(self,
-                      http_middleware: Union[AsgiMiddleware, WsgiMiddleware],
-                      app_kwargs: typing.Dict) -> None:
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`AsgiMiddleware` or
         :class:`WsgiMiddleware` instance.
-        :param app_kwargs: dict of :meth:`route` param names and values for
-        custom configuration of wsgi/asgi app.
 
         :return: None
         """
-        methods = app_kwargs.get('methods', (method for method in HttpMethod))
-        trigger_arg_data_type = app_kwargs.get('trigger_arg_data_type',
-                                               None)
-        output_arg_data_type = app_kwargs.get('output_arg_data_type',
-                                              None)
-        auth_level = app_kwargs.get('auth_level', None)
 
-        @self.route(methods=methods,
-                    auth_level=auth_level,
-                    trigger_arg_data_type=trigger_arg_data_type,
-                    output_arg_data_type=output_arg_data_type,
+        @self.route(methods=(method for method in HttpMethod),
+                    auth_level=self.auth_level,
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return http_middleware.handle(req, context)
@@ -326,8 +319,6 @@ class FunctionApp:
               route: Optional[str] = None,
               trigger_arg_name: str = 'req',
               binding_arg_name: str = '$return',
-              trigger_arg_data_type: Optional[Union[DataType, str]] = None,
-              output_arg_data_type: Optional[Union[DataType, str]] = None,
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None) -> Callable:
@@ -348,10 +339,6 @@ class FunctionApp:
         defaults to 'req'.
         :param binding_arg_name: Argument name for :class:`HttpResponse`,
         defaults to '$return'.
-        :param trigger_arg_data_type: Defines how Functions runtime should
-        treat the trigger_arg_name value.
-        :param output_arg_data_type: Defines how Functions runtime should
-        treat the binding_arg_name value.
         :param methods: A tuple of the HTTP methods to which the function
         responds.
         :param auth_level: Determines what keys, if any, need to be present
@@ -368,18 +355,11 @@ class FunctionApp:
 
                 fb.add_trigger(trigger=HttpTrigger(
                     name=trigger_arg_name,
-                    data_type=parse_singular_param_to_enum(
-                        trigger_arg_data_type,
-                        DataType),
                     methods=parse_iterable_param_to_enums(methods, HttpMethod),
                     auth_level=parse_singular_param_to_enum(auth_level,
                                                             AuthLevel),
                     route=route))
-                fb.add_binding(binding=HttpOutput(
-                    name=binding_arg_name,
-                    data_type=parse_singular_param_to_enum(
-                        output_arg_data_type,
-                        DataType)))
+                fb.add_binding(binding=HttpOutput(name=binding_arg_name))
                 return fb
 
             return decorator()
@@ -433,7 +413,7 @@ class FunctionApp:
 
         return wrap
 
-    def on_service_bus_queue_change(
+    def service_bus_queue_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -442,7 +422,7 @@ class FunctionApp:
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
-        """The on_service_bus_queue_change decorator adds
+        """The service_bus_queue_trigger decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusQueueTrigger
@@ -537,7 +517,7 @@ class FunctionApp:
 
         return wrap
 
-    def on_service_bus_topic_change(
+    def service_bus_topic_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -547,7 +527,7 @@ class FunctionApp:
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
-        """The on_service_bus_topic_change decorator adds
+        """The service_bus_topic_trigger decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusTopicTrigger
@@ -648,12 +628,12 @@ class FunctionApp:
 
         return wrap
 
-    def on_queue_change(self,
-                        arg_name: str,
-                        queue_name: str,
-                        connection: str,
-                        data_type: Optional[DataType] = None) -> Callable:
-        """The on_queue_change decorator adds :class:`QueueTrigger` to the
+    def queue_trigger(self,
+                      arg_name: str,
+                      queue_name: str,
+                      connection: str,
+                      data_type: Optional[DataType] = None) -> Callable:
+        """The queue_trigger decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining QueueTrigger
@@ -731,15 +711,18 @@ class FunctionApp:
 
         return wrap
 
-    def on_event_hub_message(self,
-                             arg_name: str,
-                             connection: str,
-                             event_hub_name: str,
-                             data_type: Optional[Union[DataType, str]] = None,
-                             cardinality: Optional[
-                                 Union[Cardinality, str]] = None,
-                             consumer_group: Optional[str] = None) -> Callable:
-        """The on_event_hub_message decorator adds :class:`EventHubTrigger`
+    def event_hub_message_trigger(self,
+                                  arg_name: str,
+                                  connection: str,
+                                  event_hub_name: str,
+                                  data_type: Optional[
+                                      Union[DataType, str]] = None,
+                                  cardinality: Optional[
+                                      Union[Cardinality, str]] = None,
+                                  consumer_group: Optional[
+                                      str] = None) -> Callable:
+        """The event_hub_message_trigger decorator adds
+        :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining EventHubTrigger
@@ -825,32 +808,32 @@ class FunctionApp:
 
         return wrap
 
-    def on_cosmos_db_update(self,
-                            arg_name: str,
-                            database_name: str,
-                            collection_name: str,
-                            connection_string_setting: str,
-                            lease_collection_name: Optional[str] = None,
-                            lease_connection_string_setting: Optional[
-                                str] = None,
-                            lease_database_name: Optional[str] = None,
-                            create_lease_collection_if_not_exists: Optional[
-                                bool] = None,
-                            leases_collection_throughput: Optional[int] = None,
-                            lease_collection_prefix: Optional[str] = None,
-                            checkpoint_interval: Optional[int] = None,
-                            checkpoint_document_count: Optional[int] = None,
-                            feed_poll_delay: Optional[int] = None,
-                            lease_renew_interval: Optional[int] = None,
-                            lease_acquire_interval: Optional[int] = None,
-                            lease_expiration_interval: Optional[int] = None,
-                            max_items_per_invocation: Optional[int] = None,
-                            start_from_beginning: Optional[bool] = None,
-                            preferred_locations: Optional[str] = None,
-                            data_type: Optional[
-                                Union[DataType, str]] = None) -> \
+    def cosmos_db_trigger(self,
+                          arg_name: str,
+                          database_name: str,
+                          collection_name: str,
+                          connection_string_setting: str,
+                          lease_collection_name: Optional[str] = None,
+                          lease_connection_string_setting: Optional[
+                              str] = None,
+                          lease_database_name: Optional[str] = None,
+                          create_lease_collection_if_not_exists: Optional[
+                              bool] = None,
+                          leases_collection_throughput: Optional[int] = None,
+                          lease_collection_prefix: Optional[str] = None,
+                          checkpoint_interval: Optional[int] = None,
+                          checkpoint_document_count: Optional[int] = None,
+                          feed_poll_delay: Optional[int] = None,
+                          lease_renew_interval: Optional[int] = None,
+                          lease_acquire_interval: Optional[int] = None,
+                          lease_expiration_interval: Optional[int] = None,
+                          max_items_per_invocation: Optional[int] = None,
+                          start_from_beginning: Optional[bool] = None,
+                          preferred_locations: Optional[str] = None,
+                          data_type: Optional[
+                              Union[DataType, str]] = None) -> \
             Callable:
-        """The on_cosmos_db_update decorator adds :class:`CosmosDBTrigger`
+        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBTrigger
@@ -1074,13 +1057,13 @@ class FunctionApp:
 
         return wrap
 
-    def on_blob_change(self,
-                       arg_name: str,
-                       path: str,
-                       connection: str,
-                       data_type: Optional[DataType] = None) -> Callable:
+    def blob_trigger(self,
+                     arg_name: str,
+                     path: str,
+                     connection: str,
+                     data_type: Optional[DataType] = None) -> Callable:
         """
-        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobTrigger

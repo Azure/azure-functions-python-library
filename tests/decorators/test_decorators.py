@@ -141,8 +141,6 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
-                   trigger_arg_data_type=DataType.STRING,
-                   output_arg_data_type=DataType.STRING,
                    methods=(HttpMethod.GET, HttpMethod.PATCH),
                    auth_level=AuthLevel.FUNCTION, route='dummy_route')
         def dummy():
@@ -155,7 +153,6 @@ class TestFunctionsApp(unittest.TestCase):
                 {
                     "direction": BindingDirection.IN,
                     "type": HTTP_TRIGGER,
-                    "dataType": DataType.STRING,
                     "name": "trigger_name",
                     "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy_route",
@@ -165,7 +162,6 @@ class TestFunctionsApp(unittest.TestCase):
                 },
                 {
                     "direction": BindingDirection.OUT,
-                    "dataType": DataType.STRING,
                     "type": HTTP_OUTPUT,
                     "name": "out",
                 }
@@ -175,8 +171,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_queue_default_args(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn")
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
         @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
                          connection="dummy_out_conn")
         def dummy():
@@ -204,9 +200,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_queue_full_args(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn",
-                             data_type=DataType.STRING)
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn",
+                           data_type=DataType.STRING)
         @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
                          connection="dummy_out_conn",
                          data_type=DataType.STRING)
@@ -237,9 +233,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_queue_default_args(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue")
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue')
@@ -270,13 +266,13 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_queue_full_args(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue",
-                                         data_type=DataType.STREAM,
-                                         access_rights=AccessRights.MANAGE,
-                                         is_sessions_enabled=True,
-                                         cardinality=Cardinality.MANY)
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue",
+                                       data_type=DataType.STREAM,
+                                       access_rights=AccessRights.MANAGE,
+                                       is_sessions_enabled=True,
+                                       cardinality=Cardinality.MANY)
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue',
@@ -315,10 +311,10 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_topic_default_args(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub')
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub')
@@ -351,14 +347,14 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_topic_full_args(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub',
-                                         data_type=DataType.STRING,
-                                         access_rights=AccessRights.LISTEN,
-                                         is_sessions_enabled=False,
-                                         cardinality=Cardinality.MANY)
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub',
+                                       data_type=DataType.STRING,
+                                       access_rights=AccessRights.LISTEN,
+                                       is_sessions_enabled=False,
+                                       cardinality=Cardinality.MANY)
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub',
@@ -399,9 +395,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_hub_default_args(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub")
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
         @app.write_event_hub_message(arg_name="res",
                                      event_hub_name="dummy_event_hub",
                                      connection="dummy_connection")
@@ -432,12 +428,12 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_hub_full_args(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub",
-                                  cardinality=Cardinality.ONE,
-                                  consumer_group="dummy_group",
-                                  data_type=DataType.UNDEFINED)
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub",
+                                       cardinality=Cardinality.ONE,
+                                       consumer_group="dummy_group",
+                                       data_type=DataType.UNDEFINED)
         @app.write_event_hub_message(arg_name="res",
                                      event_hub_name="dummy_event_hub",
                                      connection="dummy_connection",
@@ -474,7 +470,7 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_full_args(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(
+        @app.cosmos_db_trigger(
             arg_name="trigger",
             database_name="dummy_db",
             collection_name="dummy_collection",
@@ -586,9 +582,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_default_args(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(arg_name="trigger", database_name="dummy_db",
-                                 collection_name="dummy_collection",
-                                 connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger", database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
         @app.read_cosmos_db_documents(arg_name="in",
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
@@ -753,7 +749,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  })
 
     def test_set_auth_level_for_http_functions(self):
-        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
 
         @app.route(auth_level=AuthLevel.ADMIN)
         def specify_auth_level():
@@ -815,8 +811,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_default_args(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          connection="dummy_conn")
         @app.read_blob(arg_name="file", path="dummy_path",
                        connection="dummy_conn")
         @app.write_blob(arg_name="out", path="dummy_out_path",
@@ -853,9 +849,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_trigger(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         def dummy():
             pass
 
@@ -875,9 +871,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_input_binding(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         @app.read_blob(arg_name="file", path="dummy_in_path",
                        connection="dummy_in_conn",
                        data_type=DataType.STRING)
@@ -900,9 +896,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_output_binding(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         @app.write_blob(arg_name="out", path="dummy_out_path",
                         connection="dummy_out_conn",
                         data_type=DataType.STRING)
