@@ -39,3 +39,4 @@ omit =
     */.venv/*
     */.env*/*
     */.vscode/*
+    azure/functions/durable/*
