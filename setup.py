@@ -47,6 +47,12 @@ setup(
     package_data={
         'azure.functions': ['py.typed']
     },
+    install_requires=[
+        'aiohttp>=3.6.2',
+        'requests==2.*',
+        'python-dateutil>=2.8.0',
+        'furl>=2.1.0'
+    ],
     extras_require=EXTRA_REQUIRES,
     include_package_data=True,
     test_suite='tests'
