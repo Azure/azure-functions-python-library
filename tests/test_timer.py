@@ -9,7 +9,7 @@ from azure.functions.meta import Datum
 
 
 class TestTimer(unittest.TestCase):
-    def test_TimerRequestConverter_decode(self):
+    def test_timer_decode(self):
         # given
         data = '''{"Schedule":{"AdjustForDST":true},
                    "ScheduleStatus":{
@@ -21,11 +21,11 @@ class TestTimer(unittest.TestCase):
         data_dict = json.loads(data)
 
         # when
-        timerRequest: timer.TimerRequest = \
+        timer_request: timer.TimerRequest = \
             timer.TimerRequestConverter.decode(datum, trigger_metadata={})
 
         # then
-        self.assertEqual(timerRequest.schedule, data_dict["Schedule"])
-        self.assertEqual(timerRequest.schedulestatus,
+        self.assertEqual(timer_request.schedule, data_dict["Schedule"])
+        self.assertEqual(timer_request.schedule_status,
                          data_dict["ScheduleStatus"])
-        self.assertEqual(timerRequest.past_due, data_dict["IsPastDue"])
+        self.assertEqual(timer_request.past_due, data_dict["IsPastDue"])
