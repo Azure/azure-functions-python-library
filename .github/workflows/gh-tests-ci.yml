@@ -14,10 +14,10 @@ jobs:
         python_version: [3.6, 3.7, 3.8, 3.9, "3.10"]
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python_version }}
-      uses: actions/setup-python@v2
       with:
         submodules: true
+    - name: Set up Python ${{ matrix.python_version }}
+      uses: actions/setup-python@v2
         python-version: ${{ matrix.python_version }}
     - name: Install dependencies
       run: |
