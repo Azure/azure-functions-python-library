@@ -1,0 +1,4 @@
+[submodule "azure/functions/durable"]
+	path = azure/functions/durable
+	url = https://github.com/Azure/azure-functions-durable-python.git
+	branch = submodule
