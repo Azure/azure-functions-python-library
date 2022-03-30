@@ -29,3 +29,38 @@ class TestTimer(unittest.TestCase):
         self.assertEqual(timer_request.schedule_status,
                          data_dict["ScheduleStatus"])
         self.assertEqual(timer_request.past_due, data_dict["IsPastDue"])
+
+    def test_timer_initialize_without_args(self):
+        # given
+        past_due = False
+        schedule_status = {}
+        schedule = {}
+
+        # when
+        test_timer = timer.TimerRequest()
+
+        # then
+        self.assertEqual(past_due, test_timer.past_due)
+        self.assertEqual(schedule_status, test_timer.schedule_status)
+        self.assertEqual(schedule, test_timer.schedule)
+
+    def test_timer_no_implementation_exception(self):
+        # given
+        datum: Datum = Datum(value="test", type='string')
+        is_exception_raised = False
+
+        # when
+        try:
+            timer.TimerRequestConverter.decode(datum, trigger_metadata={})
+        except NotImplementedError:
+            is_exception_raised = True
+
+        # then
+        self.assertTrue(is_exception_raised)
+
+    def test_timer_input_type(self):
+        check_input_type = (
+            timer.TimerRequestConverter.check_input_type_annotation
+        )
+        self.assertTrue(check_input_type(timer.TimerRequest))
+        self.assertFalse(check_input_type(str))
