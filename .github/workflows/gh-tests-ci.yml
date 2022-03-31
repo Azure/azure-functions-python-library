@@ -15,7 +15,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        submodules: true
+        submodules: false
+    - name: Check out submodule
+      run: |
+        git config --global user.email "azfuncgh@github.com"
+        git config --global user.name "Azure Functions"
+        git submodule update --init --recursive
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v2
       with:
