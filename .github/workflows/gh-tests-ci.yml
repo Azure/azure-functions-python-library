@@ -20,7 +20,7 @@ jobs:
       run: |
         git config --global user.email "azfuncgh@github.com"
         git config --global user.name "Azure Functions"
-        git submodule update --init --recursive
+        git submodule update --init --recursive --remote
     - name: Set up Python ${{ matrix.python_version }}
       uses: actions/setup-python@v2
       with:
