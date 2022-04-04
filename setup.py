@@ -47,6 +47,7 @@ setup(
     package_data={
         'azure.functions': ['py.typed']
     },
+    install_requires=['azure-functions-durable'],
     extras_require=EXTRA_REQUIRES,
     include_package_data=True,
     test_suite='tests'
