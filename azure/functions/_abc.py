@@ -193,7 +193,7 @@ class HttpResponse(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def headers(self) -> typing.MutableMapping[str, str]:
+    def headers(self):
         pass
 
     @abc.abstractmethod

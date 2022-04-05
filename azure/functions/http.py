@@ -6,8 +6,12 @@ import typing
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _http as azf_http
-
 from . import meta
+
+try:
+    from http.cookies import SimpleCookie
+except ImportError:
+    from Cookie import SimpleCookie  # type: ignore
 
 
 class HttpRequest(azf_http.HttpRequest):
@@ -79,7 +83,8 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
         if isinstance(obj, azf_abc.HttpResponse):
             status = obj.status_code
-            headers = dict(obj.headers)
+            headers = obj.headers
+
             if 'content-type' not in headers:
                 if obj.mimetype.startswith('text/'):
                     ct = f'{obj.mimetype}; charset={obj.charset}'
@@ -93,6 +98,12 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
             else:
                 datum_body = meta.Datum(type='bytes', value=b'')
 
+            cookies = None
+            if "Set-Cookie" in headers:
+                cookies = [SimpleCookie(cookie) for cookie in
+                           headers.get_all('Set-Cookie')]
+                headers.pop("Set-Cookie")
+
             return meta.Datum(
                 type='http',
                 value=dict(
@@ -101,6 +112,7 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
                         n: meta.Datum(type='string', value=h)
                         for n, h in headers.items()
                     },
+                    cookies=cookies,
                     body=datum_body,
                 )
             )
