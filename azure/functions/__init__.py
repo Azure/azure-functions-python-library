@@ -6,7 +6,8 @@ from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest, HttpResponse
-from .decorators import (FunctionApp, Function, DataType, AuthLevel,
+from .decorators import (FunctionApp, Function, Scaffold, BluePrint,
+                         DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -70,6 +71,9 @@ __all__ = (
     # PyStein implementation
     'FunctionApp',
     'Function',
+    'Scaffold',
+    'DecoratorApi',
+    'BluePrint',
     'DataType',
     'AuthLevel',
     'Cardinality',

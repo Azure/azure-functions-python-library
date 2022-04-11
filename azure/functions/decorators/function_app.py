@@ -2,6 +2,7 @@
 #  Licensed under the MIT License.
 import json
 import typing
+from abc import ABC
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
@@ -162,7 +163,8 @@ class FunctionBuilder(object):
         self._function.add_binding(binding=binding)
         return self
 
-    def _validate_function(self) -> None:
+    def _validate_function(self,
+                           auth_level: Optional[AuthLevel] = None) -> None:
         function_name = self._function.get_function_name()
         trigger = self._function.get_trigger()
         if trigger is None:
@@ -176,45 +178,22 @@ class FunctionBuilder(object):
                 f"Function {function_name} trigger {trigger} not present"
                 f" in bindings {bindings}")
 
-        if isinstance(trigger, HttpTrigger) and trigger.route is None:
-            trigger.route = self._function.get_function_name()
+        if isinstance(trigger, HttpTrigger):
+            if trigger.route is None:
+                trigger.route = self._function.get_function_name()
+            if trigger.auth_level is None and auth_level is not None:
+                trigger.auth_level = parse_singular_param_to_enum(auth_level,
+                                                                  AuthLevel)
 
-    def build(self) -> Function:
-        self._validate_function()
+    def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
+        self._validate_function(auth_level)
         return self._function
 
 
-class FunctionApp:
-    """FunctionApp object used by worker function indexing model captures
-    user defined functions and metadata.
-
-    Ref: https://aka.ms/azure-function-ref
-    """
-
-    def __init__(self,
-                 wsgi_app=None,
-                 asgi_app=None,
-                 app_kwargs: typing.Dict = {},
-                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
-        """Constructor of :class:`FunctionApp` object.
-
-        :param wsgi_app: wsgi app object, defaults to None.
-        :param asgi_app: asgi app object, defaults to None.
-        :param app_kwargs: dict of :meth:`route` param names and values for
-        custom configuration of wsgi/asgi app, default to {}.
-        :param auth_level: defaults to AuthLevel.FUNCTION, takes str or
-        AuthLevel
-        """
+class Scaffold(ABC):
+    def __init__(self):
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
-        self._auth_level = AuthLevel[auth_level] \
-            if isinstance(auth_level, str) else auth_level
-
-        if wsgi_app is not None:
-            self._add_http_app(WsgiMiddleware(wsgi_app), app_kwargs)
-
-        if asgi_app is not None:
-            self._add_http_app(AsgiMiddleware(asgi_app), app_kwargs)
 
     @property
     def app_script_file(self) -> str:
@@ -226,24 +205,6 @@ class FunctionApp:
         :return: Script file name.
         """
         return self._app_script_file
-
-    @property
-    def auth_level(self) -> AuthLevel:
-        """Authorization level of the function app. Will be applied to the http
-         trigger functions which does not have authorization level specified.
-
-        :return: Authorization level of the function app.
-        """
-
-        return self._auth_level
-
-    def get_functions(self) -> List[Function]:
-        """Get the function objects in the function app.
-
-        :return: List of functions in the function app.
-        """
-        return [function_builder.build() for function_builder
-                in self._function_builders]
 
     def _validate_type(self, func: Union[Callable, FunctionBuilder]) \
             -> FunctionBuilder:
@@ -278,6 +239,24 @@ class FunctionApp:
 
         return decorator
 
+
+class DecoratorApi(Scaffold, ABC):
+    def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+        super().__init__()
+
+        self._auth_level = AuthLevel[auth_level] \
+            if isinstance(auth_level, str) else auth_level
+
+    @property
+    def auth_level(self) -> AuthLevel:
+        """Authorization level of the function app. Will be applied to the http
+         trigger functions which does not have authorization level specified.
+
+        :return: Authorization level of the function app.
+        """
+
+        return self._auth_level
+
     def function_name(self, name: str) -> Callable:
         """Set name of the :class:`Function` object.
 
@@ -294,33 +273,6 @@ class FunctionApp:
             return decorator()
 
         return wrap
-
-    def _add_http_app(self,
-                      http_middleware: Union[AsgiMiddleware, WsgiMiddleware],
-                      app_kwargs: typing.Dict) -> None:
-        """Add a Wsgi or Asgi app integrated http function.
-
-        :param http_middleware: :class:`AsgiMiddleware` or
-        :class:`WsgiMiddleware` instance.
-        :param app_kwargs: dict of :meth:`route` param names and values for
-        custom configuration of wsgi/asgi app.
-
-        :return: None
-        """
-        methods = app_kwargs.get('methods', (method for method in HttpMethod))
-        trigger_arg_data_type = app_kwargs.get('trigger_arg_data_type',
-                                               None)
-        output_arg_data_type = app_kwargs.get('output_arg_data_type',
-                                              None)
-        auth_level = app_kwargs.get('auth_level', None)
-
-        @self.route(methods=methods,
-                    auth_level=auth_level,
-                    trigger_arg_data_type=trigger_arg_data_type,
-                    output_arg_data_type=output_arg_data_type,
-                    route="/{*route}")
-        def http_app_func(req: HttpRequest, context: Context):
-            return http_middleware.handle(req, context)
 
     def route(self,
               route: Optional[str] = None,
@@ -1122,7 +1074,6 @@ class FunctionApp:
                   path: str,
                   connection: str,
                   data_type: Optional[DataType] = None) -> Callable:
-
         """
         The read_blob decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -1166,7 +1117,6 @@ class FunctionApp:
                    path: str,
                    connection: str,
                    data_type: Optional[DataType] = None) -> Callable:
-
         """
         The write_blob decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -1204,3 +1154,71 @@ class FunctionApp:
             return decorator()
 
         return wrap
+
+
+class FunctionApp(DecoratorApi):
+    """FunctionApp object used by worker function indexing model captures
+    user defined functions and metadata.
+
+    Ref: https://aka.ms/azure-function-ref
+    """
+
+    def __init__(self, wsgi_app=None, asgi_app=None,
+                 app_kwargs: typing.Dict = {},
+                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+        """Constructor of :class:`FunctionApp` object.
+
+        :param wsgi_app: wsgi app object, defaults to None.
+        :param asgi_app: asgi app object, defaults to None.
+        :param app_kwargs: dict of :meth:`route` param names and values for
+        custom configuration of wsgi/asgi app, default to {}.
+        """
+        super().__init__(auth_level=auth_level)
+
+        if wsgi_app is not None:
+            self._add_http_app(WsgiMiddleware(wsgi_app), app_kwargs)
+
+        if asgi_app is not None:
+            self._add_http_app(AsgiMiddleware(asgi_app), app_kwargs)
+
+    def _add_http_app(self,
+                      http_middleware: Union[AsgiMiddleware, WsgiMiddleware],
+                      app_kwargs: typing.Dict) -> None:
+        """Add a Wsgi or Asgi app integrated http function.
+
+        :param http_middleware: :class:`AsgiMiddleware` or
+        :class:`WsgiMiddleware` instance.
+        :param app_kwargs: dict of :meth:`route` param names and values for
+        custom configuration of wsgi/asgi app.
+
+        :return: None
+        """
+        methods = app_kwargs.get('methods', (method for method in HttpMethod))
+        trigger_arg_data_type = app_kwargs.get('trigger_arg_data_type',
+                                               None)
+        output_arg_data_type = app_kwargs.get('output_arg_data_type',
+                                              None)
+        auth_level = app_kwargs.get('auth_level', None)
+
+        @self.route(methods=methods,
+                    auth_level=auth_level,
+                    trigger_arg_data_type=trigger_arg_data_type,
+                    output_arg_data_type=output_arg_data_type,
+                    route="/{*route}")
+        def http_app_func(req: HttpRequest, context: Context):
+            return http_middleware.handle(req, context)
+
+    def get_functions(self) -> List[Function]:
+        """Get the function objects in the function app.
+
+        :return: List of functions in the function app.
+        """
+        return [function_builder.build(self.auth_level) for function_builder
+                in self._function_builders]
+
+    def register_functions(self, functions: Scaffold):
+        self._function_builders.extend(functions._function_builders)
+
+
+class BluePrint(DecoratorApi):
+    pass
