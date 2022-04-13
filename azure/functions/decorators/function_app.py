@@ -241,7 +241,7 @@ class Scaffold(ABC):
 
 
 class DecoratorApi(Scaffold, ABC):
-    def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+    def __init__(self, auth_level: Optional[Union[AuthLevel, str]] = None):
         super().__init__()
 
         self._auth_level = AuthLevel[auth_level] \
@@ -1217,6 +1217,8 @@ class FunctionApp(DecoratorApi):
                 in self._function_builders]
 
     def register_functions(self, functions: Scaffold):
+        if isinstance(functions, FunctionApp):
+            raise TypeError('functions can not be type of FunctionApp!')
         self._function_builders.extend(functions._function_builders)
 
 

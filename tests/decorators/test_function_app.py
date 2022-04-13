@@ -8,9 +8,10 @@ from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionApp, Function
+    FunctionApp, Function, Scaffold, BluePrint
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from tests.decorators.test_core import DummyTrigger
 from tests.decorators.testutils import assert_json
 
 
@@ -188,6 +189,50 @@ class TestFunctionBuilder(unittest.TestCase):
             ]
         })
 
+    def test_build_function_with_function_app_auth_level(self):
+        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
+                              data_type=DataType.UNDEFINED)
+        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        func = self.fb.build(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
+
+
+class TestScaffold(unittest.TestCase):
+    def setUp(self):
+        class DummyApp(Scaffold):
+            def dummy_trigger(self, name: str):
+                @self._configure_function_builder
+                def wrap(fb):
+                    def decorator():
+                        fb.add_trigger(trigger=DummyTrigger(name=name))
+                        return fb
+
+                    return decorator()
+
+                return wrap
+
+        self.dummy = DummyApp()
+
+    def test_has_app_script_file(self):
+        self.assertTrue(self.dummy.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_has_function_builders(self):
+        self.assertEquals(self.dummy._function_builders, [])
+
+    def test_dummy_app_trigger(self):
+        @self.dummy.dummy_trigger(name="dummy")
+        def dummy():
+            return "dummy"
+
+        self.assertEquals(len(self.dummy._function_builders), 1)
+        func = self.dummy._function_builders[0].build()
+        self.assertEquals(func.get_function_name(), "dummy")
+        self.assertEquals(func.get_function_json(),
+                          '{"scriptFile": "function_app.py", "bindings": [{'
+                          '"direction": "IN", "dataType": "UNDEFINED", '
+                          '"type": "Dummy", "name": "dummy"}]}')
+
 
 class TestFunctionApp(unittest.TestCase):
     def setUp(self):
@@ -305,3 +350,52 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
+
+    def test_register_function_app_error(self):
+        with self.assertRaises(TypeError) as err:
+            FunctionApp().register_functions(FunctionApp())
+
+        self.assertEqual(err.exception.args[0],
+                         "functions can not be type of FunctionApp!")
+
+    def test_register_blueprint(self):
+        bp = BluePrint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return "hello"
+
+        app = FunctionApp()
+        app.register_functions(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_register_blueprint_auth_level(self):
+        bp = BluePrint(auth_level=AuthLevel.ANONYMOUS)
+
+        @bp.route("name")
+        def hello(name: str):
+            return "hello"
+
+        app = FunctionApp()
+        app.register_functions(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
+                         AuthLevel.ANONYMOUS)
+
+    def test_register_app_auth_level(self):
+        bp = BluePrint()
+
+        @bp.route("name")
+        def hello(name: str):
+            return "hello"
+
+        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        app.register_functions(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
+                         AuthLevel.ANONYMOUS)
