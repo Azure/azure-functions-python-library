@@ -218,20 +218,20 @@ class TestScaffold(unittest.TestCase):
         self.assertTrue(self.dummy.app_script_file, SCRIPT_FILE_NAME)
 
     def test_has_function_builders(self):
-        self.assertEquals(self.dummy._function_builders, [])
+        self.assertEqual(self.dummy._function_builders, [])
 
     def test_dummy_app_trigger(self):
         @self.dummy.dummy_trigger(name="dummy")
         def dummy():
             return "dummy"
 
-        self.assertEquals(len(self.dummy._function_builders), 1)
+        self.assertEqual(len(self.dummy._function_builders), 1)
         func = self.dummy._function_builders[0].build()
-        self.assertEquals(func.get_function_name(), "dummy")
-        self.assertEquals(func.get_function_json(),
-                          '{"scriptFile": "function_app.py", "bindings": [{'
-                          '"direction": "IN", "dataType": "UNDEFINED", '
-                          '"type": "Dummy", "name": "dummy"}]}')
+        self.assertEqual(func.get_function_name(), "dummy")
+        self.assertEqual(func.get_function_json(),
+                         '{"scriptFile": "function_app.py", "bindings": [{'
+                         '"direction": "IN", "dataType": "UNDEFINED", '
+                         '"type": "Dummy", "name": "dummy"}]}')
 
 
 class TestFunctionApp(unittest.TestCase):

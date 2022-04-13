@@ -248,7 +248,7 @@ class DecoratorApi(Scaffold, ABC):
             if isinstance(auth_level, str) else auth_level
 
     @property
-    def auth_level(self) -> AuthLevel:
+    def auth_level(self):
         """Authorization level of the function app. Will be applied to the http
          trigger functions which does not have authorization level specified.
 
