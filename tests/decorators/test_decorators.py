@@ -211,9 +211,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": QUEUE_TRIGGER,
             "name": "req",
@@ -221,7 +222,7 @@ class TestFunctionsApp(unittest.TestCase):
             "connection": "dummy_conn"
         })
 
-    def test_queue_trigger_output_binding(self):
+    def test_queue_output_binding(self):
         app = self.func_app
 
         @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
@@ -233,9 +234,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": QUEUE,
             "name": "out",
@@ -320,9 +322,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": SERVICE_BUS_TRIGGER,
             "name": "req",
@@ -344,9 +347,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": SERVICE_BUS,
             "name": "res",
@@ -435,7 +439,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
-    def test_service_bus_trigger(self):
+    def test_service_bus_topic_trigger(self):
         app = self.func_app
 
         @app.on_service_bus_topic_change(arg_name='req',
@@ -447,9 +451,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "type": SERVICE_BUS_TRIGGER,
             "direction": BindingDirection.IN,
             "name": "req",
@@ -458,7 +463,7 @@ class TestFunctionsApp(unittest.TestCase):
             "subscriptionName": "dummy_sub"
         })
 
-    def test_service_bus_output_binding(self):
+    def test_service_bus_topic_output_binding(self):
         app = self.func_app
 
         @app.on_service_bus_topic_change(arg_name='req',
@@ -473,9 +478,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "type": SERVICE_BUS,
             "direction": BindingDirection.OUT,
             "name": "res",
@@ -576,9 +582,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": EVENT_HUB_TRIGGER,
             "name": "req",
@@ -600,9 +607,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": EVENT_HUB,
             "name": "res",
@@ -826,9 +834,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": COSMOS_DB_TRIGGER,
             "name": "trigger",
@@ -853,9 +862,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": COSMOS_DB,
             "name": "in",
@@ -881,9 +891,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": COSMOS_DB,
             "name": "out",
@@ -1121,9 +1132,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
             "type": BLOB_TRIGGER,
@@ -1146,9 +1158,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
             "type": BLOB,
@@ -1171,9 +1184,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_func(app)
 
-        trigger = func.get_bindings()[0]
+        output = func.get_bindings()[0]
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "dataType": DataType.STRING,
             "type": BLOB,
