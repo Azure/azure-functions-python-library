@@ -201,6 +201,48 @@ class TestFunctionsApp(unittest.TestCase):
                                          "connection": "dummy_conn"
                                      }]})
 
+    def test_queue_trigger(self):
+        app = self.func_app
+
+        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
+                             connection="dummy_conn")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+    def test_queue_trigger_output_binding(self):
+        app = self.func_app
+
+        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
+                             connection="dummy_conn")
+        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
+                         connection="dummy_out_conn")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": QUEUE,
+            "name": "out",
+            "queueName": "dummy_out_queue",
+            "connection": "dummy_out_conn"
+        })
+
     def test_queue_full_args(self):
         app = self.func_app
 
@@ -266,6 +308,51 @@ class TestFunctionsApp(unittest.TestCase):
                                      }
                                  ]
                                  })
+
+    def test_service_bus_queue_trigger(self):
+        app = self.func_app
+
+        @app.on_service_bus_queue_change(arg_name="req",
+                                         connection="dummy_conn",
+                                         queue_name="dummy_queue")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": SERVICE_BUS_TRIGGER,
+            "name": "req",
+            "connection": "dummy_conn",
+            "queueName": "dummy_queue"
+        })
+
+    def test_service_bus_queue_output_binding(self):
+        app = self.func_app
+
+        @app.on_service_bus_queue_change(arg_name="req",
+                                         connection="dummy_conn",
+                                         queue_name="dummy_queue")
+        @app.write_service_bus_queue(arg_name='res',
+                                     connection='dummy_out_conn',
+                                     queue_name='dummy_out_queue')
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": SERVICE_BUS,
+            "name": "res",
+            "connection": "dummy_out_conn",
+            "queueName": "dummy_out_queue"
+        })
 
     def test_service_bus_queue_full_args(self):
         app = self.func_app
@@ -348,6 +435,55 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
+    def test_service_bus_trigger(self):
+        app = self.func_app
+
+        @app.on_service_bus_topic_change(arg_name='req',
+                                         connection='dummy_conn',
+                                         topic_name='dummy_topic',
+                                         subscription_name='dummy_sub')
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "type": SERVICE_BUS_TRIGGER,
+            "direction": BindingDirection.IN,
+            "name": "req",
+            "connection": "dummy_conn",
+            "topicName": "dummy_topic",
+            "subscriptionName": "dummy_sub"
+        })
+
+    def test_service_bus_output_binding(self):
+        app = self.func_app
+
+        @app.on_service_bus_topic_change(arg_name='req',
+                                         connection='dummy_conn',
+                                         topic_name='dummy_topic',
+                                         subscription_name='dummy_sub')
+        @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
+                                     topic_name='dummy_topic',
+                                     subscription_name='dummy_sub')
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "type": SERVICE_BUS,
+            "direction": BindingDirection.OUT,
+            "name": "res",
+            "connection": "dummy_conn",
+            "topicName": "dummy_topic",
+            "subscriptionName": "dummy_sub"
+        })
+
     def test_service_bus_topic_full_args(self):
         app = self.func_app
 
@@ -428,6 +564,51 @@ class TestFunctionsApp(unittest.TestCase):
                                      }
                                  ]
                                  })
+
+    def test_event_hub_trigger(self):
+        app = self.func_app
+
+        @app.on_event_hub_message(arg_name="req",
+                                  connection="dummy_connection",
+                                  event_hub_name="dummy_event_hub")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": EVENT_HUB_TRIGGER,
+            "name": "req",
+            "connection": "dummy_connection",
+            "eventHubName": "dummy_event_hub"
+        })
+
+    def test_event_hub_output_binding(self):
+        app = self.func_app
+
+        @app.on_event_hub_message(arg_name="req",
+                                  connection="dummy_connection",
+                                  event_hub_name="dummy_event_hub")
+        @app.write_event_hub_message(arg_name="res",
+                                     event_hub_name="dummy_event_hub",
+                                     connection="dummy_connection")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": EVENT_HUB,
+            "name": "res",
+            "connection": "dummy_connection",
+            "eventHubName": "dummy_event_hub"
+        })
 
     def test_event_hub_full_args(self):
         app = self.func_app
@@ -632,6 +813,85 @@ class TestFunctionsApp(unittest.TestCase):
                                      }
                                  ]
                                  })
+
+    def test_cosmosdb_trigger(self):
+        app = self.func_app
+
+        @app.on_cosmos_db_update(arg_name="trigger",
+                                 database_name="dummy_db",
+                                 collection_name="dummy_collection",
+                                 connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB_TRIGGER,
+            "name": "trigger",
+            "databaseName": "dummy_db",
+            "collectionName": "dummy_collection",
+            "connectionStringSetting": "dummy_str"
+        })
+
+    def test_cosmosdb_input_binding(self):
+        app = self.func_app
+
+        @app.on_cosmos_db_update(arg_name="trigger",
+                                 database_name="dummy_db",
+                                 collection_name="dummy_collection",
+                                 connection_string_setting="dummy_str")
+        @app.read_cosmos_db_documents(arg_name="in",
+                                      database_name="dummy_in_db",
+                                      collection_name="dummy_in_collection",
+                                      connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB,
+            "name": "in",
+            "databaseName": "dummy_in_db",
+            "collectionName":
+                "dummy_in_collection",
+            "connectionStringSetting": "dummy_str"
+        })
+
+    def test_cosmosdb_output_binding(self):
+        app = self.func_app
+
+        @app.on_cosmos_db_update(arg_name="trigger",
+                                 database_name="dummy_db",
+                                 collection_name="dummy_collection",
+                                 connection_string_setting="dummy_str")
+        @app.write_cosmos_db_documents(arg_name="out",
+                                       database_name="dummy_out_db",
+                                       collection_name="dummy_out_collection",
+                                       connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_func(app)
+
+        trigger = func.get_bindings()[0]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": COSMOS_DB,
+            "name": "out",
+            "databaseName": "dummy_out_db",
+            "collectionName":
+                "dummy_out_collection",
+            "connectionStringSetting": "dummy_str"
+        })
 
     def test_multiple_triggers(self):
         app = self.func_app
