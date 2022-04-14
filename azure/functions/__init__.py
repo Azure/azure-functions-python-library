@@ -5,11 +5,16 @@ from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
-from ._http import HttpRequest
-from ._http import HttpResponse
+from ._http import HttpRequest, HttpResponse
+from .decorators import (FunctionApp, Function, DataType, AuthLevel,
+                         Cardinality, AccessRights, HttpMethod)
+from ._durable_functions import OrchestrationContext, EntityContext
+from .extension import (ExtensionMeta, FunctionExtensionException,
+                        FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
+from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._durable_functions import OrchestrationContext, EntityContext
@@ -68,7 +73,16 @@ __all__ = (
     'AppExtensionBase',
     'FuncExtensionBase',
     'ExtensionMeta',
-    'FunctionExtensionException'
+    'FunctionExtensionException',
+
+    # PyStein implementation
+    'FunctionApp',
+    'Function',
+    'DataType',
+    'AuthLevel',
+    'Cardinality',
+    'AccessRights',
+    'HttpMethod'
 )
 
-__version__ = '1.8.0'
+__version__ = '1.10.1'

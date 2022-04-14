@@ -70,8 +70,12 @@ class HttpResponse(_abc.HttpResponse):
         ``'utf-8'``.
     """
 
-    def __init__(self, body=None, *,
-                 status_code=None, headers=None, mimetype=None, charset=None):
+    def __init__(self,
+                 body: typing.Union[str, bytes] = None, *,
+                 status_code: int = None,
+                 headers: typing.Optional[typing.Mapping[str, str]] = None,
+                 mimetype: typing.Optional[str] = None,
+                 charset: str = None) -> None:
         if status_code is None:
             status_code = 200
         self.__status_code = status_code

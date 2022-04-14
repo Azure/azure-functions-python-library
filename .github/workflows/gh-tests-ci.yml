@@ -25,17 +25,12 @@ jobs:
         python -m pip install -U -e .[dev]
     - name: Test with pytest
       run: |
-        pytest --cov=./azure --cov-report=xml --cov-branch tests
+        pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
     - name: Codecov
-      if: matrix.python-version == 3.9
-      uses: codecov/codecov-action@v1
+      if: ${{ matrix.python-version }} == 3.9
+      uses: codecov/codecov-action@v2
       with:
-        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-        file: ./coverage.xml # optional
-        flags: unittests # optional
-        name: codecov # optional
-        fail_ci_if_error: false # optional (default = false)
-    - name: pytest-coverage-commentator
-      uses: coroo/pytest-coverage-commentator@v1.0.2
-      with:
-        pytest-coverage: coverage.xml
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov
+        fail_ci_if_error: false

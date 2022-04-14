@@ -1,5 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
+#  Copyright (c) Microsoft Corporation. All rights reserved.
+#  Licensed under the MIT License.
 import json
 import unittest
 from typing import Any, Dict
@@ -72,7 +72,7 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.\
+        result: InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
@@ -91,7 +91,7 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.\
+        result: InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
@@ -147,7 +147,7 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.\
+        result: InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
