@@ -7,10 +7,6 @@ import json
 from . import _abc
 
 
-# Internal properties of CosmosDB documents.
-_SYSTEM_KEYS = {'_etag', '_lsn', '_rid', '_self', '_ts'}
-
-
 class Document(_abc.Document, collections.UserDict):
     """An Azure Document.
 
@@ -25,8 +21,7 @@ class Document(_abc.Document, collections.UserDict):
     @classmethod
     def from_dict(cls, dct: dict) -> 'Document':
         """Create a Document from a dict object."""
-        filtered = {k: v for k, v in dct.items() if k not in _SYSTEM_KEYS}
-        return cls(filtered)
+        return cls({k: v for k, v in dct.items()})
 
     def to_json(self) -> str:
         """Return the JSON representation of the document."""
