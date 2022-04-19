@@ -66,6 +66,30 @@ class TestCosmosdb(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]['name'], None)
 
+    def test_cosmosdb_convert_json_internal_fields_assigned(self):
+        datum: Datum = Datum("""
+        {
+            "id": "1",
+            "name": null,
+            "_rid": "dummy12344",
+            "_self": "7U4=/docs/gpU4AJcm7U4KAAAAAAAAAA==/",
+            "_etag": "000-0500-0000-62598ff00000",
+            "_attachments": "attachments/",
+            "_ts": 1650036720
+        }
+        """, "json")
+        result: func.DocumentList = cdb.CosmosDBConverter.decode(
+            data=datum, trigger_metadata=None)
+        self.assertIsNotNone(result)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['name'], None)
+        self.assertEqual(result[0]['_rid'], "dummy12344")
+        self.assertEqual(result[0]['_self'],
+                         "7U4=/docs/gpU4AJcm7U4KAAAAAAAAAA==/")
+        self.assertEqual(result[0]['_etag'], "000-0500-0000-62598ff00000")
+        self.assertEqual(result[0]['_attachments'], "attachments/")
+        self.assertEqual(result[0]['_ts'], 1650036720)
+
     def test_cosmosdb_convert_json_multiple_entries(self):
         datum: Datum = Datum("""
         [
