@@ -35,7 +35,7 @@ class TestCodeQuality(unittest.TestCase):
         try:
             import flake8  # NoQA
         except ImportError:
-            raise unittest.SkipTest('flake8 moudule is missing')
+            raise unittest.SkipTest('flake8 module is missing')
 
         config_path = ROOT_PATH / '.flake8'
         if not config_path.exists():
