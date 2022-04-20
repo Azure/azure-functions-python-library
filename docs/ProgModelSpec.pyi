@@ -3,12 +3,11 @@
 import typing
 from typing import Callable, Optional, Union, Iterable
 
-from azure.functions import AsgiMiddleware, WsgiMiddleware, Function, \
-    HttpRequest, Context
-from azure.functions.decorators.function_app import FunctionBuilder
-from azure.functions.decorators.http import HttpMethod
+from azure.functions import AsgiMiddleware, WsgiMiddleware, Function
 from azure.functions.decorators.core import DataType, \
     AuthLevel, Cardinality, AccessRights
+from azure.functions.decorators.function_app import FunctionBuilder
+from azure.functions.decorators.http import HttpMethod
 
 
 class FunctionApp:
@@ -33,6 +32,7 @@ class FunctionApp:
         AuthLevel.
         :param kwargs: Extra arguments passed to :func:`__init__`.
         """
+
         pass
 
     @property
@@ -44,7 +44,8 @@ class FunctionApp:
 
         :return: Script file name.
         """
-        return self._app_script_file
+
+        pass
 
     @property
     def auth_level(self) -> AuthLevel:
@@ -54,15 +55,14 @@ class FunctionApp:
         :return: Authorization level of the function app.
         """
 
-        return self._auth_level
+        pass
 
     def get_functions(self) -> typing.List[Function]:
         """Get the function objects in the function app.
 
         :return: List of functions in the function app.
         """
-        return [function_builder.build() for function_builder
-                in self._function_builders]
+        pass
 
     def _validate_type(self, func: Union[Callable, FunctionBuilder]) \
             -> FunctionBuilder:
@@ -76,26 +76,15 @@ class FunctionApp:
          :class:`Callable` nor :class:`FunctionBuilder`.
         :return: :class:`FunctionBuilder` object.
         """
-        if isinstance(func, FunctionBuilder):
-            fb = self._function_builders.pop()
-        elif callable(func):
-            fb = FunctionBuilder(func, self._app_script_file)
-        else:
-            raise ValueError(
-                "Unsupported type for function app decorator found.")
-        return fb
+
+        pass
 
     def _configure_function_builder(self, wrap) -> Callable:
         """Decorator function on user defined function to create and return
          :class:`FunctionBuilder` object from :class:`Callable` func.
         """
 
-        def decorator(func):
-            fb = self._validate_type(func)
-            self._function_builders.append(fb)
-            return wrap(fb)
-
-        return decorator
+        pass
 
     def function_name(self, name: str) -> Callable:
         """Set name of the :class:`Function` object.
@@ -104,15 +93,7 @@ class FunctionApp:
         :return: Decorator function.
         """
 
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.configure_function_name(name)
-                return fb
-
-            return decorator()
-
-        return wrap
+        pass
 
     def _add_http_app(self,
                       http_middleware: Union[
@@ -125,11 +106,7 @@ class FunctionApp:
         :return: None
         """
 
-        @self.route(methods=(method for method in HttpMethod),
-                    auth_level=self.auth_level,
-                    route="/{*route}")
-        def http_app_func(req: HttpRequest, context: Context):
-            return http_middleware.handle(req, context)
+        pass
 
     def route(self,
               route: Optional[str] = None,
