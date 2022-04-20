@@ -11,7 +11,7 @@ from . import meta
 
 
 class SqlConverter(meta.InConverter, meta.OutConverter,
-                        binding='sql'):
+                    binding='sql'):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
@@ -74,3 +74,4 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
             type='json',
             value=json.dumps([dict(d) for d in data])
         )
+        

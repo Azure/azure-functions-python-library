@@ -6,6 +6,7 @@ import json
 
 from . import _abc
 
+
 class SqlRow(_abc.SqlRow, collections.UserDict):
     """A SQL Row.
 
@@ -36,6 +37,7 @@ class SqlRow(_abc.SqlRow, collections.UserDict):
         return (
             f'<SqlRow at 0x{id(self):0x}>'
         )
+
 
 class SqlRowList(_abc.SqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
