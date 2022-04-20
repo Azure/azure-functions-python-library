@@ -6,7 +6,7 @@ from azure.functions.decorators.core import Trigger, \
     InputBinding, OutputBinding, DataType
 
 
-class CustomInputBinding(InputBinding):
+class GenericInputBinding(InputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -20,8 +20,7 @@ class CustomInputBinding(InputBinding):
         super().__init__(name=name, data_type=data_type, type=type)
 
 
-class CustomOutputBinding(OutputBinding):
-    # binding_name: str = ""
+class GenericOutputBinding(OutputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -35,7 +34,7 @@ class CustomOutputBinding(OutputBinding):
         super().__init__(name=name, data_type=data_type, type=type)
 
 
-class CustomTrigger(Trigger):
+class GenericTrigger(Trigger):
 
     @staticmethod
     def get_binding_name() -> str:

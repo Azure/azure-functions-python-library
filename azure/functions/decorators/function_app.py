@@ -5,8 +5,7 @@ from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, \
-    is_supported_trigger_type
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
@@ -21,7 +20,7 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .constants import HTTP_TRIGGER
-from .custom import CustomInputBinding, CustomTrigger, CustomOutputBinding
+from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 
@@ -179,9 +178,9 @@ class FunctionBuilder(object):
                 f" in bindings {bindings}")
 
         # Set route to function name if unspecified in the http trigger
-        if is_supported_trigger_type(trigger, HttpTrigger) \
+        if Trigger.is_supported_trigger_type(trigger, HttpTrigger) \
                 and getattr(trigger, 'route', None) is None:
-            setattr(trigger, 'route', self._function.get_function_name())
+            setattr(trigger, 'route', function_name)
 
     def build(self) -> Function:
         self._validate_function()
@@ -1236,17 +1235,17 @@ class FunctionApp:
 
         return wrap
 
-    def custom_input_binding(self,
-                             arg_name: str,
-                             type: str,
-                             data_type: Optional[Union[DataType, str]] = None,
-                             **kwargs
-                             ) -> Callable:
+    def generic_input_binding(self,
+                              arg_name: str,
+                              type: str,
+                              data_type: Optional[Union[DataType, str]] = None,
+                              **kwargs
+                              ) -> Callable:
         """
-        The custom_input_binding decorator adds :class:`CustomInputBinding`
+        The generic_input_binding decorator adds :class:`GenericInputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
         object used in worker function indexing model.
-        This is equivalent to defining a custom input binding in the
+        This is equivalent to defining a generic input binding in the
         function.json which enables function to read data from a
         custom defined input source.
         All optional fields will be given default value by function host when
@@ -1268,7 +1267,7 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CustomInputBinding(
+                    binding=GenericInputBinding(
                         name=arg_name,
                         type=type,
                         data_type=parse_singular_param_to_enum(data_type,
@@ -1280,17 +1279,18 @@ class FunctionApp:
 
         return wrap
 
-    def custom_output_binding(self,
-                              arg_name: str,
-                              type: str,
-                              data_type: Optional[Union[DataType, str]] = None,
-                              **kwargs
-                              ) -> Callable:
+    def generic_output_binding(self,
+                               arg_name: str,
+                               type: str,
+                               data_type: Optional[
+                                   Union[DataType, str]] = None,
+                               **kwargs
+                               ) -> Callable:
         """
-        The custom_output_binding decorator adds :class:`CustomOutputBinding`
+        The generic_output_binding decorator adds :class:`GenericOutputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
         object used in worker function indexing model.
-        This is equivalent to defining a custom output binding in the
+        This is equivalent to defining a generic output binding in the
         function.json which enables function to write data from a
         custom defined output source.
         All optional fields will be given default value by function host when
@@ -1312,7 +1312,7 @@ class FunctionApp:
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CustomOutputBinding(
+                    binding=GenericOutputBinding(
                         name=arg_name,
                         type=type,
                         data_type=parse_singular_param_to_enum(data_type,
@@ -1324,18 +1324,18 @@ class FunctionApp:
 
         return wrap
 
-    def custom_trigger(self,
-                       arg_name: str,
-                       type: str,
-                       data_type: Optional[Union[DataType, str]] = None,
-                       **kwargs
-                       ) -> Callable:
+    def generic_trigger(self,
+                        arg_name: str,
+                        type: str,
+                        data_type: Optional[Union[DataType, str]] = None,
+                        **kwargs
+                        ) -> Callable:
         """
-        The custom_trigger decorator adds :class:`CustomTrigger`
+        The generic_trigger decorator adds :class:`GenericTrigger`
         to the :class:`FunctionBuilder` object for building :class:`Function`
         object used in worker function indexing model.
-        This is equivalent to defining a custom trigger in the
-        function.json which triggers function to execute when custom trigger
+        This is equivalent to defining a generic trigger in the
+        function.json which triggers function to execute when generic trigger
         events are received by host.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1362,7 +1362,7 @@ class FunctionApp:
                     if 'route' not in kwargs:
                         kwargs['route'] = None
                 fb.add_trigger(
-                    trigger=CustomTrigger(
+                    trigger=GenericTrigger(
                         name=arg_name,
                         type=type,
                         data_type=parse_singular_param_to_enum(data_type,

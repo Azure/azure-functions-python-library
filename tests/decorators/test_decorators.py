@@ -971,14 +971,13 @@ class TestFunctionsApp(unittest.TestCase):
             "connection": "dummy_out_conn"
         })
 
-    # mix, asgi/wsgi
-
     def test_custom_trigger(self):
         app = self.func_app
 
-        @app.custom_trigger(arg_name="req", type=BLOB_TRIGGER,
-                            data_type=DataType.BINARY, connection="dummy_conn",
-                            path="dummy_path")
+        @app.generic_trigger(arg_name="req", type=BLOB_TRIGGER,
+                             data_type=DataType.BINARY,
+                             connection="dummy_conn",
+                             path="dummy_path")
         def dummy():
             pass
 
@@ -1001,13 +1000,13 @@ class TestFunctionsApp(unittest.TestCase):
     def test_custom_input_binding(self):
         app = self.func_app
 
-        @app.custom_trigger(arg_name="req", type=TIMER_TRIGGER,
-                            data_type=DataType.BINARY,
-                            schedule="dummy_schedule")
-        @app.custom_input_binding(arg_name="file", type=BLOB,
-                                  path="dummy_in_path",
-                                  connection="dummy_in_conn",
-                                  data_type=DataType.STRING)
+        @app.generic_trigger(arg_name="req", type=TIMER_TRIGGER,
+                             data_type=DataType.BINARY,
+                             schedule="dummy_schedule")
+        @app.generic_input_binding(arg_name="file", type=BLOB,
+                                   path="dummy_in_path",
+                                   connection="dummy_in_conn",
+                                   data_type=DataType.STRING)
         def dummy():
             pass
 
@@ -1039,13 +1038,13 @@ class TestFunctionsApp(unittest.TestCase):
     def test_custom_output_binding(self):
         app = self.func_app
 
-        @app.custom_trigger(arg_name="req", type=QUEUE_TRIGGER,
-                            queue_name="dummy_queue",
-                            connection="dummy_conn")
-        @app.custom_output_binding(arg_name="out", type=BLOB,
-                                   path="dummy_out_path",
-                                   connection="dummy_out_conn",
-                                   data_type=DataType.STRING)
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             queue_name="dummy_queue",
+                             connection="dummy_conn")
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
         def dummy():
             pass
 
@@ -1074,7 +1073,7 @@ class TestFunctionsApp(unittest.TestCase):
     def test_custom_http_trigger(self):
         app = self.func_app
 
-        @app.custom_trigger(arg_name="req", type=HTTP_TRIGGER)
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
         def dummy():
             pass
 
@@ -1093,8 +1092,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_custom_binding_with_excluded_params(self):
         app = self.func_app
 
-        @app.custom_trigger(arg_name="req", type=QUEUE_TRIGGER,
-                            direction=BindingDirection.INOUT)
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             direction=BindingDirection.INOUT)
         def dummy():
             pass
 
@@ -1113,10 +1112,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn")
-        @app.custom_output_binding(arg_name="out", type=BLOB,
-                                   path="dummy_out_path",
-                                   connection="dummy_out_conn",
-                                   data_type=DataType.STRING)
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
         def dummy():
             pass
 

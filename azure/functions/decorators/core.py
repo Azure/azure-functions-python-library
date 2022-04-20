@@ -84,6 +84,9 @@ class Binding(ABC):
                  direction: BindingDirection,
                  data_type: Optional[DataType] = None,
                  type: Optional[str] = None):  # NoQa
+        # For natively supported bindings, get_binding_name is always
+        # implemented, and for generic bindings, type is a required argument
+        # in decorator functions.
         self.type = self.get_binding_name() \
             if self.get_binding_name() is not None else type
         self.name = name
@@ -124,6 +127,13 @@ class Trigger(Binding, ABC, metaclass=ABCBuildDictMeta):
     Ref: https://aka.ms/functions-triggers-bindings-overview
     """
 
+    @staticmethod
+    def is_supported_trigger_type(trigger_instance: 'Trigger',
+                                  trigger_type: Type['Trigger']):
+        return isinstance(trigger_instance,
+                          trigger_type) or trigger_instance.type == \
+            trigger_type.get_binding_name()
+
     def __init__(self, name: str, data_type: Optional[DataType] = None,
                  type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.IN,
@@ -150,10 +160,3 @@ class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
                  type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, type=type)
-
-
-def is_supported_trigger_type(trigger_instance: Trigger,
-                              trigger_type: Type[Trigger]):
-    return isinstance(trigger_instance,
-                      trigger_type) or \
-        trigger_instance.type == trigger_type.get_binding_name()

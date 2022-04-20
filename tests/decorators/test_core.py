@@ -88,3 +88,15 @@ class TestBindings(unittest.TestCase):
 
         self.assertEqual(test_output.get_binding_name(), "DummyOutputBinding")
         self.assertEqual(test_output.get_dict_repr(), expected_dict)
+
+    def test_supported_trigger_types_populated(self):
+        for supported_trigger in Trigger.__subclasses__():
+            trigger_name = supported_trigger.__name__
+            if trigger_name != "GenericTrigger":
+                trigger_type_name = supported_trigger.get_binding_name()
+                self.assertTrue(trigger_type_name is not None,
+                                f"binding_type {trigger_name} can not be "
+                                f"None!")
+                self.assertTrue(len(trigger_type_name) > 0,
+                                f"binding_type {trigger_name} can not be "
+                                f"empty str!")

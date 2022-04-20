@@ -5,18 +5,18 @@ import unittest
 from azure.functions.decorators.constants import HTTP_TRIGGER, COSMOS_DB, BLOB
 from azure.functions.decorators.core import BindingDirection, AuthLevel, \
     DataType
-from azure.functions.decorators.custom import CustomInputBinding, \
-    CustomTrigger, CustomOutputBinding
+from azure.functions.decorators.generic import GenericInputBinding, \
+    GenericTrigger, GenericOutputBinding
 
 
-class TestCustom(unittest.TestCase):
-    def test_custom_trigger_valid_creation(self):
-        trigger = CustomTrigger(name="req",
-                                type=HTTP_TRIGGER,
-                                data_type=DataType.UNDEFINED,
-                                auth_level=AuthLevel.ANONYMOUS,
-                                methods=["GET", "POST"],
-                                route="dummy")
+class TestGeneric(unittest.TestCase):
+    def test_generic_trigger_valid_creation(self):
+        trigger = GenericTrigger(name="req",
+                                 type=HTTP_TRIGGER,
+                                 data_type=DataType.UNDEFINED,
+                                 auth_level=AuthLevel.ANONYMOUS,
+                                 methods=["GET", "POST"],
+                                 route="dummy")
 
         self.assertEqual(trigger.get_binding_name(), None)
         self.assertEqual(trigger.type, HTTP_TRIGGER)
@@ -30,8 +30,8 @@ class TestCustom(unittest.TestCase):
             "methods": ["GET", "POST"]
         })
 
-    def test_custom_input_valid_creation(self):
-        cosmosdb_input = CustomInputBinding(
+    def test_generic_input_valid_creation(self):
+        cosmosdb_input = GenericInputBinding(
             name="inDocs",
             type=COSMOS_DB,
             database_name="dummy_db",
@@ -52,11 +52,11 @@ class TestCustom(unittest.TestCase):
                           'sqlQuery': 'dummy_query',
                           'type': COSMOS_DB})
 
-    def test_custom_output_valid_creation(self):
-        blob_output = CustomOutputBinding(name="res", type=BLOB,
-                                          data_type=DataType.UNDEFINED,
-                                          path="dummy_path",
-                                          connection="dummy_connection")
+    def test_generic_output_valid_creation(self):
+        blob_output = GenericOutputBinding(name="res", type=BLOB,
+                                           data_type=DataType.UNDEFINED,
+                                           path="dummy_path",
+                                           connection="dummy_connection")
 
         self.assertEqual(blob_output.get_binding_name(), None)
         self.assertEqual(blob_output.get_dict_repr(), {

@@ -5,8 +5,8 @@ import unittest
 from azure.functions import HttpMethod
 from azure.functions.decorators import utils
 from azure.functions.decorators.constants import HTTP_TRIGGER
-from azure.functions.decorators.core import DataType, is_supported_trigger_type
-from azure.functions.decorators.custom import CustomTrigger
+from azure.functions.decorators.core import DataType, Trigger
+from azure.functions.decorators.generic import GenericTrigger
 from azure.functions.decorators.http import HttpTrigger
 from azure.functions.decorators.utils import to_camel_case, BuildDictMeta, \
     is_snake_case, is_word
@@ -206,14 +206,16 @@ class TestUtils(unittest.TestCase):
 
     def test_is_supported_trigger_binding_name(self):
         self.assertTrue(
-            is_supported_trigger_type(
-                CustomTrigger(name='req', type=HTTP_TRIGGER), HttpTrigger))
+            Trigger.is_supported_trigger_type(
+                GenericTrigger(name='req', type=HTTP_TRIGGER), HttpTrigger))
 
     def test_is_supported_trigger_instance(self):
         self.assertTrue(
-            is_supported_trigger_type(HttpTrigger(name='req'), HttpTrigger))
+            Trigger.is_supported_trigger_type(HttpTrigger(name='req'),
+                                              HttpTrigger))
 
     def test_is_not_supported_trigger_type(self):
         self.assertFalse(
-            is_supported_trigger_type(CustomTrigger(name='req', type="dummy"),
-                                      HttpTrigger))
+            Trigger.is_supported_trigger_type(
+                GenericTrigger(name='req', type="dummy"),
+                HttpTrigger))
