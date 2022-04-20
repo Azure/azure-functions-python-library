@@ -17,10 +17,6 @@ from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
-from ._durable_functions import OrchestrationContext, EntityContext
-from .meta import get_binding_registry
-from .extension import (ExtensionMeta, FunctionExtensionException,
-                        FuncExtensionBase, AppExtensionBase)
 from ._sql import SqlRow, SqlRowList
 
 # Import binding implementations to register them
