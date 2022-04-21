@@ -6,10 +6,12 @@ from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest, HttpResponse
-from .decorators import (FunctionApp, Function, Scaffold, BluePrint,
+from .decorators import (FunctionApp, Function, BluePrint,
                          DecoratorApi, DataType, AuthLevel,
-                         Cardinality, AccessRights, HttpMethod)
+                         Cardinality, AccessRights, HttpMethod,
+                         AsgiFunctionApp, WsgiFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
+from .decorators.function_app import FunctionRegister
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
@@ -71,7 +73,9 @@ __all__ = (
     # PyStein implementation
     'FunctionApp',
     'Function',
-    'Scaffold',
+    'FunctionRegister',
+    'AsgiFunctionApp',
+    'WsgiFunctionApp',
     'DecoratorApi',
     'BluePrint',
     'DataType',

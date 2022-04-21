@@ -2,15 +2,16 @@
 #  Licensed under the MIT License.
 from .core import Cardinality, AccessRights
 from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
-    AuthLevel, Scaffold, BluePrint
+    AuthLevel, BluePrint, AsgiFunctionApp, WsgiFunctionApp
 from .http import HttpMethod
 
 __all__ = [
     'FunctionApp',
     'Function',
-    'Scaffold',
     'DecoratorApi',
     'BluePrint',
+    'AsgiFunctionApp',
+    'WsgiFunctionApp',
     'DataType',
     'AuthLevel',
     'Cardinality',

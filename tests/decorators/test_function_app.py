@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import unittest
+from typing import Callable
 from unittest import mock
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
@@ -8,7 +9,8 @@ from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionApp, Function, Scaffold, BluePrint
+    FunctionApp, Function, BluePrint, DecoratorApi, AsgiFunctionApp, \
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -200,7 +202,7 @@ class TestFunctionBuilder(unittest.TestCase):
 
 class TestScaffold(unittest.TestCase):
     def setUp(self):
-        class DummyApp(Scaffold):
+        class DummyApp(DecoratorApi):
             def dummy_trigger(self, name: str):
                 @self._configure_function_builder
                 def wrap(fb):
@@ -252,9 +254,6 @@ class TestFunctionApp(unittest.TestCase):
         self.func_app = FunctionApp(auth_level='ANONYMOUS')
         self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
 
-        self.func_app = FunctionApp(auth_level=AuthLevel.ADMIN)
-        self.assertEqual(self.func_app.auth_level, AuthLevel.ADMIN)
-
     def test_get_no_functions(self):
         self.assertEqual(self.func_app.app_script_file, "function_app.py")
         self.assertEqual(self.func_app.get_functions(), [])
@@ -280,71 +279,56 @@ class TestFunctionApp(unittest.TestCase):
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
 
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
                 '._add_http_app')
     def test_add_asgi(self, add_http_app_mock):
         mock_asgi_app = object()
-        FunctionApp(asgi_app=mock_asgi_app)
+        AsgiFunctionApp(app=mock_asgi_app)
 
         add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+        self.assertIsInstance(add_http_app_mock.call_args.args[0],
                               AsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], {})
 
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
         mock_wsgi_app = object()
-        FunctionApp(wsgi_app=mock_wsgi_app)
+        WsgiFunctionApp(app=mock_wsgi_app)
 
         add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+        self.assertIsInstance(add_http_app_mock.call_args.args[0],
                               WsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], {})
-
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
-                '._add_http_app')
-    def test_add_http_args(self, add_http_app_mock):
-        mock_wsgi_app = object()
-        app_kwargs = {"methods": ["GET"]}
-        FunctionApp(wsgi_app=mock_wsgi_app, app_kwargs=app_kwargs)
-
-        self.assertEqual(add_http_app_mock.call_args[0][1], app_kwargs)
 
     def test_add_http_app(self):
-        app = FunctionApp(asgi_app=object(),
-                          app_kwargs={"methods": ["GET"],
-                                      "auth_level": "ANONYMOUS",
-                                      "trigger_arg_data_type":
-                                          DataType.UNDEFINED,
-                                      "output_arg_data_type":
-                                          DataType.UNDEFINED})
+        app = AsgiFunctionApp(app=object())
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         func = funcs[0]
 
         self.assertEqual(func.get_function_name(), "http_app_func")
         self.assertEqual(func.get_raw_bindings(), [
-            '{"direction": "IN", "dataType": "UNDEFINED", "type": '
+            '{"direction": "IN", "type": '
             '"httpTrigger", "name": '
-            '"req", "methods": ["GET"], "authLevel": "ANONYMOUS", "route": '
+            '"req", "methods": ["GET", "POST", "DELETE", "HEAD", "PATCH", '
+            '"PUT", "OPTIONS"], "authLevel": "FUNCTION", "route": '
             '"/{*route}"}',
-            '{"direction": "OUT", "dataType": "UNDEFINED", "type": "http", '
+            '{"direction": "OUT", "type": "http", '
             '"name": '
             '"$return"}'])
         self.assertEqual(func.get_bindings_dict(), {
             "bindings": [
                 {
-                    "authLevel": AuthLevel.ANONYMOUS,
-                    "dataType": DataType.UNDEFINED,
+                    "authLevel": AuthLevel.FUNCTION,
                     "direction": BindingDirection.IN,
-                    "methods": [HttpMethod.GET],
+                    "methods": [HttpMethod.GET, HttpMethod.POST,
+                                HttpMethod.DELETE, HttpMethod.HEAD,
+                                HttpMethod.PATCH, HttpMethod.PUT,
+                                HttpMethod.OPTIONS],
                     "name": "req",
                     "route": "/{*route}",
                     "type": HTTP_TRIGGER
                 },
                 {
-                    "dataType": DataType.UNDEFINED,
                     "direction": BindingDirection.OUT,
                     "name": "$return",
                     "type": HTTP_OUTPUT
@@ -356,7 +340,7 @@ class TestFunctionApp(unittest.TestCase):
             FunctionApp().register_functions(FunctionApp())
 
         self.assertEqual(err.exception.args[0],
-                         "functions can not be type of FunctionApp!")
+                         "functions can not be type of FunctionRegister!")
 
     def test_register_blueprint(self):
         bp = BluePrint()
@@ -372,20 +356,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
 
-    def test_register_blueprint_auth_level(self):
-        bp = BluePrint(auth_level=AuthLevel.ANONYMOUS)
-
-        @bp.route("name")
-        def hello(name: str):
-            return "hello"
-
-        app = FunctionApp()
-        app.register_functions(bp)
-
-        self.assertEqual(len(app.get_functions()), 1)
-        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
-                         AuthLevel.ANONYMOUS)
-
     def test_register_app_auth_level(self):
         bp = BluePrint()
 
@@ -399,3 +369,46 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(len(app.get_functions()), 1)
         self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
                          AuthLevel.ANONYMOUS)
+
+    def test_decorator_api_basic_props(self):
+        class DummyFunctionApp(DecoratorApi):
+            pass
+
+        app = DummyFunctionApp()
+
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+        self.assertIsNotNone(getattr(app, "function_name", None))
+        self.assertIsNotNone(getattr(app, "_validate_type", None))
+        self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
+
+    def test_http_functions_auth_level_mixin_default(self):
+        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
+            pass
+
+        app = DummyFunctionApp()
+        
+        self.assertTrue(hasattr(app, "auth_level"))
+        self.assertIsNone(app.auth_level)
+
+    def test_http_functions_auth_level_mixin_custom(self):
+        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertTrue(hasattr(app, "auth_level"))
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_function_register(self):
+        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertTrue(hasattr(app, "auth_level"))
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+    # 1. Test asgi_app
+    # 2. Test wsgi_app
+    # 3. Test func_register
+    # 3. Test httpauthlevelmixin
+    # 3. Test decoratorapi
