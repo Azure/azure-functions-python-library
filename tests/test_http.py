@@ -5,6 +5,7 @@ import unittest
 
 import azure.functions as func
 import azure.functions.http as http
+from azure.functions._http import HttpResponseHeaders
 
 
 class TestHTTP(unittest.TestCase):
@@ -87,6 +88,53 @@ class TestHTTP(unittest.TestCase):
         )
         self.assertTrue(check_output_type(func.HttpResponse))
         self.assertTrue(check_output_type(str))
+
+    def test_http_response_encode_to_datum_no_cookie(self):
+        resp = func.HttpResponse()
+        datum = http.HttpResponseConverter.encode(resp, expected_type=None)
+
+        self.assertEqual(datum.value["cookies"], None)
+
+    def test_http_response_encode_to_datum_with_cookies(self):
+        headers = HttpResponseHeaders()
+        headers.add("Set-Cookie",
+                    'foo3=42; Domain=example.com; Expires=Thu, '
+                    '12-Jan-2017 13:55:08 GMT; Path=/; Max-Age=10000000')
+        headers.add("Set-Cookie",
+                    'foo3=43; Domain=example.com; Expires=Thu, 12-Jan-2018 '
+                    '13:55:09 GMT; Path=/; Max-Age=10000000')
+        resp = func.HttpResponse(headers=headers)
+        datum = http.HttpResponseConverter.encode(resp, expected_type=None)
+
+        actual_cookies = datum.value['cookies']
+        self.assertIsNotNone(actual_cookies)
+        self.assertTrue(isinstance(actual_cookies, list))
+        self.assertTrue(len(actual_cookies), 2)
+        self.assertEqual(str(actual_cookies[0]),
+                         "Set-Cookie: foo3=42; Domain=example.com; "
+                         "expires=Thu, 12-Jan-2017 13:55:08 GMT; "
+                         "Max-Age=10000000; Path=/")
+        self.assertEqual(str(actual_cookies[1]),
+                         "Set-Cookie: foo3=43; Domain=example.com; "
+                         "expires=Thu, 12-Jan-2018 13:55:09 GMT; "
+                         "Max-Age=10000000; Path=/")
+
+        self.assertTrue("Set-Cookie" not in resp.headers)
+
+    def test_http_response_encode_to_datum_with_cookies_lower_case(self):
+        headers = HttpResponseHeaders()
+        headers.add("set-cookie",
+                    'foo3=42; Domain=example.com; Path=/; Max-Age=10000.0')
+        resp = func.HttpResponse(headers=headers)
+        datum = http.HttpResponseConverter.encode(resp, expected_type=None)
+
+        actual_cookies = datum.value['cookies']
+        self.assertIsNotNone(actual_cookies)
+        self.assertTrue(isinstance(actual_cookies, list))
+        self.assertTrue(len(actual_cookies), 1)
+        self.assertEqual(str(actual_cookies[0]),
+                         "Set-Cookie: foo3=42; Domain=example.com; "
+                         "Max-Age=10000.0; Path=/")
 
     def test_http_request_should_not_have_implicit_output(self):
         self.assertFalse(http.HttpRequestConverter.has_implicit_output())
