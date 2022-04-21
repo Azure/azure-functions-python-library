@@ -3,15 +3,12 @@
 
 import json
 import typing
+from http.cookies import SimpleCookie
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _http as azf_http
 from . import meta
-
-try:
-    from http.cookies import SimpleCookie
-except ImportError:
-    from Cookie import SimpleCookie  # type: ignore
+from ._thirdparty.werkzeug.datastructures import Headers
 
 
 class HttpRequest(azf_http.HttpRequest):
@@ -83,7 +80,7 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
         if isinstance(obj, azf_abc.HttpResponse):
             status = obj.status_code
-            headers = obj.headers
+            headers: Headers = obj.headers
 
             if 'content-type' not in headers:
                 if obj.mimetype.startswith('text/'):
