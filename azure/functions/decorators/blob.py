@@ -12,7 +12,8 @@ class BlobTrigger(Trigger):
                  name: str,
                  path: str,
                  connection: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.path = path
         self.connection = connection
         super().__init__(name=name, data_type=data_type)
@@ -27,7 +28,8 @@ class BlobInput(InputBinding):
                  name: str,
                  path: str,
                  connection: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.path = path
         self.connection = connection
         super().__init__(name=name, data_type=data_type)
@@ -42,7 +44,8 @@ class BlobOutput(OutputBinding):
                  name: str,
                  path: str,
                  connection: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.path = path
         self.connection = connection
         super().__init__(name=name, data_type=data_type)

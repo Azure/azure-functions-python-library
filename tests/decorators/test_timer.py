@@ -13,12 +13,14 @@ class TestTimer(unittest.TestCase):
                                schedule="dummy_schedule",
                                data_type=DataType.UNDEFINED,
                                run_on_startup=False,
-                               use_monitor=False)
+                               use_monitor=False,
+                               dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "timerTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": TIMER_TRIGGER,
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "schedule": "dummy_schedule",

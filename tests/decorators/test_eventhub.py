@@ -15,7 +15,8 @@ class TestEventHub(unittest.TestCase):
                                   event_hub_name="dummy_event_hub",
                                   cardinality=Cardinality.ONE,
                                   consumer_group="dummy_group",
-                                  data_type=DataType.UNDEFINED)
+                                  data_type=DataType.UNDEFINED,
+                                  dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "eventHubTrigger")
         self.assertEqual(trigger.get_dict_repr(),
@@ -24,6 +25,7 @@ class TestEventHub(unittest.TestCase):
                           "consumerGroup": "dummy_group",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
                           "eventHubName": "dummy_event_hub",
                           "name": "req",
                           "type": EVENT_HUB_TRIGGER})
@@ -32,13 +34,15 @@ class TestEventHub(unittest.TestCase):
         output = EventHubOutput(name="res",
                                 event_hub_name="dummy_event_hub",
                                 connection="dummy_connection",
-                                data_type=DataType.UNDEFINED)
+                                data_type=DataType.UNDEFINED,
+                                dummy_field="dummy")
 
         self.assertEqual(output.get_binding_name(), "eventHub")
         self.assertEqual(output.get_dict_repr(),
                          {'connection': 'dummy_connection',
                           'dataType': DataType.UNDEFINED,
                           'direction': BindingDirection.OUT,
+                          'dummyField': 'dummy',
                           'eventHubName': 'dummy_event_hub',
                           'name': 'res',
                           'type': EVENT_HUB})

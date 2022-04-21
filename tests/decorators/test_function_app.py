@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import json
 import unittest
 from unittest import mock
 
@@ -92,12 +93,23 @@ class TestFunction(unittest.TestCase):
                                           }
                                       ]
                                       })
-        self.assertEqual(self.func.get_raw_bindings(), [
-            '{"direction": "OUT", "dataType": "UNDEFINED", "type": "http", '
-            '"name": "out"}',
-            '{"direction": "IN", "dataType": "UNDEFINED", "type": '
-            '"httpTrigger", "name": "req", "methods": ["GET", "POST"], '
-            '"authLevel": "ANONYMOUS", "route": "dummy"}'])
+
+        raw_bindings = self.func.get_raw_bindings()
+        self.assertEqual(len(raw_bindings), 2)
+        raw_output_binding = raw_bindings[0]
+        raw_trigger = raw_bindings[1]
+
+        self.assertEqual(json.loads(raw_output_binding),
+                         json.loads(
+                             '{"direction": "OUT", "dataType": "UNDEFINED", '
+                             '"type": "http", "name": "out"}'))
+
+        self.assertEqual(json.loads(raw_trigger),
+                         json.loads(
+                             '{"direction": "IN", "dataType": "UNDEFINED", '
+                             '"type": "httpTrigger", "authLevel": '
+                             '"ANONYMOUS", "route": "dummy", "methods": ['
+                             '"GET", "POST"], "name": "req"}'))
 
 
 class TestFunctionBuilder(unittest.TestCase):
@@ -262,15 +274,23 @@ class TestFunctionApp(unittest.TestCase):
         func = funcs[0]
 
         self.assertEqual(func.get_function_name(), "http_app_func")
-        self.assertEqual(func.get_raw_bindings(), [
-            '{"direction": "IN", "type": '
-            '"httpTrigger", "name": '
-            '"req", "methods": ["GET", "POST", "DELETE", "HEAD", "PATCH", '
-            '"PUT", "OPTIONS"], "authLevel": "FUNCTION", "route": '
-            '"/{*route}"}',
-            '{"direction": "OUT", "type": "http", '
-            '"name": '
-            '"$return"}'])
+
+        raw_bindings = func.get_raw_bindings()
+        raw_trigger = raw_bindings[0]
+        raw_output_binding = raw_bindings[0]
+
+        self.assertEqual(json.loads(raw_trigger),
+                         json.loads(
+                             '{"direction": "IN", "type": "httpTrigger", '
+                             '"authLevel": "FUNCTION", "route": "/{*route}", '
+                             '"methods": ["GET", "POST", "DELETE", "HEAD", '
+                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+        self.assertEqual(json.loads(raw_output_binding), json.loads(
+            '{"direction": "IN", "type": "httpTrigger", "authLevel": '
+            '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
+            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+            '*route}"}'))
+
         self.assertEqual(func.get_bindings_dict(), {
             "bindings": [
                 {
