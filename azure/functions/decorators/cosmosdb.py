@@ -20,7 +20,8 @@ class CosmosDBInput(InputBinding):
                  data_type: Optional[DataType] = None,
                  id: Optional[str] = None,
                  sql_query: Optional[str] = None,
-                 partition_key: Optional[str] = None):
+                 partition_key: Optional[str] = None,
+                 **kwargs):
         self.database_name = database_name
         self.collection_name = collection_name
         self.connection_string_setting = connection_string_setting
@@ -45,7 +46,8 @@ class CosmosDBOutput(OutputBinding):
                  use_multiple_write_locations: Optional[bool] = None,
                  preferred_locations: Optional[str] = None,
                  partition_key: Optional[str] = None,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.database_name = database_name
         self.collection_name = collection_name
         self.connection_string_setting = connection_string_setting
@@ -83,7 +85,7 @@ class CosmosDBTrigger(Trigger):
                  lease_connection_string_setting: Optional[str] = None,
                  lease_database_name: Optional[str] = None,
                  lease_collection_prefix: Optional[str] = None,
-                 ):
+                 **kwargs):
         self.lease_collection_name = lease_collection_name
         self.lease_connection_string_setting = lease_connection_string_setting
         self.lease_database_name = lease_database_name

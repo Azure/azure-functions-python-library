@@ -21,13 +21,15 @@ class TestHttp(unittest.TestCase):
                                    methods=[HttpMethod.GET, HttpMethod.POST],
                                    data_type=DataType.UNDEFINED,
                                    auth_level=AuthLevel.ANONYMOUS,
-                                   route='dummy')
+                                   route='dummy',
+                                   dummy_field="dummy")
 
         self.assertEqual(http_trigger.get_binding_name(), HTTP_TRIGGER)
         self.assertEqual(http_trigger.get_dict_repr(), {
             "authLevel": AuthLevel.ANONYMOUS,
             "type": HTTP_TRIGGER,
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": 'req',
             "dataType": DataType.UNDEFINED,
             "route": 'dummy',
@@ -35,12 +37,14 @@ class TestHttp(unittest.TestCase):
         })
 
     def test_http_output_valid_creation(self):
-        http_output = HttpOutput(name='req', data_type=DataType.UNDEFINED)
+        http_output = HttpOutput(name='req', data_type=DataType.UNDEFINED,
+                                 dummy_field="dummy")
 
         self.assertEqual(http_output.get_binding_name(), HTTP_OUTPUT)
         self.assertEqual(http_output.get_dict_repr(), {
             "type": HTTP_OUTPUT,
             "direction": BindingDirection.OUT,
+            'dummyField': 'dummy',
             "name": "req",
             "dataType": DataType.UNDEFINED,
         })
