@@ -204,10 +204,10 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(self.func_app.app_script_file, SCRIPT_FILE_NAME)
 
     def test_auth_level(self):
-        self.func_app = FunctionApp(auth_level='ANONYMOUS')
+        self.func_app = FunctionApp(http_auth_level='ANONYMOUS')
         self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
 
-        self.func_app = FunctionApp(auth_level=AuthLevel.ADMIN)
+        self.func_app = FunctionApp(http_auth_level=AuthLevel.ADMIN)
         self.assertEqual(self.func_app.auth_level, AuthLevel.ADMIN)
 
     def test_get_no_functions(self):
@@ -244,7 +244,6 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], {})
 
     @mock.patch('azure.functions.decorators.function_app.FunctionApp'
                 '._add_http_app')
@@ -255,51 +254,38 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], {})
-
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
-                '._add_http_app')
-    def test_add_http_args(self, add_http_app_mock):
-        mock_wsgi_app = object()
-        app_kwargs = {"methods": ["GET"]}
-        FunctionApp(wsgi_app=mock_wsgi_app, app_kwargs=app_kwargs)
-
-        self.assertEqual(add_http_app_mock.call_args[0][1], app_kwargs)
 
     def test_add_http_app(self):
-        app = FunctionApp(asgi_app=object(),
-                          app_kwargs={"methods": ["GET"],
-                                      "auth_level": "ANONYMOUS",
-                                      "trigger_arg_data_type":
-                                          DataType.UNDEFINED,
-                                      "output_arg_data_type":
-                                          DataType.UNDEFINED})
+        app = FunctionApp(asgi_app=object())
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         func = funcs[0]
 
         self.assertEqual(func.get_function_name(), "http_app_func")
         self.assertEqual(func.get_raw_bindings(), [
-            '{"direction": "IN", "dataType": "UNDEFINED", "type": '
+            '{"direction": "IN", "type": '
             '"httpTrigger", "name": '
-            '"req", "methods": ["GET"], "authLevel": "ANONYMOUS", "route": '
+            '"req", "methods": ["GET", "POST", "DELETE", "HEAD", "PATCH", '
+            '"PUT", "OPTIONS"], "authLevel": "FUNCTION", "route": '
             '"/{*route}"}',
-            '{"direction": "OUT", "dataType": "UNDEFINED", "type": "http", '
+            '{"direction": "OUT", "type": "http", '
             '"name": '
             '"$return"}'])
         self.assertEqual(func.get_bindings_dict(), {
             "bindings": [
                 {
-                    "authLevel": AuthLevel.ANONYMOUS,
-                    "dataType": DataType.UNDEFINED,
+                    "authLevel": AuthLevel.FUNCTION,
                     "direction": BindingDirection.IN,
-                    "methods": [HttpMethod.GET],
+                    "methods": [HttpMethod.GET, HttpMethod.POST,
+                                HttpMethod.DELETE,
+                                HttpMethod.HEAD,
+                                HttpMethod.PATCH,
+                                HttpMethod.PUT, HttpMethod.OPTIONS],
                     "name": "req",
                     "route": "/{*route}",
                     "type": HTTP_TRIGGER
                 },
                 {
-                    "dataType": DataType.UNDEFINED,
                     "direction": BindingDirection.OUT,
                     "name": "$return",
                     "type": HTTP_OUTPUT
