@@ -12,12 +12,14 @@ class TestQueue(unittest.TestCase):
         trigger = QueueTrigger(name="req",
                                queue_name="dummy_queue",
                                connection="dummy_connection",
-                               data_type=DataType.UNDEFINED)
+                               data_type=DataType.UNDEFINED,
+                               dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "queueTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": QUEUE_TRIGGER,
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "queueName": "dummy_queue",
@@ -28,12 +30,14 @@ class TestQueue(unittest.TestCase):
         output = QueueOutput(name="res",
                              queue_name="dummy_queue_out",
                              connection="dummy_connection",
-                             data_type=DataType.UNDEFINED)
+                             data_type=DataType.UNDEFINED,
+                             dummy_field="dummy")
 
         self.assertEqual(output.get_binding_name(), "queue")
         self.assertEqual(output.get_dict_repr(), {
             "type": QUEUE,
             "direction": BindingDirection.OUT,
+            'dummyField': 'dummy',
             "name": "res",
             "dataType": DataType.UNDEFINED,
             "queueName": "dummy_queue_out",
