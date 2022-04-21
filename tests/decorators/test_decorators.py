@@ -18,7 +18,7 @@ class TestFunctionsApp(unittest.TestCase):
     def setUp(self):
         self.func_app = FunctionApp()
 
-    def _get_func(self, app):
+    def _get_user_function(self, app):
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         return funcs[0]
@@ -32,7 +32,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), test_func_name)
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -45,7 +45,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), "dummy_func")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -59,7 +59,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), "dummy_function")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -72,7 +72,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         self.assertEqual(func.get_function_name(), "dummy_func")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
@@ -95,7 +95,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -118,7 +118,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -146,7 +146,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -178,7 +178,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -200,12 +200,12 @@ class TestFunctionsApp(unittest.TestCase):
     def test_queue_trigger(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn")
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -221,14 +221,14 @@ class TestFunctionsApp(unittest.TestCase):
     def test_queue_output_binding(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn")
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
         @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
                          connection="dummy_out_conn")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -253,7 +253,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -286,7 +286,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -310,13 +310,13 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_queue_trigger(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue")
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -332,16 +332,16 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_queue_output_binding(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue")
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -372,7 +372,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -412,7 +412,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -438,14 +438,14 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_topic_trigger(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub')
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -462,17 +462,17 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_topic_output_binding(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub')
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -505,7 +505,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -546,7 +546,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -570,13 +570,13 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_hub_trigger(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub")
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -592,16 +592,16 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_hub_output_binding(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub")
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
         @app.write_event_hub_message(arg_name="res",
                                      event_hub_name="dummy_event_hub",
                                      connection="dummy_connection")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -630,7 +630,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {
             "scriptFile": "function_app.py",
@@ -701,7 +701,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -785,7 +785,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -821,14 +821,14 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_trigger(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(arg_name="trigger",
-                                 database_name="dummy_db",
-                                 collection_name="dummy_collection",
-                                 connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -845,10 +845,10 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_input_binding(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(arg_name="trigger",
-                                 database_name="dummy_db",
-                                 collection_name="dummy_collection",
-                                 connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
         @app.read_cosmos_db_documents(arg_name="in",
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
@@ -856,7 +856,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -874,10 +874,10 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_output_binding(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(arg_name="trigger",
-                                 database_name="dummy_db",
-                                 collection_name="dummy_collection",
-                                 connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
         @app.write_cosmos_db_documents(arg_name="out",
                                        database_name="dummy_out_db",
                                        collection_name="dummy_out_collection",
@@ -885,7 +885,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -964,7 +964,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -1091,7 +1091,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -1126,7 +1126,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
 
@@ -1152,7 +1152,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
@@ -1178,7 +1178,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 2)
 
