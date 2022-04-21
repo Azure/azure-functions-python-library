@@ -91,7 +91,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.schedule(arg_name="req", schedule="dummy_schedule",
                       run_on_startup=False, use_monitor=False,
-                      data_type=DataType.STRING)
+                      data_type=DataType.STRING, dummy_field='dummy')
         def dummy():
             pass
 
@@ -104,6 +104,7 @@ class TestFunctionsApp(unittest.TestCase):
                     "type": TIMER_TRIGGER,
                     "dataType": DataType.STRING,
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "schedule": "dummy_schedule",
                     "runOnStartup": False,
                     "useMonitor": False
@@ -142,7 +143,9 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
                    methods=(HttpMethod.GET, HttpMethod.PATCH),
-                   auth_level=AuthLevel.FUNCTION, route='dummy_route')
+                   auth_level=AuthLevel.FUNCTION, route='dummy_route',
+                   trigger_extra_fields={"dummy_field": "dummy"},
+                   binding_extra_fields={"dummy_field": "dummy"})
         def dummy():
             pass
 
@@ -152,6 +155,7 @@ class TestFunctionsApp(unittest.TestCase):
             "bindings": [
                 {
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "type": HTTP_TRIGGER,
                     "name": "trigger_name",
                     "authLevel": AuthLevel.FUNCTION,
@@ -162,6 +166,7 @@ class TestFunctionsApp(unittest.TestCase):
                 },
                 {
                     "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
                     "type": HTTP_OUTPUT,
                     "name": "out",
                 }
@@ -246,10 +251,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn",
-                           data_type=DataType.STRING)
+                           data_type=DataType.STRING, dummy_field="dummy")
         @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
                          connection="dummy_out_conn",
-                         data_type=DataType.STRING)
+                         data_type=DataType.STRING, dummy_field="dummy")
         def dummy():
             pass
 
@@ -259,6 +264,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": QUEUE,
                                          "name": "out",
@@ -267,6 +273,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": QUEUE_TRIGGER,
                                          "name": "req",
@@ -363,12 +370,14 @@ class TestFunctionsApp(unittest.TestCase):
                                        data_type=DataType.STREAM,
                                        access_rights=AccessRights.MANAGE,
                                        is_sessions_enabled=True,
-                                       cardinality=Cardinality.MANY)
+                                       cardinality=Cardinality.MANY,
+                                       dummy_field="dummy")
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue',
                                      data_type=DataType.STREAM,
-                                     access_rights=AccessRights.MANAGE)
+                                     access_rights=AccessRights.MANAGE,
+                                     dummy_field="dummy")
         def dummy():
             pass
 
@@ -378,6 +387,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STREAM,
                                          "type": SERVICE_BUS,
                                          "name": "res",
@@ -388,6 +398,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      {
                                          "direction": BindingDirection.IN,
                                          "dataType": DataType.STREAM,
+                                         'dummyField': 'dummy',
                                          "type": SERVICE_BUS_TRIGGER,
                                          "name": "req",
                                          "connection": "dummy_conn",
@@ -496,12 +507,14 @@ class TestFunctionsApp(unittest.TestCase):
                                        data_type=DataType.STRING,
                                        access_rights=AccessRights.LISTEN,
                                        is_sessions_enabled=False,
-                                       cardinality=Cardinality.MANY)
+                                       cardinality=Cardinality.MANY,
+                                       dummy_field="dummy")
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub',
                                      data_type=DataType.STRING,
-                                     access_rights=AccessRights.LISTEN)
+                                     access_rights=AccessRights.LISTEN,
+                                     dummy_field="dummy")
         def dummy():
             pass
 
@@ -512,6 +525,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      {
                                          "type": SERVICE_BUS,
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "name": "res",
                                          "connection": "dummy_conn",
                                          "topicName": "dummy_topic",
@@ -522,6 +536,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      {
                                          "type": SERVICE_BUS_TRIGGER,
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "name": "req",
                                          "connection": "dummy_conn",
                                          "topicName": "dummy_topic",
@@ -622,11 +637,13 @@ class TestFunctionsApp(unittest.TestCase):
                                        event_hub_name="dummy_event_hub",
                                        cardinality=Cardinality.ONE,
                                        consumer_group="dummy_group",
-                                       data_type=DataType.UNDEFINED)
+                                       data_type=DataType.UNDEFINED,
+                                       dummy_field="dummy")
         @app.write_event_hub_message(arg_name="res",
                                      event_hub_name="dummy_event_hub",
                                      connection="dummy_connection",
-                                     data_type=DataType.UNDEFINED)
+                                     data_type=DataType.UNDEFINED,
+                                     dummy_field="dummy")
         def dummy():
             pass
 
@@ -637,6 +654,7 @@ class TestFunctionsApp(unittest.TestCase):
             "bindings": [
                 {
                     "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
                     "dataType": DataType.UNDEFINED,
                     "type": EVENT_HUB,
                     "name": "res",
@@ -645,6 +663,7 @@ class TestFunctionsApp(unittest.TestCase):
                 },
                 {
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "dataType": DataType.UNDEFINED,
                     "type": EVENT_HUB_TRIGGER,
                     "name": "req",
@@ -679,7 +698,8 @@ class TestFunctionsApp(unittest.TestCase):
             start_from_beginning=False,
             create_lease_collection_if_not_exists=False,
             preferred_locations="dummy_loc",
-            data_type=DataType.STRING)
+            data_type=DataType.STRING,
+            dummy_field="dummy")
         @app.read_cosmos_db_documents(arg_name="in",
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
@@ -687,7 +707,8 @@ class TestFunctionsApp(unittest.TestCase):
                                       id="dummy_id",
                                       sql_query="dummy_query",
                                       partition_key="dummy_partitions",
-                                      data_type=DataType.STRING)
+                                      data_type=DataType.STRING,
+                                      dummy_field="dummy")
         @app.write_cosmos_db_documents(arg_name="out",
                                        database_name="dummy_out_db",
                                        collection_name="dummy_out_collection",
@@ -697,7 +718,8 @@ class TestFunctionsApp(unittest.TestCase):
                                        collection_throughput=1,
                                        use_multiple_write_locations=False,
                                        preferred_locations="dummy_location",
-                                       data_type=DataType.STRING)
+                                       data_type=DataType.STRING,
+                                       dummy_field="dummy")
         def dummy():
             pass
 
@@ -707,6 +729,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB,
                                          "name": "out",
@@ -724,6 +747,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB,
                                          "name": "in",
@@ -738,6 +762,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB_TRIGGER,
                                          "name": "trigger",
@@ -1128,7 +1153,8 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(len(func.get_bindings()), 1)
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 1)
 
         output = func.get_bindings()[0]
         self.assertEqual(output.get_dict_repr(), {
@@ -1154,10 +1180,22 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(len(func.get_bindings()), 2)
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
 
-        output = func.get_bindings()[0]
+        input_binding = bindings[0]
+        output = bindings[1]
+
         self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(input_binding.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
             "type": BLOB,
@@ -1180,10 +1218,192 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(len(func.get_bindings()), 2)
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
+
+        output_binding = bindings[0]
+        output = bindings[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
+
+    def test_custom_trigger(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=BLOB_TRIGGER,
+                             data_type=DataType.BINARY,
+                             connection="dummy_conn",
+                             path="dummy_path")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 1)
+
+        output = bindings[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.BINARY,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+    def test_custom_input_binding(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=TIMER_TRIGGER,
+                             data_type=DataType.BINARY,
+                             schedule="dummy_schedule")
+        @app.generic_input_binding(arg_name="file", type=BLOB,
+                                   path="dummy_in_path",
+                                   connection="dummy_in_conn",
+                                   data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
+
+        input_binding = bindings[0]
+        trigger = bindings[1]
+
+        self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.BINARY,
+            "type": TIMER_TRIGGER,
+            "name": "req",
+            "schedule": "dummy_schedule"
+        })
+
+        self.assertEqual(input_binding.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "file",
+            "path": "dummy_in_path",
+            "connection": "dummy_in_conn"
+        })
+
+    def test_custom_output_binding(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             queue_name="dummy_queue",
+                             connection="dummy_conn")
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output_binding = func.get_bindings()[0]
+        output = func.get_bindings()[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
+
+    def test_custom_http_trigger(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
 
         output = func.get_bindings()[0]
+
         self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": HTTP_TRIGGER,
+            "name": "req",
+            "route": "dummy",
+            "authLevel": AuthLevel.FUNCTION
+        })
+
+    def test_custom_binding_with_excluded_params(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             direction=BindingDirection.INOUT)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output = func.get_bindings()[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req"
+        })
+
+    def test_mixed_custom_and_supported_binding(self):
+        app = self.func_app
+
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output_binding = func.get_bindings()[0]
+        output = func.get_bindings()[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "dataType": DataType.STRING,
             "type": BLOB,
