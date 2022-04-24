@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
-from azure.functions.decorators.utils import to_camel_case, \
+from .utils import to_camel_case, \
     ABCBuildDictMeta, StringifyEnum
 
 SCRIPT_FILE_NAME = "function_app.py"
@@ -73,6 +73,8 @@ class Binding(ABC):
     attribute in function.json when new binding classes are created.
     Ref: https://aka.ms/azure-function-binding-http """
 
+    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'type', 'data_type', 'direction'}
+
     @staticmethod
     @abstractmethod
     def get_binding_name() -> str:
@@ -80,10 +82,13 @@ class Binding(ABC):
 
     def __init__(self, name: str,
                  direction: BindingDirection,
-                 is_trigger: bool,
-                 data_type: Optional[DataType] = None):
-        self.type = self.get_binding_name()
-        self.is_trigger = is_trigger
+                 data_type: Optional[DataType] = None,
+                 type: Optional[str] = None):  # NoQa
+        # For natively supported bindings, get_binding_name is always
+        # implemented, and for generic bindings, type is a required argument
+        # in decorator functions.
+        self.type = self.get_binding_name() \
+            if self.get_binding_name() is not None else type
         self.name = name
         self._direction = direction
         self._data_type = data_type
@@ -111,7 +116,7 @@ class Binding(ABC):
         :return: Dictionary representation of the binding.
         """
         for p in getattr(self, 'init_params', []):
-            if p not in ['data_type', 'self']:
+            if p not in Binding.EXCLUDED_INIT_PARAMS:
                 self._dict[to_camel_case(p)] = getattr(self, p, None)
 
         return self._dict
@@ -121,24 +126,37 @@ class Trigger(Binding, ABC, metaclass=ABCBuildDictMeta):
     """Class representation of Azure Function Trigger. \n
     Ref: https://aka.ms/functions-triggers-bindings-overview
     """
-    def __init__(self, name, data_type) -> None:
+
+    @staticmethod
+    def is_supported_trigger_type(trigger_instance: 'Trigger',
+                                  trigger_type: Type['Trigger']):
+        return isinstance(trigger_instance,
+                          trigger_type) or trigger_instance.type == \
+            trigger_type.get_binding_name()
+
+    def __init__(self, name: str, data_type: Optional[DataType] = None,
+                 type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.IN,
-                         name=name, data_type=data_type, is_trigger=True)
+                         name=name, data_type=data_type, type=type)
 
 
 class InputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
     """Class representation of Azure Function Input Binding. \n
     Ref: https://aka.ms/functions-triggers-bindings-overview
     """
-    def __init__(self, name, data_type) -> None:
+
+    def __init__(self, name: str, data_type: Optional[DataType] = None,
+                 type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.IN,
-                         name=name, data_type=data_type, is_trigger=False)
+                         name=name, data_type=data_type, type=type)
 
 
 class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
     """Class representation of Azure Function Output Binding. \n
     Ref: https://aka.ms/functions-triggers-bindings-overview
     """
-    def __init__(self, name, data_type) -> None:
+
+    def __init__(self, name: str, data_type: Optional[DataType] = None,
+                 type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.OUT,
-                         name=name, data_type=data_type, is_trigger=False)
+                         name=name, data_type=data_type, type=type)

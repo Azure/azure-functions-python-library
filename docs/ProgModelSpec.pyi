@@ -3,18 +3,88 @@
 import typing
 from typing import Callable, Optional, Union, Iterable
 
-from azure.functions import AsgiMiddleware, WsgiMiddleware
-from azure.functions.decorators.http import HttpMethod
+from azure.functions import AsgiMiddleware, WsgiMiddleware, Function
 from azure.functions.decorators.core import DataType, \
     AuthLevel, Cardinality, AccessRights
+from azure.functions.decorators.function_app import FunctionBuilder
+from azure.functions.decorators.http import HttpMethod
 
 
 class FunctionApp:
     """FunctionApp object used by worker function indexing model captures
-    user defined functions and metadata.
+       user defined functions and metadata.
 
-    Ref: https://aka.ms/azure-function-ref
-    """
+       Ref: https://aka.ms/azure-function-ref
+       """
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 **kwargs):
+        """Constructor of :class:`FunctionApp` object.
+        To integrate your asgi or wsgi application into python function,
+        specify either of below variables as a keyword argument:
+        `asgi_app` - the actual asgi application to integrate into python
+        function.
+        `wsgi_app` - the actual wsgi application to integrate into python
+        function.
+
+        :param http_auth_level: defaults to AuthLevel.FUNCTION, takes str or
+        AuthLevel.
+        :param kwargs: Extra arguments passed to :func:`__init__`.
+        """
+
+        pass
+
+    @property
+    def app_script_file(self) -> str:
+        """Name of function app script file in which all the functions
+         are defined. \n
+         Script file defined here is for placeholder purpose, please refer to
+         worker defined script file path as the single point of truth.
+
+        :return: Script file name.
+        """
+
+        pass
+
+    @property
+    def auth_level(self) -> AuthLevel:
+        """Authorization level of the function app. Will be applied to the http
+         trigger functions which does not have authorization level specified.
+
+        :return: Authorization level of the function app.
+        """
+
+        pass
+
+    def get_functions(self) -> typing.List[Function]:
+        """Get the function objects in the function app.
+
+        :return: List of functions in the function app.
+        """
+        pass
+
+    def _validate_type(self, func: Union[Callable, FunctionBuilder]) \
+            -> FunctionBuilder:
+        """Validate the type of the function object and return the created
+        :class:`FunctionBuilder` object.
+
+
+        :param func: Function object passed to
+         :meth:`_configure_function_builder`
+        :raises ValueError: Raise error when func param is neither
+         :class:`Callable` nor :class:`FunctionBuilder`.
+        :return: :class:`FunctionBuilder` object.
+        """
+
+        pass
+
+    def _configure_function_builder(self, wrap) -> Callable:
+        """Decorator function on user defined function to create and return
+         :class:`FunctionBuilder` object from :class:`Callable` func.
+        """
+
+        pass
 
     def function_name(self, name: str) -> Callable:
         """Set name of the :class:`Function` object.
@@ -22,31 +92,32 @@ class FunctionApp:
         :param name: Name of the function.
         :return: Decorator function.
         """
+
         pass
 
     def _add_http_app(self,
-                      http_middleware: Union[AsgiMiddleware, WsgiMiddleware],
-                      app_kwargs: typing.Dict) -> None:
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`AsgiMiddleware` or
         :class:`WsgiMiddleware` instance.
-        :param app_kwargs: dict of :meth:`route` param names and values for
-        custom configuration of wsgi/asgi app.
 
         :return: None
         """
+
         pass
 
     def route(self,
               route: Optional[str] = None,
               trigger_arg_name: str = 'req',
               binding_arg_name: str = '$return',
-              trigger_arg_data_type: Optional[Union[DataType, str]] = None,
-              output_arg_data_type: Optional[Union[DataType, str]] = None,
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
-              auth_level: Optional[Union[AuthLevel, str]] = None) -> Callable:
+              auth_level: Optional[Union[AuthLevel, str]] = None,
+              trigger_extra_fields: typing.Dict = {},
+              binding_extra_fields: typing.Dict = {}
+              ) -> Callable:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -64,16 +135,19 @@ class FunctionApp:
         defaults to 'req'.
         :param binding_arg_name: Argument name for :class:`HttpResponse`,
         defaults to '$return'.
-        :param trigger_arg_data_type: Defines how Functions runtime should
-        treat the trigger_arg_name value.
-        :param output_arg_data_type: Defines how Functions runtime should
-        treat the binding_arg_name value.
         :param methods: A tuple of the HTTP methods to which the function
         responds.
         :param auth_level: Determines what keys, if any, need to be present
         on the request in order to invoke the function.
         :return: Decorator function.
+        :param trigger_extra_fields: Additional fields to include in trigger
+        json. For example,
+        >>> data_type='STRING' # 'dataType': 'STRING' in trigger json
+        :param binding_extra_fields: Additional fields to include in binding
+        json. For example,
+        >>> data_type='STRING' # 'dataType': 'STRING' in binding json
         """
+
         pass
 
     def schedule(self,
@@ -81,7 +155,8 @@ class FunctionApp:
                  schedule: str,
                  run_on_startup: Optional[bool] = None,
                  use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None) -> Callable:
+                 data_type: Optional[Union[DataType, str]] = None,
+                 **kwargs) -> Callable:
         """The schedule decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -105,9 +180,10 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
-    def on_service_bus_queue_change(
+    def service_bus_queue_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -115,7 +191,8 @@ class FunctionApp:
             data_type: Optional[Union[DataType, str]] = None,
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
-            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
+            cardinality: Optional[Union[Cardinality, str]] = None,
+            **kwargs) -> Callable:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -140,6 +217,7 @@ class FunctionApp:
         :param cardinality: Set to many in order to enable batching.
         :return: Decorator function.
         """
+
         pass
 
     def write_service_bus_queue(self,
@@ -149,7 +227,9 @@ class FunctionApp:
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_service_bus_queue decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -171,9 +251,10 @@ class FunctionApp:
         :param access_rights: Access rights for the connection string.
         :return: Decorator function.
         """
+
         pass
 
-    def on_service_bus_topic_change(
+    def service_bus_topic_trigger(
             self,
             arg_name: str,
             connection: str,
@@ -182,7 +263,8 @@ class FunctionApp:
             data_type: Optional[Union[DataType, str]] = None,
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
-            cardinality: Optional[Union[Cardinality, str]] = None) -> Callable:
+            cardinality: Optional[Union[Cardinality, str]] = None,
+            **kwargs) -> Callable:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -208,6 +290,7 @@ class FunctionApp:
         :param cardinality: Set to many in order to enable batching.
         :return: Decorator function.
         """
+
         pass
 
     def write_service_bus_topic(self,
@@ -218,7 +301,9 @@ class FunctionApp:
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_service_bus_topic decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -241,14 +326,16 @@ class FunctionApp:
         :param access_rights: Access rights for the connection string.
         :return: Decorator function.
         """
+
         pass
 
-    def on_queue_change(self,
-                        arg_name: str,
-                        queue_name: str,
-                        connection: str,
-                        data_type: Optional[DataType] = None) -> Callable:
-        """The on_queue_change decorator adds :class:`QueueTrigger` to the
+    def queue_trigger(self,
+                      arg_name: str,
+                      queue_name: str,
+                      connection: str,
+                      data_type: Optional[DataType] = None,
+                      **kwargs) -> Callable:
+        """The queue_trigger decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining QueueTrigger
@@ -268,13 +355,15 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
     def write_queue(self,
                     arg_name: str,
                     queue_name: str,
                     connection: str,
-                    data_type: Optional[DataType] = None) -> Callable:
+                    data_type: Optional[DataType] = None,
+                    **kwargs) -> Callable:
         """The write_queue decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -291,20 +380,26 @@ class FunctionApp:
         :param queue_name: The name of the queue to poll.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Queues.
-        :param data_type: Set to many in order to enable batching.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
         :return: Decorator function.
         """
+
         pass
 
-    def on_event_hub_message(self,
-                             arg_name: str,
-                             connection: str,
-                             event_hub_name: str,
-                             data_type: Optional[Union[DataType, str]] = None,
-                             cardinality: Optional[
-                                 Union[Cardinality, str]] = None,
-                             consumer_group: Optional[str] = None) -> Callable:
-        """The on_event_hub_message decorator adds :class:`EventHubTrigger`
+    def event_hub_message_trigger(self,
+                                  arg_name: str,
+                                  connection: str,
+                                  event_hub_name: str,
+                                  data_type: Optional[
+                                      Union[DataType, str]] = None,
+                                  cardinality: Optional[
+                                      Union[Cardinality, str]] = None,
+                                  consumer_group: Optional[
+                                      str] = None,
+                                  **kwargs) -> Callable:
+        """The event_hub_message_trigger decorator adds
+        :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining EventHubTrigger
@@ -327,6 +422,7 @@ class FunctionApp:
         group used to subscribe to events in the hub.
         :return: Decorator function.
         """
+
         pass
 
     def write_event_hub_message(self,
@@ -334,7 +430,9 @@ class FunctionApp:
                                 connection: str,
                                 event_hub_name: str,
                                 data_type: Optional[
-                                    Union[DataType, str]] = None) -> Callable:
+                                    Union[DataType, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_event_hub_message decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -355,34 +453,36 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
-    def on_cosmos_db_update(self,
-                            arg_name: str,
-                            database_name: str,
-                            collection_name: str,
-                            connection_string_setting: str,
-                            lease_collection_name: Optional[str] = None,
-                            lease_connection_string_setting: Optional[
-                                str] = None,
-                            lease_database_name: Optional[str] = None,
-                            create_lease_collection_if_not_exists: Optional[
-                                bool] = None,
-                            leases_collection_throughput: Optional[int] = None,
-                            lease_collection_prefix: Optional[str] = None,
-                            checkpoint_interval: Optional[int] = None,
-                            checkpoint_document_count: Optional[int] = None,
-                            feed_poll_delay: Optional[int] = None,
-                            lease_renew_interval: Optional[int] = None,
-                            lease_acquire_interval: Optional[int] = None,
-                            lease_expiration_interval: Optional[int] = None,
-                            max_items_per_invocation: Optional[int] = None,
-                            start_from_beginning: Optional[bool] = None,
-                            preferred_locations: Optional[str] = None,
-                            data_type: Optional[
-                                Union[DataType, str]] = None) -> \
+    def cosmos_db_trigger(self,
+                          arg_name: str,
+                          database_name: str,
+                          collection_name: str,
+                          connection_string_setting: str,
+                          lease_collection_name: Optional[str] = None,
+                          lease_connection_string_setting: Optional[
+                              str] = None,
+                          lease_database_name: Optional[str] = None,
+                          create_lease_collection_if_not_exists: Optional[
+                              bool] = None,
+                          leases_collection_throughput: Optional[int] = None,
+                          lease_collection_prefix: Optional[str] = None,
+                          checkpoint_interval: Optional[int] = None,
+                          checkpoint_document_count: Optional[int] = None,
+                          feed_poll_delay: Optional[int] = None,
+                          lease_renew_interval: Optional[int] = None,
+                          lease_acquire_interval: Optional[int] = None,
+                          lease_expiration_interval: Optional[int] = None,
+                          max_items_per_invocation: Optional[int] = None,
+                          start_from_beginning: Optional[bool] = None,
+                          preferred_locations: Optional[str] = None,
+                          data_type: Optional[
+                              Union[DataType, str]] = None,
+                          **kwargs) -> \
             Callable:
-        """The on_cosmos_db_update decorator adds :class:`CosmosDBTrigger`
+        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBTrigger
@@ -444,6 +544,7 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
     def write_cosmos_db_documents(self,
@@ -458,7 +559,8 @@ class FunctionApp:
                                       bool] = None,
                                   preferred_locations: Optional[str] = None,
                                   data_type: Optional[
-                                      Union[DataType, str]] = None) \
+                                      Union[DataType, str]] = None,
+                                  **kwargs) \
             -> Callable:
         """The write_cosmos_db_documents decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
@@ -493,6 +595,7 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
     def read_cosmos_db_documents(self,
@@ -504,7 +607,8 @@ class FunctionApp:
                                  sql_query: Optional[str] = None,
                                  partition_key: Optional[str] = None,
                                  data_type: Optional[
-                                     Union[DataType, str]] = None) \
+                                     Union[DataType, str]] = None,
+                                 **kwargs) \
             -> Callable:
         """The read_cosmos_db_documents decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
@@ -532,15 +636,17 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
-    def on_blob_change(self,
-                       arg_name: str,
-                       path: str,
-                       connection: str,
-                       data_type: Optional[DataType] = None) -> Callable:
+    def blob_trigger(self,
+                     arg_name: str,
+                     path: str,
+                     connection: str,
+                     data_type: Optional[DataType] = None,
+                     **kwargs) -> Callable:
         """
-        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobTrigger
@@ -560,13 +666,16 @@ class FunctionApp:
         parameter value.
         :return: Decorator function.
         """
+
         pass
 
     def read_blob(self,
                   arg_name: str,
                   path: str,
                   connection: str,
-                  data_type: Optional[DataType] = None) -> Callable:
+                  data_type: Optional[DataType] = None,
+                  **kwargs) -> Callable:
+
         """
         The read_blob decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -588,13 +697,16 @@ class FunctionApp:
          parameter value.
         :return: Decorator function.
         """
+
         pass
 
     def write_blob(self,
                    arg_name: str,
                    path: str,
                    connection: str,
-                   data_type: Optional[DataType] = None) -> Callable:
+                   data_type: Optional[DataType] = None,
+                   **kwargs) -> Callable:
+
         """
         The write_blob decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -616,5 +728,97 @@ class FunctionApp:
          parameter value.
         :return: Decorator function.
         """
+
+        pass
+
+    def generic_input_binding(self,
+                              arg_name: str,
+                              type: str,
+                              data_type: Optional[Union[DataType, str]] = None,
+                              **kwargs
+                              ) -> Callable:
+        """
+        The generic_input_binding decorator adds :class:`GenericInputBinding`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a generic input binding in the
+        function.json which enables function to read data from a
+        custom defined input source.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of input parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+
+        pass
+
+    def generic_output_binding(self,
+                               arg_name: str,
+                               type: str,
+                               data_type: Optional[
+                                   Union[DataType, str]] = None,
+                               **kwargs
+                               ) -> Callable:
+        """
+        The generic_output_binding decorator adds :class:`GenericOutputBinding`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a generic output binding in the
+        function.json which enables function to write data from a
+        custom defined output source.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of output parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+
+        pass
+
+    def generic_trigger(self,
+                        arg_name: str,
+                        type: str,
+                        data_type: Optional[Union[DataType, str]] = None,
+                        **kwargs
+                        ) -> Callable:
+        """
+        The generic_trigger decorator adds :class:`GenericTrigger`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a generic trigger in the
+        function.json which triggers function to execute when generic trigger
+        events are received by host.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of trigger parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+
         pass
 

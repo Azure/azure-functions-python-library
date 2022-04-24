@@ -18,7 +18,7 @@ class TestFunctionsApp(unittest.TestCase):
     def setUp(self):
         self.func_app = FunctionApp()
 
-    def _get_func(self, app):
+    def _get_user_function(self, app):
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         return funcs[0]
@@ -32,7 +32,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), test_func_name)
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -45,7 +45,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), "dummy_func")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -59,7 +59,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         self.assertEqual(func.get_function_name(), "dummy_function")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
@@ -72,7 +72,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy_func():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         self.assertEqual(func.get_function_name(), "dummy_func")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
@@ -91,11 +91,11 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.schedule(arg_name="req", schedule="dummy_schedule",
                       run_on_startup=False, use_monitor=False,
-                      data_type=DataType.STRING)
+                      data_type=DataType.STRING, dummy_field='dummy')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -104,6 +104,7 @@ class TestFunctionsApp(unittest.TestCase):
                     "type": TIMER_TRIGGER,
                     "dataType": DataType.STRING,
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "schedule": "dummy_schedule",
                     "runOnStartup": False,
                     "useMonitor": False
@@ -118,7 +119,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -141,21 +142,21 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
-                   trigger_arg_data_type=DataType.STRING,
-                   output_arg_data_type=DataType.STRING,
                    methods=(HttpMethod.GET, HttpMethod.PATCH),
-                   auth_level=AuthLevel.FUNCTION, route='dummy_route')
+                   auth_level=AuthLevel.FUNCTION, route='dummy_route',
+                   trigger_extra_fields={"dummy_field": "dummy"},
+                   binding_extra_fields={"dummy_field": "dummy"})
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "type": HTTP_TRIGGER,
-                    "dataType": DataType.STRING,
                     "name": "trigger_name",
                     "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy_route",
@@ -165,7 +166,7 @@ class TestFunctionsApp(unittest.TestCase):
                 },
                 {
                     "direction": BindingDirection.OUT,
-                    "dataType": DataType.STRING,
+                    'dummyField': 'dummy',
                     "type": HTTP_OUTPUT,
                     "name": "out",
                 }
@@ -175,14 +176,14 @@ class TestFunctionsApp(unittest.TestCase):
     def test_queue_default_args(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn")
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
         @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
                          connection="dummy_out_conn")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -201,24 +202,69 @@ class TestFunctionsApp(unittest.TestCase):
                                          "connection": "dummy_conn"
                                      }]})
 
-    def test_queue_full_args(self):
+    def test_queue_trigger(self):
         app = self.func_app
 
-        @app.on_queue_change(arg_name="req", queue_name="dummy_queue",
-                             connection="dummy_conn",
-                             data_type=DataType.STRING)
-        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
-                         connection="dummy_out_conn",
-                         data_type=DataType.STRING)
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+    def test_queue_output_binding(self):
+        app = self.func_app
+
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
+        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
+                         connection="dummy_out_conn")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": QUEUE,
+            "name": "out",
+            "queueName": "dummy_out_queue",
+            "connection": "dummy_out_conn"
+        })
+
+    def test_queue_full_args(self):
+        app = self.func_app
+
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn",
+                           data_type=DataType.STRING, dummy_field="dummy")
+        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
+                         connection="dummy_out_conn",
+                         data_type=DataType.STRING, dummy_field="dummy")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": QUEUE,
                                          "name": "out",
@@ -227,6 +273,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": QUEUE_TRIGGER,
                                          "name": "req",
@@ -237,16 +284,16 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_queue_default_args(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue")
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -267,30 +314,80 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
+    def test_service_bus_queue_trigger(self):
+        app = self.func_app
+
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": SERVICE_BUS_TRIGGER,
+            "name": "req",
+            "connection": "dummy_conn",
+            "queueName": "dummy_queue"
+        })
+
+    def test_service_bus_queue_output_binding(self):
+        app = self.func_app
+
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue")
+        @app.write_service_bus_queue(arg_name='res',
+                                     connection='dummy_out_conn',
+                                     queue_name='dummy_out_queue')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": SERVICE_BUS,
+            "name": "res",
+            "connection": "dummy_out_conn",
+            "queueName": "dummy_out_queue"
+        })
+
     def test_service_bus_queue_full_args(self):
         app = self.func_app
 
-        @app.on_service_bus_queue_change(arg_name="req",
-                                         connection="dummy_conn",
-                                         queue_name="dummy_queue",
-                                         data_type=DataType.STREAM,
-                                         access_rights=AccessRights.MANAGE,
-                                         is_sessions_enabled=True,
-                                         cardinality=Cardinality.MANY)
+        @app.service_bus_queue_trigger(arg_name="req",
+                                       connection="dummy_conn",
+                                       queue_name="dummy_queue",
+                                       data_type=DataType.STREAM,
+                                       access_rights=AccessRights.MANAGE,
+                                       is_sessions_enabled=True,
+                                       cardinality=Cardinality.MANY,
+                                       dummy_field="dummy")
         @app.write_service_bus_queue(arg_name='res',
                                      connection='dummy_out_conn',
                                      queue_name='dummy_out_queue',
                                      data_type=DataType.STREAM,
-                                     access_rights=AccessRights.MANAGE)
+                                     access_rights=AccessRights.MANAGE,
+                                     dummy_field="dummy")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STREAM,
                                          "type": SERVICE_BUS,
                                          "name": "res",
@@ -301,6 +398,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      {
                                          "direction": BindingDirection.IN,
                                          "dataType": DataType.STREAM,
+                                         'dummyField': 'dummy',
                                          "type": SERVICE_BUS_TRIGGER,
                                          "name": "req",
                                          "connection": "dummy_conn",
@@ -315,17 +413,17 @@ class TestFunctionsApp(unittest.TestCase):
     def test_service_bus_topic_default_args(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub')
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub')
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -348,32 +446,86 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
+    def test_service_bus_topic_trigger(self):
+        app = self.func_app
+
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "type": SERVICE_BUS_TRIGGER,
+            "direction": BindingDirection.IN,
+            "name": "req",
+            "connection": "dummy_conn",
+            "topicName": "dummy_topic",
+            "subscriptionName": "dummy_sub"
+        })
+
+    def test_service_bus_topic_output_binding(self):
+        app = self.func_app
+
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub')
+        @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
+                                     topic_name='dummy_topic',
+                                     subscription_name='dummy_sub')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "type": SERVICE_BUS,
+            "direction": BindingDirection.OUT,
+            "name": "res",
+            "connection": "dummy_conn",
+            "topicName": "dummy_topic",
+            "subscriptionName": "dummy_sub"
+        })
+
     def test_service_bus_topic_full_args(self):
         app = self.func_app
 
-        @app.on_service_bus_topic_change(arg_name='req',
-                                         connection='dummy_conn',
-                                         topic_name='dummy_topic',
-                                         subscription_name='dummy_sub',
-                                         data_type=DataType.STRING,
-                                         access_rights=AccessRights.LISTEN,
-                                         is_sessions_enabled=False,
-                                         cardinality=Cardinality.MANY)
+        @app.service_bus_topic_trigger(arg_name='req',
+                                       connection='dummy_conn',
+                                       topic_name='dummy_topic',
+                                       subscription_name='dummy_sub',
+                                       data_type=DataType.STRING,
+                                       access_rights=AccessRights.LISTEN,
+                                       is_sessions_enabled=False,
+                                       cardinality=Cardinality.MANY,
+                                       dummy_field="dummy")
         @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
                                      topic_name='dummy_topic',
                                      subscription_name='dummy_sub',
                                      data_type=DataType.STRING,
-                                     access_rights=AccessRights.LISTEN)
+                                     access_rights=AccessRights.LISTEN,
+                                     dummy_field="dummy")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
                                      {
                                          "type": SERVICE_BUS,
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "name": "res",
                                          "connection": "dummy_conn",
                                          "topicName": "dummy_topic",
@@ -384,6 +536,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      {
                                          "type": SERVICE_BUS_TRIGGER,
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "name": "req",
                                          "connection": "dummy_conn",
                                          "topicName": "dummy_topic",
@@ -399,16 +552,16 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_hub_default_args(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub")
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
         @app.write_event_hub_message(arg_name="res",
                                      event_hub_name="dummy_event_hub",
                                      connection="dummy_connection")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -429,29 +582,79 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
-    def test_event_hub_full_args(self):
+    def test_event_hub_trigger(self):
         app = self.func_app
 
-        @app.on_event_hub_message(arg_name="req",
-                                  connection="dummy_connection",
-                                  event_hub_name="dummy_event_hub",
-                                  cardinality=Cardinality.ONE,
-                                  consumer_group="dummy_group",
-                                  data_type=DataType.UNDEFINED)
-        @app.write_event_hub_message(arg_name="res",
-                                     event_hub_name="dummy_event_hub",
-                                     connection="dummy_connection",
-                                     data_type=DataType.UNDEFINED)
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": EVENT_HUB_TRIGGER,
+            "name": "req",
+            "connection": "dummy_connection",
+            "eventHubName": "dummy_event_hub"
+        })
+
+    def test_event_hub_output_binding(self):
+        app = self.func_app
+
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub")
+        @app.write_event_hub_message(arg_name="res",
+                                     event_hub_name="dummy_event_hub",
+                                     connection="dummy_connection")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": EVENT_HUB,
+            "name": "res",
+            "connection": "dummy_connection",
+            "eventHubName": "dummy_event_hub"
+        })
+
+    def test_event_hub_full_args(self):
+        app = self.func_app
+
+        @app.event_hub_message_trigger(arg_name="req",
+                                       connection="dummy_connection",
+                                       event_hub_name="dummy_event_hub",
+                                       cardinality=Cardinality.ONE,
+                                       consumer_group="dummy_group",
+                                       data_type=DataType.UNDEFINED,
+                                       dummy_field="dummy")
+        @app.write_event_hub_message(arg_name="res",
+                                     event_hub_name="dummy_event_hub",
+                                     connection="dummy_connection",
+                                     data_type=DataType.UNDEFINED,
+                                     dummy_field="dummy")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
 
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
                 {
                     "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
                     "dataType": DataType.UNDEFINED,
                     "type": EVENT_HUB,
                     "name": "res",
@@ -460,6 +663,7 @@ class TestFunctionsApp(unittest.TestCase):
                 },
                 {
                     "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
                     "dataType": DataType.UNDEFINED,
                     "type": EVENT_HUB_TRIGGER,
                     "name": "req",
@@ -474,7 +678,7 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_full_args(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(
+        @app.cosmos_db_trigger(
             arg_name="trigger",
             database_name="dummy_db",
             collection_name="dummy_collection",
@@ -494,7 +698,8 @@ class TestFunctionsApp(unittest.TestCase):
             start_from_beginning=False,
             create_lease_collection_if_not_exists=False,
             preferred_locations="dummy_loc",
-            data_type=DataType.STRING)
+            data_type=DataType.STRING,
+            dummy_field="dummy")
         @app.read_cosmos_db_documents(arg_name="in",
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
@@ -502,7 +707,8 @@ class TestFunctionsApp(unittest.TestCase):
                                       id="dummy_id",
                                       sql_query="dummy_query",
                                       partition_key="dummy_partitions",
-                                      data_type=DataType.STRING)
+                                      data_type=DataType.STRING,
+                                      dummy_field="dummy")
         @app.write_cosmos_db_documents(arg_name="out",
                                        database_name="dummy_out_db",
                                        collection_name="dummy_out_collection",
@@ -512,16 +718,18 @@ class TestFunctionsApp(unittest.TestCase):
                                        collection_throughput=1,
                                        use_multiple_write_locations=False,
                                        preferred_locations="dummy_location",
-                                       data_type=DataType.STRING)
+                                       data_type=DataType.STRING,
+                                       dummy_field="dummy")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
                                      {
                                          "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB,
                                          "name": "out",
@@ -539,6 +747,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB,
                                          "name": "in",
@@ -553,6 +762,7 @@ class TestFunctionsApp(unittest.TestCase):
                                      },
                                      {
                                          "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
                                          "dataType": DataType.STRING,
                                          "type": COSMOS_DB_TRIGGER,
                                          "name": "trigger",
@@ -586,9 +796,9 @@ class TestFunctionsApp(unittest.TestCase):
     def test_cosmosdb_default_args(self):
         app = self.func_app
 
-        @app.on_cosmos_db_update(arg_name="trigger", database_name="dummy_db",
-                                 collection_name="dummy_collection",
-                                 connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger", database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
         @app.read_cosmos_db_documents(arg_name="in",
                                       database_name="dummy_in_db",
                                       collection_name="dummy_in_collection",
@@ -600,7 +810,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -632,6 +842,88 @@ class TestFunctionsApp(unittest.TestCase):
                                      }
                                  ]
                                  })
+
+    def test_cosmosdb_trigger(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB_TRIGGER,
+            "name": "trigger",
+            "databaseName": "dummy_db",
+            "collectionName": "dummy_collection",
+            "connectionStringSetting": "dummy_str"
+        })
+
+    def test_cosmosdb_input_binding(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
+        @app.read_cosmos_db_documents(arg_name="in",
+                                      database_name="dummy_in_db",
+                                      collection_name="dummy_in_collection",
+                                      connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB,
+            "name": "in",
+            "databaseName": "dummy_in_db",
+            "collectionName":
+                "dummy_in_collection",
+            "connectionStringSetting": "dummy_str"
+        })
+
+    def test_cosmosdb_output_binding(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
+        @app.write_cosmos_db_documents(arg_name="out",
+                                       database_name="dummy_out_db",
+                                       collection_name="dummy_out_collection",
+                                       connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": COSMOS_DB,
+            "name": "out",
+            "databaseName": "dummy_out_db",
+            "collectionName":
+                "dummy_out_collection",
+            "connectionStringSetting": "dummy_str"
+        })
 
     def test_multiple_triggers(self):
         app = self.func_app
@@ -697,7 +989,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -753,7 +1045,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  })
 
     def test_set_auth_level_for_http_functions(self):
-        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
 
         @app.route(auth_level=AuthLevel.ADMIN)
         def specify_auth_level():
@@ -815,8 +1107,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_default_args(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          connection="dummy_conn")
         @app.read_blob(arg_name="file", path="dummy_path",
                        connection="dummy_conn")
         @app.write_blob(arg_name="out", path="dummy_out_path",
@@ -824,7 +1116,7 @@ class TestFunctionsApp(unittest.TestCase):
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
@@ -853,17 +1145,19 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_trigger(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
-        trigger = func.get_bindings()[0]
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 1)
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
             "type": BLOB_TRIGGER,
@@ -875,20 +1169,33 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_input_binding(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         @app.read_blob(arg_name="file", path="dummy_in_path",
                        connection="dummy_in_conn",
                        data_type=DataType.STRING)
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
-        trigger = func.get_bindings()[0]
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
 
-        self.assertEqual(trigger.get_dict_repr(), {
+        input_binding = bindings[0]
+        output = bindings[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(input_binding.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
             "type": BLOB,
@@ -900,20 +1207,203 @@ class TestFunctionsApp(unittest.TestCase):
     def test_blob_output_binding(self):
         app = self.func_app
 
-        @app.on_blob_change(arg_name="req", path="dummy_path",
-                            data_type=DataType.STRING,
-                            connection="dummy_conn")
+        @app.blob_trigger(arg_name="req", path="dummy_path",
+                          data_type=DataType.STRING,
+                          connection="dummy_conn")
         @app.write_blob(arg_name="out", path="dummy_out_path",
                         connection="dummy_out_conn",
                         data_type=DataType.STRING)
         def dummy():
             pass
 
-        func = self._get_func(app)
+        func = self._get_user_function(app)
 
-        trigger = func.get_bindings()[0]
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
+
+        output_binding = bindings[0]
+        output = bindings[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
+
+    def test_custom_trigger(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=BLOB_TRIGGER,
+                             data_type=DataType.BINARY,
+                             connection="dummy_conn",
+                             path="dummy_path")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 1)
+
+        output = bindings[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.BINARY,
+            "type": BLOB_TRIGGER,
+            "name": "req",
+            "path": "dummy_path",
+            "connection": "dummy_conn"
+        })
+
+    def test_custom_input_binding(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=TIMER_TRIGGER,
+                             data_type=DataType.BINARY,
+                             schedule="dummy_schedule")
+        @app.generic_input_binding(arg_name="file", type=BLOB,
+                                   path="dummy_in_path",
+                                   connection="dummy_in_conn",
+                                   data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 2)
+
+        input_binding = bindings[0]
+        trigger = bindings[1]
 
         self.assertEqual(trigger.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.BINARY,
+            "type": TIMER_TRIGGER,
+            "name": "req",
+            "schedule": "dummy_schedule"
+        })
+
+        self.assertEqual(input_binding.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "file",
+            "path": "dummy_in_path",
+            "connection": "dummy_in_conn"
+        })
+
+    def test_custom_output_binding(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             queue_name="dummy_queue",
+                             connection="dummy_conn")
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output_binding = func.get_bindings()[0]
+        output = func.get_bindings()[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": BLOB,
+            "name": "out",
+            "path": "dummy_out_path",
+            "connection": "dummy_out_conn"
+        })
+
+    def test_custom_http_trigger(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output = func.get_bindings()[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": HTTP_TRIGGER,
+            "name": "req",
+            "route": "dummy",
+            "authLevel": AuthLevel.FUNCTION
+        })
+
+    def test_custom_binding_with_excluded_params(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
+                             direction=BindingDirection.INOUT)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output = func.get_bindings()[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req"
+        })
+
+    def test_mixed_custom_and_supported_binding(self):
+        app = self.func_app
+
+        @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
+                           connection="dummy_conn")
+        @app.generic_output_binding(arg_name="out", type=BLOB,
+                                    path="dummy_out_path",
+                                    connection="dummy_out_conn",
+                                    data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        output_binding = func.get_bindings()[0]
+        output = func.get_bindings()[1]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": QUEUE_TRIGGER,
+            "name": "req",
+            "queueName": "dummy_queue",
+            "connection": "dummy_conn"
+        })
+
+        self.assertEqual(output_binding.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "dataType": DataType.STRING,
             "type": BLOB,

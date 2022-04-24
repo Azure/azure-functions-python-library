@@ -18,12 +18,14 @@ class TestServiceBus(unittest.TestCase):
                                          data_type=DataType.UNDEFINED,
                                          access_rights=AccessRights.MANAGE,
                                          is_sessions_enabled=True,
-                                         cardinality=Cardinality.ONE)
+                                         cardinality=Cardinality.ONE,
+                                         dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": SERVICE_BUS_TRIGGER,
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "req",
             "connection": "dummy_conn",
             "queueName": "dummy_queue",
@@ -39,13 +41,15 @@ class TestServiceBus(unittest.TestCase):
             connection="dummy_conn",
             queue_name="dummy_queue",
             data_type=DataType.UNDEFINED,
-            access_rights=AccessRights.MANAGE)
+            access_rights=AccessRights.MANAGE,
+            dummy_field="dummy")
 
         self.assertEqual(service_bus_queue_output.get_binding_name(),
                          "serviceBus")
         self.assertEqual(service_bus_queue_output.get_dict_repr(), {
             "type": SERVICE_BUS,
             "direction": BindingDirection.OUT,
+            'dummyField': 'dummy',
             "name": "res",
             "dataType": DataType.UNDEFINED,
             "connection": "dummy_conn",
@@ -60,12 +64,14 @@ class TestServiceBus(unittest.TestCase):
                                          data_type=DataType.UNDEFINED,
                                          access_rights=AccessRights.MANAGE,
                                          is_sessions_enabled=True,
-                                         cardinality=Cardinality.ONE)
+                                         cardinality=Cardinality.ONE,
+                                         dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
         self.assertEqual(trigger.get_dict_repr(), {
             "type": SERVICE_BUS_TRIGGER,
             "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
             "name": "req",
             "connection": "dummy_conn",
             "topicName": "dummy_topic",
@@ -81,12 +87,14 @@ class TestServiceBus(unittest.TestCase):
                                        topic_name="dummy_topic",
                                        subscription_name="dummy_sub",
                                        data_type=DataType.UNDEFINED,
-                                       access_rights=AccessRights.MANAGE)
+                                       access_rights=AccessRights.MANAGE,
+                                       dummy_field="dummy")
 
         self.assertEqual(output.get_binding_name(), "serviceBus")
         self.assertEqual(output.get_dict_repr(), {
             "type": SERVICE_BUS,
             "direction": BindingDirection.OUT,
+            'dummyField': 'dummy',
             "name": "res",
             "dataType": DataType.UNDEFINED,
             "connection": "dummy_conn",

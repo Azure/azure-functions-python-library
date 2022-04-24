@@ -47,16 +47,23 @@ class BuildDictMeta(type):
 
     @staticmethod
     def add_to_dict(func: Callable):
-        def wrapper(*args, **kw):
+        def wrapper(*args, **kwargs):
             if args is None or len(args) == 0:
                 raise ValueError(
                     f'{func.__name__} has no args. Please ensure func is an '
                     f'object method.')
 
-            func(*args, **kw)
+            func(*args, **kwargs)
 
-            setattr(args[0], 'init_params',
-                    list(inspect.signature(func).parameters.keys()))
+            self = args[0]
+
+            init_params = set(inspect.signature(func).parameters.keys())
+            init_params.update(kwargs.keys())
+            for key in kwargs.keys():
+                if not hasattr(self, key):
+                    setattr(self, key, kwargs[key])
+
+            setattr(self, 'init_params', init_params)
 
         return wrapper
 
@@ -90,7 +97,7 @@ def parse_singular_param_to_enum(param: Optional[Union[T, str]],
         return None
     if isinstance(param, str):
         try:
-            return class_name[param]
+            return class_name[param.upper()]
         except KeyError:
             raise KeyError(
                 f"Can not parse str '{param}' to {class_name.__name__}. "
@@ -106,8 +113,8 @@ def parse_iterable_param_to_enums(
         return None
 
     try:
-        return [class_name[value] if isinstance(value, str) else value for
-                value in param_values]
+        return [class_name[value.upper()] if isinstance(value, str) else value
+                for value in param_values]
     except KeyError:
         raise KeyError(
             f"Can not parse '{param_values}' to "

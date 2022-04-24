@@ -19,7 +19,8 @@ class EventHubTrigger(Trigger):
                  event_hub_name: str,
                  data_type: Optional[DataType] = None,
                  cardinality: Optional[Cardinality] = None,
-                 consumer_group: Optional[str] = None):
+                 consumer_group: Optional[str] = None,
+                 **kwargs):
         self.connection = connection
         self.event_hub_name = event_hub_name
         self.cardinality = cardinality
@@ -37,7 +38,8 @@ class EventHubOutput(OutputBinding):
                  name: str,
                  connection: str,
                  event_hub_name: str,
-                 data_type: Optional[DataType] = None):
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
         self.connection = connection
         self.event_hub_name = event_hub_name
         super().__init__(name=name, data_type=data_type)
