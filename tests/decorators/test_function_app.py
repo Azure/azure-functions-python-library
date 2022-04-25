@@ -263,7 +263,7 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(self.func_app.app_script_file, SCRIPT_FILE_NAME)
 
     def test_auth_level(self):
-        self.func_app = FunctionApp(auth_level='ANONYMOUS')
+        self.func_app = FunctionApp(http_auth_level='ANONYMOUS')
         self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
 
     def test_get_no_functions(self):
@@ -298,7 +298,8 @@ class TestFunctionApp(unittest.TestCase):
         AsgiFunctionApp(app=mock_asgi_app)
 
         add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
 
     @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
@@ -308,7 +309,7 @@ class TestFunctionApp(unittest.TestCase):
         WsgiFunctionApp(app=mock_wsgi_app)
 
         add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args.args[0],
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
 
     def test_add_http_app(self):
@@ -384,7 +385,7 @@ class TestFunctionApp(unittest.TestCase):
         def hello(name: str):
             return "hello"
 
-        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
         app.register_functions(bp)
 
         self.assertEqual(len(app.get_functions()), 1)
@@ -464,7 +465,8 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
 
     def test_asgi_function_app_custom(self):
-        app = AsgiFunctionApp(app=object(), auth_level=AuthLevel.ANONYMOUS)
+        app = AsgiFunctionApp(app=object(),
+                              http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
     def test_wsgi_function_app_default(self):
@@ -472,5 +474,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
 
     def test_wsgi_function_app_custom(self):
-        app = WsgiFunctionApp(app=object(), auth_level=AuthLevel.ANONYMOUS)
+        app = WsgiFunctionApp(app=object(),
+                              http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)

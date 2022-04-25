@@ -1045,7 +1045,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  })
 
     def test_set_auth_level_for_http_functions(self):
-        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
 
         @app.route(auth_level=AuthLevel.ADMIN)
         def specify_auth_level():

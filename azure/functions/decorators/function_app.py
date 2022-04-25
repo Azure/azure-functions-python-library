@@ -1404,13 +1404,15 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
     Ref: https://aka.ms/azure-function-ref
     """
 
-    def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`FunctionApp` object.
 
-        :param auth_level: Determines what keys, if any, need to be present
+        :param http_auth_level: Determines what keys, if any, need to be
+        present
         on the request in order to invoke the function.
         """
-        super().__init__(auth_level=auth_level)
+        super().__init__(auth_level=http_auth_level)
 
 
 class BluePrint(TriggerApi, BindingApi):
@@ -1445,21 +1447,21 @@ class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
 class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
-                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
         """
-        super().__init__(auth_level=auth_level)
+        super().__init__(auth_level=http_auth_level)
         self._add_http_app(AsgiMiddleware(app))
 
 
 class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
-                 auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
         """
-        super().__init__(auth_level=auth_level)
+        super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app))
