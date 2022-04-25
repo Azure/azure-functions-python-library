@@ -194,11 +194,6 @@ class FunctionBuilder(object):
         return self._function
 
 
-# TODO: merge scaffhold and decoratorapi -> scaffold
-# TODO: convert  httpauthlevel to mixin
-# TODO: separate asgi and wsgi into separate top level function apps
-
-
 class DecoratorApi(ABC):
     """Interface which contains essential decorator function building blocks
     to extend for creating new function app or blueprint classes.
