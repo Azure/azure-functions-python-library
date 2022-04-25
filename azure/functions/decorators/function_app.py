@@ -200,6 +200,10 @@ class FunctionBuilder(object):
 
 
 class DecoratorApi(ABC):
+    """Interface which contains essential decorator function building blocks
+    to extend for creating new function app or blueprint classes.
+    """
+
     def __init__(self, *args, **kwargs):
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
@@ -267,6 +271,9 @@ class DecoratorApi(ABC):
 
 
 class HttpFunctionsAuthLevelMixin(ABC):
+    """Interface to extend for enabling function app level http
+    authorization level setting"""
+
     def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
         self._auth_level = AuthLevel[auth_level] \
             if isinstance(auth_level, str) else auth_level
@@ -283,6 +290,8 @@ class HttpFunctionsAuthLevelMixin(ABC):
 
 
 class TriggerApi(DecoratorApi, ABC):
+    """Interface to extend for using existing trigger decorator functions."""
+
     def route(self,
               route: Optional[str] = None,
               trigger_arg_name: str = 'req',
@@ -447,57 +456,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_service_bus_queue(self,
-                                arg_name: str,
-                                connection: str,
-                                queue_name: str,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                access_rights: Optional[Union[
-                                    AccessRights, str]] = None,
-                                **kwargs) -> \
-            Callable:
-        """The write_service_bus_queue decorator adds
-        :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusQueueOutput
-        in the function.json which enables function to write message(s) to
-        the service bus queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-service-bus
-
-        :param arg_name: The name of the variable that represents service
-        bus queue output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param queue_name: Name of the queue to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param access_rights: Access rights for the connection string.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=ServiceBusQueueOutput(
-                        name=arg_name,
-                        connection=connection,
-                        queue_name=queue_name,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        access_rights=parse_singular_param_to_enum(
-                            access_rights, AccessRights),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
     def service_bus_topic_trigger(
             self,
             arg_name: str,
@@ -559,61 +517,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_service_bus_topic(self,
-                                arg_name: str,
-                                connection: str,
-                                topic_name: str,
-                                subscription_name: Optional[str] = None,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                access_rights: Optional[Union[
-                                    AccessRights, str]] = None,
-                                **kwargs) -> \
-            Callable:
-        """The write_service_bus_topic decorator adds
-        :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusTopicOutput
-        in the function.json which enables function to write message(s) to
-        the service bus topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-service-bus
-
-        :param arg_name: The name of the variable that represents service
-        bus topic output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param topic_name: Name of the topic to monitor.
-        :param subscription_name: Name of the subscription to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=ServiceBusTopicOutput(
-                        name=arg_name,
-                        connection=connection,
-                        topic_name=topic_name,
-                        subscription_name=subscription_name,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        access_rights=parse_singular_param_to_enum(
-                            access_rights,
-                            AccessRights),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
     def queue_trigger(self,
                       arg_name: str,
                       queue_name: str,
@@ -638,6 +541,9 @@ class TriggerApi(DecoratorApi, ABC):
         that specifies how to connect to Azure Queues.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -652,49 +558,6 @@ class TriggerApi(DecoratorApi, ABC):
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
-    def write_queue(self,
-                    arg_name: str,
-                    queue_name: str,
-                    connection: str,
-                    data_type: Optional[DataType] = None,
-                    **kwargs) -> Callable:
-        """The write_queue decorator adds :class:`QueueOutput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining QueueOutput
-        in the function.json which enables function to write message(s) to
-        the storage queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-queue
-
-        :param arg_name: The name of the variable that represents storage
-        queue output object in function code.
-        :param queue_name: The name of the queue to poll.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Azure Queues.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=QueueOutput(name=arg_name,
-                                        queue_name=queue_name,
-                                        connection=connection,
-                                        data_type=parse_singular_param_to_enum(
-                                            data_type, DataType),
-                                        **kwargs))
                 return fb
 
             return decorator()
@@ -734,6 +597,9 @@ class TriggerApi(DecoratorApi, ABC):
         :param cardinality: Set to many in order to enable batching.
         :param consumer_group: An optional property that sets the consumer
         group used to subscribe to events in the hub.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -750,52 +616,6 @@ class TriggerApi(DecoratorApi, ABC):
                         cardinality=parse_singular_param_to_enum(cardinality,
                                                                  Cardinality),
                         consumer_group=consumer_group,
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
-    def write_event_hub_message(self,
-                                arg_name: str,
-                                connection: str,
-                                event_hub_name: str,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                **kwargs) -> \
-            Callable:
-        """The write_event_hub_message decorator adds
-        :class:`EventHubOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining EventHubOutput
-        in the function.json which enables function to write message(s) to
-        the event hub.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-event-hubs
-
-        :param arg_name: The name of the variable that represents event hub
-        output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Event Hub.
-        :param event_hub_name: The name of the event hub.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=EventHubOutput(
-                        name=arg_name,
-                        connection=connection,
-                        event_hub_name=event_hub_name,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -889,6 +709,9 @@ class TriggerApi(DecoratorApi, ABC):
         for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
         trigger = CosmosDBTrigger(
@@ -924,13 +747,14 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def on_blob_change(self,
-                       arg_name: str,
-                       path: str,
-                       connection: str,
-                       data_type: Optional[DataType] = None) -> Callable:
+    def blob_trigger(self,
+                     arg_name: str,
+                     path: str,
+                     connection: str,
+                     data_type: Optional[DataType] = None,
+                     **kwargs) -> Callable:
         """
-        The on_blob_change decorator adds :class:`BlobTrigger` to the
+        The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobTrigger
@@ -938,9 +762,7 @@ class TriggerApi(DecoratorApi, ABC):
         message(s) are sent to the storage blobs.
         All optional fields will be given default value by function host when
         they are parsed by function host.
-
         Ref: https://aka.ms/azure-function-binding-storage-blob
-
         :param arg_name: The name of the variable that represents the
         :class:`InputStream` object in function code.
         :param path: The path to the blob.
@@ -948,6 +770,9 @@ class TriggerApi(DecoratorApi, ABC):
         that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -960,7 +785,52 @@ class TriggerApi(DecoratorApi, ABC):
                         path=path,
                         connection=connection,
                         data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType)))
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def generic_trigger(self,
+                        arg_name: str,
+                        type: str,
+                        data_type: Optional[Union[DataType, str]] = None,
+                        **kwargs
+                        ) -> Callable:
+        """
+        The generic_trigger decorator adds :class:`GenericTrigger`
+        to the :class:`FunctionBuilder` object for building :class:`Function`
+        object used in worker function indexing model.
+        This is equivalent to defining a generic trigger in the
+        function.json which triggers function to execute when generic trigger
+        events are received by host.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of trigger parameter in the function code.
+        :param type: The type of binding.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=GenericTrigger(
+                        name=arg_name,
+                        type=type,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
                 return fb
 
             return decorator()
@@ -969,6 +839,7 @@ class TriggerApi(DecoratorApi, ABC):
 
 
 class BindingApi(DecoratorApi, ABC):
+    """Interface to extend for using existing binding decorator functions."""
 
     def write_service_bus_queue(self,
                                 arg_name: str,
@@ -977,7 +848,9 @@ class BindingApi(DecoratorApi, ABC):
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_service_bus_queue decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1011,7 +884,8 @@ class BindingApi(DecoratorApi, ABC):
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         access_rights=parse_singular_param_to_enum(
-                            access_rights, AccessRights)))
+                            access_rights, AccessRights),
+                        **kwargs))
                 return fb
 
             return decorator()
@@ -1026,7 +900,9 @@ class BindingApi(DecoratorApi, ABC):
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 access_rights: Optional[Union[
-                                    AccessRights, str]] = None) -> Callable:
+                                    AccessRights, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_service_bus_topic decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1063,7 +939,8 @@ class BindingApi(DecoratorApi, ABC):
                                                                DataType),
                         access_rights=parse_singular_param_to_enum(
                             access_rights,
-                            AccessRights)))
+                            AccessRights),
+                        **kwargs))
                 return fb
 
             return decorator()
@@ -1074,7 +951,8 @@ class BindingApi(DecoratorApi, ABC):
                     arg_name: str,
                     queue_name: str,
                     connection: str,
-                    data_type: Optional[DataType] = None) -> Callable:
+                    data_type: Optional[DataType] = None,
+                    **kwargs) -> Callable:
         """The write_queue decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1093,6 +971,9 @@ class BindingApi(DecoratorApi, ABC):
         that specifies how to connect to Azure Queues.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -1104,7 +985,8 @@ class BindingApi(DecoratorApi, ABC):
                                         queue_name=queue_name,
                                         connection=connection,
                                         data_type=parse_singular_param_to_enum(
-                                            data_type, DataType)))
+                                            data_type, DataType),
+                                        **kwargs))
                 return fb
 
             return decorator()
@@ -1116,7 +998,9 @@ class BindingApi(DecoratorApi, ABC):
                                 connection: str,
                                 event_hub_name: str,
                                 data_type: Optional[
-                                    Union[DataType, str]] = None) -> Callable:
+                                    Union[DataType, str]] = None,
+                                **kwargs) -> \
+            Callable:
         """The write_event_hub_message decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1135,6 +1019,9 @@ class BindingApi(DecoratorApi, ABC):
         :param event_hub_name: The name of the event hub.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -1147,7 +1034,8 @@ class BindingApi(DecoratorApi, ABC):
                         connection=connection,
                         event_hub_name=event_hub_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType)))
+                                                               DataType),
+                        **kwargs))
                 return fb
 
             return decorator()
@@ -1200,6 +1088,9 @@ class BindingApi(DecoratorApi, ABC):
         for geo-replicated database accounts in the Azure Cosmos DB service.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -1215,7 +1106,7 @@ class BindingApi(DecoratorApi, ABC):
                         create_if_not_exists=create_if_not_exists,
                         partition_key=partition_key,
                         collection_throughput=collection_throughput,
-                        use_multiple_write_locations=use_multiple_write_locations,  # NoQA
+                        use_multiple_write_locations=use_multiple_write_locations, # NoQA
                         preferred_locations=preferred_locations,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -1262,6 +1153,9 @@ class BindingApi(DecoratorApi, ABC):
         lookup.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -1286,58 +1180,12 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def blob_trigger(self,
-                     arg_name: str,
-                     path: str,
-                     connection: str,
-                     data_type: Optional[DataType] = None,
-                     **kwargs) -> Callable:
-        """
-        The blob_change_trigger decorator adds :class:`BlobTrigger` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining BlobTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the storage blobs.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-storage-blob
-
-        :param arg_name: The name of the variable that represents the
-        :class:`InputStream` object in function code.
-        :param path: The path to the blob.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Azure Blobs.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_trigger(
-                    trigger=BlobTrigger(
-                        name=arg_name,
-                        path=path,
-                        connection=connection,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
     def read_blob(self,
                   arg_name: str,
                   path: str,
                   connection: str,
                   data_type: Optional[DataType] = None,
                   **kwargs) -> Callable:
-
         """
         The read_blob decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -1357,6 +1205,9 @@ class BindingApi(DecoratorApi, ABC):
         that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
         :return: Decorator function.
         """
 
@@ -1383,7 +1234,6 @@ class BindingApi(DecoratorApi, ABC):
                    connection: str,
                    data_type: Optional[DataType] = None,
                    **kwargs) -> Callable:
-
         """
         The write_blob decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -1403,6 +1253,8 @@ class BindingApi(DecoratorApi, ABC):
          that specifies how to connect to Azure Blobs.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
         :return: Decorator function.
         """
 
@@ -1512,53 +1364,17 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def generic_trigger(self,
-                        arg_name: str,
-                        type: str,
-                        data_type: Optional[Union[DataType, str]] = None,
-                        **kwargs
-                        ) -> Callable:
-        """
-        The generic_trigger decorator adds :class:`GenericTrigger`
-        to the :class:`FunctionBuilder` object for building :class:`Function`
-        object used in worker function indexing model.
-        This is equivalent to defining a generic trigger in the
-        function.json which triggers function to execute when generic trigger
-        events are received by host.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
-
-        Ref: https://aka.ms/azure-function-binding-custom
-
-        :param arg_name: The name of trigger parameter in the function code.
-        :param type: The type of binding.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
-
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_trigger(
-                    trigger=GenericTrigger(
-                        name=arg_name,
-                        type=type,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
 
 class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
     def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
+        """Interface for declaring top level function app class which will
+        be directly indexed by Python Function runtime.
+
+        :param auth_level: Determines what keys, if any, need to be present
+        on the request in order to invoke the function.
+        :param args: Variable length argument list.
+        :param kwargs: Arbitrary keyword arguments.
+        """
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
 
@@ -1570,7 +1386,12 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         return [function_builder.build(self.auth_level) for function_builder
                 in self._function_builders]
 
-    def register_functions(self, functions: DecoratorApi):
+    def register_functions(self, functions: DecoratorApi) -> None:
+        """Register a list of functions in the function app.
+
+        :param functions: Instance extending :class:`DecoratorApi` which
+        contains a list of functions.
+        """
         if isinstance(functions, FunctionRegister):
             raise TypeError('functions can not be type of FunctionRegister!')
         self._function_builders.extend(functions._function_builders)
@@ -1585,15 +1406,25 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
 
     def __init__(self, auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`FunctionApp` object.
+
+        :param auth_level: Determines what keys, if any, need to be present
+        on the request in order to invoke the function.
         """
         super().__init__(auth_level=auth_level)
 
 
 class BluePrint(TriggerApi, BindingApi):
+    """Functions container class where all the functions
+    loaded in it can be registered in :class:`FunctionRegister` subclasses
+    but itself can not be indexed directly. The class contains all existing
+    supported trigger and binding decorator functions.
+    """
     pass
 
 
 class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+    """Interface to extend for building third party http function apps."""
+
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware]) -> None:
@@ -1615,7 +1446,7 @@ class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
                  auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
-        """Constructor of :class:`FunctionApp` object.
+        """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
         """
@@ -1626,7 +1457,7 @@ class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
 class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
                  auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
-        """Constructor of :class:`FunctionApp` object.
+        """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
         """
