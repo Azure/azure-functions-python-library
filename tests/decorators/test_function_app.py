@@ -2,16 +2,16 @@
 #  Licensed under the MIT License.
 import json
 import unittest
-from typing import Callable
 from unittest import mock
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
-from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
+from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
+    TIMER_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, BluePrint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -263,7 +263,7 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(self.func_app.app_script_file, SCRIPT_FILE_NAME)
 
     def test_auth_level(self):
-        self.func_app = FunctionApp(http_auth_level='ANONYMOUS')
+        self.func_app = FunctionApp(auth_level='ANONYMOUS')
         self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
 
     def test_get_no_functions(self):
@@ -402,16 +402,7 @@ class TestFunctionApp(unittest.TestCase):
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
 
-    def test_http_functions_auth_level_mixin_default(self):
-        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
-            pass
-
-        app = DummyFunctionApp()
-        
-        self.assertTrue(hasattr(app, "auth_level"))
-        self.assertIsNone(app.auth_level)
-
-    def test_http_functions_auth_level_mixin_custom(self):
+    def test_http_functions_auth_level_mixin(self):
         class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
             pass
 
@@ -420,16 +411,66 @@ class TestFunctionApp(unittest.TestCase):
         self.assertTrue(hasattr(app, "auth_level"))
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
-    def test_function_register(self):
-        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
+    def test_function_register_basic_props(self):
+        class DummyFunctionApp(FunctionRegister):
             pass
 
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
 
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+        self.assertIsNotNone(getattr(app, "function_name", None))
+        self.assertIsNotNone(getattr(app, "_validate_type", None))
+        self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
         self.assertTrue(hasattr(app, "auth_level"))
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
-    # 1. Test asgi_app
-    # 2. Test wsgi_app
-    # 3. Test func_register
-    # 3. Test httpauthlevelmixin
-    # 3. Test decoratorapi
+
+    def test_function_register_register_function_register_error(self):
+        class DummyFunctionApp(FunctionRegister):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        with self.assertRaises(TypeError) as err:
+            app.register_functions(app)
+
+        self.assertEqual(err.exception.args[0],
+                         'functions can not be type of FunctionRegister!')
+
+    def test_function_register_register_functions_from_blueprint(self):
+        class DummyFunctionApp(FunctionRegister):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = BluePrint()
+
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_functions(blueprint)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+
+        trigger = functions[0].get_trigger()
+
+        self.assertEqual(trigger.type, TIMER_TRIGGER)
+        self.assertEqual(trigger.schedule, "10****")
+        self.assertEqual(trigger.name, "name")
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[0].get_user_function()("timer"), "timer")
+
+    def test_asgi_function_app_default(self):
+        app = AsgiFunctionApp(app=object())
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+
+    def test_asgi_function_app_custom(self):
+        app = AsgiFunctionApp(app=object(), auth_level=AuthLevel.ANONYMOUS)
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_wsgi_function_app_default(self):
+        app = WsgiFunctionApp(app=object())
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+
+    def test_wsgi_function_app_custom(self):
+        app = WsgiFunctionApp(app=object(), auth_level=AuthLevel.ANONYMOUS)
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)

@@ -20,7 +20,6 @@ from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
-from .constants import HTTP_TRIGGER
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
@@ -180,9 +179,15 @@ class FunctionBuilder(object):
                 f" in bindings {bindings}")
 
         # Set route to function name if unspecified in the http trigger
-        if Trigger.is_supported_trigger_type(trigger, HttpTrigger) \
-                and getattr(trigger, 'route', None) is None:
-            setattr(trigger, 'route', function_name)
+        if Trigger.is_supported_trigger_type(trigger, HttpTrigger):
+            if getattr(trigger, 'route', None) is None:
+                getattr(trigger, 'init_params').add('route')
+                setattr(trigger, 'route', function_name)
+            if getattr(trigger, 'auth_level',
+                       None) is None and auth_level is not None:
+                getattr(trigger, 'init_params').add('auth_level')
+                setattr(trigger, 'auth_level',
+                        parse_singular_param_to_enum(auth_level, AuthLevel))
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         self._validate_function(auth_level)
@@ -262,8 +267,7 @@ class DecoratorApi(ABC):
 
 
 class HttpFunctionsAuthLevelMixin(ABC):
-    def __init__(self, auth_level: Optional[Union[AuthLevel, str]] = None,
-                 *args, **kwargs):
+    def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
         self._auth_level = AuthLevel[auth_level] \
             if isinstance(auth_level, str) else auth_level
 
@@ -1539,12 +1543,6 @@ class BindingApi(DecoratorApi, ABC):
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
-                nonlocal kwargs
-                if type == HTTP_TRIGGER:
-                    if kwargs.get('auth_level', None) is None:
-                        kwargs['auth_level'] = self.auth_level
-                    if 'route' not in kwargs:
-                        kwargs['route'] = None
                 fb.add_trigger(
                     trigger=GenericTrigger(
                         name=arg_name,
@@ -1560,8 +1558,7 @@ class BindingApi(DecoratorApi, ABC):
 
 
 class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
-    def __init__(self, auth_level: Optional[Union[AuthLevel, str]] = None,
-                 *args, **kwargs):
+    def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
 
@@ -1610,8 +1607,6 @@ class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
-                    trigger_arg_data_type=None,
-                    output_arg_data_type=None,
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return http_middleware.handle(req, context)

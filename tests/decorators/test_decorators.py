@@ -124,10 +124,10 @@ class TestFunctionsApp(unittest.TestCase):
             "scriptFile": "function_app.py",
             "bindings": [
                 {
+                    "authLevel": AuthLevel.FUNCTION,
                     "direction": BindingDirection.IN,
                     "type": HTTP_TRIGGER,
                     "name": "req",
-                    "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy"
                 },
                 {
@@ -1045,7 +1045,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  })
 
     def test_set_auth_level_for_http_functions(self):
-        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+        app = FunctionApp(auth_level=AuthLevel.ANONYMOUS)
 
         @app.route(auth_level=AuthLevel.ADMIN)
         def specify_auth_level():
@@ -1350,6 +1350,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
+        self.assertEqual(len(func.get_bindings()), 1)
         output = func.get_bindings()[0]
 
         self.assertEqual(output.get_dict_repr(), {
