@@ -28,7 +28,8 @@ class HttpTrigger(Trigger):
                  methods: Optional[Iterable[HttpMethod]] = None,
                  data_type: Optional[DataType] = None,
                  auth_level: Optional[AuthLevel] = None,
-                 route: Optional[str] = None) -> None:
+                 route: Optional[str] = None,
+                 **kwargs) -> None:
         self.auth_level = auth_level
         self.methods = methods
         self.route = route
@@ -42,5 +43,6 @@ class HttpOutput(OutputBinding):
 
     def __init__(self,
                  name: str,
-                 data_type: Optional[DataType] = None) -> None:
+                 data_type: Optional[DataType] = None,
+                 **kwargs) -> None:
         super().__init__(name=name, data_type=data_type)

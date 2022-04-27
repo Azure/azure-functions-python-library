@@ -6,6 +6,7 @@ import datetime
 import io
 import typing
 
+from azure.functions._thirdparty.werkzeug.datastructures import Headers
 
 T = typing.TypeVar('T')
 
@@ -193,7 +194,7 @@ class HttpResponse(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def headers(self) -> typing.MutableMapping[str, str]:
+    def headers(self) -> Headers:
         pass
 
     @abc.abstractmethod

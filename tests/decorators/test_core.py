@@ -14,7 +14,8 @@ class DummyTrigger(Trigger):
 
     def __init__(self,
                  name: str,
-                 data_type: DataType = DataType.UNDEFINED):
+                 data_type: DataType = DataType.UNDEFINED,
+                 **kwargs):
         super().__init__(name=name, data_type=data_type)
 
 
@@ -25,7 +26,8 @@ class DummyInputBinding(InputBinding):
 
     def __init__(self,
                  name: str,
-                 data_type: DataType = DataType.UNDEFINED):
+                 data_type: DataType = DataType.UNDEFINED,
+                 **kwargs):
         super().__init__(name=name, data_type=data_type)
 
 
@@ -36,17 +38,25 @@ class DummyOutputBinding(OutputBinding):
 
     def __init__(self,
                  name: str,
-                 data_type: DataType = DataType.UNDEFINED):
+                 data_type: DataType = DataType.UNDEFINED,
+                 **kwargs):
         super().__init__(name=name, data_type=data_type)
 
 
 class TestBindings(unittest.TestCase):
     def test_trigger_creation(self):
-        """Testing if the trigger creation sets the correct values by default
-        """
         test_trigger = DummyTrigger(name="dummy", data_type=DataType.UNDEFINED)
 
-        self.assertTrue(test_trigger.is_trigger)
+        expected_dict = {'dataType': DataType.UNDEFINED,
+                         'direction': BindingDirection.IN,
+                         'name': 'dummy',
+                         'type': 'Dummy'}
+        self.assertEqual(test_trigger.get_binding_name(), "Dummy")
+        self.assertEqual(test_trigger.get_dict_repr(), expected_dict)
+
+    def test_param_direction_unset(self):
+        test_trigger = DummyTrigger(name="dummy", data_type=DataType.UNDEFINED,
+                                    direction="dummy", type="hello")
 
         expected_dict = {'dataType': DataType.UNDEFINED,
                          'direction': BindingDirection.IN,
@@ -56,8 +66,6 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(test_trigger.get_dict_repr(), expected_dict)
 
     def test_input_creation(self):
-        """Testing if the input creation sets the correct values by default
-        """
         test_input = DummyInputBinding(name="dummy",
                                        data_type=DataType.UNDEFINED)
 
@@ -67,12 +75,9 @@ class TestBindings(unittest.TestCase):
                          'type': 'DummyInputBinding'}
 
         self.assertEqual(test_input.get_binding_name(), "DummyInputBinding")
-        self.assertFalse(test_input.is_trigger)
         self.assertEqual(test_input.get_dict_repr(), expected_dict)
 
     def test_output_creation(self):
-        """Testing if the output creation sets the correct values by default
-        """
         test_output = DummyOutputBinding(name="dummy",
                                          data_type=DataType.UNDEFINED)
 
@@ -82,5 +87,16 @@ class TestBindings(unittest.TestCase):
                          'type': 'DummyOutputBinding'}
 
         self.assertEqual(test_output.get_binding_name(), "DummyOutputBinding")
-        self.assertFalse(test_output.is_trigger)
         self.assertEqual(test_output.get_dict_repr(), expected_dict)
+
+    def test_supported_trigger_types_populated(self):
+        for supported_trigger in Trigger.__subclasses__():
+            trigger_name = supported_trigger.__name__
+            if trigger_name != "GenericTrigger":
+                trigger_type_name = supported_trigger.get_binding_name()
+                self.assertTrue(trigger_type_name is not None,
+                                f"binding_type {trigger_name} can not be "
+                                f"None!")
+                self.assertTrue(len(trigger_type_name) > 0,
+                                f"binding_type {trigger_name} can not be "
+                                f"empty str!")

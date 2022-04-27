@@ -20,7 +20,8 @@ class ServiceBusQueueTrigger(Trigger):
                  data_type: Optional[DataType] = None,
                  access_rights: Optional[AccessRights] = None,
                  is_sessions_enabled: Optional[bool] = None,
-                 cardinality: Optional[Cardinality] = None):
+                 cardinality: Optional[Cardinality] = None,
+                 **kwargs):
         self.connection = connection
         self.queue_name = queue_name
         self.access_rights = access_rights
@@ -39,7 +40,8 @@ class ServiceBusQueueOutput(OutputBinding):
                  connection: str,
                  queue_name: str,
                  data_type: Optional[DataType] = None,
-                 access_rights: Optional[AccessRights] = None):
+                 access_rights: Optional[AccessRights] = None,
+                 **kwargs):
         self.connection = connection
         self.queue_name = queue_name
         self.access_rights = access_rights
@@ -59,7 +61,8 @@ class ServiceBusTopicTrigger(Trigger):
                  data_type: Optional[DataType] = None,
                  access_rights: Optional[AccessRights] = None,
                  is_sessions_enabled: Optional[bool] = None,
-                 cardinality: Optional[Cardinality] = None):
+                 cardinality: Optional[Cardinality] = None,
+                 **kwargs):
         self.connection = connection
         self.topic_name = topic_name
         self.subscription_name = subscription_name
@@ -80,7 +83,8 @@ class ServiceBusTopicOutput(OutputBinding):
                  topic_name: str,
                  subscription_name: Optional[str] = None,
                  data_type: Optional[DataType] = None,
-                 access_rights: Optional[AccessRights] = None):
+                 access_rights: Optional[AccessRights] = None,
+                 **kwargs):
         self.connection = connection
         self.topic_name = topic_name
         self.subscription_name = subscription_name
