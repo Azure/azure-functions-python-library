@@ -375,26 +375,31 @@ class _BaseConverter(metaclass=_ConverterMeta, binding=None):
 
 class InConverter(_BaseConverter, binding=None):
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
         pass
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def decode(cls, data: Datum, *, trigger_metadata) -> Any:
         raise NotImplementedError
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def has_implicit_output(cls) -> bool:
         return False
 
 
 class OutConverter(_BaseConverter, binding=None):
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
         pass
 
-    @abc.abstractclassmethod
+    @classmethod
+    @abc.abstractmethod
     def encode(cls, obj: Any, *,
                expected_type: Optional[type]) -> Optional[Datum]:
         raise NotImplementedError
