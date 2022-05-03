@@ -8,6 +8,7 @@ from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput
+from azure.functions.decorators.table import TableInput, TableOutput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
@@ -1368,6 +1369,108 @@ class FunctionApp:
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def read_table(self,
+                   arg_name: str,
+                   connection: str,
+                   table_name: str,
+                   row_key: Optional[str] = None,
+                   partition_key: Optional[str] = None,
+                   data_type: Optional[
+                       Union[DataType, str]] = None) -> Callable:
+        """
+        The read_table decorator adds :class:`TableInput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining TableInput
+        in the function.json which enables function to read a table in
+        an Azure Storage or Cosmos DB account
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref:
+        https://docs.microsoft.com/en-us/azure/azure-function/functions-bindings-storage-table
+
+        :param arg_name: The name of the variable that represents
+        the table or entity in function code.
+        :param connection: 	The name of an app setting or setting collection
+        that specifies how to connect to the table service.
+        :param table_name: The Name of the table
+        :param row_key:  The row key of the table entity to read.
+        :param partition_key: The partition key of the table entity to read.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=TableInput(
+                        name=arg_name,
+                        connection=connection,
+                        table_name=table_name,
+                        row_key=row_key,
+                        partition_key=partition_key,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def write_table(self,
+                    arg_name: str,
+                    connection: str,
+                    table_name: str,
+                    row_key: str,
+                    partition_key: str,
+                    data_type: Optional[
+                        Union[DataType, str]] = None) -> Callable:
+
+        """
+        The write_table decorator adds :class:`TableOutput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining TableOutput
+        in the function.json which enables function to write entities
+        to a table in an Azure Storage
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref:
+        https://docs.microsoft.com/en-us/azure/azure-function/functions-bindings-storage-table
+
+        :param arg_name: The name of the variable that represents
+        the table or entity in function code.
+        :param connection: 	The name of an app setting or setting collection
+        that specifies how to connect to the table service.
+        :param table_name: The Name of the table
+        :param row_key:  The row key of the table entity to read.
+        :param partition_key: The partition key of the table entity to read.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=TableOutput(
+                        name=arg_name,
+                        connection=connection,
+                        table_name=table_name,
+                        row_key=row_key,
+                        partition_key=partition_key,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType)))
                 return fb
 
             return decorator()
