@@ -39,7 +39,7 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
 
         else:
             raise NotImplementedError(
-                f'unsupported queue payload type: {data_type}')
+                f'Unsupported payload type: {data_type}')
 
         rows = json.loads(body)
         if not isinstance(rows, list):
@@ -63,12 +63,12 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
 
             for row in obj:
                 if not isinstance(row, sql.SqlRow):
-                    raise NotImplementedError
+                    raise NotImplementedError(f'Unsupported list type: {type(obj)}, lists must contain SqlRow objects')
                 else:
                     data.append(row)
 
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f'Unsupported type: {type(obj)}')
 
         return meta.Datum(
             type='json',
