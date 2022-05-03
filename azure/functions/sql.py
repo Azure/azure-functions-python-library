@@ -63,7 +63,9 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
 
             for row in obj:
                 if not isinstance(row, sql.SqlRow):
-                    raise NotImplementedError(f'Unsupported list type: {type(obj)}, lists must contain SqlRow objects')
+                    raise NotImplementedError(
+                        f'Unsupported list type: {type(obj)}, \
+                            lists must contain SqlRow objects')
                 else:
                     data.append(row)
 
