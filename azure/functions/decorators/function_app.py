@@ -179,6 +179,8 @@ class FunctionBuilder(object):
                 f" in bindings {bindings}")
 
         # Set route to function name if unspecified in the http trigger
+        # Set auth level to function app auth level if unspecified in the
+        # http trigger
         if Trigger.is_supported_trigger_type(trigger, HttpTrigger):
             if getattr(trigger, 'route', None) is None:
                 getattr(trigger, 'init_params').add('route')
@@ -1381,15 +1383,15 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         return [function_builder.build(self.auth_level) for function_builder
                 in self._function_builders]
 
-    def register_functions(self, functions: DecoratorApi) -> None:
+    def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.
 
-        :param functions: Instance extending :class:`DecoratorApi` which
-        contains a list of functions.
+        :param function_container: Instance extending :class:`DecoratorApi`
+        which contains a list of functions.
         """
-        if isinstance(functions, FunctionRegister):
+        if isinstance(function_container, FunctionRegister):
             raise TypeError('functions can not be type of FunctionRegister!')
-        self._function_builders.extend(functions._function_builders)
+        self._function_builders.extend(function_container._function_builders)
 
 
 class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
