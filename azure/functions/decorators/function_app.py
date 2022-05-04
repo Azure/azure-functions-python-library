@@ -1392,8 +1392,7 @@ class FunctionApp:
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref:
-        https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-grid-trigger
+        Ref: aka.ms/eventgridtrigger
 
         :param arg_name: the variable name used in function code for the
          parameter that receives the event data.
@@ -1436,8 +1435,7 @@ class FunctionApp:
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref:
-        https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-event-grid-trigger
+        Ref: aka.ms/eventgridtrigger
 
         :param arg_name: The variable name used in function code that
         represents the event.
