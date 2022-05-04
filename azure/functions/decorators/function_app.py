@@ -276,7 +276,7 @@ class HttpFunctionsAuthLevelMixin(ABC):
             if isinstance(auth_level, str) else auth_level
 
     @property
-    def auth_level(self):
+    def auth_level(self) -> AuthLevel:
         """Authorization level of the function app. Will be applied to the http
          trigger functions which do not have authorization level specified.
 
