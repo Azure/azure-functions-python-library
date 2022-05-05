@@ -96,6 +96,8 @@ class TestHTTP(unittest.TestCase):
 
         self.assertEqual(datum.value["cookies"], None)
 
+    @skipIf(sys.version_info < (3, 8, 0),
+            "Skip the tests for Python 3.7 and below")
     def test_http_response_encode_to_datum_with_cookies(self):
         headers = HttpResponseHeaders()
         headers.add("Set-Cookie",
@@ -140,6 +142,8 @@ class TestHTTP(unittest.TestCase):
         self.assertIn("Set-Cookie", resp.headers,
                       "Set-Cookie header not present in response headers!")
 
+    @skipIf(sys.version_info < (3, 8, 0),
+            "Skip the tests for Python 3.7 and below")
     def test_http_response_encode_to_datum_with_cookies_lower_case(self):
         headers = HttpResponseHeaders()
         headers.add("set-cookie",
