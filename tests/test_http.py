@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import sys
 import unittest
+from unittest import skipIf
 
 import azure.functions as func
 import azure.functions.http as http
@@ -120,6 +121,24 @@ class TestHTTP(unittest.TestCase):
                          "Max-Age=10000000; Path=/")
 
         self.assertTrue("Set-Cookie" not in resp.headers)
+
+    @skipIf(sys.version_info >= (3, 8, 0),
+            "Skip the tests for Python 3.8 and above")
+    def test_http_response_encode_to_datum_with_cookies_in_python_3_7(self):
+        headers = HttpResponseHeaders()
+        headers.add("Set-Cookie",
+                    'foo3=42; Domain=example.com; Expires=Thu, '
+                    '12-Jan-2017 13:55:08 GMT; Path=/; Max-Age=10000000')
+        headers.add("Set-Cookie",
+                    'foo3=43; Domain=example.com; Expires=Thu, 12-Jan-2018 '
+                    '13:55:09 GMT; Path=/; Max-Age=10000000')
+        resp = func.HttpResponse(headers=headers)
+        datum = http.HttpResponseConverter.encode(resp, expected_type=None)
+
+        actual_cookies = datum.value['cookies']
+        self.assertIsNone(actual_cookies)
+        self.assertIn("Set-Cookie", resp.headers,
+                      "Set-Cookie header not present in response headers!")
 
     def test_http_response_encode_to_datum_with_cookies_lower_case(self):
         headers = HttpResponseHeaders()
