@@ -1415,10 +1415,11 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_grid_default_args(self):
         app = self.func_app
 
-        @app.event_grid_trigger(arg_name="req")
-        @app.write_event_grid(arg_name="res",
-                              topic_endpoint_uri="dummy_topic_endpoint_uri",
-                              topic_key_setting="dummy_topic_key_setting")
+        @app.event_grid_trigger_message(arg_name="req")
+        @app.write_event_grid_message(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting")
         def dummy():
             pass
 
@@ -1445,15 +1446,16 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_grid_full_args(self):
         app = self.func_app
 
-        @app.event_grid_trigger(arg_name="req",
-                                data_type=DataType.UNDEFINED,
-                                dummy_field="dummy")
-        @app.write_event_grid(arg_name="res",
-                              topic_endpoint_uri="dummy_topic_endpoint_uri",
-                              topic_key_setting="dummy_topic_key_setting",
-                              data_type=DataType.UNDEFINED,
-                              dummy_field="dummy"
-                              )
+        @app.event_grid_trigger_message(arg_name="req",
+                                        data_type=DataType.UNDEFINED,
+                                        dummy_field="dummy")
+        @app.write_event_grid_message(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting",
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy"
+        )
         def dummy():
             pass
 
@@ -1484,7 +1486,7 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_grid_trigger(self):
         app = self.func_app
 
-        @app.event_grid_trigger(arg_name="req")
+        @app.event_grid_trigger_message(arg_name="req")
         def dummy():
             pass
 
@@ -1502,10 +1504,11 @@ class TestFunctionsApp(unittest.TestCase):
     def test_event_grid_output_binding(self):
         app = self.func_app
 
-        @app.event_grid_trigger(arg_name="req")
-        @app.write_event_grid(arg_name="res",
-                              topic_endpoint_uri="dummy_topic_endpoint_uri",
-                              topic_key_setting="dummy_topic_key_setting")
+        @app.event_grid_trigger_message(arg_name="req")
+        @app.write_event_grid_message(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting")
         def dummy():
             pass
 

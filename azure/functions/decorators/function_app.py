@@ -11,7 +11,7 @@ from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
-from azure.functions.decorators.eventgrid import EventGridTrigger,\
+from azure.functions.decorators.eventgrid import EventGridTrigger, \
     EventGridOutput
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
@@ -1376,13 +1376,13 @@ class FunctionApp:
 
         return wrap
 
-    def event_grid_trigger(self,
-                           arg_name: str,
-                           data_type: Optional[
-                               Union[DataType, str]] = None,
-                           **kwargs) -> Callable:
+    def event_grid_trigger_message(self,
+                                   arg_name: str,
+                                   data_type: Optional[
+                                       Union[DataType, str]] = None,
+                                   **kwargs) -> Callable:
         """
-        The event_grid_trigger decorator adds
+        The event_grid_trigger_message decorator adds
         :class:`EventGridTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1392,7 +1392,7 @@ class FunctionApp:
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: aka.ms/eventgridtrigger
+        Ref: https://aka.ms/eventgridtrigger
 
         :param arg_name: the variable name used in function code for the
          parameter that receives the event data.
@@ -1416,26 +1416,26 @@ class FunctionApp:
 
         return wrap
 
-    def write_event_grid(self,
-                         arg_name: str,
-                         topic_endpoint_uri: str,
-                         topic_key_setting: str,
-                         data_type: Optional[
-                             Union[DataType, str]] = None,
-                         **kwargs) -> \
+    def write_event_grid_message(self,
+                                 arg_name: str,
+                                 topic_endpoint_uri: str,
+                                 topic_key_setting: str,
+                                 data_type: Optional[
+                                     Union[DataType, str]] = None,
+                                 **kwargs) -> \
             Callable:
         """
-        The write_event_grid decorator adds
-        :class:`write_event_grid`
+        The write_event_grid_message decorator adds
+        :class:`EventGridOutput`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining write_event_grid
+        indexing model. This is equivalent to defining output binding
         in the function.json which enables function to
         write events to a custom topic.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: aka.ms/eventgridtrigger
+        Ref: https://aka.ms/eventgridtrigger
 
         :param arg_name: The variable name used in function code that
         represents the event.
