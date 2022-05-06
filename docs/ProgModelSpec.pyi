@@ -822,3 +822,77 @@ class FunctionApp:
 
         pass
 
+    def read_table(self,
+                   arg_name: str,
+                   connection: str,
+                   table_name: str,
+                   row_key: Optional[str] = None,
+                   partition_key: Optional[str] = None,
+                   take: Optional[int] = None,
+                   filter: Optional[str] = None,
+                   data_type: Optional[
+                       Union[DataType, str]] = None) -> Callable:
+        """
+        The read_table decorator adds :class:`TableInput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining TableInput
+        in the function.json which enables function to read a table in
+        an Azure Storage or Cosmos DB account
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/tablesbindings
+
+        :param arg_name: The name of the variable that represents
+        the table or entity in function code.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to the table service.
+        :param table_name: The Name of the table
+        :param row_key: The row key of the table entity to read.
+        :param partition_key: The partition key of the table entity to read.
+        :param take: The maximum number of entities to return
+        :param filter: An OData filter expression for the entities to return
+         from the table.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+
+        pass
+
+    def write_table(self,
+                    arg_name: str,
+                    connection: str,
+                    table_name: str,
+                    row_key: str,
+                    partition_key: str,
+                    data_type: Optional[
+                        Union[DataType, str]] = None) -> Callable:
+
+        """
+        The write_table decorator adds :class:`TableOutput` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining TableOutput
+        in the function.json which enables function to write entities
+        to a table in an Azure Storage
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/tablesbindings
+
+        :param arg_name: The name of the variable that represents
+        the table or entity in function code.
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to the table service.
+        :param table_name: The Name of the table
+        :param row_key: The row key of the table entity to read.
+        :param partition_key: The partition key of the table entity to read.
+        :param data_type: Defines how Functions runtime should treat the
+         parameter value.
+        :return: Decorator function.
+        """
+
+        pass
+

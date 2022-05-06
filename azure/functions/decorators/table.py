@@ -19,11 +19,15 @@ class TableInput(InputBinding):
                  table_name: str,
                  row_key: Optional[str] = None,
                  partition_key: Optional[str] = None,
+                 take: Optional[int] = None,
+                 filter: Optional[str] = None,
                  data_type: Optional[DataType] = None):
         self.connection = connection
         self.table_name = table_name
         self.row_key = row_key
         self.partition_key = partition_key
+        self.take = take
+        self.filter = filter
         super().__init__(name=name, data_type=data_type)
 
 

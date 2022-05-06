@@ -1472,7 +1472,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.read_table(arg_name="in", table_name="dummy_table_name",
                         connection="dummy_in_conn",
                         row_key="dummy_key",
-                        partition_key="dummy_partition_key")
+                        partition_key="dummy_partition_key",
+                        take=1,
+                        filter="dummy_filter")
         @app.write_table(arg_name="out", table_name="dummy_table_name",
                          connection="dummy_out_conn",
                          row_key="dummy_key",
@@ -1501,6 +1503,8 @@ class TestFunctionsApp(unittest.TestCase):
                     "partitionKey": "dummy_partition_key",
                     "tableName": "dummy_table_name",
                     "connection": "dummy_in_conn",
+                    "take": 1,
+                    "filter": "dummy_filter"
                 },
                 {
                     "direction": BindingDirection.IN,
@@ -1530,14 +1534,18 @@ class TestFunctionsApp(unittest.TestCase):
                         connection="dummy_in_conn",
                         row_key="dummy_key",
                         partition_key="dummy_partition_key",
+                        take=1,
+                        filter="dummy_filter",
                         data_type=DataType.STRING)
         def dummy():
             pass
 
         func = self._get_user_function(app)
 
-        output = func.get_bindings()[0]
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 3)
 
+        output = func.get_bindings()[0]
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "dataType": DataType.STRING,
@@ -1546,8 +1554,9 @@ class TestFunctionsApp(unittest.TestCase):
             "tableName": "dummy_table_name",
             "connection": "dummy_in_conn",
             "rowKey": "dummy_key",
-            "partitionKey": "dummy_partition_key"
-
+            "partitionKey": "dummy_partition_key",
+            "take": 1,
+            "filter": "dummy_filter"
         })
 
     def test_table_output_binding(self):
@@ -1564,8 +1573,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        output = func.get_bindings()[0]
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 3)
 
+        output = func.get_bindings()[0]
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "dataType": DataType.STRING,

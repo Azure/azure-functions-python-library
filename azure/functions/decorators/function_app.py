@@ -1381,6 +1381,8 @@ class FunctionApp:
                    table_name: str,
                    row_key: Optional[str] = None,
                    partition_key: Optional[str] = None,
+                   take: Optional[int] = None,
+                   filter: Optional[str] = None,
                    data_type: Optional[
                        Union[DataType, str]] = None) -> Callable:
         """
@@ -1393,16 +1395,18 @@ class FunctionApp:
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref:
-        https://docs.microsoft.com/en-us/azure/azure-function/functions-bindings-storage-table
+        Ref: https://aka.ms/tablesbindings
 
         :param arg_name: The name of the variable that represents
         the table or entity in function code.
-        :param connection: 	The name of an app setting or setting collection
+        :param connection: The name of an app setting or setting collection
         that specifies how to connect to the table service.
         :param table_name: The Name of the table
-        :param row_key:  The row key of the table entity to read.
+        :param row_key: The row key of the table entity to read.
         :param partition_key: The partition key of the table entity to read.
+        :param take: The maximum number of entities to return
+        :param filter: An OData filter expression for the entities to return
+         from the table.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
         :return: Decorator function.
@@ -1417,6 +1421,8 @@ class FunctionApp:
                         table_name=table_name,
                         row_key=row_key,
                         partition_key=partition_key,
+                        take=take,
+                        filter=filter,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType)))
                 return fb
@@ -1444,15 +1450,14 @@ class FunctionApp:
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref:
-        https://docs.microsoft.com/en-us/azure/azure-function/functions-bindings-storage-table
+        Ref: https://aka.ms/tablesbindings
 
         :param arg_name: The name of the variable that represents
         the table or entity in function code.
-        :param connection: 	The name of an app setting or setting collection
+        :param connection: The name of an app setting or setting collection
         that specifies how to connect to the table service.
         :param table_name: The Name of the table
-        :param row_key:  The row key of the table entity to read.
+        :param row_key: The row key of the table entity to read.
         :param partition_key: The partition key of the table entity to read.
         :param data_type: Defines how Functions runtime should treat the
          parameter value.
