@@ -822,3 +822,63 @@ class FunctionApp:
 
         pass
 
+    def event_grid_trigger(self,
+                           arg_name: str,
+                           data_type: Optional[
+                               Union[DataType, str]] = None,
+                           **kwargs) -> Callable:
+        """
+        The event_grid_trigger decorator adds
+        :class:`EventGridTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining event grid trigger
+        in the function.json which enables function to be triggered to
+        respond to an event sent to an event grid topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/eventgridtrigger
+
+        :param arg_name: the variable name used in function code for the
+         parameter that receives the event data.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        pass
+
+    def write_event_grid(self,
+                         arg_name: str,
+                         topic_endpoint_uri: str,
+                         topic_key_setting: str,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) -> Callable:
+        """
+        The write_event_grid decorator adds
+        :class:`EventGridOutput`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining output binding
+        in the function.json which enables function to
+        write events to a custom topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/eventgridtrigger
+
+        :param arg_name: The variable name used in function code that
+        represents the event.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param topic_endpoint_uri: 	The name of an app setting that
+        contains the URI for the custom topic.
+        :param topic_key_setting: The name of an app setting that
+        contains an access key for the custom topic.
+        :return: Decorator function.
+        """
+
+        pass
+
