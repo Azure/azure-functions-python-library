@@ -822,13 +822,13 @@ class FunctionApp:
 
         pass
 
-    def event_grid_trigger_message(self,
-                                   arg_name: str,
-                                   data_type: Optional[
-                                       Union[DataType, str]] = None,
-                                   **kwargs) -> Callable:
+    def event_grid_trigger(self,
+                           arg_name: str,
+                           data_type: Optional[
+                               Union[DataType, str]] = None,
+                           **kwargs) -> Callable:
         """
-        The event_grid_trigger_message decorator adds
+        The event_grid_trigger decorator adds
         :class:`EventGridTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -849,16 +849,15 @@ class FunctionApp:
 
         pass
 
-    def write_event_grid_message(self,
-                                 arg_name: str,
-                                 topic_endpoint_uri: str,
-                                 topic_key_setting: str,
-                                 data_type: Optional[
-                                     Union[DataType, str]] = None,
-                                 **kwargs) -> \
-            Callable:
+    def write_event_grid(self,
+                         arg_name: str,
+                         topic_endpoint_uri: str,
+                         topic_key_setting: str,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) -> Callable:
         """
-        The write_event_grid_message decorator adds
+        The write_event_grid decorator adds
         :class:`EventGridOutput`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
