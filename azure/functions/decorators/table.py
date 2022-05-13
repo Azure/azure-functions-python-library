@@ -41,8 +41,8 @@ class TableOutput(OutputBinding):
                  name: str,
                  connection: str,
                  table_name: str,
-                 row_key: str,
-                 partition_key: str,
+                 row_key: Optional[str] = None,
+                 partition_key: Optional[str] = None,
                  data_type: Optional[DataType] = None):
         self.connection = connection
         self.table_name = table_name
