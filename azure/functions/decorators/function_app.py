@@ -100,8 +100,8 @@ class Function(object):
         return self._bindings
 
     def get_raw_bindings(self) -> List[str]:
-        return [json.dumps(i, cls=StringifyEnumJsonEncoder) for i in
-                self.get_bindings_dict()["bindings"]]
+        return [json.dumps(b.get_dict_repr(), cls=StringifyEnumJsonEncoder) for b in
+                self._bindings]
 
     def get_bindings_dict(self) -> Dict:
         """Get dictionary representation of the bindings of the function.
