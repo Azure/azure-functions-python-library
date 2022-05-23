@@ -4,14 +4,14 @@
 import collections.abc
 import io
 import json
-import typing
 import types
+import typing
 
 from . import _abc
-
 from ._thirdparty.werkzeug import datastructures as _wk_datastructures
 from ._thirdparty.werkzeug import formparser as _wk_parser
 from ._thirdparty.werkzeug import http as _wk_http
+from ._thirdparty.werkzeug.datastructures import Headers
 
 
 class BaseHeaders(collections.abc.Mapping):
@@ -40,13 +40,8 @@ class HttpRequestHeaders(BaseHeaders):
     pass
 
 
-class HttpResponseHeaders(BaseHeaders, collections.abc.MutableMapping):
-
-    def __setitem__(self, key: str, value: str):
-        self.__http_headers__[key.lower()] = value
-
-    def __delitem__(self, key: str):
-        del self.__http_headers__[key.lower()]
+class HttpResponseHeaders(Headers):
+    pass
 
 
 class HttpResponse(_abc.HttpResponse):
@@ -70,8 +65,12 @@ class HttpResponse(_abc.HttpResponse):
         ``'utf-8'``.
     """
 
-    def __init__(self, body=None, *,
-                 status_code=None, headers=None, mimetype=None, charset=None):
+    def __init__(self,
+                 body: typing.Union[str, bytes] = None, *,
+                 status_code: int = None,
+                 headers: typing.Optional[typing.Mapping[str, str]] = None,
+                 mimetype: typing.Optional[str] = None,
+                 charset: str = None) -> None:
         if status_code is None:
             status_code = 200
         self.__status_code = status_code
@@ -86,7 +85,10 @@ class HttpResponse(_abc.HttpResponse):
 
         if headers is None:
             headers = {}
-        self.__headers = HttpResponseHeaders(headers)
+
+        self.__headers = HttpResponseHeaders([])
+        for k, v in headers.items():
+            self.__headers.add_header(k, v)
 
         if body is not None:
             self.__set_body(body)

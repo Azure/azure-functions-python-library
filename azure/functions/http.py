@@ -2,12 +2,15 @@
 # Licensed under the MIT License.
 
 import json
+import logging
+import sys
 import typing
+from http.cookies import SimpleCookie
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _http as azf_http
-
 from . import meta
+from ._thirdparty.werkzeug.datastructures import Headers
 
 
 class HttpRequest(azf_http.HttpRequest):
@@ -79,7 +82,8 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
         if isinstance(obj, azf_abc.HttpResponse):
             status = obj.status_code
-            headers = dict(obj.headers)
+            headers: Headers = obj.headers
+
             if 'content-type' not in headers:
                 if obj.mimetype.startswith('text/'):
                     ct = f'{obj.mimetype}; charset={obj.charset}'
@@ -93,6 +97,24 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
             else:
                 datum_body = meta.Datum(type='bytes', value=b'')
 
+            cookies = None
+
+            if sys.version_info.major == 3 and sys.version_info.minor <= 7:
+                # SimpleCookie api in http.cookies - Python Standard Library
+                # is not supporting 'samesite' in cookie attribute in python
+                # 3.7 or below and would cause cookie parsing error
+                # https://docs.python.org/3/library/http.cookies.html
+                # ?msclkid=d78849ddcd7311ecadd81f2f51d08b8e
+                logging.warning(
+                    "Setting multiple 'Set-Cookie' response headers is not "
+                    "supported in Azure Python Function with python version "
+                    "3.7, please upgrade to python 3.8 or above.")
+            else:
+                if "Set-Cookie" in headers:
+                    cookies = [SimpleCookie(cookie) for cookie in
+                               headers.get_all('Set-Cookie')]
+                    headers.pop("Set-Cookie")
+
             return meta.Datum(
                 type='http',
                 value=dict(
@@ -101,6 +123,7 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
                         n: meta.Datum(type='string', value=h)
                         for n, h in headers.items()
                     },
+                    cookies=cookies,
                     body=datum_body,
                 )
             )

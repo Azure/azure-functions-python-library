@@ -6,6 +6,7 @@ from io import StringIO, BytesIO
 
 import azure.functions as func
 from azure.functions._abc import TraceContext, RetryContext
+from azure.functions._http import HttpResponseHeaders
 from azure.functions._http_wsgi import (
     WsgiRequest,
     WsgiResponse,
@@ -153,7 +154,7 @@ class TestHttpWsgi(unittest.TestCase):
 
         wsgi_response: WsgiResponse = WsgiResponse.from_app(app, environ)
         func_response: func.HttpResponse = wsgi_response.to_func_response()
-        self.assertEqual(func_response.headers, {})
+        self.assertEqual(func_response.headers, HttpResponseHeaders([]))
 
     def test_response_with_exception(self):
         app = self._generate_wsgi_app(

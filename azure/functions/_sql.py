@@ -7,24 +7,24 @@ import json
 from . import _abc
 
 
-class Document(_abc.Document, collections.UserDict):
-    """An Azure Document.
+class SqlRow(_abc.SqlRow, collections.UserDict):
+    """A SQL Row.
 
-    Document objects are ``UserDict`` subclasses and behave like dicts.
+    SqlRow objects are ''UserDict'' subclasses and behave like dicts.
     """
 
     @classmethod
-    def from_json(cls, json_data: str) -> 'Document':
-        """Create a Document from a JSON string."""
+    def from_json(cls, json_data: str) -> 'SqlRow':
+        """Create a SqlRow from a JSON string."""
         return cls.from_dict(json.loads(json_data))
 
     @classmethod
-    def from_dict(cls, dct: dict) -> 'Document':
-        """Create a Document from a dict object."""
+    def from_dict(cls, dct: dict) -> 'SqlRow':
+        """Create a SqlRow from a dict object"""
         return cls({k: v for k, v in dct.items()})
 
     def to_json(self) -> str:
-        """Return the JSON representation of the document."""
+        """Return the JSON representation of the SqlRow"""
         return json.dumps(dict(self))
 
     def __getitem__(self, key):
@@ -35,10 +35,10 @@ class Document(_abc.Document, collections.UserDict):
 
     def __repr__(self) -> str:
         return (
-            f'<azure.Document at 0x{id(self):0x}>'
+            f'<SqlRow at 0x{id(self):0x}>'
         )
 
 
-class DocumentList(_abc.DocumentList, collections.UserList):
-    "A ``UserList`` subclass containing a list of :class:`~Document` objects"
+class SqlRowList(_abc.SqlRowList, collections.UserList):
+    "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
     pass

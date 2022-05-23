@@ -1,9 +1,9 @@
-# <img src="https://raw.githubusercontent.com/Azure/azure-functions-python-worker/dev/docs/Azure.Functions.svg" width = "30" alt="Functions Header Image - Lightning Logo"> Azure Functions Python Library
+# <img src="https://raw.githubusercontent.com/Azure/azure-functions-python-worker/dev/docs/Azure.Functions.svg" width = "40" alt="Functions Header Image - Lightning Logo"> Azure Functions Python Library
 
-|Branch|Status|Coverage|CodeCov|
-|---|---|---|---|
-|master|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=master)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=master)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/master)|[![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library)
-|dev|[![Build Status](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_apis/build/status/Azure%20Functions%20Python-CI?branchName=dev)](https://azfunc.visualstudio.com/Azure%20Functions%20Python/_build/latest?definitionId=19&branchName=dev)|![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/azfunc/Azure%20Functions%20Python/19/dev)|[![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library)
+| Branch | CodeCov                                                                                                                                                            |
+|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| master | [![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/master/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library) |
+| dev    | [![codecov](https://codecov.io/gh/Azure/azure-functions-python-library/branch/dev/graph/badge.svg)](https://codecov.io/gh/Azure/azure-functions-python-library)    |
 
 ## Overview
 
@@ -14,11 +14,11 @@ Here is the current status of Python in Azure Functions:
 
 _What are the supported Python versions?_
 
-|Azure Functions Runtime|Python 3.6|Python 3.7|Python 3.8|Python 3.9|
-|---|---|---|---|---|
-|Azure Functions 2.0|✔|✔|-|-|
-|Azure Functions 3.0|✔|✔|✔|✔|
-|Azure Functions 4.0|-|✔|✔|✔|
+| Azure Functions Runtime | Python 3.6 | Python 3.7 | Python 3.8 | Python 3.9 |
+|-------------------------|------------|------------|------------|------------|
+| Azure Functions 2.0     | ✔          | ✔          | -          | -          |
+| Azure Functions 3.0     | ✔          | ✔          | ✔          | ✔          |
+| Azure Functions 4.0     | -          | ✔          | ✔          | ✔          |
 
 _What's available?_
 - Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
@@ -38,15 +38,15 @@ _What's available?_
 
 Issues and feature requests are tracked in a variety of places. To report this feedback, please file an issue to the relevant repository below:
 
-|Item|Description|Link|
-|----|-----|-----|
-| Python Worker | Programming Model, Triggers & Bindings |[File an Issue](https://github.com/Azure/azure-functions-python-worker/issues)|
-| Linux | Base Docker Images |[File an Issue](https://github.com/Azure/azure-functions-docker/issues)|
-| Runtime | Script Host & Language Extensibility |[File an Issue](https://github.com/Azure/azure-functions-host/issues)|
-| VSCode | VSCode Extension for Azure Functions |[File an Issue](https://github.com/microsoft/vscode-azurefunctions/issues)
-| Core Tools | Command Line Interface for Local Development |[File an Issue](https://github.com/Azure/azure-functions-core-tools/issues)|
-| Portal | User Interface or Experience Issue |[File an Issue](https://github.com/azure/azure-functions-ux/issues)|
-| Templates | Code Issues with Creation Template |[File an Issue](https://github.com/Azure/azure-functions-templates/issues)|
+| Item          | Description                                  | Link                                                                           |
+|---------------|----------------------------------------------|--------------------------------------------------------------------------------|
+| Python Worker | Programming Model, Triggers & Bindings       | [File an Issue](https://github.com/Azure/azure-functions-python-worker/issues) |
+| Linux         | Base Docker Images                           | [File an Issue](https://github.com/Azure/azure-functions-docker/issues)        |
+| Runtime       | Script Host & Language Extensibility         | [File an Issue](https://github.com/Azure/azure-functions-host/issues)          |
+| VSCode        | VSCode Extension for Azure Functions         | [File an Issue](https://github.com/microsoft/vscode-azurefunctions/issues)     |
+| Core Tools    | Command Line Interface for Local Development | [File an Issue](https://github.com/Azure/azure-functions-core-tools/issues)    |
+| Portal        | User Interface or Experience Issue           | [File an Issue](https://github.com/azure/azure-functions-ux/issues)            |
+| Templates     | Code Issues with Creation Template           | [File an Issue](https://github.com/Azure/azure-functions-templates/issues)     |
 
 ## Contributing
 

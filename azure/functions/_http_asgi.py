@@ -29,6 +29,15 @@ class AsgiRequest(WsgiRequest):
         return None
 
     def to_asgi_http_scope(self):
+        if self.path_info is not None:
+            _raw_path = self.path_info.encode("utf-8")
+        else:
+            _raw_path = b''
+        if self.query_string is not None:
+            _query_string = self.query_string.encode("utf-8")
+        else:
+            _query_string = b''
+
         return {
             "type": "http",
             "asgi.version": self.asgi_version,
@@ -37,8 +46,8 @@ class AsgiRequest(WsgiRequest):
             "method": self.request_method,
             "scheme": "https",
             "path": self.path_info,
-            "raw_path": self.path_info.encode("utf-8"),
-            "query_string": self.query_string.encode("utf-8"),
+            "raw_path": _raw_path,
+            "query_string": _query_string,
             "root_path": self.script_name,
             "headers": self._get_encoded_http_headers(),
             "server": self._get_server_address(),
@@ -57,7 +66,7 @@ class AsgiResponse:
         self._status_code = 0
         self._headers: Union[Headers, Dict] = {}
         self._buffer: List[bytes] = []
-        self._request_body = b""
+        self._request_body: Optional[bytes] = b""
 
     @classmethod
     async def from_app(cls, app, scope: Dict[str, Any],
@@ -72,7 +81,7 @@ class AsgiResponse:
         return HttpResponse(
             body=b"".join(self._buffer),
             status_code=self._status_code,
-            headers=self._headers,
+            headers=self._headers,  # type: ignore
             mimetype=lowercased_headers.get("content-type"),
             charset=lowercased_headers.get("content-encoding"),
         )
