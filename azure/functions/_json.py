@@ -3,7 +3,6 @@
 
 from enum import Enum
 import os
-import warnings
 
 try:
     import orjson
