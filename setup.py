@@ -10,6 +10,7 @@ EXTRA_REQUIRES = {
         'mypy',
         'pytest',
         'pytest-cov',
+        'pytest-benchmark',
         'requests==2.*',
         'coverage'
     ],
