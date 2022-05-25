@@ -2,11 +2,12 @@
 # Licensed under the MIT License.
 
 from typing import Dict, List
-import json
+
 import unittest
 from datetime import datetime, timedelta
 
 import azure.functions as func
+from azure.functions import _json as json
 import azure.functions.servicebus as azf_sb
 from azure.functions import meta
 

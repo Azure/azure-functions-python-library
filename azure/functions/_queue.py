@@ -2,9 +2,10 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
+
 import typing
 
+from azure.functions import _json as json
 from . import _abc
 
 

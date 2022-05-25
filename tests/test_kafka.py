@@ -3,10 +3,10 @@
 
 from typing import List
 import unittest
-import json
 
 from unittest.mock import patch
 import azure.functions as func
+from azure.functions import _json as json
 import azure.functions.kafka as azf_ka
 import azure.functions.meta as meta
 

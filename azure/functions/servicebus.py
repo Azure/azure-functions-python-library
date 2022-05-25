@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
-from typing import Dict, Any, List, Union, Optional, Mapping, cast
 
+from typing import Dict, Any, List, Union, Optional, Mapping, cast
+from azure.functions import _json as json
 from azure.functions import _servicebus as azf_sbus
 
 from . import meta

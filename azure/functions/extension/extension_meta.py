@@ -3,7 +3,8 @@
 
 from typing import Optional, Union, Dict, List
 import abc
-import json
+
+from azure.functions import _json as json
 from .app_extension_hooks import AppExtensionHooks
 from .func_extension_hooks import FuncExtensionHooks
 from .extension_hook_meta import ExtensionHookMeta

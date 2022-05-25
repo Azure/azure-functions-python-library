@@ -12,7 +12,8 @@ EXTRA_REQUIRES = {
         'pytest-cov',
         'requests==2.*',
         'coverage'
-    ]
+    ],
+    'orjson': ['orjson>=3.6.8,<4.0']
 }
 
 with open("README.md") as readme:

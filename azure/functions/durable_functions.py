@@ -2,8 +2,8 @@
 # Licensed under the MIT License.
 
 import typing
-import json
 
+from azure.functions import _json as json
 from azure.functions import _durable_functions
 from . import meta
 
