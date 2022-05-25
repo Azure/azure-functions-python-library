@@ -169,7 +169,7 @@ class TestHTTP(unittest.TestCase):
 
 
 def test_http_request_body_json(benchmark):
-    data: bytes = b'{ "result": "OK", "message": "Everything is ok", "code": 200 }'
+    data: bytes = b'{ "result": "OK", "message": "All good!", "code": 200 }'
     request = func.HttpRequest(
         method='POST',
         url='/foo',
