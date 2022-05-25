@@ -41,7 +41,7 @@ if HAS_ORJSON:
             del kwargs['sort_keys']
             sort_keys = True
         if kwargs:  # Unsupported arguments
-            return json.dumps(v, **kwargs)
+            return json.dumps(v, sort_keys=sort_keys, **kwargs)
         if sort_keys:
             r = orjson.dumps(v, option=orjson.OPT_SORT_KEYS)
         else:
