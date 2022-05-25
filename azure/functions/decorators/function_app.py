@@ -793,10 +793,10 @@ class TriggerApi(DecoratorApi, ABC):
         return wrap
 
     def event_grid_trigger(self,
-                        arg_name: str,
-                        data_type: Optional[
-                            Union[DataType, str]] = None,
-                        **kwargs) -> Callable:
+                           arg_name: str,
+                           data_type: Optional[
+                               Union[DataType, str]] = None,
+                           **kwargs) -> Callable:
         """
         The event_grid_trigger decorator adds
         :class:`EventGridTrigger`
@@ -824,7 +824,7 @@ class TriggerApi(DecoratorApi, ABC):
                     trigger=EventGridTrigger(
                         name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                                                                DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -1361,7 +1361,7 @@ class BindingApi(DecoratorApi, ABC):
             return decorator()
 
         return wrap
-        
+
     def generic_input_binding(self,
                               arg_name: str,
                               type: str,
@@ -1552,4 +1552,3 @@ class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app))
-
