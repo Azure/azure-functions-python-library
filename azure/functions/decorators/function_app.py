@@ -12,6 +12,8 @@ from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.eventgrid import EventGridTrigger, \
+    EventGridOutput
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -790,6 +792,46 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    def event_grid_trigger(self,
+                        arg_name: str,
+                        data_type: Optional[
+                            Union[DataType, str]] = None,
+                        **kwargs) -> Callable:
+        """
+        The event_grid_trigger decorator adds
+        :class:`EventGridTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining event grid trigger
+        in the function.json which enables function to be triggered to
+        respond to an event sent to an event grid topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/eventgridtrigger
+
+        :param arg_name: the variable name used in function code for the
+            parameter that receives the event data.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=EventGridTrigger(
+                        name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                                DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def generic_trigger(self,
                         arg_name: str,
                         type: str,
@@ -1272,6 +1314,54 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
+    def write_event_grid(self,
+                         arg_name: str,
+                         topic_endpoint_uri: str,
+                         topic_key_setting: str,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) -> Callable:
+        """
+        The write_event_grid decorator adds
+        :class:`EventGridOutput`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining output binding
+        in the function.json which enables function to
+        write events to a custom topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/eventgridtrigger
+
+        :param arg_name: The variable name used in function code that
+        represents the event.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param topic_endpoint_uri: 	The name of an app setting that
+        contains the URI for the custom topic.
+        :param topic_key_setting: The name of an app setting that
+        contains an access key for the custom topic.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=EventGridOutput(
+                        name=arg_name,
+                        topic_endpoint_uri=topic_endpoint_uri,
+                        topic_key_setting=topic_key_setting,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+        
     def generic_input_binding(self,
                               arg_name: str,
                               type: str,
@@ -1462,3 +1552,4 @@ class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app))
+

@@ -94,4 +94,4 @@ __all__ = (
     'HttpMethod'
 )
 
-__version__ = '1.11.0'
+__version__ = '1.11.3b1'
