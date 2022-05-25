@@ -12,7 +12,8 @@ EXTRA_REQUIRES = {
         'pytest-cov',
         'pytest-benchmark',
         'requests==2.*',
-        'coverage'
+        'coverage',
+        'types-ujson'
     ],
     'ujson': ['ujson>=5.3.0,<6.0']
 }

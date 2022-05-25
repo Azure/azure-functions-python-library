@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 from enum import Enum
+from typing import AnyStr, Any
 import os
 
 AZUREFUNCTIONS_UJSON_ENV_VAR = 'AZUREFUNCTIONS_UJSON'
@@ -40,21 +41,21 @@ class StringifyEnumJsonEncoder(json.JSONEncoder):
 JSONDecodeError = json.JSONDecodeError
 
 if HAS_UJSON:
-    def dumps(v, **kwargs):
+    def dumps(v: Any, **kwargs) -> str:
         if 'default' in kwargs:
             return json.dumps(v, **kwargs)
 
         if 'cls' in kwargs:
             del kwargs['cls']
-        
+
         return ujson.dumps(v, **kwargs)
 
-    def loads(*args, **kwargs):
+    def loads(s: AnyStr, **kwargs):
         if kwargs:
-            return json.loads(*args, **kwargs)
+            return json.loads(s, **kwargs)
         else:  # ujson takes no kwargs
-            return ujson.loads(*args)
+            return ujson.loads(s)
 
 else:
-    dumps = json.dumps
+    dumps = json.dumps # type: ignore
     loads = json.loads
