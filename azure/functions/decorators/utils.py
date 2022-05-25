@@ -8,8 +8,9 @@ from json import JSONEncoder
 from typing import TypeVar, Optional, Union, Iterable, Type, Callable
 
 T = TypeVar("T", bound=Enum)
-SNAKE_CASE_RE = re.compile(r'^([a-zA-Z]+\d*_[a-zA-Z\d_]*|_+[a-zA-Z\d]+[a-zA-Z\d_]*)$')
+SNAKE_CASE_RE = re.compile(r'^([a-zA-Z]+\d*_|_+[a-zA-Z\d])\w*$')
 WORD_RE = re.compile(r'^([a-zA-Z]+\d*)$')
+
 
 class StringifyEnum(Enum):
     """This class output name of enum object when printed as string."""
