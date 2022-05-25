@@ -4,16 +4,18 @@
 from enum import Enum
 import os
 
+AZUREFUNCTIONS_UJSON_ENV_VAR = 'AZUREFUNCTIONS_UJSON'
+
 try:
-    import orjson
-    if 'AZUREFUNCTIONS_ORJSON' in os.environ:
-        HAS_ORJSON = bool(os.environ['AZUREFUNCTIONS_ORJSON'])
+    import ujson
+    if AZUREFUNCTIONS_UJSON_ENV_VAR in os.environ:
+        HAS_UJSON = bool(os.environ[AZUREFUNCTIONS_UJSON_ENV_VAR])
     else:
-        HAS_ORJSON = True
+        HAS_UJSON = True
     import json
 except ImportError:
     import json
-    HAS_ORJSON = False
+    HAS_UJSON = False
 
 
 class StringifyEnum(Enum):
@@ -21,6 +23,10 @@ class StringifyEnum(Enum):
 
     def __str__(self):
         return str(self.name)
+
+    def __json__(self):
+        """For ujson encoding."""
+        return f'"{self.name}"'
 
 
 class StringifyEnumJsonEncoder(json.JSONEncoder):
@@ -33,25 +39,21 @@ class StringifyEnumJsonEncoder(json.JSONEncoder):
 
 JSONDecodeError = json.JSONDecodeError
 
-if HAS_ORJSON:
+if HAS_UJSON:
     def dumps(v, **kwargs):
-        sort_keys = False
-        if 'sort_keys' in kwargs:
-            del kwargs['sort_keys']
-            sort_keys = True
-        if kwargs:  # Unsupported arguments
-            return json.dumps(v, sort_keys=sort_keys, **kwargs)
-        if sort_keys:
-            r = orjson.dumps(v, option=orjson.OPT_SORT_KEYS)
-        else:
-            r = orjson.dumps(v)
-        return r.decode(encoding='utf-8')
+        if 'default' in kwargs:
+            return json.dumps(v, **kwargs)
+
+        if 'cls' in kwargs:
+            del kwargs['cls']
+        
+        return ujson.dumps(v, **kwargs)
 
     def loads(*args, **kwargs):
         if kwargs:
             return json.loads(*args, **kwargs)
-        else:  # ORjson takes no kwargs
-            return orjson.loads(*args)
+        else:  # ujson takes no kwargs
+            return ujson.loads(*args)
 
 else:
     dumps = json.dumps

@@ -12,7 +12,7 @@ def _serialize_custom_object(obj):
 
     This function gets called when `json.dumps` cannot serialize
     an object and returns a serializable dictionary containing enough
-    metadata to recontrust the original object.
+    metadata to reconstruct the original object.
 
     Parameters
     ----------

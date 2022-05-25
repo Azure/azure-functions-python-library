@@ -14,7 +14,7 @@ EXTRA_REQUIRES = {
         'requests==2.*',
         'coverage'
     ],
-    'orjson': ['orjson>=3.6.8,<4.0']
+    'ujson': ['ujson>=5.3.0,<6.0']
 }
 
 with open("README.md") as readme:
@@ -36,6 +36,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: POSIX',
         'Operating System :: MacOS :: MacOS X',
