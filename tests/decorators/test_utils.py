@@ -219,3 +219,18 @@ class TestUtils(unittest.TestCase):
             Trigger.is_supported_trigger_type(
                 GenericTrigger(name='req', type="dummy"),
                 HttpTrigger))
+
+
+def test_clean_nones_nested_benchmark(benchmark):
+    data = [
+        {"direction": "IN", "type": "b", "name": "t1"},
+        {"direction": "IN", "type": "b", "name": "t2"},
+        {"direction": "IN", "type": "b", "name": "t3"},
+        {"direction": "IN", "type": "b", "name": "t4"},
+        {"direction": "IN", "type": "b", "name": "t5"},
+        {"direction": "IN", "type": "b", "name": "t6"},
+        {"direction": "IN", "type": "b", "name": "t7"},
+        {"direction": "IN", "type": "b", "name": "t8"},
+        {"direction": "IN", "type": "b", "name": "t9"}
+    ]
+    benchmark(BuildDictMeta.clean_nones, data)

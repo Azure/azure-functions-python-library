@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from logging import Logger
 
+from azure.functions import _json as json
 from azure.functions.extension import FunctionExtensionException
 from azure.functions.extension.app_extension_base import AppExtensionBase
 from azure.functions.extension.func_extension_base import FuncExtensionBase
@@ -152,7 +153,8 @@ class TestExtensionMeta(unittest.TestCase):
         info_json = self._instance.get_registered_extensions_json()
         self.assertEqual(
             info_json,
-            r'{"FuncExtension": {"HttpTrigger": ["NewFuncExtension"]}}'
+            json.dumps({"FuncExtension":
+                        {"HttpTrigger": ["NewFuncExtension"]}})
         )
 
     def test_get_registered_extension_json_application_ext(self):
@@ -164,7 +166,7 @@ class TestExtensionMeta(unittest.TestCase):
         info_json = self._instance.get_registered_extensions_json()
         self.assertEqual(
             info_json,
-            r'{"AppExtension": ["NewAppExtension"]}'
+            json.dumps({"AppExtension": ["NewAppExtension"]})
         )
 
     def test_get_extension_scope(self):

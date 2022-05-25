@@ -4,7 +4,6 @@ import inspect
 import re
 from abc import ABCMeta
 from enum import Enum
-from json import JSONEncoder
 from typing import TypeVar, Optional, Union, Iterable, Type, Callable
 
 T = TypeVar("T", bound=Enum)
@@ -12,12 +11,7 @@ SNAKE_CASE_RE = re.compile(r'^([a-z]+\d*_[a-z\d_]*|_+[a-z\d]+[a-z\d_]*)$',
                            re.IGNORECASE)
 WORD_RE = re.compile(r'^([a-z]+\d*)$', re.IGNORECASE)
 
-
-class StringifyEnum(Enum):
-    """This class output name of enum object when printed as string."""
-
-    def __str__(self):
-        return str(self.name)
+from azure.functions._json import StringifyEnum, StringifyEnumJsonEncoder  # NOQA
 
 
 class BuildDictMeta(type):
@@ -166,11 +160,3 @@ def is_word(input_string: str) -> bool:
     :return: True for one word string, false otherwise.
     """
     return WORD_RE.match(input_string) is not None
-
-
-class StringifyEnumJsonEncoder(JSONEncoder):
-    def default(self, o):
-        if isinstance(o, StringifyEnum):
-            return str(o)
-
-        return super().default(o)

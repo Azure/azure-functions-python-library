@@ -1,12 +1,12 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 import unittest
 from typing import Any, Dict
 
 import azure.functions as func
 import azure.functions.blob as afb
 from azure.functions.blob import InputStream
+from azure.functions import _json as json
 from azure.functions.meta import Datum
 
 

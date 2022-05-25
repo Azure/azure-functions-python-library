@@ -3,7 +3,7 @@
 
 import collections.abc
 import io
-import json
+
 import types
 import typing
 
@@ -12,6 +12,7 @@ from ._thirdparty.werkzeug import datastructures as _wk_datastructures
 from ._thirdparty.werkzeug import formparser as _wk_parser
 from ._thirdparty.werkzeug import http as _wk_http
 from ._thirdparty.werkzeug.datastructures import Headers
+from azure.functions import _json as json
 
 
 class BaseHeaders(collections.abc.Mapping):

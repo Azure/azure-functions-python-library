@@ -166,3 +166,17 @@ class TestHTTP(unittest.TestCase):
         self.assertIsNone(
             getattr(http.HttpResponseConverter, 'has_implicit_output', None)
         )
+
+
+def test_http_request_body_json(benchmark):
+    data: bytes = b'{ "result": "OK", "message": "All good!", "code": 200 }'
+    request = func.HttpRequest(
+        method='POST',
+        url='/foo',
+        body=data,
+        headers={
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+    )
+
+    benchmark(request.get_json)

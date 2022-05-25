@@ -6,7 +6,7 @@ import unittest
 import azure.functions as func
 import azure.functions.sql as sql
 from azure.functions.meta import Datum
-import json
+from azure.functions import _json as json
 
 
 class TestSql(unittest.TestCase):

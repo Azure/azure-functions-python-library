@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import unittest
-import json
 
 from azure.functions.durable_functions import (
     OrchestrationTriggerConverter,
@@ -13,6 +12,7 @@ from azure.functions._durable_functions import (
     OrchestrationContext,
     EntityContext
 )
+from azure.functions import _json as json
 from azure.functions.meta import Datum
 
 CONTEXT_CLASSES = [OrchestrationContext, EntityContext]

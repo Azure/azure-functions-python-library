@@ -2,12 +2,11 @@
 # Licensed under the MIT License.
 
 import typing
-import json
-
 from typing import Any, List
 
 from . import meta
 
+from azure.functions import _json as json
 from ._kafka import AbstractKafkaEvent
 
 

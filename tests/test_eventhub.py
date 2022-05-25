@@ -3,12 +3,12 @@
 
 from typing import List, Mapping
 import unittest
-import json
 from unittest.mock import patch
 from datetime import datetime
 
 import azure.functions as func
 import azure.functions.eventhub as azf_eh
+from azure.functions import _json as json
 import azure.functions.meta as meta
 
 from .testutils import CollectionBytes, CollectionString
@@ -113,12 +113,14 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good1"})
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good2"})
         )
 
     def test_eventhub_trigger_multiple_events_collection_string(self):
@@ -131,12 +133,14 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good1"})
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good2"})
         )
 
     def test_eventhub_trigger_multiple_events_collection_bytes(self):
@@ -149,12 +153,14 @@ class TestEventHub(unittest.TestCase):
 
         self.assertEqual(result[0].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+            result[0].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good1"})
         )
 
         self.assertEqual(result[1].enqueued_time, self.MOCKED_ENQUEUE_TIME)
         self.assertEqual(
-            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+            result[1].get_body().decode('utf-8'),
+            json.dumps({"device-status": "good2"})
         )
 
     def test_iothub_metadata_events(self):

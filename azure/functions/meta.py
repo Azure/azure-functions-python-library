@@ -4,7 +4,6 @@
 import abc
 import collections.abc
 import datetime
-import json
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
@@ -13,6 +12,7 @@ from ._utils import (
     try_parse_datetime_with_formats,
     try_parse_timedelta_with_formats
 )
+from azure.functions import _json as json
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:

@@ -1,7 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 
+from azure.functions import _json as json
 from azure.functions.decorators.utils import StringifyEnumJsonEncoder
 
 

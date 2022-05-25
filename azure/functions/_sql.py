@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 
 import collections
-import json
-
+from azure.functions import _json as json
 from . import _abc
 
 
