@@ -28,7 +28,7 @@ jobs:
         pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
     - name: Test with pytest and ujson
       run: |
-        python -m pip install ujson
+        python -m pip install .[ujson]
         pytest --cache-clear tests
     - name: Codecov
       if: ${{ matrix.python-version }} == 3.9
