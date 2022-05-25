@@ -57,5 +57,5 @@ if HAS_UJSON:
             return ujson.loads(s)
 
 else:
-    dumps = json.dumps # type: ignore
+    dumps = json.dumps  # type: ignore
     loads = json.loads
