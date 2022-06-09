@@ -167,6 +167,12 @@ class FunctionBuilder(object):
 
     def _validate_function(self,
                            auth_level: Optional[AuthLevel] = None) -> None:
+        """
+        Validates the function information before building the function.
+
+        :param auth_level: Http auth level that will be set if http
+        trigger function auth level is None.
+        """
         function_name = self._function.get_function_name()
         trigger = self._function.get_trigger()
         if trigger is None:
@@ -194,6 +200,12 @@ class FunctionBuilder(object):
                         parse_singular_param_to_enum(auth_level, AuthLevel))
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
+        """
+        Validates and builds the function object.
+
+        :param auth_level: Http auth level that will be set if http
+        trigger function auth level is None.
+        """
         self._validate_function(auth_level)
         return self._function
 
