@@ -234,6 +234,111 @@ class TestEventHub(unittest.TestCase):
                          '2020-07-14T01:27:55.627000+00:00')
         self.assertEqual(result.offset, '3696')
 
+    @patch('azure.functions.eventhub.EventHubConverter'
+           '.decode_single_event')
+    @patch('azure.functions.eventhub.EventHubConverter'
+           '.decode_multiple_events')
+    def test_eventhub_decode_call_single_event(self, dme_mock, dse_mock):
+        azf_eh.EventHubConverter.decode(
+            data=self._generate_single_iothub_datum(),
+            trigger_metadata=self._generate_single_trigger_metadatum()
+        )
+        dse_mock.assert_called_once()
+        dme_mock.assert_not_called()
+
+    @patch('azure.functions.eventhub.EventHubConverter'
+           '.decode_single_event')
+    @patch('azure.functions.eventhub.EventHubConverter'
+           '.decode_multiple_events')
+    def test_eventhub_decode_call_multiple_events(self, dme_mock, dse_mock):
+        azf_eh.EventHubConverter.decode(
+            data=self._generate_multiple_iothub_data(
+                data_type='collection_bytes'),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
+        dse_mock.assert_not_called()
+        dme_mock.assert_called_once()
+
+    def test_eventhub_single_event_json(self):
+        result = azf_eh.EventHubConverter.decode(
+            data=self._generate_single_iothub_datum('json'),
+            trigger_metadata=self._generate_single_trigger_metadatum()
+        )
+        # Result body always has the datatype of bytes
+        self.assertEqual(
+            result.get_body().decode('utf-8'), '{"device-status": "good"}'
+        )
+
+    def test_eventhub_single_event_bytes(self):
+        result = azf_eh.EventHubConverter.decode(
+            data=self._generate_single_iothub_datum('bytes'),
+            trigger_metadata=self._generate_single_trigger_metadatum()
+        )
+        self.assertEqual(
+            result.get_body().decode('utf-8'), '{"device-status": "good"}'
+        )
+
+    def test_eventhub_multiple_events_collection_bytes(self):
+        result = azf_eh.EventHubConverter.decode(
+            data=self._generate_multiple_iothub_data('collection_bytes'),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+
+        self.assertEqual(
+            result[0].get_body().decode('utf-8'), '{"device-status": "good1"}'
+        )
+
+        self.assertEqual(
+            result[1].get_body().decode('utf-8'), '{"device-status": "good2"}'
+        )
+
+    def test_eventhub_multiple_events_collection_string(self):
+        result = azf_eh.EventHubConverter.decode(
+            data=self._generate_multiple_iothub_data('collection_string'),
+            trigger_metadata=self._generate_multiple_trigger_metadata()
+        )
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+
+        self.assertEqual(
+            result[0].get_body(), '{"device-status": "good1"}'
+        )
+
+        self.assertEqual(
+            result[1].get_body(), '{"device-status": "good2"}'
+        )
+
+    def test_eventhub_encode_string(self):
+        result = azf_eh.EventHubConverter.encode(obj="dummy_string",
+                                                 expected_type=None)
+
+        self.assertEqual(result.type, "string")
+        self.assertEqual(result.value, "dummy_string")
+
+    def test_eventhub_encode_bytes(self):
+        result = azf_eh.EventHubConverter.encode(obj=b"dummy_bytes",
+                                                 expected_type=None)
+
+        self.assertEqual(result.type, "bytes")
+        self.assertEqual(result.value, b"dummy_bytes")
+
+    def test_eventhub_encode_int(self):
+        result = azf_eh.EventHubConverter.encode(obj=1,
+                                                 expected_type=None)
+
+        self.assertEqual(result.type, "int")
+        self.assertEqual(result.value, 1)
+
+    def test_eventhub_encode_json(self):
+        data = ["dummy_val1", "dummy_val2"]
+        result = azf_eh.EventHubConverter.encode(obj=data,
+                                                 expected_type=None)
+
+        self.assertEqual(result.type, "json")
+        self.assertEqual(result.value, json.dumps(data))
+
     def _generate_full_metadata(self):
         mocked_metadata: Mapping[str, meta.Datum] = {}
         mocked_metadata['Offset'] = meta.Datum(type='string', value='3696')
