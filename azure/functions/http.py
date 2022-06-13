@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 
 import json
+import logging
+import sys
 import typing
 from http.cookies import SimpleCookie
 
@@ -96,10 +98,22 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
                 datum_body = meta.Datum(type='bytes', value=b'')
 
             cookies = None
-            if "Set-Cookie" in headers:
-                cookies = [SimpleCookie(cookie) for cookie in
-                           headers.get_all('Set-Cookie')]
-                headers.pop("Set-Cookie")
+
+            if sys.version_info.major == 3 and sys.version_info.minor <= 7:
+                # SimpleCookie api in http.cookies - Python Standard Library
+                # is not supporting 'samesite' in cookie attribute in python
+                # 3.7 or below and would cause cookie parsing error
+                # https://docs.python.org/3/library/http.cookies.html
+                # ?msclkid=d78849ddcd7311ecadd81f2f51d08b8e
+                logging.warning(
+                    "Setting multiple 'Set-Cookie' response headers is not "
+                    "supported in Azure Python Function with python version "
+                    "3.7, please upgrade to python 3.8 or above.")
+            else:
+                if "Set-Cookie" in headers:
+                    cookies = [SimpleCookie(cookie) for cookie in
+                               headers.get_all('Set-Cookie')]
+                    headers.pop("Set-Cookie")
 
             return meta.Datum(
                 type='http',

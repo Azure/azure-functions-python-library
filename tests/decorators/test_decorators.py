@@ -5,6 +5,7 @@ import unittest
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
+    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID
     BLOB_TRIGGER, TABLE
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
@@ -1410,6 +1411,119 @@ class TestFunctionsApp(unittest.TestCase):
             "name": "out",
             "path": "dummy_out_path",
             "connection": "dummy_out_conn"
+        })
+
+    def test_event_grid_default_args(self):
+        app = self.func_app
+
+        @app.event_grid_trigger(arg_name="req")
+        @app.write_event_grid(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func,
+                    {"scriptFile": "function_app.py",
+                     "bindings": [
+                         {
+                             "direction": BindingDirection.OUT,
+                             "type": EVENT_GRID,
+                             "name": "res",
+                             "topicKeySetting": "dummy_topic_key_setting",
+                             "topicEndpointUri": "dummy_topic_endpoint_uri"
+                         },
+                         {
+                             "direction": BindingDirection.IN,
+                             "type": EVENT_GRID_TRIGGER,
+                             "name": "req"
+                         }
+                     ]
+                     })
+
+    def test_event_grid_full_args(self):
+        app = self.func_app
+
+        @app.event_grid_trigger(arg_name="req",
+                                data_type=DataType.UNDEFINED,
+                                dummy_field="dummy")
+        @app.write_event_grid(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting",
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy"
+        )
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func,
+                    {"scriptFile": "function_app.py",
+                     "bindings": [
+                         {
+                             "direction": BindingDirection.OUT,
+                             "type": EVENT_GRID,
+                             "name": "res",
+                             "topicKeySetting": "dummy_topic_key_setting",
+                             "topicEndpointUri": "dummy_topic_endpoint_uri",
+                             'dummyField': 'dummy',
+                             "dataType": DataType.UNDEFINED
+                         },
+                         {
+                             "direction": BindingDirection.IN,
+                             "type": EVENT_GRID_TRIGGER,
+                             "name": "req",
+                             'dummyField': 'dummy',
+                             "dataType": DataType.UNDEFINED
+                         }
+                     ]
+                     })
+
+    def test_event_grid_trigger(self):
+        app = self.func_app
+
+        @app.event_grid_trigger(arg_name="req")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": EVENT_GRID_TRIGGER,
+            "name": "req"
+        })
+
+    def test_event_grid_output_binding(self):
+        app = self.func_app
+
+        @app.event_grid_trigger(arg_name="req")
+        @app.write_event_grid(
+            arg_name="res",
+            topic_endpoint_uri="dummy_topic_endpoint_uri",
+            topic_key_setting="dummy_topic_key_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": EVENT_GRID,
+            "name": "res",
+            "topicEndpointUri": "dummy_topic_endpoint_uri",
+            "topicKeySetting": "dummy_topic_key_setting"
         })
 
     def test_table_default_args(self):
