@@ -5,8 +5,7 @@ import unittest
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
-    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID
-    BLOB_TRIGGER, TABLE
+    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
