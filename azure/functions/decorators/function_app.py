@@ -1495,6 +1495,8 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
             raise TypeError('functions can not be type of FunctionRegister!')
         self._function_builders.extend(function_container._function_builders)
 
+    register_blueprint = register_functions
+
 
 class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
     """FunctionApp object used by worker function indexing model captures
@@ -1514,7 +1516,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         super().__init__(auth_level=http_auth_level)
 
 
-class BluePrint(TriggerApi, BindingApi):
+class Blueprint(TriggerApi, BindingApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing
@@ -1523,7 +1525,7 @@ class BluePrint(TriggerApi, BindingApi):
     pass
 
 
-class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
     """Interface to extend for building third party http function apps."""
 
     def _add_http_app(self,
@@ -1544,7 +1546,7 @@ class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
             return http_middleware.handle(req, context)
 
 
-class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
+class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
@@ -1555,7 +1557,7 @@ class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
         self._add_http_app(AsgiMiddleware(app))
 
 
-class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
+class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.

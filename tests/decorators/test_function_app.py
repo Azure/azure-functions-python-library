@@ -10,7 +10,7 @@ from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionApp, Function, BluePrint, DecoratorApi, AsgiFunctionApp, \
+    FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
     WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
@@ -365,28 +365,28 @@ class TestFunctionApp(unittest.TestCase):
                          "functions can not be type of FunctionRegister!")
 
     def test_register_blueprint(self):
-        bp = BluePrint()
+        bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****")
         def hello(name: str):
             return "hello"
 
         app = FunctionApp()
-        app.register_functions(bp)
+        app.register_blueprint(bp)
 
         self.assertEqual(len(app.get_functions()), 1)
         self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
 
     def test_register_app_auth_level(self):
-        bp = BluePrint()
+        bp = Blueprint()
 
         @bp.route("name")
         def hello(name: str):
             return "hello"
 
         app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
-        app.register_functions(bp)
+        app.register_blueprint(bp)
 
         self.assertEqual(len(app.get_functions()), 1)
         self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
@@ -441,13 +441,13 @@ class TestFunctionApp(unittest.TestCase):
             pass
 
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
-        blueprint = BluePrint()
+        blueprint = Blueprint()
 
         @blueprint.schedule(arg_name="name", schedule="10****")
         def hello(name: str):
             return name
 
-        app.register_functions(blueprint)
+        app.register_blueprint(blueprint)
 
         functions = app.get_functions()
         self.assertEqual(len(functions), 1)

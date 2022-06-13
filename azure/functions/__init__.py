@@ -6,13 +6,13 @@ from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest, HttpResponse
-from .decorators import (FunctionApp, Function, BluePrint,
+from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi, BindingApi,
-                                      ThirdPartyHttpFunctionApp)
+                                      ExternalHttpFunctionApp)
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
@@ -82,8 +82,8 @@ __all__ = (
     'DecoratorApi',
     'TriggerApi',
     'BindingApi',
-    'BluePrint',
-    'ThirdPartyHttpFunctionApp',
+    'Blueprint',
+    'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
     'WsgiFunctionApp',
     'DataType',
