@@ -1481,7 +1481,7 @@ class BindingApi(DecoratorApi, ABC):
             return decorator()
 
         return wrap
-        
+
     def generic_input_binding(self,
                               arg_name: str,
                               type: str,
