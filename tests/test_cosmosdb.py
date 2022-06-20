@@ -129,3 +129,70 @@ class TestCosmosdb(unittest.TestCase):
         self.assertTrue(check_output_type(func.DocumentList))
         self.assertTrue(check_output_type(func.Document))
         self.assertFalse(check_output_type(str))
+
+    def test_cosmosdb_encode_document(self):
+        doc = cdb.cdb.Document({"dummy_key": "dummy_val"})
+
+        # when
+        result = cdb.CosmosDBConverter.encode(obj=doc, expected_type=None)
+
+        # then
+        expected_value = '[{"dummy_key": "dummy_val"}]'
+        self.assertEqual(result.type, "json")
+        self.assertEqual(result.value, expected_value)
+
+    def test_cosmosdb_encode_document_list(self):
+        doc1 = cdb.cdb.Document({"dummy_key1": "dummy_val2"})
+        doc2 = cdb.cdb.Document({"dummy_key2": "dummy_val2"})
+
+        doc_list = cdb.cdb.DocumentList([doc1, doc2])
+
+        # when
+        result = cdb.CosmosDBConverter.encode(obj=doc_list, expected_type=None)
+
+        # then
+        expected_value = \
+            '[{"dummy_key1": "dummy_val2"}, {"dummy_key2": "dummy_val2"}]'
+        self.assertEqual(result.type, "json")
+        self.assertEqual(result.value, expected_value)
+
+    def test_cosmosdb_encode_obj_iterable(self):
+        doc1 = cdb.cdb.Document({"dummy_key1": "dummy_val2"})
+        doc2 = cdb.cdb.Document({"dummy_key2": "dummy_val2"})
+
+        doc_list_iterable = [doc1, doc2]
+
+        # when
+        result = cdb.CosmosDBConverter.encode(
+            obj=doc_list_iterable, expected_type=None)
+
+        # then
+        expected_value = \
+            '[{"dummy_key1": "dummy_val2"}, {"dummy_key2": "dummy_val2"}]'
+        self.assertEqual(result.type, "json")
+        self.assertEqual(result.value, expected_value)
+
+    def test_cosmosdb_encode_no_implementation_exception(self):
+        is_exception_raised = False
+        # when
+        try:
+            cdb.CosmosDBConverter.encode(obj=1,
+                                         expected_type=None)
+        except NotImplementedError:
+            is_exception_raised = True
+
+        # then
+        self.assertTrue(is_exception_raised)
+
+    def test_cosmosdb_encode_no_implementation_exception1(self):
+        is_exception_raised = False
+
+        # when
+        try:
+            cdb.CosmosDBConverter.encode(obj=[1],
+                                         expected_type=None)
+        except NotImplementedError:
+            is_exception_raised = True
+
+        # then
+        self.assertTrue(is_exception_raised)
