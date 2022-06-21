@@ -124,10 +124,10 @@ class TestFunctionsApp(unittest.TestCase):
             "scriptFile": "function_app.py",
             "bindings": [
                 {
+                    "authLevel": AuthLevel.FUNCTION,
                     "direction": BindingDirection.IN,
                     "type": HTTP_TRIGGER,
                     "name": "req",
-                    "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy"
                 },
                 {
@@ -1350,6 +1350,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
+        self.assertEqual(len(func.get_bindings()), 1)
         output = func.get_bindings()[0]
 
         self.assertEqual(output.get_dict_repr(), {
