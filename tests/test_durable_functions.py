@@ -212,3 +212,31 @@ class TestDurableFunctions(unittest.TestCase):
         self.assertTrue(
             ActivityTriggerConverter.has_implicit_output()
         )
+
+    def test_enitity_trigger_check_output_type_annotation(self):
+        self.assertTrue(
+            EnitityTriggerConverter.check_output_type_annotation(pytype=None)
+        )
+
+    def test_activity_trigger_converter_decode_no_implementation_exception(
+            self):
+        is_exception_raised = False
+        datum = Datum(value=b"dummy", type="bytes")
+        # when
+        try:
+            ActivityTriggerConverter.decode(data=datum, trigger_metadata=None)
+        except NotImplementedError:
+            is_exception_raised = True
+
+        # then
+        self.assertTrue(is_exception_raised)
+
+    def test_enitity_trigger_converter_encode(self):
+
+        data = '{"dummy_key": "dummy_value"}'
+
+        result = EnitityTriggerConverter.encode(
+            obj=data, expected_type=None)
+
+        self.assertEqual(result.type, "json")
+        self.assertEqual(result.python_value, {'dummy_key': 'dummy_value'})
