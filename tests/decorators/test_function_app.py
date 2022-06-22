@@ -5,13 +5,16 @@ import unittest
 from unittest import mock
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
-from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER
+from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
+    TIMER_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionApp, Function
+    FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from tests.decorators.test_core import DummyTrigger
 from tests.decorators.testutils import assert_json
 
 
@@ -200,6 +203,50 @@ class TestFunctionBuilder(unittest.TestCase):
             ]
         })
 
+    def test_build_function_with_function_app_auth_level(self):
+        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
+                              data_type=DataType.UNDEFINED)
+        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        func = self.fb.build(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
+
+
+class TestScaffold(unittest.TestCase):
+    def setUp(self):
+        class DummyApp(DecoratorApi):
+            def dummy_trigger(self, name: str):
+                @self._configure_function_builder
+                def wrap(fb):
+                    def decorator():
+                        fb.add_trigger(trigger=DummyTrigger(name=name))
+                        return fb
+
+                    return decorator()
+
+                return wrap
+
+        self.dummy = DummyApp()
+
+    def test_has_app_script_file(self):
+        self.assertTrue(self.dummy.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_has_function_builders(self):
+        self.assertEqual(self.dummy._function_builders, [])
+
+    def test_dummy_app_trigger(self):
+        @self.dummy.dummy_trigger(name="dummy")
+        def dummy():
+            return "dummy"
+
+        self.assertEqual(len(self.dummy._function_builders), 1)
+        func = self.dummy._function_builders[0].build()
+        self.assertEqual(func.get_function_name(), "dummy")
+        self.assertEqual(func.get_function_json(),
+                         '{"scriptFile": "function_app.py", "bindings": [{'
+                         '"direction": "IN", "dataType": "UNDEFINED", '
+                         '"type": "Dummy", "name": "dummy"}]}')
+
 
 class TestFunctionApp(unittest.TestCase):
     def setUp(self):
@@ -218,9 +265,6 @@ class TestFunctionApp(unittest.TestCase):
     def test_auth_level(self):
         self.func_app = FunctionApp(http_auth_level='ANONYMOUS')
         self.assertEqual(self.func_app.auth_level, AuthLevel.ANONYMOUS)
-
-        self.func_app = FunctionApp(http_auth_level=AuthLevel.ADMIN)
-        self.assertEqual(self.func_app.auth_level, AuthLevel.ADMIN)
 
     def test_get_no_functions(self):
         self.assertEqual(self.func_app.app_script_file, "function_app.py")
@@ -247,28 +291,29 @@ class TestFunctionApp(unittest.TestCase):
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
 
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
                 '._add_http_app')
     def test_add_asgi(self, add_http_app_mock):
         mock_asgi_app = object()
-        FunctionApp(asgi_app=mock_asgi_app)
+        AsgiFunctionApp(app=mock_asgi_app)
 
         add_http_app_mock.assert_called_once()
+
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
 
-    @mock.patch('azure.functions.decorators.function_app.FunctionApp'
+    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
         mock_wsgi_app = object()
-        FunctionApp(wsgi_app=mock_wsgi_app)
+        WsgiFunctionApp(app=mock_wsgi_app)
 
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
 
     def test_add_http_app(self):
-        app = FunctionApp(asgi_app=object())
+        app = AsgiFunctionApp(app=object())
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         func = funcs[0]
@@ -311,3 +356,124 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
+
+    def test_register_function_app_error(self):
+        with self.assertRaises(TypeError) as err:
+            FunctionApp().register_functions(FunctionApp())
+
+        self.assertEqual(err.exception.args[0],
+                         "functions can not be type of FunctionRegister!")
+
+    def test_register_blueprint(self):
+        bp = Blueprint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return "hello"
+
+        app = FunctionApp()
+        app.register_blueprint(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_register_app_auth_level(self):
+        bp = Blueprint()
+
+        @bp.route("name")
+        def hello(name: str):
+            return "hello"
+
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+        app.register_blueprint(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
+                         AuthLevel.ANONYMOUS)
+
+    def test_decorator_api_basic_props(self):
+        class DummyFunctionApp(DecoratorApi):
+            pass
+
+        app = DummyFunctionApp()
+
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+        self.assertIsNotNone(getattr(app, "function_name", None))
+        self.assertIsNotNone(getattr(app, "_validate_type", None))
+        self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
+
+    def test_http_functions_auth_level_mixin(self):
+        class DummyFunctionApp(HttpFunctionsAuthLevelMixin):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertTrue(hasattr(app, "auth_level"))
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_function_register_basic_props(self):
+        class DummyFunctionApp(FunctionRegister):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+        self.assertIsNotNone(getattr(app, "function_name", None))
+        self.assertIsNotNone(getattr(app, "_validate_type", None))
+        self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
+        self.assertTrue(hasattr(app, "auth_level"))
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_function_register_register_function_register_error(self):
+        class DummyFunctionApp(FunctionRegister):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        with self.assertRaises(TypeError) as err:
+            app.register_functions(app)
+
+        self.assertEqual(err.exception.args[0],
+                         'functions can not be type of FunctionRegister!')
+
+    def test_function_register_register_functions_from_blueprint(self):
+        class DummyFunctionApp(FunctionRegister):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = Blueprint()
+
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(blueprint)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+
+        trigger = functions[0].get_trigger()
+
+        self.assertEqual(trigger.type, TIMER_TRIGGER)
+        self.assertEqual(trigger.schedule, "10****")
+        self.assertEqual(trigger.name, "name")
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[0].get_user_function()("timer"), "timer")
+
+    def test_asgi_function_app_default(self):
+        app = AsgiFunctionApp(app=object())
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+
+    def test_asgi_function_app_custom(self):
+        app = AsgiFunctionApp(app=object(),
+                              http_auth_level=AuthLevel.ANONYMOUS)
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_wsgi_function_app_default(self):
+        app = WsgiFunctionApp(app=object())
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+
+    def test_wsgi_function_app_custom(self):
+        app = WsgiFunctionApp(app=object(),
+                              http_auth_level=AuthLevel.ANONYMOUS)
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
