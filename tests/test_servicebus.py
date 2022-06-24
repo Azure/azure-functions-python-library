@@ -296,6 +296,26 @@ class TestServiceBus(unittest.TestCase):
                 'x-opt-enqueue-sequence-number': 0
             })
 
+    def test_servicebus_message_out_converter_encode_str(self):
+
+        data = "dummy_string"
+
+        result = azf_sb.ServiceBusMessageOutConverter.encode(
+            obj=data, expected_type=None)
+
+        self.assertEqual(result.type, "string")
+        self.assertEqual(result.python_value, data)
+
+    def test_servicebus_message_out_converter_encode_bytes(self):
+
+        data = b"dummy_bytes"
+
+        result = azf_sb.ServiceBusMessageOutConverter.encode(
+            obj=data, expected_type=None)
+
+        self.assertEqual(result.type, "bytes")
+        self.assertEqual(result.python_value, data)
+
     def _generate_single_servicebus_data(self) -> meta.Datum:
         return meta.Datum(value=json.dumps({
             'lucky_number': 23
