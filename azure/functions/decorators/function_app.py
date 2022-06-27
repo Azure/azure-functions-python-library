@@ -45,6 +45,7 @@ class Function(object):
         self._trigger: Optional[Trigger] = None
         self._bindings: List[Binding] = []
         self.function_script_file = script_file
+        self.http_type = 'function'
 
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
@@ -84,6 +85,13 @@ class Function(object):
         """
         if function_name:
             self._name = function_name
+
+    def set_http_type(self, http_type: str) -> None:
+        """Set or update the http type for the function if :param:`http_type`
+        .
+        :param http_type: Http function type.
+        """
+        self.http_type = http_type
 
     def get_trigger(self) -> Optional[Trigger]:
         """Get attached trigger instance of the function.
@@ -155,6 +163,11 @@ class FunctionBuilder(object):
 
     def configure_function_name(self, function_name: str) -> 'FunctionBuilder':
         self._function.set_function_name(function_name)
+
+        return self
+
+    def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
+        self._function.set_http_type(http_type)
 
         return self
 
@@ -275,6 +288,23 @@ class DecoratorApi(ABC):
         def wrap(fb):
             def decorator():
                 fb.configure_function_name(name)
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def http_type(self, http_type: str) -> Callable:
+        """Set http  type of the :class:`Function` object.
+
+        :param http_type: Http type of the function.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.configure_http_type(http_type)
                 return fb
 
             return decorator()
@@ -1638,7 +1668,8 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      http_type: str) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`AsgiMiddleware` or
@@ -1647,6 +1678,7 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
         :return: None
         """
 
+        @self.http_type(http_type=http_type)
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
                     route="/{*route}")
@@ -1662,7 +1694,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: asgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(AsgiMiddleware(app))
+        self._add_http_app(AsgiMiddleware(app), 'asgi')
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1673,4 +1705,4 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: wsgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app))
+        self._add_http_app(WsgiMiddleware(app), 'wsgi')

@@ -302,6 +302,8 @@ class TestFunctionApp(unittest.TestCase):
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
 
+        self.assertEqual(add_http_app_mock.call_args[0][1], 'asgi')
+
     @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
@@ -311,6 +313,7 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
+        self.assertEqual(add_http_app_mock.call_args[0][1], 'wsgi')
 
     def test_add_http_app(self):
         app = AsgiFunctionApp(app=object())
@@ -391,6 +394,40 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(len(app.get_functions()), 1)
         self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
                          AuthLevel.ANONYMOUS)
+
+    def test_default_function_http_type(self):
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+
+        @app.route("name")
+        def hello(name: str):
+            return "hello"
+
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        func = funcs[0]
+        self.assertEqual(func.http_type, 'function')
+
+    def test_set_http_type(self):
+        app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+
+        @app.route("name1")
+        @app.http_type("dummy1")
+        def hello(name: str):
+            return "hello"
+
+        @app.route("name2")
+        @app.http_type("dummy2")
+        def hello2(name: str):
+            return "hello"
+
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 2)
+
+        func1 = funcs[0]
+        self.assertEqual(func1.http_type, 'dummy1')
+        func2 = funcs[1]
+        self.assertEqual(func2.http_type, 'dummy2')
 
     def test_decorator_api_basic_props(self):
         class DummyFunctionApp(DecoratorApi):
