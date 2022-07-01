@@ -8,9 +8,8 @@ from json import JSONEncoder
 from typing import TypeVar, Optional, Union, Iterable, Type, Callable
 
 T = TypeVar("T", bound=Enum)
-SNAKE_CASE_RE = re.compile(r'^([a-z]+\d*_[a-z\d_]*|_+[a-z\d]+[a-z\d_]*)$',
-                           re.IGNORECASE)
-WORD_RE = re.compile(r'^([a-z]+\d*)$', re.IGNORECASE)
+SNAKE_CASE_RE = re.compile(r'^([a-zA-Z]+\d*_|_+[a-zA-Z\d])\w*$')
+WORD_RE = re.compile(r'^([a-zA-Z]+\d*)$')
 
 
 class StringifyEnum(Enum):
@@ -133,7 +132,7 @@ def to_camel_case(snake_case_str: str):
             f"Please ensure {snake_case_str} is a word or snake case "
             f"string with underscore as separator.")
     words = snake_case_str.split('_')
-    return words[0] + ''.join(ele.title() for ele in words[1:])
+    return words[0] + ''.join([ele.title() for ele in words[1:]])
 
 
 def is_snake_case(input_string: str) -> bool:

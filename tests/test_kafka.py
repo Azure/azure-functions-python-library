@@ -197,6 +197,38 @@ class Kafka(unittest.TestCase):
         sys_dict = json.loads(sys)
         self.assertEqual(sys_dict['MethodName'], 'KafkaTriggerMany')
 
+    def test_kafka_convert_single_event_str(self):
+        datum = meta.Datum("dummy_body", "string")
+        result = azf_ka.KafkaConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual(result.get_body(), b"dummy_body")
+
+    def test_kafka_convert_single_event_bytes(self):
+        datum = meta.Datum(b"dummy_body", "bytes")
+        result = azf_ka.KafkaConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual(result.get_body(), b"dummy_body")
+
+    def test_kafka_convert_multiple_event_collection_string(self):
+        datum = meta.Datum(CollectionString(["dummy_body1", "dummy_body2"]),
+                           "collection_string")
+        result = azf_ka.KafkaConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual([result[0].get_body(), result[1].get_body()],
+                         [b"dummy_body1", b"dummy_body2"])
+
+    def test_kafka_convert_multiple_event_collection_bytes(self):
+        datum = meta.Datum(CollectionBytes([b"dummy_body1", b"dummy_body2"]),
+                           "collection_bytes")
+        result = azf_ka.KafkaConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual([result[0].get_body(), result[1].get_body()],
+                         [b"dummy_body1", b"dummy_body2"])
+
     def _generate_single_kafka_datum(self, datum_type='string'):
         datum = self.SINGLE_KAFKA_DATAUM
         if datum_type == 'bytes':
