@@ -867,6 +867,21 @@ class TestFunctionsApp(unittest.TestCase):
             "connectionStringSetting": "dummy_str"
         })
 
+    def test_not_http_function(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        self.assertFalse(funcs[0].is_http_function())
+
     def test_cosmosdb_input_binding(self):
         app = self.func_app
 
@@ -1060,6 +1075,8 @@ class TestFunctionsApp(unittest.TestCase):
         http_func_1 = funcs[0]
         http_func_2 = funcs[1]
 
+        self.assertTrue(http_func_1.is_http_function())
+        self.assertTrue(http_func_2.is_http_function())
         self.assertEqual(http_func_1.get_user_function().__name__,
                          "specify_auth_level")
         self.assertEqual(http_func_2.get_user_function().__name__,
