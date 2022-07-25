@@ -1368,6 +1368,8 @@ class TestFunctionsApp(unittest.TestCase):
         func = self._get_user_function(app)
 
         self.assertEqual(len(func.get_bindings()), 1)
+        self.assertTrue(func.is_http_function())
+        
         output = func.get_bindings()[0]
 
         self.assertEqual(output.get_dict_repr(), {
