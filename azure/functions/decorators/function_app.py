@@ -1619,6 +1619,7 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         """
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
+        self._require_auth_level: Optional[bool] = None
 
     def get_functions(self) -> List[Function]:
         """Get the function objects in the function app.
@@ -1628,10 +1629,17 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         functions = [function_builder.build(self.auth_level)
                      for function_builder in self._function_builders]
 
-        if all(not function.is_http_function() for function in functions):
+        if not self._require_auth_level:
+            self._require_auth_level = any(
+                function.is_http_function() for function in functions)
+
+        if not self._require_auth_level:
             logging.warning(
-                'Auth level for the function app is not applied to non http '
-                'function app')
+                'Auth level is not applied to non http '
+                'function app. Ref: '
+                'https://docs.microsoft.com/azure/azure-functions/functions'
+                '-bindings-http-webhook-trigger?tabs=in-process'
+                '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
 
         return functions
 
