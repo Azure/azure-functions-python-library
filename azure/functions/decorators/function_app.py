@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
+import logging
 from abc import ABC
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
@@ -46,6 +47,7 @@ class Function(object):
         self._bindings: List[Binding] = []
         self.function_script_file = script_file
         self.http_type = 'function'
+        self._is_http_function = False
 
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
@@ -72,7 +74,6 @@ class Function(object):
                              f"being added is {trigger.get_dict_repr()}")
 
         self._trigger = trigger
-
         #  We still add the trigger info to the bindings to ensure that
         #  function.json is complete
         self._bindings.append(trigger)
@@ -92,6 +93,9 @@ class Function(object):
         :param http_type: Http function type.
         """
         self.http_type = http_type
+
+    def is_http_function(self) -> bool:
+        return self._is_http_function
 
     def get_trigger(self) -> Optional[Trigger]:
         """Get attached trigger instance of the function.
@@ -212,6 +216,7 @@ class FunctionBuilder(object):
                 getattr(trigger, 'init_params').add('auth_level')
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
+            self._function._is_http_function = True
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
@@ -1614,14 +1619,29 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         """
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
+        self._require_auth_level: Optional[bool] = None
 
     def get_functions(self) -> List[Function]:
         """Get the function objects in the function app.
 
         :return: List of functions in the function app.
         """
-        return [function_builder.build(self.auth_level) for function_builder
-                in self._function_builders]
+        functions = [function_builder.build(self.auth_level)
+                     for function_builder in self._function_builders]
+
+        if not self._require_auth_level:
+            self._require_auth_level = any(
+                function.is_http_function() for function in functions)
+
+        if not self._require_auth_level:
+            logging.warning(
+                'Auth level is not applied to non http '
+                'function app. Ref: '
+                'https://docs.microsoft.com/azure/azure-functions/functions'
+                '-bindings-http-webhook-trigger?tabs=in-process'
+                '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
+
+        return functions
 
     def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.

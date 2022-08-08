@@ -11,7 +11,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -459,8 +459,47 @@ class TestFunctionApp(unittest.TestCase):
         self.assertIsNotNone(getattr(app, "function_name", None))
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
+        self.assertIsNone(getattr(app, "_require_auth_level"))
         self.assertTrue(hasattr(app, "auth_level"))
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_function_register_http_function_app(self):
+        class DummyFunctionApp(FunctionRegister, TriggerApi):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+
+        @app.route("name1")
+        def hello1(name: str):
+            return "hello"
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return "hello"
+
+        @app.route("name1")
+        def hello3(name: str):
+            return "hello"
+
+        self.assertIsNone(app._require_auth_level, None)
+        app.get_functions()
+        self.assertTrue(app._require_auth_level)
+
+    def test_function_register_non_http_function_app(self):
+        class DummyFunctionApp(FunctionRegister, TriggerApi):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = Blueprint()
+
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(blueprint)
+
+        app.get_functions()
+        self.assertFalse(app._require_auth_level)
 
     def test_function_register_register_function_register_error(self):
         class DummyFunctionApp(FunctionRegister):
@@ -506,6 +545,13 @@ class TestFunctionApp(unittest.TestCase):
                               http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
+    def test_asgi_function_app_is_http_function(self):
+        app = AsgiFunctionApp(app=object())
+        funcs = app.get_functions()
+
+        self.assertEqual(len(funcs), 1)
+        self.assertTrue(funcs[0].is_http_function())
+
     def test_wsgi_function_app_default(self):
         app = WsgiFunctionApp(app=object())
         self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
@@ -514,3 +560,10 @@ class TestFunctionApp(unittest.TestCase):
         app = WsgiFunctionApp(app=object(),
                               http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_wsgi_function_app_is_http_function(self):
+        app = WsgiFunctionApp(app=object())
+        funcs = app.get_functions()
+
+        self.assertEqual(len(funcs), 1)
+        self.assertTrue(funcs[0].is_http_function())
