@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import json
+import logging
 from abc import ABC
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
@@ -45,6 +46,8 @@ class Function(object):
         self._trigger: Optional[Trigger] = None
         self._bindings: List[Binding] = []
         self.function_script_file = script_file
+        self.http_type = 'function'
+        self._is_http_function = False
 
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
@@ -71,7 +74,6 @@ class Function(object):
                              f"being added is {trigger.get_dict_repr()}")
 
         self._trigger = trigger
-
         #  We still add the trigger info to the bindings to ensure that
         #  function.json is complete
         self._bindings.append(trigger)
@@ -84,6 +86,16 @@ class Function(object):
         """
         if function_name:
             self._name = function_name
+
+    def set_http_type(self, http_type: str) -> None:
+        """Set or update the http type for the function if :param:`http_type`
+        .
+        :param http_type: Http function type.
+        """
+        self.http_type = http_type
+
+    def is_http_function(self) -> bool:
+        return self._is_http_function
 
     def get_trigger(self) -> Optional[Trigger]:
         """Get attached trigger instance of the function.
@@ -158,6 +170,11 @@ class FunctionBuilder(object):
 
         return self
 
+    def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
+        self._function.set_http_type(http_type)
+
+        return self
+
     def add_trigger(self, trigger: Trigger) -> 'FunctionBuilder':
         self._function.add_trigger(trigger=trigger)
         return self
@@ -199,6 +216,7 @@ class FunctionBuilder(object):
                 getattr(trigger, 'init_params').add('auth_level')
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
+            self._function._is_http_function = True
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
@@ -275,6 +293,23 @@ class DecoratorApi(ABC):
         def wrap(fb):
             def decorator():
                 fb.configure_function_name(name)
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def http_type(self, http_type: str) -> Callable:
+        """Set http  type of the :class:`Function` object.
+
+        :param http_type: Http type of the function.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.configure_http_type(http_type)
                 return fb
 
             return decorator()
@@ -893,17 +928,17 @@ class TriggerApi(DecoratorApi, ABC):
 class BindingApi(DecoratorApi, ABC):
     """Interface to extend for using existing binding decorator functions."""
 
-    def write_service_bus_queue(self,
-                                arg_name: str,
-                                connection: str,
-                                queue_name: str,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                access_rights: Optional[Union[
-                                    AccessRights, str]] = None,
-                                **kwargs) -> \
+    def service_bus_queue_output(self,
+                                 arg_name: str,
+                                 connection: str,
+                                 queue_name: str,
+                                 data_type: Optional[
+                                     Union[DataType, str]] = None,
+                                 access_rights: Optional[Union[
+                                     AccessRights, str]] = None,
+                                 **kwargs) -> \
             Callable:
-        """The write_service_bus_queue decorator adds
+        """The service_bus_queue_output decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusQueueOutput
@@ -944,18 +979,18 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_service_bus_topic(self,
-                                arg_name: str,
-                                connection: str,
-                                topic_name: str,
-                                subscription_name: Optional[str] = None,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                access_rights: Optional[Union[
-                                    AccessRights, str]] = None,
-                                **kwargs) -> \
+    def service_bus_topic_output(self,
+                                 arg_name: str,
+                                 connection: str,
+                                 topic_name: str,
+                                 subscription_name: Optional[str] = None,
+                                 data_type: Optional[
+                                     Union[DataType, str]] = None,
+                                 access_rights: Optional[Union[
+                                     AccessRights, str]] = None,
+                                 **kwargs) -> \
             Callable:
-        """The write_service_bus_topic decorator adds
+        """The service_bus_topic_output decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining ServiceBusTopicOutput
@@ -999,13 +1034,13 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_queue(self,
-                    arg_name: str,
-                    queue_name: str,
-                    connection: str,
-                    data_type: Optional[DataType] = None,
-                    **kwargs) -> Callable:
-        """The write_queue decorator adds :class:`QueueOutput` to the
+    def queue_output(self,
+                     arg_name: str,
+                     queue_name: str,
+                     connection: str,
+                     data_type: Optional[DataType] = None,
+                     **kwargs) -> Callable:
+        """The queue_output decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining QueueOutput
@@ -1045,15 +1080,15 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_event_hub_message(self,
-                                arg_name: str,
-                                connection: str,
-                                event_hub_name: str,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                **kwargs) -> \
+    def event_hub_output(self,
+                         arg_name: str,
+                         connection: str,
+                         event_hub_name: str,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) -> \
             Callable:
-        """The write_event_hub_message decorator adds
+        """The event_hub_output decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining EventHubOutput
@@ -1094,22 +1129,22 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_cosmos_db_documents(self,
-                                  arg_name: str,
-                                  database_name: str,
-                                  collection_name: str,
-                                  connection_string_setting: str,
-                                  create_if_not_exists: Optional[bool] = None,
-                                  partition_key: Optional[str] = None,
-                                  collection_throughput: Optional[int] = None,
-                                  use_multiple_write_locations: Optional[
-                                      bool] = None,
-                                  preferred_locations: Optional[str] = None,
-                                  data_type: Optional[
-                                      Union[DataType, str]] = None,
-                                  **kwargs) \
+    def cosmos_db_output(self,
+                         arg_name: str,
+                         database_name: str,
+                         collection_name: str,
+                         connection_string_setting: str,
+                         create_if_not_exists: Optional[bool] = None,
+                         partition_key: Optional[str] = None,
+                         collection_throughput: Optional[int] = None,
+                         use_multiple_write_locations: Optional[
+                             bool] = None,
+                         preferred_locations: Optional[str] = None,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) \
             -> Callable:
-        """The write_cosmos_db_documents decorator adds
+        """The cosmos_db_output decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBOutput
@@ -1169,19 +1204,19 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def read_cosmos_db_documents(self,
-                                 arg_name: str,
-                                 database_name: str,
-                                 collection_name: str,
-                                 connection_string_setting: str,
-                                 id: Optional[str] = None,
-                                 sql_query: Optional[str] = None,
-                                 partition_key: Optional[str] = None,
-                                 data_type: Optional[
-                                     Union[DataType, str]] = None,
-                                 **kwargs) \
+    def cosmos_db_input(self,
+                        arg_name: str,
+                        database_name: str,
+                        collection_name: str,
+                        connection_string_setting: str,
+                        id: Optional[str] = None,
+                        sql_query: Optional[str] = None,
+                        partition_key: Optional[str] = None,
+                        data_type: Optional[
+                            Union[DataType, str]] = None,
+                        **kwargs) \
             -> Callable:
-        """The read_cosmos_db_documents decorator adds
+        """The cosmos_db_input decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining CosmosDBInput
@@ -1232,14 +1267,14 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def read_blob(self,
-                  arg_name: str,
-                  path: str,
-                  connection: str,
-                  data_type: Optional[DataType] = None,
-                  **kwargs) -> Callable:
+    def blob_input(self,
+                   arg_name: str,
+                   path: str,
+                   connection: str,
+                   data_type: Optional[DataType] = None,
+                   **kwargs) -> Callable:
         """
-        The read_blob decorator adds :class:`BlobInput` to the
+        The blob_input decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobInput
@@ -1280,14 +1315,14 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_blob(self,
-                   arg_name: str,
-                   path: str,
-                   connection: str,
-                   data_type: Optional[DataType] = None,
-                   **kwargs) -> Callable:
+    def blob_output(self,
+                    arg_name: str,
+                    path: str,
+                    connection: str,
+                    data_type: Optional[DataType] = None,
+                    **kwargs) -> Callable:
         """
-        The write_blob decorator adds :class:`BlobOutput` to the
+        The blob_output decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining BlobOutput
@@ -1327,15 +1362,15 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_event_grid(self,
-                         arg_name: str,
-                         topic_endpoint_uri: str,
-                         topic_key_setting: str,
-                         data_type: Optional[
-                             Union[DataType, str]] = None,
-                         **kwargs) -> Callable:
+    def event_grid_output(self,
+                          arg_name: str,
+                          topic_endpoint_uri: str,
+                          topic_key_setting: str,
+                          data_type: Optional[
+                              Union[DataType, str]] = None,
+                          **kwargs) -> Callable:
         """
-        The write_event_grid decorator adds
+        The event_grid_output decorator adds
         :class:`EventGridOutput`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1375,18 +1410,18 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def read_table(self,
-                   arg_name: str,
-                   connection: str,
-                   table_name: str,
-                   row_key: Optional[str] = None,
-                   partition_key: Optional[str] = None,
-                   take: Optional[int] = None,
-                   filter: Optional[str] = None,
-                   data_type: Optional[
-                       Union[DataType, str]] = None) -> Callable:
+    def table_input(self,
+                    arg_name: str,
+                    connection: str,
+                    table_name: str,
+                    row_key: Optional[str] = None,
+                    partition_key: Optional[str] = None,
+                    take: Optional[int] = None,
+                    filter: Optional[str] = None,
+                    data_type: Optional[
+                        Union[DataType, str]] = None) -> Callable:
         """
-        The read_table decorator adds :class:`TableInput` to the
+        The table_input decorator adds :class:`TableInput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TableInput
@@ -1411,6 +1446,7 @@ class BindingApi(DecoratorApi, ABC):
          parameter value.
         :return: Decorator function.
         """
+
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
@@ -1431,17 +1467,16 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def write_table(self,
-                    arg_name: str,
-                    connection: str,
-                    table_name: str,
-                    row_key: Optional[str] = None,
-                    partition_key: Optional[str] = None,
-                    data_type: Optional[
-                        Union[DataType, str]] = None) -> Callable:
-
+    def table_output(self,
+                     arg_name: str,
+                     connection: str,
+                     table_name: str,
+                     row_key: Optional[str] = None,
+                     partition_key: Optional[str] = None,
+                     data_type: Optional[
+                         Union[DataType, str]] = None) -> Callable:
         """
-        The write_table decorator adds :class:`TableOutput` to the
+        The table_output decorator adds :class:`TableOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TableOutput
@@ -1584,14 +1619,29 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         """
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
+        self._require_auth_level: Optional[bool] = None
 
     def get_functions(self) -> List[Function]:
         """Get the function objects in the function app.
 
         :return: List of functions in the function app.
         """
-        return [function_builder.build(self.auth_level) for function_builder
-                in self._function_builders]
+        functions = [function_builder.build(self.auth_level)
+                     for function_builder in self._function_builders]
+
+        if not self._require_auth_level:
+            self._require_auth_level = any(
+                function.is_http_function() for function in functions)
+
+        if not self._require_auth_level:
+            logging.warning(
+                'Auth level is not applied to non http '
+                'function app. Ref: '
+                'https://docs.microsoft.com/azure/azure-functions/functions'
+                '-bindings-http-webhook-trigger?tabs=in-process'
+                '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
+
+        return functions
 
     def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.
@@ -1638,7 +1688,8 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      http_type: str) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`AsgiMiddleware` or
@@ -1647,6 +1698,7 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
         :return: None
         """
 
+        @self.http_type(http_type=http_type)
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
                     route="/{*route}")
@@ -1662,7 +1714,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: asgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(AsgiMiddleware(app))
+        self._add_http_app(AsgiMiddleware(app), 'asgi')
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1673,4 +1725,4 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: wsgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app))
+        self._add_http_app(WsgiMiddleware(app), 'wsgi')
