@@ -166,9 +166,11 @@ class AsgiMiddleware:
     def _handle(self, req, context):
         asgi_request = AsgiRequest(req, context)
         asyncio.set_event_loop(self._loop)
+        self._loop.run_until_complete(self._app.router.startup())
         scope = asgi_request.to_asgi_http_scope()
         asgi_response = self._loop.run_until_complete(
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
+        self._loop.run_until_complete(self._app.router.shutdown())
 
         return asgi_response.to_func_response()
