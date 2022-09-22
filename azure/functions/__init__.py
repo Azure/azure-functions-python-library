@@ -21,7 +21,6 @@ from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
-from ._sql import SqlRow, SqlRowList
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -34,7 +33,6 @@ from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
-from . import sql # NoQA
 
 
 __all__ = (
@@ -61,8 +59,6 @@ __all__ = (
     'EntityContext',
     'QueueMessage',
     'ServiceBusMessage',
-    'SqlRow',
-    'SqlRowList',
     'TimerRequest',
 
     # Middlewares
