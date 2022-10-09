@@ -4,6 +4,7 @@
 from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
 import asyncio
+from warnings import warn, DeprecationWarning
 from wsgiref.headers import Headers
 
 from ._abc import Context
@@ -149,18 +150,19 @@ class AsgiMiddleware:
         self.main = self._handle
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
-        """Method to convert an Azure Functions HTTP request into a ASGI
-        Python object. Example on handling ASGI app in a HTTP trigger by
-        calling .handle() in .main() method:
+        """Deprecated. Please use handle_async instead:
 
-        import azure.functions as func
+            import azure.functions as func
 
-        from FastapiApp import app
+            from FastapiApp import app
 
-        def main(req, context):
-            return func.AsgiMiddleware(app).handle(req, context)
+            async def main(req, context):
+                return await func.AsgiMiddleware(app).handle_async(req, context)
         """
+        warn("handle() is deprecated. Please use handle_async() instead.", 
+             DeprecationWarning, stacklevel=2)
         self._logger.debug(f"Handling {req.url} as an ASGI request.")
+        self._logger.warning(f"handle() is deprecated. Please `await .handle_async()` instead.")
         return self._handle(req, context)
 
     def _handle(self, req, context):
@@ -171,4 +173,25 @@ class AsgiMiddleware:
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
 
+        return asgi_response.to_func_response()
+    
+    async def handle_async(self, req: HttpRequest, context: Optional[Context] = None):
+        """Method to convert an Azure Functions HTTP request into a ASGI
+        Python object. Example on handling ASGI app in a HTTP trigger by
+        calling .handle_async() in .main() method:
+
+            import azure.functions as func
+
+            from FastapiApp import app
+
+            async def main(req, context):
+                return await func.AsgiMiddleware(app).handle_async(req, context)
+        """
+        self._logger.debug(f"Awaiting {req.url} as an ASGI request.")
+        return await self._handle_async(req, context)
+
+    async def _handle_async(self, req, context):
+        asgi_request = AsgiRequest(req, context)
+        scope = asgi_request.to_asgi_http_scope()
+        asgi_response = await AsgiResponse.from_app(self._app, scope, req.get_body())
         return asgi_response.to_func_response()
