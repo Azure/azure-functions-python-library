@@ -42,7 +42,7 @@ setup(
     ],
     license='MIT',
     packages=find_packages(exclude=[
-        'azure'
+        'azure', 'tests'
     ]),
     package_data={
         'azure.functions': ['py.typed']
