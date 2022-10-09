@@ -4,7 +4,7 @@
 from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
 import asyncio
-from warnings import warn, DeprecationWarning
+from warnings import warn
 from wsgiref.headers import Headers
 
 from ._abc import Context
