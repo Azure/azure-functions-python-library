@@ -5,7 +5,7 @@ import unittest
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
-    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID
+    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
@@ -124,10 +124,10 @@ class TestFunctionsApp(unittest.TestCase):
             "scriptFile": "function_app.py",
             "bindings": [
                 {
+                    "authLevel": AuthLevel.FUNCTION,
                     "direction": BindingDirection.IN,
                     "type": HTTP_TRIGGER,
                     "name": "req",
-                    "authLevel": AuthLevel.FUNCTION,
                     "route": "dummy"
                 },
                 {
@@ -178,8 +178,8 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn")
-        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
-                         connection="dummy_out_conn")
+        @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
+                          connection="dummy_out_conn")
         def dummy():
             pass
 
@@ -228,8 +228,8 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn")
-        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
-                         connection="dummy_out_conn")
+        @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
+                          connection="dummy_out_conn")
         def dummy():
             pass
 
@@ -252,9 +252,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn",
                            data_type=DataType.STRING, dummy_field="dummy")
-        @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
-                         connection="dummy_out_conn",
-                         data_type=DataType.STRING, dummy_field="dummy")
+        @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
+                          connection="dummy_out_conn",
+                          data_type=DataType.STRING, dummy_field="dummy")
         def dummy():
             pass
 
@@ -287,9 +287,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_queue_trigger(arg_name="req",
                                        connection="dummy_conn",
                                        queue_name="dummy_queue")
-        @app.write_service_bus_queue(arg_name='res',
-                                     connection='dummy_out_conn',
-                                     queue_name='dummy_out_queue')
+        @app.service_bus_queue_output(arg_name='res',
+                                      connection='dummy_out_conn',
+                                      queue_name='dummy_out_queue')
         def dummy():
             pass
 
@@ -342,9 +342,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_queue_trigger(arg_name="req",
                                        connection="dummy_conn",
                                        queue_name="dummy_queue")
-        @app.write_service_bus_queue(arg_name='res',
-                                     connection='dummy_out_conn',
-                                     queue_name='dummy_out_queue')
+        @app.service_bus_queue_output(arg_name='res',
+                                      connection='dummy_out_conn',
+                                      queue_name='dummy_out_queue')
         def dummy():
             pass
 
@@ -372,12 +372,12 @@ class TestFunctionsApp(unittest.TestCase):
                                        is_sessions_enabled=True,
                                        cardinality=Cardinality.MANY,
                                        dummy_field="dummy")
-        @app.write_service_bus_queue(arg_name='res',
-                                     connection='dummy_out_conn',
-                                     queue_name='dummy_out_queue',
-                                     data_type=DataType.STREAM,
-                                     access_rights=AccessRights.MANAGE,
-                                     dummy_field="dummy")
+        @app.service_bus_queue_output(arg_name='res',
+                                      connection='dummy_out_conn',
+                                      queue_name='dummy_out_queue',
+                                      data_type=DataType.STREAM,
+                                      access_rights=AccessRights.MANAGE,
+                                      dummy_field="dummy")
         def dummy():
             pass
 
@@ -417,9 +417,9 @@ class TestFunctionsApp(unittest.TestCase):
                                        connection='dummy_conn',
                                        topic_name='dummy_topic',
                                        subscription_name='dummy_sub')
-        @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
-                                     topic_name='dummy_topic',
-                                     subscription_name='dummy_sub')
+        @app.service_bus_topic_output(arg_name='res', connection='dummy_conn',
+                                      topic_name='dummy_topic',
+                                      subscription_name='dummy_sub')
         def dummy():
             pass
 
@@ -477,9 +477,9 @@ class TestFunctionsApp(unittest.TestCase):
                                        connection='dummy_conn',
                                        topic_name='dummy_topic',
                                        subscription_name='dummy_sub')
-        @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
-                                     topic_name='dummy_topic',
-                                     subscription_name='dummy_sub')
+        @app.service_bus_topic_output(arg_name='res', connection='dummy_conn',
+                                      topic_name='dummy_topic',
+                                      subscription_name='dummy_sub')
         def dummy():
             pass
 
@@ -509,12 +509,12 @@ class TestFunctionsApp(unittest.TestCase):
                                        is_sessions_enabled=False,
                                        cardinality=Cardinality.MANY,
                                        dummy_field="dummy")
-        @app.write_service_bus_topic(arg_name='res', connection='dummy_conn',
-                                     topic_name='dummy_topic',
-                                     subscription_name='dummy_sub',
-                                     data_type=DataType.STRING,
-                                     access_rights=AccessRights.LISTEN,
-                                     dummy_field="dummy")
+        @app.service_bus_topic_output(arg_name='res', connection='dummy_conn',
+                                      topic_name='dummy_topic',
+                                      subscription_name='dummy_sub',
+                                      data_type=DataType.STRING,
+                                      access_rights=AccessRights.LISTEN,
+                                      dummy_field="dummy")
         def dummy():
             pass
 
@@ -555,9 +555,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_hub_message_trigger(arg_name="req",
                                        connection="dummy_connection",
                                        event_hub_name="dummy_event_hub")
-        @app.write_event_hub_message(arg_name="res",
-                                     event_hub_name="dummy_event_hub",
-                                     connection="dummy_connection")
+        @app.event_hub_output(arg_name="res",
+                              event_hub_name="dummy_event_hub",
+                              connection="dummy_connection")
         def dummy():
             pass
 
@@ -610,9 +610,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_hub_message_trigger(arg_name="req",
                                        connection="dummy_connection",
                                        event_hub_name="dummy_event_hub")
-        @app.write_event_hub_message(arg_name="res",
-                                     event_hub_name="dummy_event_hub",
-                                     connection="dummy_connection")
+        @app.event_hub_output(arg_name="res",
+                              event_hub_name="dummy_event_hub",
+                              connection="dummy_connection")
         def dummy():
             pass
 
@@ -639,11 +639,11 @@ class TestFunctionsApp(unittest.TestCase):
                                        consumer_group="dummy_group",
                                        data_type=DataType.UNDEFINED,
                                        dummy_field="dummy")
-        @app.write_event_hub_message(arg_name="res",
-                                     event_hub_name="dummy_event_hub",
-                                     connection="dummy_connection",
-                                     data_type=DataType.UNDEFINED,
-                                     dummy_field="dummy")
+        @app.event_hub_output(arg_name="res",
+                              event_hub_name="dummy_event_hub",
+                              connection="dummy_connection",
+                              data_type=DataType.UNDEFINED,
+                              dummy_field="dummy")
         def dummy():
             pass
 
@@ -700,26 +700,26 @@ class TestFunctionsApp(unittest.TestCase):
             preferred_locations="dummy_loc",
             data_type=DataType.STRING,
             dummy_field="dummy")
-        @app.read_cosmos_db_documents(arg_name="in",
-                                      database_name="dummy_in_db",
-                                      collection_name="dummy_in_collection",
-                                      connection_string_setting="dummy_str",
-                                      id="dummy_id",
-                                      sql_query="dummy_query",
-                                      partition_key="dummy_partitions",
-                                      data_type=DataType.STRING,
-                                      dummy_field="dummy")
-        @app.write_cosmos_db_documents(arg_name="out",
-                                       database_name="dummy_out_db",
-                                       collection_name="dummy_out_collection",
-                                       connection_string_setting="dummy_str",
-                                       create_if_not_exists=False,
-                                       partition_key="dummy_part_key",
-                                       collection_throughput=1,
-                                       use_multiple_write_locations=False,
-                                       preferred_locations="dummy_location",
-                                       data_type=DataType.STRING,
-                                       dummy_field="dummy")
+        @app.cosmos_db_input(arg_name="in",
+                             database_name="dummy_in_db",
+                             collection_name="dummy_in_collection",
+                             connection_string_setting="dummy_str",
+                             id="dummy_id",
+                             sql_query="dummy_query",
+                             partition_key="dummy_partitions",
+                             data_type=DataType.STRING,
+                             dummy_field="dummy")
+        @app.cosmos_db_output(arg_name="out",
+                              database_name="dummy_out_db",
+                              collection_name="dummy_out_collection",
+                              connection_string_setting="dummy_str",
+                              create_if_not_exists=False,
+                              partition_key="dummy_part_key",
+                              collection_throughput=1,
+                              use_multiple_write_locations=False,
+                              preferred_locations="dummy_location",
+                              data_type=DataType.STRING,
+                              dummy_field="dummy")
         def dummy():
             pass
 
@@ -799,14 +799,14 @@ class TestFunctionsApp(unittest.TestCase):
         @app.cosmos_db_trigger(arg_name="trigger", database_name="dummy_db",
                                collection_name="dummy_collection",
                                connection_string_setting="dummy_str")
-        @app.read_cosmos_db_documents(arg_name="in",
-                                      database_name="dummy_in_db",
-                                      collection_name="dummy_in_collection",
-                                      connection_string_setting="dummy_str")
-        @app.write_cosmos_db_documents(arg_name="out",
-                                       database_name="dummy_out_db",
-                                       collection_name="dummy_out_collection",
-                                       connection_string_setting="dummy_str")
+        @app.cosmos_db_input(arg_name="in",
+                             database_name="dummy_in_db",
+                             collection_name="dummy_in_collection",
+                             connection_string_setting="dummy_str")
+        @app.cosmos_db_output(arg_name="out",
+                              database_name="dummy_out_db",
+                              collection_name="dummy_out_collection",
+                              connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -867,6 +867,21 @@ class TestFunctionsApp(unittest.TestCase):
             "connectionStringSetting": "dummy_str"
         })
 
+    def test_not_http_function(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               collection_name="dummy_collection",
+                               connection_string_setting="dummy_str")
+        def dummy():
+            pass
+
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        self.assertFalse(funcs[0].is_http_function())
+
     def test_cosmosdb_input_binding(self):
         app = self.func_app
 
@@ -874,10 +889,10 @@ class TestFunctionsApp(unittest.TestCase):
                                database_name="dummy_db",
                                collection_name="dummy_collection",
                                connection_string_setting="dummy_str")
-        @app.read_cosmos_db_documents(arg_name="in",
-                                      database_name="dummy_in_db",
-                                      collection_name="dummy_in_collection",
-                                      connection_string_setting="dummy_str")
+        @app.cosmos_db_input(arg_name="in",
+                             database_name="dummy_in_db",
+                             collection_name="dummy_in_collection",
+                             connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -903,10 +918,10 @@ class TestFunctionsApp(unittest.TestCase):
                                database_name="dummy_db",
                                collection_name="dummy_collection",
                                connection_string_setting="dummy_str")
-        @app.write_cosmos_db_documents(arg_name="out",
-                                       database_name="dummy_out_db",
-                                       collection_name="dummy_out_collection",
-                                       connection_string_setting="dummy_str")
+        @app.cosmos_db_output(arg_name="out",
+                              database_name="dummy_out_db",
+                              collection_name="dummy_out_collection",
+                              connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -946,8 +961,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_no_trigger(self):
         app = self.func_app
         with self.assertRaises(ValueError) as err:
-            @app.write_queue(arg_name="out", queue_name="dummy_out_queue",
-                             connection="dummy_out_conn")
+            @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
+                              connection="dummy_out_conn")
             def dummy():
                 pass
 
@@ -962,7 +977,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.schedule(arg_name="req1", schedule="dummy_schedule")
-        @app.read_cosmos_db_documents(
+        @app.cosmos_db_input(
             arg_name="in1",
             database_name="dummy_in_db",
             collection_name="dummy_in_collection",
@@ -971,7 +986,7 @@ class TestFunctionsApp(unittest.TestCase):
             sql_query="dummy_query",
             partition_key="dummy_partitions",
             data_type=DataType.STRING)
-        @app.read_cosmos_db_documents(
+        @app.cosmos_db_input(
             arg_name="in2",
             database_name="dummy_in_db",
             collection_name="dummy_in_collection",
@@ -980,9 +995,9 @@ class TestFunctionsApp(unittest.TestCase):
             sql_query="dummy_query",
             partition_key="dummy_partitions",
             data_type=DataType.STRING)
-        @app.write_queue(arg_name="out1", queue_name="dummy_out_queue",
-                         connection="dummy_out_conn")
-        @app.write_event_hub_message(
+        @app.queue_output(arg_name="out1", queue_name="dummy_out_queue",
+                          connection="dummy_out_conn")
+        @app.event_hub_output(
             arg_name="res",
             event_hub_name="dummy_event_hub",
             connection="dummy_connection")
@@ -1060,6 +1075,8 @@ class TestFunctionsApp(unittest.TestCase):
         http_func_1 = funcs[0]
         http_func_2 = funcs[1]
 
+        self.assertTrue(http_func_1.is_http_function())
+        self.assertTrue(http_func_2.is_http_function())
         self.assertEqual(http_func_1.get_user_function().__name__,
                          "specify_auth_level")
         self.assertEqual(http_func_2.get_user_function().__name__,
@@ -1109,10 +1126,10 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           connection="dummy_conn")
-        @app.read_blob(arg_name="file", path="dummy_path",
-                       connection="dummy_conn")
-        @app.write_blob(arg_name="out", path="dummy_out_path",
-                        connection="dummy_out_conn")
+        @app.blob_input(arg_name="file", path="dummy_path",
+                        connection="dummy_conn")
+        @app.blob_output(arg_name="out", path="dummy_out_path",
+                         connection="dummy_out_conn")
         def dummy():
             pass
 
@@ -1172,9 +1189,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
                           connection="dummy_conn")
-        @app.read_blob(arg_name="file", path="dummy_in_path",
-                       connection="dummy_in_conn",
-                       data_type=DataType.STRING)
+        @app.blob_input(arg_name="file", path="dummy_in_path",
+                        connection="dummy_in_conn",
+                        data_type=DataType.STRING)
         def dummy():
             pass
 
@@ -1210,9 +1227,9 @@ class TestFunctionsApp(unittest.TestCase):
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
                           connection="dummy_conn")
-        @app.write_blob(arg_name="out", path="dummy_out_path",
-                        connection="dummy_out_conn",
-                        data_type=DataType.STRING)
+        @app.blob_output(arg_name="out", path="dummy_out_path",
+                         connection="dummy_out_conn",
+                         data_type=DataType.STRING)
         def dummy():
             pass
 
@@ -1350,6 +1367,9 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
+        self.assertEqual(len(func.get_bindings()), 1)
+        self.assertTrue(func.is_http_function())
+
         output = func.get_bindings()[0]
 
         self.assertEqual(output.get_dict_repr(), {
@@ -1416,7 +1436,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.event_grid_trigger(arg_name="req")
-        @app.write_event_grid(
+        @app.event_grid_output(
             arg_name="res",
             topic_endpoint_uri="dummy_topic_endpoint_uri",
             topic_key_setting="dummy_topic_key_setting")
@@ -1449,7 +1469,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_grid_trigger(arg_name="req",
                                 data_type=DataType.UNDEFINED,
                                 dummy_field="dummy")
-        @app.write_event_grid(
+        @app.event_grid_output(
             arg_name="res",
             topic_endpoint_uri="dummy_topic_endpoint_uri",
             topic_key_setting="dummy_topic_key_setting",
@@ -1505,7 +1525,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.event_grid_trigger(arg_name="req")
-        @app.write_event_grid(
+        @app.event_grid_output(
             arg_name="res",
             topic_endpoint_uri="dummy_topic_endpoint_uri",
             topic_key_setting="dummy_topic_key_setting")
@@ -1523,4 +1543,180 @@ class TestFunctionsApp(unittest.TestCase):
             "name": "res",
             "topicEndpointUri": "dummy_topic_endpoint_uri",
             "topicKeySetting": "dummy_topic_key_setting"
+        })
+
+    def test_table_default_args(self):
+        app = self.func_app
+
+        @app.route()
+        @app.table_input(arg_name="in", table_name="dummy_table_name",
+                         connection="dummy_in_conn")
+        @app.table_output(arg_name="out", table_name="dummy_table_name",
+                          connection="dummy_out_conn",
+                          row_key="dummy_key",
+                          partition_key="dummy_partition_key")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func,
+                    {"scriptFile": "function_app.py",
+                     "bindings": [
+                         {
+                             "direction": BindingDirection.OUT,
+                             "type": TABLE,
+                             "name": "out",
+                             "rowKey": "dummy_key",
+                             "partitionKey": "dummy_partition_key",
+                             "tableName": "dummy_table_name",
+                             "connection": "dummy_out_conn"
+                         },
+                         {
+                             "direction": BindingDirection.IN,
+                             "type": TABLE,
+                             "name": "in",
+                             "tableName": "dummy_table_name",
+                             "connection": "dummy_in_conn",
+                         },
+                         {
+                             "direction": BindingDirection.IN,
+                             "type": HTTP_TRIGGER,
+                             "name": "req",
+                             "authLevel": AuthLevel.FUNCTION,
+                             "route": "dummy"
+                         },
+                         {
+                             "direction": BindingDirection.OUT,
+                             "type": HTTP_OUTPUT,
+                             "name": "$return"
+                         },
+                     ]
+                     })
+
+    def test_table_with_all_args(self):
+        app = self.func_app
+
+        @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
+                   methods=(HttpMethod.GET, HttpMethod.PATCH),
+                   auth_level=AuthLevel.FUNCTION, route='dummy_route',
+                   trigger_extra_fields={"dummy_field": "dummy"},
+                   binding_extra_fields={"dummy_field": "dummy"})
+        @app.table_input(arg_name="in", table_name="dummy_table_name",
+                         connection="dummy_in_conn",
+                         row_key="dummy_key",
+                         partition_key="dummy_partition_key",
+                         take=1,
+                         filter="dummy_filter")
+        @app.table_output(arg_name="out", table_name="dummy_table_name",
+                          connection="dummy_out_conn",
+                          row_key="dummy_key",
+                          partition_key="dummy_partition_key")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    "type": TABLE,
+                    "name": "out",
+                    "rowKey": "dummy_key",
+                    "partitionKey": "dummy_partition_key",
+                    "tableName": "dummy_table_name",
+                    "connection": "dummy_out_conn"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "type": TABLE,
+                    "name": "in",
+                    "rowKey": "dummy_key",
+                    "partitionKey": "dummy_partition_key",
+                    "tableName": "dummy_table_name",
+                    "connection": "dummy_in_conn",
+                    "take": 1,
+                    "filter": "dummy_filter"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "type": HTTP_TRIGGER,
+                    "name": "trigger_name",
+                    "authLevel": AuthLevel.FUNCTION,
+                    "route": "dummy_route",
+                    "methods": [
+                        "GET", "PATCH"
+                    ]
+                },
+                {
+                    "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
+                    "type": HTTP_OUTPUT,
+                    "name": "out",
+                }
+            ]
+        })
+
+    def test_table_input_binding(self):
+        app = self.func_app
+
+        @app.route()
+        @app.table_input(arg_name="in", table_name="dummy_table_name",
+                         connection="dummy_in_conn",
+                         row_key="dummy_key",
+                         partition_key="dummy_partition_key",
+                         take=1,
+                         filter="dummy_filter",
+                         data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 3)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "dataType": DataType.STRING,
+            "type": TABLE,
+            "name": "in",
+            "tableName": "dummy_table_name",
+            "connection": "dummy_in_conn",
+            "rowKey": "dummy_key",
+            "partitionKey": "dummy_partition_key",
+            "take": 1,
+            "filter": "dummy_filter"
+        })
+
+    def test_table_output_binding(self):
+        app = self.func_app
+
+        @app.route()
+        @app.table_output(arg_name="out", table_name="dummy_table_name",
+                          connection="dummy_out_conn",
+                          row_key="dummy_key",
+                          partition_key="dummy_partition_key",
+                          data_type=DataType.STRING)
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        bindings = func.get_bindings()
+        self.assertEqual(len(bindings), 3)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "dataType": DataType.STRING,
+            "type": TABLE,
+            "name": "out",
+            "rowKey": "dummy_key",
+            "partitionKey": "dummy_partition_key",
+            "tableName": "dummy_table_name",
+            "connection": "dummy_out_conn"
         })
