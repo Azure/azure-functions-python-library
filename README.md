@@ -16,9 +16,8 @@ _What are the supported Python versions?_
 
 | Azure Functions Runtime | Python 3.6 | Python 3.7 | Python 3.8 | Python 3.9 |
 |-------------------------|------------|------------|------------|------------|
-| Azure Functions 2.0     | ✔          | ✔          | -          | -          |
-| Azure Functions 3.0     | ✔          | ✔          | ✔          | ✔          |
-| Azure Functions 4.0     | -          | ✔          | ✔          | ✔          |
+| Azure Functions 3.0     | &#x2713;          | &#x2713;          | &#x2713;          | &#x2713;          |
+| Azure Functions 4.0     | &#x2713;          | &#x2713;          | &#x2713;          | &#x2713;          |
 
 _What's available?_
 - Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
