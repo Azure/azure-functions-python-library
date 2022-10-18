@@ -1685,25 +1685,7 @@ class Blueprint(TriggerApi, BindingApi):
 
 class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
     """Interface to extend for building third party http function apps."""
-
-    def _add_http_app(self,
-                      http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware],
-                      http_type: str) -> None:
-        """Add a Wsgi or Asgi app integrated http function.
-
-        :param http_middleware: :class:`AsgiMiddleware` or
-        :class:`WsgiMiddleware` instance.
-
-        :return: None
-        """
-
-        @self.http_type(http_type=http_type)
-        @self.route(methods=(method for method in HttpMethod),
-                    auth_level=self.auth_level,
-                    route="/{*route}")
-        def http_app_func(req: HttpRequest, context: Context):
-            return http_middleware.handle(req, context)
+    pass
 
 
 class AsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1716,6 +1698,23 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(AsgiMiddleware(app), 'asgi')
 
+    def _add_http_app(self,
+                      http_middleware: AsgiMiddleware,
+                      http_type: str) -> None:
+        """Add an Asgi app integrated http function.
+
+        :param http_middleware: :class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+
+        @self.http_type(http_type=http_type)
+        @self.route(methods=(method for method in HttpMethod),
+                    auth_level=self.auth_level,
+                    route="/{*route}")
+        async def http_app_func(req: HttpRequest, context: Context):
+            return await http_middleware.handle_async(req, context)
+
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
@@ -1726,3 +1725,20 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app), 'wsgi')
+
+    def _add_http_app(self,
+                      http_middleware: WsgiMiddleware,
+                      http_type: str) -> None:
+        """Add a Wsgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware` instance.
+
+        :return: None
+        """
+
+        @self.http_type(http_type=http_type)
+        @self.route(methods=(method for method in HttpMethod),
+                    auth_level=self.auth_level,
+                    route="/{*route}")
+        def http_app_func(req: HttpRequest, context: Context):
+            return http_middleware.handle(req, context)

@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import inspect
 import json
 import unittest
 from unittest import mock
@@ -315,50 +316,11 @@ class TestFunctionApp(unittest.TestCase):
                               WsgiMiddleware)
         self.assertEqual(add_http_app_mock.call_args[0][1], 'wsgi')
 
-    def test_add_http_app(self):
-        app = AsgiFunctionApp(app=object())
-        funcs = app.get_functions()
-        self.assertEqual(len(funcs), 1)
-        func = funcs[0]
+    def test_add_asgi_app(self):
+        self._test_http_external_app(AsgiFunctionApp(app=object()), True)
 
-        self.assertEqual(func.get_function_name(), "http_app_func")
-
-        raw_bindings = func.get_raw_bindings()
-        raw_trigger = raw_bindings[0]
-        raw_output_binding = raw_bindings[0]
-
-        self.assertEqual(json.loads(raw_trigger),
-                         json.loads(
-                             '{"direction": "IN", "type": "httpTrigger", '
-                             '"authLevel": "FUNCTION", "route": "/{*route}", '
-                             '"methods": ["GET", "POST", "DELETE", "HEAD", '
-                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
-        self.assertEqual(json.loads(raw_output_binding), json.loads(
-            '{"direction": "IN", "type": "httpTrigger", "authLevel": '
-            '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
-            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
-            '*route}"}'))
-
-        self.assertEqual(func.get_bindings_dict(), {
-            "bindings": [
-                {
-                    "authLevel": AuthLevel.FUNCTION,
-                    "direction": BindingDirection.IN,
-                    "methods": [HttpMethod.GET, HttpMethod.POST,
-                                HttpMethod.DELETE,
-                                HttpMethod.HEAD,
-                                HttpMethod.PATCH,
-                                HttpMethod.PUT, HttpMethod.OPTIONS],
-                    "name": "req",
-                    "route": "/{*route}",
-                    "type": HTTP_TRIGGER
-                },
-                {
-                    "direction": BindingDirection.OUT,
-                    "name": "$return",
-                    "type": HTTP_OUTPUT
-                }
-            ]})
+    def test_add_wsgi_app(self):
+        self._test_http_external_app(WsgiFunctionApp(app=object()), False)
 
     def test_register_function_app_error(self):
         with self.assertRaises(TypeError) as err:
@@ -567,3 +529,45 @@ class TestFunctionApp(unittest.TestCase):
 
         self.assertEqual(len(funcs), 1)
         self.assertTrue(funcs[0].is_http_function())
+
+    def _test_http_external_app(self, app, is_async):
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+        func = funcs[0]
+        self.assertEqual(func.get_function_name(), "http_app_func")
+        raw_bindings = func.get_raw_bindings()
+        raw_trigger = raw_bindings[0]
+        raw_output_binding = raw_bindings[0]
+        self.assertEqual(inspect.iscoroutinefunction(func.get_user_function()),
+                         is_async)
+        self.assertEqual(json.loads(raw_trigger),
+                         json.loads(
+                             '{"direction": "IN", "type": "httpTrigger", '
+                             '"authLevel": "FUNCTION", "route": "/{*route}", '
+                             '"methods": ["GET", "POST", "DELETE", "HEAD", '
+                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+        self.assertEqual(json.loads(raw_output_binding), json.loads(
+            '{"direction": "IN", "type": "httpTrigger", "authLevel": '
+            '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
+            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+            '*route}"}'))
+        self.assertEqual(func.get_bindings_dict(), {
+            "bindings": [
+                {
+                    "authLevel": AuthLevel.FUNCTION,
+                    "direction": BindingDirection.IN,
+                    "methods": [HttpMethod.GET, HttpMethod.POST,
+                                HttpMethod.DELETE,
+                                HttpMethod.HEAD,
+                                HttpMethod.PATCH,
+                                HttpMethod.PUT, HttpMethod.OPTIONS],
+                    "name": "req",
+                    "route": "/{*route}",
+                    "type": HTTP_TRIGGER
+                },
+                {
+                    "direction": BindingDirection.OUT,
+                    "name": "$return",
+                    "type": HTTP_OUTPUT
+                }
+            ]})
