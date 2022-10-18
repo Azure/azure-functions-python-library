@@ -22,10 +22,12 @@ class Kafka(unittest.TestCase):
     MULTIPLE_KAFKA_TIMESTAMP_1 = "2020-06-20T05:06:25.945Z"
     MULTIPLE_KAFKA_DATA_0 = '{"Offset":62,"Partition":1,"Topic":"message",'\
         '"Timestamp":"2020-06-20T05:06:25.139Z","Value":"a", ' \
-                            '"Headers":[{"Key":"test","Value":"1"}], "Key" : "1"}'
+                            '"Headers":[{"Key":"test","Value":"1"}], ' \
+                            '"Key" : "1"}'
     MULTIPLE_KAFKA_DATA_1 = '{"Offset":63,"Partition":1,"Topic":"message",'\
         '"Timestamp":"2020-06-20T05:06:25.945Z","Value":"a", ' \
-                            '"Headers":[{"Key":"test2","Value":"2"}], "Key": "2"}'
+                            '"Headers":[{"Key":"test2","Value":"2"}], ' \
+                            '"Key": "2"}'
 
     def test_kafka_input_type(self):
         check_input_type = (
