@@ -303,8 +303,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
 
-        self.assertEqual(add_http_app_mock.call_args[0][1], 'asgi')
-
     @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
@@ -314,7 +312,6 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], 'wsgi')
 
     def test_add_asgi_app(self):
         self._test_http_external_app(AsgiFunctionApp(app=object()), True)

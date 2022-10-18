@@ -1694,26 +1694,27 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
+        :param http_auth_level: Determines what keys, if any, need to be
+        present
+        on the request in order to invoke the function.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(AsgiMiddleware(app), 'asgi')
+        self._add_http_app(AsgiMiddleware(app))
 
-    def _add_http_app(self,
-                      http_middleware: AsgiMiddleware,
-                      http_type: str) -> None:
+    def _add_http_app(self, asgi_middleware: AsgiMiddleware) -> None:
         """Add an Asgi app integrated http function.
 
-        :param http_middleware: :class:`AsgiMiddleware` instance.
+        :param asgi_middleware: :class:`AsgiMiddleware` instance.
 
         :return: None
         """
 
-        @self.http_type(http_type=http_type)
+        @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
-            return await http_middleware.handle_async(req, context)
+            return await asgi_middleware.handle_async(req, context)
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1724,21 +1725,20 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: wsgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app), 'wsgi')
+        self._add_http_app(WsgiMiddleware(app))
 
     def _add_http_app(self,
-                      http_middleware: WsgiMiddleware,
-                      http_type: str) -> None:
+                      wsgi_middleware: WsgiMiddleware) -> None:
         """Add a Wsgi app integrated http function.
 
-        :param http_middleware: :class:`WsgiMiddleware` instance.
+        :param wsgi_middleware: :class:`WsgiMiddleware` instance.
 
         :return: None
         """
 
-        @self.http_type(http_type=http_type)
+        @self.http_type(http_type='wsgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
-            return http_middleware.handle(req, context)
+            return wsgi_middleware.handle(req, context)
