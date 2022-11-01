@@ -146,7 +146,6 @@ class AsgiMiddleware:
             self._usage_reported = True
 
         self._app = app
-        self._loop = asyncio.new_event_loop()
         self.main = self._handle
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
@@ -168,9 +167,8 @@ class AsgiMiddleware:
 
     def _handle(self, req, context):
         asgi_request = AsgiRequest(req, context)
-        asyncio.set_event_loop(self._loop)
         scope = asgi_request.to_asgi_http_scope()
-        asgi_response = self._loop.run_until_complete(
+        asgi_response = asyncio.run(
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
 
