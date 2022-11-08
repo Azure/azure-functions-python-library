@@ -45,8 +45,8 @@ class InputStream(azf_abc.InputStream):
     def read(self, size=-1) -> bytes:
         return self._io.read(size)
 
-    def read1(self, size: int = -1) -> bytes:
-        return self.read(size)
+    # implemented read1 method using aliasing.
+    read1 = read
 
     def readable(self) -> bool:
         return True
