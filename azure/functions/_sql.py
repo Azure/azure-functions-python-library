@@ -1,13 +1,40 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import abc
 import collections
 import json
 
-from . import _abc
+
+class SqlRow(abc.ABC):
+
+    @classmethod
+    @abc.abstractmethod
+    def from_json(cls, json_data: str) -> 'SqlRow':
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, dct: dict) -> 'SqlRow':
+        pass
+
+    @abc.abstractmethod
+    def __getitem__(self, key):
+        pass
+
+    @abc.abstractmethod
+    def __setitem__(self, key, value):
+        pass
+
+    @abc.abstractmethod
+    def to_json(self) -> str:
+        pass
 
 
-class SqlRow(_abc.SqlRow, collections.UserDict):
+class SqlRowList(abc.ABC):
+    pass
+
+
+class SqlRow(SqlRow, collections.UserDict):
     """A SQL Row.
 
     SqlRow objects are ''UserDict'' subclasses and behave like dicts.
@@ -39,6 +66,6 @@ class SqlRow(_abc.SqlRow, collections.UserDict):
         )
 
 
-class SqlRowList(_abc.SqlRowList, collections.UserList):
+class SqlRowList(SqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
     pass
