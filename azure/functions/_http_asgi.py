@@ -159,7 +159,7 @@ class AsgiMiddleware:
         async def main(req, context):
             return await func.AsgiMiddleware(app).handle_async(req, context)
         """
-        warn("handle() is deprecated. Please use handle_async() instead.",
+        warn("handle() is deprecated. Please await .handle_async() instead.",
              DeprecationWarning, stacklevel=2)
         self._logger.debug(f"Handling {req.url} as an ASGI request.")
         self._logger.warning(
