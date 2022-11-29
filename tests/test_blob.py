@@ -166,6 +166,20 @@ class TestBlob(unittest.TestCase):
 
         self.assertEqual(result.read(size=3), b'blo')
 
+    def test_blob_incomplete_read1(self):
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        result: InputStream = afb.BlobConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual(result.read1(size=3), b'blo')
+
+    def test_blob_complete_read1(self):
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        result: InputStream = afb.BlobConverter.decode(
+            data=datum, trigger_metadata=None)
+
+        self.assertEqual(result.read1(), b'blob_content')
+
     def test_blob_output_custom_output_content(self):
         class CustomOutput:
             def read(self) -> bytes:
