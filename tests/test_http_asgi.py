@@ -66,9 +66,6 @@ class MockAsgiApplication:
         assert isinstance(self.received_request['body'], bytes)
         assert isinstance(self.received_request['more_body'], bool)
 
-        self.next_request = await receive()
-        assert self.next_request['type'] == 'http.disconnect'
-
         await send(
             {
                 "type": "http.response.start",
@@ -82,6 +79,9 @@ class MockAsgiApplication:
                 "body": self.response_body,
             }
         )
+
+        self.next_request = await receive()
+        assert self.next_request['type'] == 'http.disconnect'
 
 
 class TestHttpAsgiMiddleware(unittest.TestCase):
