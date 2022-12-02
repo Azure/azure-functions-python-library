@@ -68,6 +68,7 @@ class AsgiResponse:
         self._headers: Union[Headers, Dict] = {}
         self._buffer: List[bytes] = []
         self._request_body: Optional[bytes] = b""
+        self._has_received_response: bool = False
 
     @classmethod
     async def from_app(cls, app, scope: Dict[str, Any],
@@ -95,6 +96,7 @@ class AsgiResponse:
 
     def _handle_http_response_body(self, message: Dict[str, Any]):
         self._buffer.append(message["body"])
+        self._has_received_response = not message.get("more_body", False)
         # XXX : Chunked bodies not supported, see
         # https://github.com/Azure/azure-functions-host/issues/4926
 
@@ -106,14 +108,15 @@ class AsgiResponse:
                 "more_body": False,
             }
             self._request_body = None
+            return reply
         else:
-            reply = {
+            while not self._has_received_response:
+                await asyncio.sleep(0.1)
+            return {
                 "type": "http.disconnect",
             }
-        return reply
 
     async def _send(self, message):
-        logging.debug(f"Received {message} from ASGI worker.")
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":
@@ -142,7 +145,7 @@ class AsgiMiddleware:
         main = func.AsgiMiddleware(app).main
         """
         if not self._usage_reported:
-            self._logger.info("Instantiating Azure Functions ASGI middleware.")
+            self._logger.debug("Instantiating Azure Functions ASGI middleware.")
             self._usage_reported = True
 
         self._app = app
