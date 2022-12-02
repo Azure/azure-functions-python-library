@@ -145,7 +145,7 @@ class AsgiMiddleware:
         main = func.AsgiMiddleware(app).main
         """
         if not self._usage_reported:
-            self._logger.debug("Instantiating Azure Functions ASGI middleware.")
+            self._logger.debug("Starting Azure Functions ASGI middleware.")
             self._usage_reported = True
 
         self._app = app
