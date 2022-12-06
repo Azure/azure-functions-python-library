@@ -132,14 +132,12 @@ class WsgiResponse:
 
     def to_func_response(self) -> HttpResponse:
         lowercased_headers = {k.lower(): v for k, v in self._headers.items()}
-        mimetype = str(lowercased_headers.get('content-type', ''))
-        charset = str(lowercased_headers.get('content-encoding', ''))
         return HttpResponse(
             body=b''.join(self._buffer),
             status_code=self._status_code,
             headers=self._headers,
-            mimetype=mimetype,
-            charset=charset
+            mimetype=lowercased_headers.get('content-type'),
+            charset=lowercased_headers.get('content-encoding')
         )
 
     # PEP 3333 start response implementation
