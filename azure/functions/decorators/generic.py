@@ -10,7 +10,7 @@ class GenericInputBinding(InputBinding):
 
     @staticmethod
     def get_binding_name():
-        return None
+        pass
 
     def __init__(self,
                  name: str,
@@ -24,7 +24,7 @@ class GenericOutputBinding(OutputBinding):
 
     @staticmethod
     def get_binding_name():
-        return None
+        pass
 
     def __init__(self,
                  name: str,
@@ -38,7 +38,7 @@ class GenericTrigger(Trigger):
 
     @staticmethod
     def get_binding_name():
-        return None
+        pass
 
     def __init__(self,
                  name: str,
