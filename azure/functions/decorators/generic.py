@@ -9,8 +9,8 @@ from azure.functions.decorators.core import Trigger, \
 class GenericInputBinding(InputBinding):
 
     @staticmethod
-    def get_binding_name() -> str:  # type: ignore
-        pass
+    def get_binding_name():
+        return None
 
     def __init__(self,
                  name: str,
@@ -23,8 +23,8 @@ class GenericInputBinding(InputBinding):
 class GenericOutputBinding(OutputBinding):
 
     @staticmethod
-    def get_binding_name() -> str:  # type: ignore
-        pass
+    def get_binding_name():
+        return None
 
     def __init__(self,
                  name: str,
@@ -37,8 +37,8 @@ class GenericOutputBinding(OutputBinding):
 class GenericTrigger(Trigger):
 
     @staticmethod
-    def get_binding_name() -> str:  # type: ignore
-        pass
+    def get_binding_name():
+        return None
 
     def __init__(self,
                  name: str,
