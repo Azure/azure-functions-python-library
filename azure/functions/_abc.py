@@ -47,6 +47,11 @@ class RpcException:
         pass
 
 
+class WarmUpContext(abc.ABC):
+    """Warmup context object."""
+    pass
+
+
 class TraceContext(abc.ABC):
     """Trace context object."""
 
@@ -124,6 +129,12 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def retry_context(self) -> RetryContext:
         """Context for retries to the function."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def warmup_context(self) -> WarmUpContext:
+        """Context for warmup to the function."""
         pass
 
 
