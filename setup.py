@@ -7,6 +7,7 @@ from azure.functions import __version__
 EXTRA_REQUIRES = {
     'dev': [
         'flake8~=4.0.1',
+        'flake8-logging-format',
         'mypy',
         'pytest',
         'pytest-cov',
