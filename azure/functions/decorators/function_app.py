@@ -1683,12 +1683,7 @@ class Blueprint(TriggerApi, BindingApi):
     pass
 
 
-class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
-    """Interface to extend for building third party http function apps."""
-    pass
-
-
-class AsgiFunctionApp(ExternalHttpFunctionApp):
+class AsgiFunctionApp(FunctionRegister, TriggerApi):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
@@ -1717,7 +1712,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
             return await asgi_middleware.handle_async(req, context)
 
 
-class WsgiFunctionApp(ExternalHttpFunctionApp):
+class WsgiFunctionApp(FunctionRegister, TriggerApi):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.

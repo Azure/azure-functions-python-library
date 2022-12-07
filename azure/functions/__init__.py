@@ -11,8 +11,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
-from .decorators.function_app import (FunctionRegister, TriggerApi, BindingApi,
-                                      ExternalHttpFunctionApp)
+from .decorators.function_app import (FunctionRegister, TriggerApi, BindingApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
@@ -83,7 +82,6 @@ __all__ = (
     'TriggerApi',
     'BindingApi',
     'Blueprint',
-    'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
     'WsgiFunctionApp',
     'DataType',
