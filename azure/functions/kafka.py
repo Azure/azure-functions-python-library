@@ -16,7 +16,8 @@ class KafkaEvent(AbstractKafkaEvent):
 
     def __init__(self, *,
                  body: bytes,
-                 trigger_metadata: typing.Mapping[str, meta.Datum] = None,
+                 trigger_metadata: typing.Optional[
+                     typing.Mapping[str, meta.Datum]] = None,
                  key: typing.Optional[str] = None,
                  offset: typing.Optional[int] = None,
                  partition: typing.Optional[int] = None,
@@ -262,8 +263,7 @@ class KafkaTriggerConverter(KafkaConverter,
             event = KafkaEvent(
                 body=parsed_data[i],
                 timestamp=parsed_timestamp_props[i],
-                key=cls._decode_typed_data(
-                    parsed_key_props[i], python_type=str),
+                key=parsed_key_props[i],
                 partition=parsed_partition_props[i],
                 offset=parsed_offset_props[i],
                 topic=parsed_topic_props[i],

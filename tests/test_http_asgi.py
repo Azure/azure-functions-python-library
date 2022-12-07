@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import asyncio
 import unittest
 
 import azure.functions as func
-from azure.functions._abc import TraceContext, RetryContext
+from azure.functions._abc import TraceContext, RetryContext, WarmUpContext
 from azure.functions._http_asgi import (
     AsgiMiddleware
 )
@@ -113,15 +114,17 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         function_name='httptrigger',
         function_directory='/home/roger/wwwroot/httptrigger',
         trace_context=TraceContext,
-        retry_context=RetryContext
+        retry_context=RetryContext,
+        warmup_context=WarmUpContext
     ) -> func.Context:
         class MockContext(func.Context):
-            def __init__(self, ii, fn, fd, tc, rc):
+            def __init__(self, ii, fn, fd, tc, rc, wc):
                 self._invocation_id = ii
                 self._function_name = fn
                 self._function_directory = fd
                 self._trace_context = tc
                 self._retry_context = rc
+                self._warmup_context = wc
 
             @property
             def invocation_id(self):
@@ -143,8 +146,12 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
             def retry_context(self):
                 return self._retry_context
 
+            @property
+            def warmup_context(self):
+                return self._warmup_context
+
         return MockContext(invocation_id, function_name, function_directory,
-                           trace_context, retry_context)
+                           trace_context, retry_context, warmup_context)
 
     def test_middleware_calls_app(self):
         app = MockAsgiApplication()
@@ -190,6 +197,25 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
 
         main = AsgiMiddleware(app).main
         response = main(req, ctx)
+
+        # Verify asserted
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_body(), test_body)
+
+    def test_middleware_async_calls_app_with_context(self):
+        """Test the middleware with the awaitable handle_async() method
+        async def main(req, context):
+            return await AsgiMiddleware(app).handle_async(req, context)
+        """
+        app = MockAsgiApplication()
+        test_body = b'Hello world!'
+        app.response_body = test_body
+        app.response_code = 200
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+        response = asyncio.get_event_loop().run_until_complete(
+            AsgiMiddleware(app).handle_async(req, ctx)
+        )
 
         # Verify asserted
         self.assertEqual(response.status_code, 200)
