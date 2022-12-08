@@ -5,16 +5,16 @@ import collections
 import json
 
 
-class SqlRow(abc.ABC):
+class BaseSqlRow(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def from_json(cls, json_data: str) -> 'SqlRow':
+    def from_json(cls, json_data: str) -> 'BaseSqlRow':
         pass
 
     @classmethod
     @abc.abstractmethod
-    def from_dict(cls, dct: dict) -> 'SqlRow':
+    def from_dict(cls, dct: dict) -> 'BaseSqlRow':
         pass
 
     @abc.abstractmethod
@@ -30,23 +30,23 @@ class SqlRow(abc.ABC):
         pass
 
 
-class SqlRowList(abc.ABC):
+class BaseSqlRowList(abc.ABC):
     pass
 
 
-class SqlRow(SqlRow, collections.UserDict):
+class SqlRow(BaseSqlRow, collections.UserDict):
     """A SQL Row.
 
     SqlRow objects are ''UserDict'' subclasses and behave like dicts.
     """
 
     @classmethod
-    def from_json(cls, json_data: str) -> 'SqlRow':
+    def from_json(cls, json_data: str) -> 'BaseSqlRow':
         """Create a SqlRow from a JSON string."""
         return cls.from_dict(json.loads(json_data))
 
     @classmethod
-    def from_dict(cls, dct: dict) -> 'SqlRow':
+    def from_dict(cls, dct: dict) -> 'BaseSqlRow':
         """Create a SqlRow from a dict object"""
         return cls({k: v for k, v in dct.items()})
 
@@ -66,6 +66,6 @@ class SqlRow(SqlRow, collections.UserDict):
         )
 
 
-class SqlRowList(SqlRowList, collections.UserList):
+class SqlRowList(BaseSqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
     pass
