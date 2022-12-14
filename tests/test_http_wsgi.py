@@ -5,7 +5,7 @@ import unittest
 from io import StringIO, BytesIO
 
 import azure.functions as func
-from azure.functions._abc import TraceContext, RetryContext, WarmUpContext
+from azure.functions._abc import TraceContext, RetryContext
 from azure.functions._http import HttpResponseHeaders
 from azure.functions._http_wsgi import (
     WsgiRequest,
@@ -223,17 +223,15 @@ class TestHttpWsgi(unittest.TestCase):
         function_name='httptrigger',
         function_directory='/home/roger/wwwroot/httptrigger',
         trace_context=TraceContext,
-        retry_context=RetryContext,
-        warmup_context=WarmUpContext
+        retry_context=RetryContext
     ) -> func.Context:
         class MockContext(func.Context):
-            def __init__(self, ii, fn, fd, tc, rc, wc):
+            def __init__(self, ii, fn, fd, tc, rc):
                 self._invocation_id = ii
                 self._function_name = fn
                 self._function_directory = fd
                 self._trace_context = tc
                 self._retry_context = rc
-                self._warmup_context = wc
 
             @property
             def invocation_id(self):
@@ -255,12 +253,8 @@ class TestHttpWsgi(unittest.TestCase):
             def retry_context(self):
                 return self._retry_context
 
-            @property
-            def warmup_context(self):
-                return self._warmup_context
-
         return MockContext(invocation_id, function_name, function_directory,
-                           trace_context, retry_context, warmup_context)
+                           trace_context, retry_context)
 
     def _generate_wsgi_app(self,
                            status='200 OK',
