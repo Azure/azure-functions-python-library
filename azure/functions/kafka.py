@@ -16,8 +16,7 @@ class KafkaEvent(AbstractKafkaEvent):
 
     def __init__(self, *,
                  body: bytes,
-                 trigger_metadata: typing.Optional[
-                     typing.Mapping[str, meta.Datum]] = None,
+                 trigger_metadata: typing.Mapping[str, meta.Datum] = None,
                  key: typing.Optional[str] = None,
                  offset: typing.Optional[int] = None,
                  partition: typing.Optional[int] = None,

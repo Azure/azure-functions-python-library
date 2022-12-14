@@ -13,8 +13,7 @@ class EventHubEvent(func_abc.EventHubEvent):
 
     def __init__(self, *,
                  body: bytes,
-                 trigger_metadata: typing.Optional[
-                     typing.Mapping[str, meta.Datum]] = None,
+                 trigger_metadata: typing.Mapping[str, meta.Datum] = None,
                  enqueued_time: typing.Optional[datetime.datetime] = None,
                  partition_key: typing.Optional[str] = None,
                  sequence_number: typing.Optional[int] = None,

@@ -16,7 +16,7 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     def __init__(
             self, *,
             body: bytes,
-            trigger_metadata: Optional[Mapping[str, Any]] = None,
+            trigger_metadata: Mapping[str, Any] = None,
             content_type: Optional[str] = None,
             correlation_id: Optional[str] = None,
             dead_letter_source: Optional[str] = None,
