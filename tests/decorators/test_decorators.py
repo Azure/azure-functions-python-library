@@ -135,7 +135,8 @@ class TestFunctionsApp(unittest.TestCase):
     def test_warmup_trigger_full_args(self):
         app = self.func_app
 
-        @app.warm_up_trigger(arg_name="req", data_type=DataType.STRING, dummy_field='dummy')
+        @app.warm_up_trigger(arg_name="req", data_type=DataType.STRING,
+                             dummy_field='dummy')
         def dummy():
             pass
 
