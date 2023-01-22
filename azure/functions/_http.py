@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import collections.abc
+import http
 import io
 import json
 import types
@@ -67,12 +68,14 @@ class HttpResponse(_abc.HttpResponse):
 
     def __init__(self,
                  body: typing.Optional[typing.Union[str, bytes]] = None, *,
-                 status_code: typing.Optional[int] = None,
+                 status_code: typing.Optional[typing.Union[http.HTTPStatus, int]] = None,
                  headers: typing.Optional[typing.Mapping[str, str]] = None,
                  mimetype: typing.Optional[str] = None,
                  charset: typing.Optional[str] = None) -> None:
         if status_code is None:
             status_code = 200
+        if isinstance(status_code , http.HTTPStatus):
+            status_code = status_code.value
         self.__status_code = status_code
 
         if mimetype is None:
