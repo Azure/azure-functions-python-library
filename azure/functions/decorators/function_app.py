@@ -349,8 +349,8 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict = {},
-              binding_extra_fields: Dict = {}
+              trigger_extra_fields: Dict[str, Any] = {},
+              binding_extra_fields: Dict[str, Any] = {}
               ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
