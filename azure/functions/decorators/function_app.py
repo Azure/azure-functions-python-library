@@ -405,7 +405,7 @@ class TriggerApi(DecoratorApi, ABC):
                  run_on_startup: Optional[bool] = None,
                  use_monitor: Optional[bool] = None,
                  data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs) -> Callable[..., Any]:
+                 **kwargs: Any) -> Callable[..., Any]:
         """The schedule decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -457,7 +457,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable[..., Any]:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -516,7 +516,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable[..., Any]:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -624,7 +624,7 @@ class TriggerApi(DecoratorApi, ABC):
                                       Union[Cardinality, str]] = None,
                                   consumer_group: Optional[
                                       str] = None,
-                                  **kwargs) -> Callable[..., Any]:
+                                  **kwargs: Any) -> Callable[..., Any]:
         """The event_hub_message_trigger decorator adds
         :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
@@ -697,7 +697,7 @@ class TriggerApi(DecoratorApi, ABC):
                           preferred_locations: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) -> \
+                          **kwargs: Any) -> \
             Callable[..., Any]:
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
