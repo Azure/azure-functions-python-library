@@ -10,24 +10,24 @@ class BaseSqlRow(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def from_json(cls, json_data: str) -> 'BaseSqlRow':
-        pass
+        raise NotImplementedError
 
     @classmethod
     @abc.abstractmethod
     def from_dict(cls, dct: dict) -> 'BaseSqlRow':
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __getitem__(self, key):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def __setitem__(self, key, value):
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def to_json(self) -> str:
-        pass
+        raise NotImplementedError
 
 
 class BaseSqlRowList(abc.ABC):
