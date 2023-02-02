@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 from typing import Dict, List, Optional, Any
 import logging
 from io import BytesIO, StringIO
@@ -192,13 +191,16 @@ class WsgiMiddleware:
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
-        self._handle_errors()
+        self._handle_errors(wsgi_response)
         return wsgi_response.to_func_response()
 
-    def _handle_errors(self):
+    def _handle_errors(self, wsgi_response):
         if self._wsgi_error_buffer.tell() > 0:
             self._wsgi_error_buffer.seek(0)
             error_message = linesep.join(
                 self._wsgi_error_buffer.readline()
             )
             raise Exception(error_message)
+
+        if wsgi_response._status_code == 500:
+            raise Exception(b''.join(wsgi_response._buffer))
