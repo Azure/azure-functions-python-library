@@ -112,9 +112,6 @@ class Context(abc.ABC):
             Invocation ID contained in local thread storage.
             Enables logging from user threads when set to
             the current context's invocation ID.
-
-        :return:
-            Bytes read from the input stream.
         """
         pass
 
