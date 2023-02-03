@@ -4,6 +4,7 @@
 import abc
 import datetime
 import io
+import threading
 import typing
 
 from azure.functions._thirdparty.werkzeug.datastructures import Headers
@@ -100,6 +101,21 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def invocation_id(self) -> str:
         """Function invocation ID."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def thread_local_storage(self) -> threading.local():
+        """Thread local storage.
+
+        :attribute str invocation_id:
+            Invocation ID contained in local thread storage.
+            Enables logging from user threads when set to
+            the current context's invocation ID.
+
+        :return:
+            Bytes read from the input stream.
+        """
         pass
 
     @property
