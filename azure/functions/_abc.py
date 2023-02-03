@@ -108,7 +108,7 @@ class Context(abc.ABC):
     def thread_local_storage(self) -> typing.Type[threading.local]:
         """Thread local storage.
 
-        :field str invocation_id:
+        :attribute str invocation_id:
             Invocation ID contained in local thread storage.
             Enables logging from user threads when set to
             the current context's invocation ID.
