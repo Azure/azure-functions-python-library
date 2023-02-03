@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import sys
-import unittest
-from unittest import skipIf
 import types
+import unittest
+from http import HTTPStatus
+from unittest import skipIf
+
 import azure.functions as func
 import azure.functions.http as http
-from azure.functions._http import HttpResponseHeaders, HttpRequestHeaders
-
+from azure.functions._http import HttpRequestHeaders, HttpResponseHeaders
 from azure.functions.meta import Datum
 
 
@@ -177,6 +178,12 @@ class TestHTTP(unittest.TestCase):
         self.assertIsNone(
             getattr(http.HttpResponseConverter, 'has_implicit_output', None)
         )
+
+    def test_http_response_accepts_http_enums(self):
+        response = func.HttpResponse(status_code=404)
+        self.assertEquals(response.status_code, 404)
+        response = func.HttpResponse(status_code=HTTPStatus.ACCEPTED)
+        self.assertEquals(response.status_code, 202)
 
     def test_http_request_converter_decode(self):
         data = {
