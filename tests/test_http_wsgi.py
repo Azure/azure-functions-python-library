@@ -261,8 +261,8 @@ class TestHttpWsgi(unittest.TestCase):
                 return self._retry_context
 
         return MockContext(invocation_id, thread_local_storage,
-                           function_directory, trace_context,
-                           retry_context)
+                           function_name, function_directory,
+                           trace_context, retry_context)
 
     def _generate_wsgi_app(self,
                            status='200 OK',
