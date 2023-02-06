@@ -50,7 +50,7 @@ class ServiceBusQueueOutput(OutputBinding):
 
 class ServiceBusTopicTrigger(Trigger):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return SERVICE_BUS_TRIGGER
 
     def __init__(self,
@@ -74,7 +74,7 @@ class ServiceBusTopicTrigger(Trigger):
 
 class ServiceBusTopicOutput(OutputBinding):
     @staticmethod
-    def get_binding_name():
+    def get_binding_name() -> str:
         return SERVICE_BUS
 
     def __init__(self,

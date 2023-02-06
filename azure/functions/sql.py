@@ -15,11 +15,11 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, sql.SqlRowList)
+        return issubclass(pytype, sql.BaseSqlRowList)
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (sql.SqlRowList, sql.SqlRow))
+        return issubclass(pytype, (sql.BaseSqlRowList, sql.BaseSqlRow))
 
     @classmethod
     def decode(cls,
