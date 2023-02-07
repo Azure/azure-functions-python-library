@@ -25,8 +25,6 @@ _What's available?_
 - Create a Python Function on Linux using a custom docker image
 - Triggers / Bindings : Custom binding support
 
-[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)
-
 #### Get Started
 
 - [Create your first Python function](https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-function-python)
