@@ -16,7 +16,7 @@ _What are the supported Python versions?_
 
 | Azure Functions Runtime | Python 3.6 | Python 3.7 | Python 3.8 | Python 3.9 | Python 3.10  | Python 3.11 |
 |-------------------------|------------|------------|------------|------------|--------------|-------------|
-| Azure Functions 3.0     |[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|
+| Azure Functions 3.0     |[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)|[EOL](https://learn.microsoft.com/en-us/azure/azure-functions/functions-versions?tabs=v4&pivots=programming-language-python)| -       |-        |
 | Azure Functions 4.0     | &#x2713;          | &#x2713;          | &#x2713;          | &#x2713;          | coming soon  | coming soon |
 
 _What's available?_
