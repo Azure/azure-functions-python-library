@@ -92,6 +92,26 @@ class RetryContext(abc.ABC):
         """Gets the RpcException"""
         pass
 
+    @property
+    @abc.abstractmethod
+    def strategy(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def delay_interval(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def minimum_interval(self):
+        pass
+
+    @property
+    @abc.abstractmethod
+    def maximum_interval(self):
+        pass
+
 
 class Context(abc.ABC):
     """Function invocation context."""

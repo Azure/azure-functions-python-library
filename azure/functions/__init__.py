@@ -22,6 +22,7 @@ from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
+from ._retry_context import RetryContext
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -44,6 +45,7 @@ __all__ = (
     # Generics.
     'Context',
     'Out',
+    'RetryContext',
 
     # Binding rich types, sorted alphabetically.
     'Document',

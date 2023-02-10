@@ -28,6 +28,7 @@ from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
+from azure.functions._retry_context import RetryContext
 
 
 class Function(object):
@@ -49,6 +50,7 @@ class Function(object):
         self.function_script_file = script_file
         self.http_type = 'function'
         self._is_http_function = False
+        self._retry_context: Optional[RetryContext] = None
 
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
@@ -123,6 +125,28 @@ class Function(object):
         """
         return {"bindings": [b.get_dict_repr() for b in self._bindings]}
 
+    def set_retry_context(self, retry_context) -> None:
+        self._retry_context = retry_context
+
+    def get_retry_context(self) -> Optional[RetryContext]:
+        return self._retry_context
+
+    def get_retry_context_dict(self) -> Dict:
+        if self._retry_context is not None:
+            return \
+                {
+                    "retry":
+                    {
+                        "strategy": self._retry_context.strategy,
+                        "maxRetryCount": self._retry_context.max_retry_count,
+                        "delayInterval": self._retry_context.delay_interval,
+                        "minimumInterval": self._retry_context.minimum_interval,
+                        "maximumInterval": self._retry_context.maximum_interval
+                    }
+                }
+        else:
+            return {}
+
     def get_dict_repr(self) -> Dict:
         """Get the dictionary representation of the function.
 
@@ -132,6 +156,8 @@ class Function(object):
             "scriptFile": self.function_script_file
         }
         stub_f_json.update(self.get_bindings_dict())  # NoQA
+        if self._retry_context is not None:
+            stub_f_json.update(self.get_retry_context_dict())
         return stub_f_json
 
     def get_user_function(self) -> Callable[..., Any]:
@@ -178,6 +204,10 @@ class FunctionBuilder(object):
 
     def add_trigger(self, trigger: Trigger) -> 'FunctionBuilder':
         self._function.add_trigger(trigger=trigger)
+        return self
+
+    def set_retry_context(self, retry_context) -> 'FunctionBuilder':
+        self._function.set_retry_context(retry_context=retry_context)
         return self
 
     def add_binding(self, binding: Binding) -> 'FunctionBuilder':
@@ -442,6 +472,30 @@ class TriggerApi(DecoratorApi, ABC):
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def retry(self,
+              strategy: Optional[str] = "fixedDelay",
+              max_retry_count: Optional[int] = None,
+              delay_interval: Optional[str] = None,
+              minimum_interval: Optional[str] = None,
+              maximum_interval: Optional[str] = None):
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.set_retry_context(
+                    retry_context=RetryContext(
+                        strategy=strategy,
+                        max_retry_count=max_retry_count,
+                        delay_interval=delay_interval,
+                        minimum_interval=minimum_interval,
+                        maximum_interval=maximum_interval)
+                )
                 return fb
 
             return decorator()
