@@ -111,7 +111,7 @@ class TestFunctionsApp(unittest.TestCase):
                 }
             ]
         })
-    
+
     def test_timer_trigger_default_args(self):
         app = self.func_app
 
@@ -137,8 +137,8 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.timer_trigger(arg_name="req", schedule="dummy_schedule",
-                      run_on_startup=False, use_monitor=False,
-                      data_type=DataType.STRING, dummy_field='dummy')
+            run_on_startup=False, use_monitor=False,
+            data_type=DataType.STRING, dummy_field='dummy')
         def dummy():
             pass
 
