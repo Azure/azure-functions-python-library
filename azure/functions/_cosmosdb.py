@@ -27,6 +27,11 @@ class Document(_abc.Document, collections.UserDict):
         """Return the JSON representation of the document."""
         return json.dumps(dict(self))
 
+    def to_dict(cls) -> dict:
+        """Return the document as a dict - directly using self would also work 
+        as Document is ``UserDict`` subclass and behave like dict"""
+        return dict(self)
+
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)
 

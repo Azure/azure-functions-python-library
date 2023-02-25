@@ -380,6 +380,10 @@ class Document(abc.ABC):
     def to_json(self) -> str:
         pass
 
+    @abc.abstractmethod
+    def to_dict(self) -> dict:
+        pass
+
 
 class DocumentList(abc.ABC):
     pass
