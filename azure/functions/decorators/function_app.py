@@ -3,7 +3,8 @@
 import json
 import logging
 from abc import ABC
-from typing import Callable, Dict, List, Optional, Union, Iterable
+from typing import Any, Callable, Dict, List, Optional, Union, \
+    Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
@@ -36,7 +37,7 @@ class Function(object):
     function indexing model. Ref: https://aka.ms/azure-function-ref
     """
 
-    def __init__(self, func: Callable, script_file: str):
+    def __init__(self, func: Callable[..., Any], script_file: str):
         """Constructor of :class:`FunctionBuilder` object.
 
         :param func: User defined python function instance.
@@ -134,7 +135,7 @@ class Function(object):
         stub_f_json.update(self.get_bindings_dict())  # NoQA
         return stub_f_json
 
-    def get_user_function(self) -> Callable:
+    def get_user_function(self) -> Callable[..., Any]:
         """Get the python function customer defined.
 
         :return: The python function customer defined.
@@ -250,7 +251,9 @@ class DecoratorApi(ABC):
         """
         return self._app_script_file
 
-    def _validate_type(self, func: Union[Callable, FunctionBuilder]) \
+    def _validate_type(self,
+                       func: Union[Callable[..., Any],
+                                   FunctionBuilder]) \
             -> FunctionBuilder:
         """Validate the type of the function object and return the created
         :class:`FunctionBuilder` object.
@@ -271,7 +274,7 @@ class DecoratorApi(ABC):
                 "Unsupported type for function app decorator found.")
         return fb
 
-    def _configure_function_builder(self, wrap) -> Callable:
+    def _configure_function_builder(self, wrap) -> Callable[..., Any]:
         """Decorator function on user defined function to create and return
          :class:`FunctionBuilder` object from :class:`Callable` func.
         """
@@ -283,7 +286,7 @@ class DecoratorApi(ABC):
 
         return decorator
 
-    def function_name(self, name: str) -> Callable:
+    def function_name(self, name: str) -> Callable[..., Any]:
         """Set name of the :class:`Function` object.
 
         :param name: Name of the function.
@@ -300,8 +303,8 @@ class DecoratorApi(ABC):
 
         return wrap
 
-    def http_type(self, http_type: str) -> Callable:
-        """Set http  type of the :class:`Function` object.
+    def http_type(self, http_type: str) -> Callable[..., Any]:
+        """Set http type of the :class:`Function` object.
 
         :param http_type: Http type of the function.
         :return: Decorator function.
@@ -347,9 +350,9 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict = {},
-              binding_extra_fields: Dict = {}
-              ) -> Callable:
+              trigger_extra_fields: Dict[str, Any] = {},
+              binding_extra_fields: Dict[str, Any] = {}
+              ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -403,7 +406,7 @@ class TriggerApi(DecoratorApi, ABC):
                  run_on_startup: Optional[bool] = None,
                  use_monitor: Optional[bool] = None,
                  data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs) -> Callable:
+                 **kwargs: Any) -> Callable[..., Any]:
         """The schedule decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -492,7 +495,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -551,7 +554,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -607,7 +610,7 @@ class TriggerApi(DecoratorApi, ABC):
                       queue_name: str,
                       connection: str,
                       data_type: Optional[DataType] = None,
-                      **kwargs) -> Callable:
+                      **kwargs) -> Callable[..., Any]:
         """The queue_trigger decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -659,7 +662,7 @@ class TriggerApi(DecoratorApi, ABC):
                                       Union[Cardinality, str]] = None,
                                   consumer_group: Optional[
                                       str] = None,
-                                  **kwargs) -> Callable:
+                                  **kwargs: Any) -> Callable[..., Any]:
         """The event_hub_message_trigger decorator adds
         :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
@@ -732,8 +735,8 @@ class TriggerApi(DecoratorApi, ABC):
                           preferred_locations: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) -> \
-            Callable:
+                          **kwargs: Any) -> \
+            Callable[..., Any]:
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -837,7 +840,7 @@ class TriggerApi(DecoratorApi, ABC):
                      path: str,
                      connection: str,
                      data_type: Optional[DataType] = None,
-                     **kwargs) -> Callable:
+                     **kwargs) -> Callable[..., Any]:
         """
         The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
@@ -882,7 +885,7 @@ class TriggerApi(DecoratorApi, ABC):
                            arg_name: str,
                            data_type: Optional[
                                Union[DataType, str]] = None,
-                           **kwargs) -> Callable:
+                           **kwargs) -> Callable[..., Any]:
         """
         The event_grid_trigger decorator adds
         :class:`EventGridTrigger`
@@ -923,7 +926,7 @@ class TriggerApi(DecoratorApi, ABC):
                         type: str,
                         data_type: Optional[Union[DataType, str]] = None,
                         **kwargs
-                        ) -> Callable:
+                        ) -> Callable[..., Any]:
         """
         The generic_trigger decorator adds :class:`GenericTrigger`
         to the :class:`FunctionBuilder` object for building :class:`Function`
@@ -975,7 +978,7 @@ class BindingApi(DecoratorApi, ABC):
                                  access_rights: Optional[Union[
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The service_bus_queue_output decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1027,7 +1030,7 @@ class BindingApi(DecoratorApi, ABC):
                                  access_rights: Optional[Union[
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The service_bus_topic_output decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1077,7 +1080,7 @@ class BindingApi(DecoratorApi, ABC):
                      queue_name: str,
                      connection: str,
                      data_type: Optional[DataType] = None,
-                     **kwargs) -> Callable:
+                     **kwargs) -> Callable[..., Any]:
         """The queue_output decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1125,7 +1128,7 @@ class BindingApi(DecoratorApi, ABC):
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The event_hub_output decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1181,7 +1184,7 @@ class BindingApi(DecoratorApi, ABC):
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) \
-            -> Callable:
+            -> Callable[..., Any]:
         """The cosmos_db_output decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1253,7 +1256,7 @@ class BindingApi(DecoratorApi, ABC):
                         data_type: Optional[
                             Union[DataType, str]] = None,
                         **kwargs) \
-            -> Callable:
+            -> Callable[..., Any]:
         """The cosmos_db_input decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1310,7 +1313,7 @@ class BindingApi(DecoratorApi, ABC):
                    path: str,
                    connection: str,
                    data_type: Optional[DataType] = None,
-                   **kwargs) -> Callable:
+                   **kwargs) -> Callable[..., Any]:
         """
         The blob_input decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -1358,7 +1361,7 @@ class BindingApi(DecoratorApi, ABC):
                     path: str,
                     connection: str,
                     data_type: Optional[DataType] = None,
-                    **kwargs) -> Callable:
+                    **kwargs) -> Callable[..., Any]:
         """
         The blob_output decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -1406,7 +1409,7 @@ class BindingApi(DecoratorApi, ABC):
                           topic_key_setting: str,
                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) -> Callable:
+                          **kwargs) -> Callable[..., Any]:
         """
         The event_grid_output decorator adds
         :class:`EventGridOutput`
@@ -1457,7 +1460,7 @@ class BindingApi(DecoratorApi, ABC):
                     take: Optional[int] = None,
                     filter: Optional[str] = None,
                     data_type: Optional[
-                        Union[DataType, str]] = None) -> Callable:
+                        Union[DataType, str]] = None) -> Callable[..., Any]:
         """
         The table_input decorator adds :class:`TableInput` to the
         :class:`FunctionBuilder` object
@@ -1512,7 +1515,7 @@ class BindingApi(DecoratorApi, ABC):
                      row_key: Optional[str] = None,
                      partition_key: Optional[str] = None,
                      data_type: Optional[
-                         Union[DataType, str]] = None) -> Callable:
+                         Union[DataType, str]] = None) -> Callable[..., Any]:
         """
         The table_output decorator adds :class:`TableOutput` to the
         :class:`FunctionBuilder` object
@@ -1560,7 +1563,7 @@ class BindingApi(DecoratorApi, ABC):
                               type: str,
                               data_type: Optional[Union[DataType, str]] = None,
                               **kwargs
-                              ) -> Callable:
+                              ) -> Callable[..., Any]:
         """
         The generic_input_binding decorator adds :class:`GenericInputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
@@ -1605,7 +1608,7 @@ class BindingApi(DecoratorApi, ABC):
                                data_type: Optional[
                                    Union[DataType, str]] = None,
                                **kwargs
-                               ) -> Callable:
+                               ) -> Callable[..., Any]:
         """
         The generic_output_binding decorator adds :class:`GenericOutputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
