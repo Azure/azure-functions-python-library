@@ -202,5 +202,5 @@ class WsgiMiddleware:
             )
             raise Exception(error_message)
 
-        if wsgi_response._status_code == 500:
+        if wsgi_response._status_code >= 500:
             raise Exception(b''.join(wsgi_response._buffer))
