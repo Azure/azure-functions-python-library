@@ -14,10 +14,10 @@ Here is the current status of Python in Azure Functions:
 
 _What are the supported Python versions?_
 
-| Azure Functions Runtime | Python 3.6 | Python 3.7 | Python 3.8 | Python 3.9 |
-|-------------------------|------------|------------|------------|------------|
-| Azure Functions 3.0     | &#x2713;          | &#x2713;          | &#x2713;          | &#x2713;          |
-| Azure Functions 4.0     | &#x2713;          | &#x2713;          | &#x2713;          | &#x2713;          |
+| Azure Functions Runtime | Python 3.6 | Python 3.7 | Python 3.8 | Python 3.9 | Python 3.10  | Python 3.11 |
+|-------------------------|--------|-------|-------|--------|--------------|-------------|
+| Azure Functions 3.0     | [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4)|[EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4)|[EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4)| [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4)| -       |-        |
+| Azure Functions 4.0     | &#x2713; | &#x2713; | &#x2713; | &#x2713; | &#x2713;    | coming soon |
 
 _What's available?_
 - Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
