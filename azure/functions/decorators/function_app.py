@@ -400,14 +400,14 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def schedule(self,
-                 arg_name: str,
-                 schedule: str,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs: Any) -> Callable[..., Any]:
-        """The schedule decorator adds :class:`TimerTrigger` to the
+    def timer_trigger(self,
+                      arg_name: str,
+                      schedule: str,
+                      run_on_startup: Optional[bool] = None,
+                      use_monitor: Optional[bool] = None,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs: Any) -> Callable[..., Any]:
+        """The schedule or timer decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TimerTrigger
@@ -448,6 +448,8 @@ class TriggerApi(DecoratorApi, ABC):
             return decorator()
 
         return wrap
+
+    schedule = timer_trigger
 
     def warm_up_trigger(self,
                         arg_name: str,
