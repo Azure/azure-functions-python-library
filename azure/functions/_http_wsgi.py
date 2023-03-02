@@ -56,6 +56,9 @@ class WsgiRequest:
                                              'function_directory', None)
         self.af_function_name = getattr(func_ctx, 'function_name', None)
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
+        self.af_thread_local_storage = getattr(func_ctx,
+                                               'thread_local_storage',
+                                               None)
         self.af_trace_context = getattr(func_ctx, 'trace_context', None)
         self.af_retry_context = getattr(func_ctx, 'retry_context', None)
 
@@ -83,6 +86,8 @@ class WsgiRequest:
             'azure_functions.function_directory': self.af_function_directory,
             'azure_functions.function_name': self.af_function_name,
             'azure_functions.invocation_id': self.af_invocation_id,
+            'azure_functions.thread_local_storage':
+                self.af_thread_local_storage,
             'azure_functions.trace_context': self.af_trace_context,
             'azure_functions.retry_context': self.af_retry_context
         }
