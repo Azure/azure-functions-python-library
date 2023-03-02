@@ -4,6 +4,8 @@ import threading
 import unittest
 from io import StringIO, BytesIO
 
+import pytest
+
 import azure.functions as func
 from azure.functions._abc import TraceContext, RetryContext
 from azure.functions._http import HttpResponseHeaders
@@ -181,6 +183,20 @@ class TestHttpWsgi(unittest.TestCase):
         func_response = WsgiMiddleware(app).handle(func_request)
         self.assertEqual(func_response.status_code, 200)
         self.assertEqual(func_response.get_body(), b'sample string')
+
+    def test_middleware_handle_with_server_error_status_code(self):
+        """Test if the middleware can be used by exposing the .handle method,
+        specifically when the middleware is used as
+        def main(req, context):
+            return WsgiMiddleware(app).handle(req, context)
+        """
+        app = self._generate_wsgi_app(status="500 Internal Server Error",
+                                      response_body=b'internal server error')
+        func_request = self._generate_func_request()
+        with pytest.raises(Exception) as exec_info:
+            func_response = WsgiMiddleware(app).handle(func_request)
+            self.assertEqual(func_response.status_code, 500)
+        self.assertEqual(exec_info.value.args[0], b'internal server error')
 
     def test_middleware_wrapper(self):
         """Test if the middleware can be used by exposing the .main property,
