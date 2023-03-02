@@ -35,6 +35,7 @@ from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
 from . import sql # NoQA
+from . import warmup # NoQA
 
 
 __all__ = (
@@ -64,6 +65,7 @@ __all__ = (
     'SqlRow',
     'SqlRowList',
     'TimerRequest',
+    'WarmUpContext',
 
     # Middlewares
     'WsgiMiddleware',
@@ -93,4 +95,4 @@ __all__ = (
     'HttpMethod'
 )
 
-__version__ = '1.13.0b1'
+__version__ = '1.13.2'

@@ -26,6 +26,7 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .warmup import WarmUpTrigger
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 
@@ -399,14 +400,14 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def schedule(self,
-                 arg_name: str,
-                 schedule: str,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs: Any) -> Callable[..., Any]:
-        """The schedule decorator adds :class:`TimerTrigger` to the
+    def timer_trigger(self,
+                      arg_name: str,
+                      schedule: str,
+                      run_on_startup: Optional[bool] = None,
+                      use_monitor: Optional[bool] = None,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs: Any) -> Callable[..., Any]:
+        """The schedule or timer decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TimerTrigger
@@ -439,6 +440,45 @@ class TriggerApi(DecoratorApi, ABC):
                         schedule=schedule,
                         run_on_startup=run_on_startup,
                         use_monitor=use_monitor,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    schedule = timer_trigger
+
+    def warm_up_trigger(self,
+                        arg_name: str,
+                        data_type: Optional[Union[DataType, str]] = None,
+                        **kwargs) -> Callable:
+        """The warm up decorator adds :class:`WarmUpTrigger` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining WarmUpTrigger
+        in the function.json which enables your function be triggered on the
+        specified schedule.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-warmup
+
+        :param arg_name: The name of the variable that represents the
+        :class:`TimerRequest` object in function code.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=WarmUpTrigger(
+                        name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
