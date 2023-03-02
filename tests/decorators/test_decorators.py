@@ -65,7 +65,7 @@ class TestFunctionsApp(unittest.TestCase):
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
         self.assertTrue(func.get_trigger().route, "dummy")
 
-    def test_timer_trigger_default_args(self):
+    def test_schedule_trigger_default_args(self):
         app = self.func_app
 
         @app.schedule(arg_name="req", schedule="dummy_schedule")
@@ -86,12 +86,59 @@ class TestFunctionsApp(unittest.TestCase):
             ]
         })
 
-    def test_timer_trigger_full_args(self):
+    def test_schedule_trigger_full_args(self):
         app = self.func_app
 
         @app.schedule(arg_name="req", schedule="dummy_schedule",
                       run_on_startup=False, use_monitor=False,
                       data_type=DataType.STRING, dummy_field='dummy')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": TIMER_TRIGGER,
+                    "dataType": DataType.STRING,
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "schedule": "dummy_schedule",
+                    "runOnStartup": False,
+                    "useMonitor": False
+                }
+            ]
+        })
+
+    def test_timer_trigger_default_args(self):
+        app = self.func_app
+
+        @app.timer_trigger(arg_name="req", schedule="dummy_schedule")
+        def dummy_func():
+            pass
+
+        func = self._get_user_function(app)
+        self.assertEqual(func.get_function_name(), "dummy_func")
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": TIMER_TRIGGER,
+                    "direction": BindingDirection.IN,
+                    "schedule": "dummy_schedule"
+                }
+            ]
+        })
+
+    def test_timer_trigger_full_args(self):
+        app = self.func_app
+
+        @app.timer_trigger(arg_name="req", schedule="dummy_schedule",
+                           run_on_startup=False, use_monitor=False,
+                           data_type=DataType.STRING, dummy_field='dummy')
         def dummy():
             pass
 
