@@ -117,6 +117,7 @@ class AsgiResponse:
             }
 
     async def _send(self, message):
+        logging.debug("Received %s from ASGI worker.", message)
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":

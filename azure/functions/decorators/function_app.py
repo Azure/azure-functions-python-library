@@ -349,8 +349,8 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict = {},
-              binding_extra_fields: Dict = {}
+              trigger_extra_fields: Dict[str, Any] = {},
+              binding_extra_fields: Dict[str, Any] = {}
               ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
@@ -399,14 +399,14 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def schedule(self,
-                 arg_name: str,
-                 schedule: str,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs) -> Callable[..., Any]:
-        """The schedule decorator adds :class:`TimerTrigger` to the
+    def timer_trigger(self,
+                      arg_name: str,
+                      schedule: str,
+                      run_on_startup: Optional[bool] = None,
+                      use_monitor: Optional[bool] = None,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs: Any) -> Callable[..., Any]:
+        """The schedule or timer decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TimerTrigger
@@ -448,6 +448,8 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    schedule = timer_trigger
+
     def service_bus_queue_trigger(
             self,
             arg_name: str,
@@ -457,7 +459,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable[..., Any]:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -516,7 +518,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable[..., Any]:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -624,7 +626,7 @@ class TriggerApi(DecoratorApi, ABC):
                                       Union[Cardinality, str]] = None,
                                   consumer_group: Optional[
                                       str] = None,
-                                  **kwargs) -> Callable[..., Any]:
+                                  **kwargs: Any) -> Callable[..., Any]:
         """The event_hub_message_trigger decorator adds
         :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
@@ -697,7 +699,7 @@ class TriggerApi(DecoratorApi, ABC):
                           preferred_locations: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) -> \
+                          **kwargs: Any) -> \
             Callable[..., Any]:
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object

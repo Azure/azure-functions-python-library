@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import json
 import unittest
 
 import azure.functions as func
 import azure.functions.sql as sql
 from azure.functions.meta import Datum
-import json
 
 
 class TestSql(unittest.TestCase):
