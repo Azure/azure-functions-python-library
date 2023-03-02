@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import threading
 import unittest
 from io import StringIO, BytesIO
 
@@ -113,7 +113,8 @@ class TestHttpWsgi(unittest.TestCase):
         environ = WsgiRequest(func_request,
                               func_context).to_environ(error_buffer)
         self.assertEqual(environ['azure_functions.invocation_id'],
-                         '123e4567-e89b-12d3-a456-426655440000')
+                         '123e4567-e89b-12d3-a456-426655440000'),
+        self.assertIsNotNone(environ['azure_functions.thread_local_storage'])
         self.assertEqual(environ['azure_functions.function_name'],
                          'httptrigger')
         self.assertEqual(environ['azure_functions.function_directory'],
@@ -236,14 +237,16 @@ class TestHttpWsgi(unittest.TestCase):
     def _generate_func_context(
         self,
         invocation_id='123e4567-e89b-12d3-a456-426655440000',
+        thread_local_storage=threading.local(),
         function_name='httptrigger',
         function_directory='/home/roger/wwwroot/httptrigger',
         trace_context=TraceContext,
         retry_context=RetryContext
     ) -> func.Context:
         class MockContext(func.Context):
-            def __init__(self, ii, fn, fd, tc, rc):
+            def __init__(self, ii, tls, fn, fd, tc, rc):
                 self._invocation_id = ii
+                self._thread_local_storage = tls
                 self._function_name = fn
                 self._function_directory = fd
                 self._trace_context = tc
@@ -252,6 +255,10 @@ class TestHttpWsgi(unittest.TestCase):
             @property
             def invocation_id(self):
                 return self._invocation_id
+
+            @property
+            def thread_local_storage(self):
+                return self._thread_local_storage
 
             @property
             def function_name(self):
@@ -269,7 +276,8 @@ class TestHttpWsgi(unittest.TestCase):
             def retry_context(self):
                 return self._retry_context
 
-        return MockContext(invocation_id, function_name, function_directory,
+        return MockContext(invocation_id, thread_local_storage,
+                           function_name, function_directory,
                            trace_context, retry_context)
 
     def _generate_wsgi_app(self,
