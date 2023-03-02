@@ -47,11 +47,6 @@ class RpcException:
         pass
 
 
-class WarmUpContext(abc.ABC):
-    """Warmup context object."""
-    pass
-
-
 class TraceContext(abc.ABC):
     """Trace context object."""
 
@@ -129,12 +124,6 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def retry_context(self) -> RetryContext:
         """Context for retries to the function."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def warmup_context(self) -> WarmUpContext:
-        """Context for warmup to the function."""
         pass
 
 
@@ -433,32 +422,3 @@ class OrchestrationContext(abc.ABC):
     @abc.abstractmethod
     def body(self) -> str:
         pass
-
-
-class SqlRow(abc.ABC):
-
-    @classmethod
-    @abc.abstractmethod
-    def from_json(cls, json_data: str) -> 'SqlRow':
-        pass
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, dct: dict) -> 'SqlRow':
-        pass
-
-    @abc.abstractmethod
-    def __getitem__(self, key):
-        pass
-
-    @abc.abstractmethod
-    def __setitem__(self, key, value):
-        pass
-
-    @abc.abstractmethod
-    def to_json(self) -> str:
-        pass
-
-
-class SqlRowList(abc.ABC):
-    pass
