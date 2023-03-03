@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
 from typing import Dict, List, Optional, Any
 import logging
 from io import BytesIO, StringIO
@@ -57,6 +56,9 @@ class WsgiRequest:
                                              'function_directory', None)
         self.af_function_name = getattr(func_ctx, 'function_name', None)
         self.af_invocation_id = getattr(func_ctx, 'invocation_id', None)
+        self.af_thread_local_storage = getattr(func_ctx,
+                                               'thread_local_storage',
+                                               None)
         self.af_trace_context = getattr(func_ctx, 'trace_context', None)
         self.af_retry_context = getattr(func_ctx, 'retry_context', None)
 
@@ -84,6 +86,8 @@ class WsgiRequest:
             'azure_functions.function_directory': self.af_function_directory,
             'azure_functions.function_name': self.af_function_name,
             'azure_functions.invocation_id': self.af_invocation_id,
+            'azure_functions.thread_local_storage':
+                self.af_thread_local_storage,
             'azure_functions.trace_context': self.af_trace_context,
             'azure_functions.retry_context': self.af_retry_context
         }
@@ -192,13 +196,16 @@ class WsgiMiddleware:
         wsgi_request = WsgiRequest(req, context)
         environ = wsgi_request.to_environ(self._wsgi_error_buffer)
         wsgi_response = WsgiResponse.from_app(self._app, environ)
-        self._handle_errors()
+        self._handle_errors(wsgi_response)
         return wsgi_response.to_func_response()
 
-    def _handle_errors(self):
+    def _handle_errors(self, wsgi_response):
         if self._wsgi_error_buffer.tell() > 0:
             self._wsgi_error_buffer.seek(0)
             error_message = linesep.join(
                 self._wsgi_error_buffer.readline()
             )
             raise Exception(error_message)
+
+        if wsgi_response._status_code >= 500:
+            raise Exception(b''.join(wsgi_response._buffer))

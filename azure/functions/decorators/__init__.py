@@ -3,7 +3,7 @@
 from .core import Cardinality, AccessRights
 from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, AsgiFunctionApp, WsgiFunctionApp, \
-    ExternalHttpFunctionApp, FunctionRegister, TriggerApi, BindingApi
+    FunctionRegister, TriggerApi, BindingApi
 from .http import HttpMethod
 
 __all__ = [
@@ -14,7 +14,6 @@ __all__ = [
     'TriggerApi',
     'BindingApi',
     'Blueprint',
-    'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
     'WsgiFunctionApp',
     'DataType',

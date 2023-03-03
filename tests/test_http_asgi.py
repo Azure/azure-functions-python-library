@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import asyncio
+import threading
 import unittest
 
 import azure.functions as func
@@ -111,14 +112,16 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
     def _generate_func_context(
         self,
         invocation_id='123e4567-e89b-12d3-a456-426655440000',
+        thread_local_storage=threading.local(),
         function_name='httptrigger',
         function_directory='/home/roger/wwwroot/httptrigger',
         trace_context=TraceContext,
         retry_context=RetryContext
     ) -> func.Context:
         class MockContext(func.Context):
-            def __init__(self, ii, fn, fd, tc, rc):
+            def __init__(self, ii, tls, fn, fd, tc, rc):
                 self._invocation_id = ii
+                self._thread_local_storage = tls
                 self._function_name = fn
                 self._function_directory = fd
                 self._trace_context = tc
@@ -127,6 +130,10 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
             @property
             def invocation_id(self):
                 return self._invocation_id
+
+            @property
+            def thread_local_storage(self):
+                return self._thread_local_storage
 
             @property
             def function_name(self):
@@ -144,8 +151,8 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
             def retry_context(self):
                 return self._retry_context
 
-        return MockContext(invocation_id, function_name, function_directory,
-                           trace_context, retry_context)
+        return MockContext(invocation_id, thread_local_storage, function_name,
+                           function_directory, trace_context, retry_context)
 
     def test_middleware_calls_app(self):
         app = MockAsgiApplication()

@@ -11,8 +11,8 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
-from .decorators.function_app import (FunctionRegister, TriggerApi, BindingApi,
-                                      ExternalHttpFunctionApp)
+from .decorators.function_app import (FunctionRegister, TriggerApi,
+                                      BindingApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
@@ -35,6 +35,7 @@ from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
 from . import sql # NoQA
+from . import warmup # NoQA
 
 
 __all__ = (
@@ -64,6 +65,7 @@ __all__ = (
     'SqlRow',
     'SqlRowList',
     'TimerRequest',
+    'WarmUpContext',
 
     # Middlewares
     'WsgiMiddleware',
@@ -83,7 +85,6 @@ __all__ = (
     'TriggerApi',
     'BindingApi',
     'Blueprint',
-    'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
     'WsgiFunctionApp',
     'DataType',
@@ -93,4 +94,4 @@ __all__ = (
     'HttpMethod'
 )
 
-__version__ = '1.13.2'
+__version__ = '1.13.3'
