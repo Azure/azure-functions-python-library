@@ -33,7 +33,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
         """This function is intended to be called by Azure Functions
         customers. This is a contract between extension developers and
         azure functions customers. If multiple .configure() are called,
-        the extension system cannot guarentee the calling order.
+        the extension system cannot guarantee the calling order.
         """
         pass
 
