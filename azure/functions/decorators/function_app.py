@@ -3,6 +3,7 @@
 import json
 import logging
 from abc import ABC
+from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
     Iterable
 
@@ -10,17 +11,18 @@ from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
-    CosmosDBOutput, CosmosDBInput
-from azure.functions.decorators.table import TableInput, TableOutput
+    CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
+    CosmosDBOutputV3
+from azure.functions.decorators.eventgrid import EventGridTrigger, \
+    EventGridOutput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
-from azure.functions.decorators.eventgrid import EventGridTrigger, \
-    EventGridOutput
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
+from azure.functions.decorators.table import TableInput, TableOutput
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
@@ -713,31 +715,32 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_trigger(self,
-                          arg_name: str,
-                          database_name: str,
-                          collection_name: str,
-                          connection_string_setting: str,
-                          lease_collection_name: Optional[str] = None,
-                          lease_connection_string_setting: Optional[
-                              str] = None,
-                          lease_database_name: Optional[str] = None,
-                          create_lease_collection_if_not_exists: Optional[
-                              bool] = None,
-                          leases_collection_throughput: Optional[int] = None,
-                          lease_collection_prefix: Optional[str] = None,
-                          checkpoint_interval: Optional[int] = None,
-                          checkpoint_document_count: Optional[int] = None,
-                          feed_poll_delay: Optional[int] = None,
-                          lease_renew_interval: Optional[int] = None,
-                          lease_acquire_interval: Optional[int] = None,
-                          lease_expiration_interval: Optional[int] = None,
-                          max_items_per_invocation: Optional[int] = None,
-                          start_from_beginning: Optional[bool] = None,
-                          preferred_locations: Optional[str] = None,
-                          data_type: Optional[
-                              Union[DataType, str]] = None,
-                          **kwargs: Any) -> \
+    def cosmos_db_trigger_v3(self,
+                             arg_name: str,
+                             database_name: str,
+                             collection_name: str,
+                             connection_string_setting: str,
+                             lease_collection_name: Optional[str] = None,
+                             lease_connection_string_setting: Optional[
+                                 str] = None,
+                             lease_database_name: Optional[str] = None,
+                             create_lease_collection_if_not_exists: Optional[
+                                 bool] = None,
+                             leases_collection_throughput: Optional[int] =
+                             None,
+                             lease_collection_prefix: Optional[str] = None,
+                             checkpoint_interval: Optional[int] = None,
+                             checkpoint_document_count: Optional[int] = None,
+                             feed_poll_delay: Optional[int] = None,
+                             lease_renew_interval: Optional[int] = None,
+                             lease_acquire_interval: Optional[int] = None,
+                             lease_expiration_interval: Optional[int] = None,
+                             max_items_per_invocation: Optional[int] = None,
+                             start_from_beginning: Optional[bool] = None,
+                             preferred_locations: Optional[str] = None,
+                             data_type: Optional[
+                                 Union[DataType, str]] = None,
+                             **kwargs: Any) -> \
             Callable[..., Any]:
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
@@ -804,7 +807,7 @@ class TriggerApi(DecoratorApi, ABC):
 
         :return: Decorator function.
         """
-        trigger = CosmosDBTrigger(
+        trigger = CosmosDBTriggerV3(
             name=arg_name,
             database_name=database_name,
             collection_name=collection_name,
@@ -823,6 +826,134 @@ class TriggerApi(DecoratorApi, ABC):
             lease_expiration_interval=lease_expiration_interval,
             max_items_per_invocation=max_items_per_invocation,
             start_from_beginning=start_from_beginning,
+            preferred_locations=preferred_locations,
+            data_type=parse_singular_param_to_enum(data_type, DataType),
+            **kwargs)
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(trigger=trigger)
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def cosmos_db_trigger(self,
+                          arg_name: str,
+                          connection: str,
+                          database_name: str,
+                          container_name: str,
+                          lease_connection: Optional[str] = None,
+                          lease_database_name: Optional[str] = None,
+                          lease_container_name: Optional[str] = None,
+                          create_lease_container_if_not_exists: Optional[
+                              bool] = None,
+                          leases_container_throughput: Optional[int] = None,
+                          lease_container_prefix: Optional[str] = None,
+                          feed_poll_delay: Optional[int] = None,
+                          lease_acquire_interval: Optional[int] = None,
+                          lease_expiration_interval: Optional[int] = None,
+                          lease_renew_interval: Optional[int] = None,
+                          max_items_per_invocation: Optional[int] = None,
+                          start_from_beginning: Optional[time] = None,
+                          start_from_time: Optional[time] = None,
+                          preferred_locations: Optional[str] = None,
+                          data_type: Optional[
+                              Union[DataType, str]] = None,
+                          **kwargs: Any) -> \
+            Callable[..., Any]:
+        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining CosmosDBTrigger
+        in the function.json which enables function to be triggered when
+        CosmosDB data is changed.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+
+        :param arg_name: The name of the variable that represents
+        :class:`DocumentList` object in function code
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to the Azure Cosmos DB account being
+         monitored.
+        :param database_name: The name of the Azure Cosmos DB database with
+        the collection being monitored
+        :param container_name: The name of the container being monitored
+        :param lease_connection: (Optional) The name of an app setting or
+         setting container that specifies how to connect to the Azure Cosmos
+         DB account that holds the lease container
+        :param lease_database_name: The name of the database that holds the
+        collection used to store leases
+        :param lease_container_name: (Optional) The name of the container used
+            to store leases. When not set, the value leases is used
+        :param create_lease_container_if_not_exists: (Optional) When set to
+        true, the leases container is automatically created when it doesn't
+         already exist. The default value is false. When using Azure AD
+         identities if you set the value to true, creating containers is not an
+          allowed operation and your Function won't be able to start
+        :param leases_container_throughput: (Optional) Defines the number of
+        Request Units to assign when the leases container is created. This
+        setting is only used when createLeaseContainerIfNotExists is set to
+        true. This parameter is automatically set when the binding is created
+        using the portal
+        :param lease_container_prefix: (Optional) When set, the value is added
+        as a prefix to the leases created in the Lease container for this
+        function. Using a prefix allows two separate Azure Functions to share
+        the same Lease container by using different prefixes
+        :param feed_poll_delay: The time (in milliseconds) for the delay
+        between polling a partition for new changes on the feed, after all
+        current changes are drained
+        :param lease_acquire_interval: When set, it defines,
+        in milliseconds, the interval to kick off a task to compute if
+        partitions are distributed evenly among known host instances
+        :param lease_expiration_interval: When set, it defines,
+        in milliseconds, the interval for which the lease is taken on a
+        lease representing a partition
+        :param lease_renew_interval: When set, it defines, in milliseconds,
+        the renew interval for all leases for partitions currently held by
+        an instance
+        :param max_items_per_invocation: When set, this property sets the
+        maximum number of items received per Function call
+        :param start_from_beginning: This option tells the Trigger to read
+        changes from the beginning of the collection's change history
+        instead of starting at the current time
+        :param start_from_time: (Optional) Gets or sets the date and time from
+        which to initialize the change feed read operation. The recommended
+        format is ISO 8601 with the UTC designator, such as
+        2021-02-16T14:19:29Z. This is only used to set the initial trigger
+        state. After the trigger has a lease state, changing this value has
+        no effect
+        :param preferred_locations: Defines preferred locations (regions)
+        for geo-replicated database accounts in the Azure Cosmos DB service
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+        trigger = CosmosDBTrigger(
+            name=arg_name,
+            connection=connection,
+            database_name=database_name,
+            container_name=container_name,
+            lease_connection=lease_connection,
+            lease_database_name=lease_database_name,
+            lease_container_name=lease_container_name,
+            create_lease_container_if_not_exists=create_lease_container_if_not_exists,  # NoQA
+            leases_container_throughput=leases_container_throughput,
+            lease_container_prefix=lease_container_prefix,
+            feed_poll_delay=feed_poll_delay,
+            lease_acquire_interval=lease_acquire_interval,
+            lease_expiration_interval=lease_expiration_interval,
+            lease_renew_interval=lease_renew_interval,
+            max_items_per_invocation=max_items_per_invocation,
+            start_from_beginning=start_from_beginning,
+            start_from_time=start_from_time,
             preferred_locations=preferred_locations,
             data_type=parse_singular_param_to_enum(data_type, DataType),
             **kwargs)
@@ -1172,20 +1303,20 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_output(self,
-                         arg_name: str,
-                         database_name: str,
-                         collection_name: str,
-                         connection_string_setting: str,
-                         create_if_not_exists: Optional[bool] = None,
-                         partition_key: Optional[str] = None,
-                         collection_throughput: Optional[int] = None,
-                         use_multiple_write_locations: Optional[
-                             bool] = None,
-                         preferred_locations: Optional[str] = None,
-                         data_type: Optional[
-                             Union[DataType, str]] = None,
-                         **kwargs) \
+    def cosmos_db_output_v3(self,
+                            arg_name: str,
+                            database_name: str,
+                            collection_name: str,
+                            connection_string_setting: str,
+                            create_if_not_exists: Optional[bool] = None,
+                            partition_key: Optional[str] = None,
+                            collection_throughput: Optional[int] = None,
+                            use_multiple_write_locations: Optional[
+                                bool] = None,
+                            preferred_locations: Optional[str] = None,
+                            data_type: Optional[
+                                Union[DataType, str]] = None,
+                            **kwargs) \
             -> Callable[..., Any]:
         """The cosmos_db_output decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
@@ -1228,7 +1359,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBOutput(
+                    binding=CosmosDBOutputV3(
                         name=arg_name,
                         database_name=database_name,
                         collection_name=collection_name,
@@ -1236,7 +1367,7 @@ class BindingApi(DecoratorApi, ABC):
                         create_if_not_exists=create_if_not_exists,
                         partition_key=partition_key,
                         collection_throughput=collection_throughput,
-                        use_multiple_write_locations=use_multiple_write_locations, # NoQA
+                        use_multiple_write_locations=use_multiple_write_locations,  # NoQA
                         preferred_locations=preferred_locations,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -1247,17 +1378,88 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_input(self,
-                        arg_name: str,
-                        database_name: str,
-                        collection_name: str,
-                        connection_string_setting: str,
-                        id: Optional[str] = None,
-                        sql_query: Optional[str] = None,
-                        partition_key: Optional[str] = None,
-                        data_type: Optional[
-                            Union[DataType, str]] = None,
-                        **kwargs) \
+    def cosmos_db_output(self,
+                         arg_name: str,
+                         connection: str,
+                         database_name: str,
+                         container_name: str,
+                         create_if_not_exists: Optional[bool] = None,
+                         partition_key: Optional[str] = None,
+                         container_throughput: Optional[int] = None,
+                         preferred_locations: Optional[str] = None,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_output decorator adds
+        :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining CosmosDBOutput
+        in the function.json which enables function to write to the CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+
+        :param arg_name: The name of the variable that represents CosmosDB
+        output object in function code.
+        :param connection: The name of an app setting or
+        setting collection that specifies how to connect to the Azure Cosmos
+        DB account being monitored
+        :param database_name: The name of the Azure Cosmos DB database with
+        the collection being monitored
+        :param container_name: The name of the container being monitored
+        :param create_if_not_exists: A boolean value to indicate whether the
+        collection is created when it doesn't exist
+        :param partition_key: When CreateIfNotExists is true, it defines the
+        partition key path for the created collection
+        :param container_throughput: When createIfNotExists is true, it defines
+        the throughput of the created container
+        PreferredLocations, it can leverage multi-region writes in the Azure
+        Cosmos DB service
+        :param preferred_locations: Defines preferred locations (regions)
+        for geo-replicated database accounts in the Azure Cosmos DB service
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=CosmosDBOutput(
+                        name=arg_name,
+                        connection=connection,
+                        database_name=database_name,
+                        container_name=container_name,
+                        create_if_not_exists=create_if_not_exists,
+                        partition_key=partition_key,
+                        container_throughput=container_throughput,
+                        preferred_locations=preferred_locations,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def cosmos_db_input_v3(self,
+                           arg_name: str,
+                           database_name: str,
+                           collection_name: str,
+                           connection_string_setting: str,
+                           id: Optional[str] = None,
+                           sql_query: Optional[str] = None,
+                           partition_key: Optional[str] = None,
+                           data_type: Optional[
+                               Union[DataType, str]] = None,
+                           **kwargs) \
             -> Callable[..., Any]:
         """The cosmos_db_input decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
@@ -1293,7 +1495,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBInput(
+                    binding=CosmosDBInputV3(
                         name=arg_name,
                         database_name=database_name,
                         collection_name=collection_name,
@@ -1301,6 +1503,76 @@ class BindingApi(DecoratorApi, ABC):
                         id=id,
                         sql_query=sql_query,
                         partition_key=partition_key,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def cosmos_db_input(self,
+                        arg_name: str,
+                        connection: str,
+                        database_name: str,
+                        container_name: str,
+                        partition_key: Optional[str] = None,
+                        id: Optional[str] = None,
+                        sql_query: Optional[str] = None,
+                        preferred_locations: Optional[str] = None,
+                        data_type: Optional[
+                            Union[DataType, str]] = None,
+                        **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_input decorator adds
+        :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining CosmosDBInput
+        in the function.json which enables function to read from CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+
+        :param arg_name: The name of the variable that represents
+        :class:`DocumentList` input object in function code
+        :param connection: The name of an app setting or setting container that
+         specifies how to connect to the Azure Cosmos DB account being
+         monitored containing your Azure Cosmos DB connection string
+        :param database_name: The database containing the document
+        :param container_name: The name of the container that contains the
+        document
+        :param partition_key: Specifies the partition key value for the
+        lookup
+        :param id: The ID of the document to retrieve
+        :param sql_query: An Azure Cosmos DB SQL query used for retrieving
+        multiple documents
+        :param preferred_locations: (Optional) Defines preferred locations
+        (regions) for geo-replicated database accounts in the Azure Cosmos DB
+        service. Values should be comma-separated. For example, East US,South
+        Central US,North Europe
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=CosmosDBInput(
+                        name=arg_name,
+                        connection=connection,
+                        database_name=database_name,
+                        container_name=container_name,
+                        partition_key=partition_key,
+                        id=id,
+                        sql_query=sql_query,
+                        preferred_locations=preferred_locations,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
