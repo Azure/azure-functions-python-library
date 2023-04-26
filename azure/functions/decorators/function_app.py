@@ -742,12 +742,14 @@ class TriggerApi(DecoratorApi, ABC):
                                  Union[DataType, str]] = None,
                              **kwargs: Any) -> \
             Callable[..., Any]:
-        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
+        """The cosmos_db_trigger_v3 decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBTrigger
-        in the function.json which enables function to be triggered when
-        CosmosDB data is changed.
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        This is equivalent to defining CosmosDBTrigger in the function.json
+         which enables function to be triggered when CosmosDB data is changed.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -867,9 +869,11 @@ class TriggerApi(DecoratorApi, ABC):
         """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBTrigger
-        in the function.json which enables function to be triggered when
-        CosmosDB data is changed.
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        This is equivalent to defining CosmosDBTrigger in the function.json
+        which enables function to be triggered when CosmosDB data is changed.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -1318,10 +1322,13 @@ class BindingApi(DecoratorApi, ABC):
                                 Union[DataType, str]] = None,
                             **kwargs) \
             -> Callable[..., Any]:
-        """The cosmos_db_output decorator adds
+        """The cosmos_db_output_v3 decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBOutput
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+         This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1394,7 +1401,10 @@ class BindingApi(DecoratorApi, ABC):
         """The cosmos_db_output decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBOutput
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1461,10 +1471,13 @@ class BindingApi(DecoratorApi, ABC):
                                Union[DataType, str]] = None,
                            **kwargs) \
             -> Callable[..., Any]:
-        """The cosmos_db_input decorator adds
+        """The cosmos_db_input_v3 decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBInput
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        This is equivalent to defining CosmosDBInput
         in the function.json which enables function to read from CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1528,8 +1541,11 @@ class BindingApi(DecoratorApi, ABC):
         """The cosmos_db_input decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBInput
-        in the function.json which enables function to read from CosmosDB.
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        This is equivalent to defining CosmosDBInput in the function.json which
+         enables function to read from CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
