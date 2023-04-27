@@ -8,6 +8,7 @@ from azure.functions.decorators.core import DataType, InputBinding, \
     OutputBinding, Trigger
 
 
+#  Used by cosmos_db_input_v3
 class CosmosDBInputV3(InputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -32,6 +33,7 @@ class CosmosDBInputV3(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
+#  Used by cosmos_db_output_v3
 class CosmosDBOutputV3(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -60,6 +62,7 @@ class CosmosDBOutputV3(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
+# Used by cosmos_db_output_v3
 class CosmosDBTriggerV3(Trigger):
     @staticmethod
     def get_binding_name() -> str:
@@ -109,6 +112,7 @@ class CosmosDBTriggerV3(Trigger):
         super().__init__(name=name, data_type=data_type)
 
 
+#  Used by cosmos_db_input
 class CosmosDBInput(InputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -135,6 +139,7 @@ class CosmosDBInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
+#  Used by cosmos_db_output
 class CosmosDBOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -161,6 +166,7 @@ class CosmosDBOutput(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
+#  Used by cosmos_db_trigger
 class CosmosDBTrigger(Trigger):
     @staticmethod
     def get_binding_name() -> str:

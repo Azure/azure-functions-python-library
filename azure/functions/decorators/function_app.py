@@ -747,7 +747,7 @@ class TriggerApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 2.x
         or 3.x. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
         This is equivalent to defining CosmosDBTrigger in the function.json
          which enables function to be triggered when CosmosDB data is changed.
         All optional fields will be given default value by function host when
@@ -871,13 +871,13 @@ class TriggerApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 4.x
         and above. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
         This is equivalent to defining CosmosDBTrigger in the function.json
         which enables function to be triggered when CosmosDB data is changed.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
 
         :param arg_name: The name of the variable that represents
         :class:`DocumentList` object in function code
@@ -1327,7 +1327,7 @@ class BindingApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 2.x
         or 3.x. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
          This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
         All optional fields will be given default value by function host when
@@ -1403,13 +1403,13 @@ class BindingApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 4.x
         and above. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
         This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
 
         :param arg_name: The name of the variable that represents CosmosDB
         output object in function code.
@@ -1476,7 +1476,7 @@ class BindingApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 2.x
         or 3.x. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
         This is equivalent to defining CosmosDBInput
         in the function.json which enables function to read from CosmosDB.
         All optional fields will be given default value by function host when
@@ -1543,13 +1543,13 @@ class BindingApi(DecoratorApi, ABC):
         for building :class:`Function` object used in worker function
         indexing model. This decorator will work only with extension bundle 4.x
         and above. For additional details, please refer
-        https://github.com/Azure/azure-functions-python-worker/issues/1222.
+        https://aka.ms/cosmosdb-v4-update.
         This is equivalent to defining CosmosDBInput in the function.json which
          enables function to read from CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: https://aka.ms/azure-function-binding-cosmosdb-v2
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
 
         :param arg_name: The name of the variable that represents
         :class:`DocumentList` input object in function code
