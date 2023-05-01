@@ -2053,7 +2053,8 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         :return: None
         """
         if not isinstance(http_middleware, AsgiMiddleware):
-            raise TypeError("Please pass AsgiMiddleware instance as parameter.")
+            raise TypeError("Please pass AsgiMiddleware instance"
+                            " as parameter.")
 
         asgi_middleware: AsgiMiddleware = http_middleware
 
@@ -2086,7 +2087,8 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :return: None
         """
         if not isinstance(http_middleware, WsgiMiddleware):
-            raise TypeError("Please pass WsgiMiddleware instance as parameter.")
+            raise TypeError("Please pass WsgiMiddleware instance"
+                            " as parameter.")
 
         wsgi_middleware: WsgiMiddleware = http_middleware
 
