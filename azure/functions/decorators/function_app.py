@@ -254,8 +254,7 @@ class DecoratorApi(ABC):
         return self._app_script_file
 
     def _validate_type(self,
-                       func: Union[Callable[..., Any],
-                       FunctionBuilder]) \
+                       func: Union[Callable[..., Any], FunctionBuilder]) \
             -> FunctionBuilder:
         """Validate the type of the function object and return the created
         :class:`FunctionBuilder` object.
@@ -2022,7 +2021,8 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
                           AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
-        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
@@ -2047,14 +2047,16 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                           AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add an Asgi app integrated http function.
 
-        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
         if not isinstance(http_middleware, AsgiMiddleware):
-            raise TypeError("Please pass in AsgiMiddleware instance as parameter.")
+            raise TypeError("Please pass AsgiMiddleware instance as parameter.")
 
         asgi_middleware: AsgiMiddleware = http_middleware
+
         @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
@@ -2078,12 +2080,13 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                           AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi app integrated http function.
 
-        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
         if not isinstance(http_middleware, WsgiMiddleware):
-            raise TypeError("Please pass in WsgiMiddleware instance as parameter.")
+            raise TypeError("Please pass WsgiMiddleware instance as parameter.")
 
         wsgi_middleware: WsgiMiddleware = http_middleware
 
