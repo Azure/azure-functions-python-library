@@ -527,6 +527,24 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(len(funcs), 1)
         self.assertTrue(funcs[0].is_http_function())
 
+    def test_asgi_function_app_add_wsgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = AsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(WsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass AsgiMiddleware instance as parameter.")
+
+    def test_wsgi_function_app_add_asgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = WsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass WsgiMiddleware instance as parameter.")
+
     def _test_http_external_app(self, app, is_async):
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
