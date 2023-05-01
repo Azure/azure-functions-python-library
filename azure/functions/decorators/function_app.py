@@ -255,7 +255,7 @@ class DecoratorApi(ABC):
 
     def _validate_type(self,
                        func: Union[Callable[..., Any],
-                                   FunctionBuilder]) \
+                       FunctionBuilder]) \
             -> FunctionBuilder:
         """Validate the type of the function object and return the created
         :class:`FunctionBuilder` object.
@@ -817,7 +817,7 @@ class TriggerApi(DecoratorApi, ABC):
             lease_collection_name=lease_collection_name,
             lease_connection_string_setting=lease_connection_string_setting,
             lease_database_name=lease_database_name,
-            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists, # NoQA
+            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists,  # NoQA
             leases_collection_throughput=leases_collection_throughput,
             lease_collection_prefix=lease_collection_prefix,
             checkpoint_interval=checkpoint_interval,
@@ -2014,6 +2014,21 @@ class Blueprint(TriggerApi, BindingApi):
     pass
 
 
+class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+    """Interface to extend for building third party http function apps."""
+
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
+        """Add a Wsgi or Asgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+        pass
+
+
 class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
@@ -2027,10 +2042,9 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(AsgiMiddleware(app))
 
-        def _add_http_app(self,
+    def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware],
-                      http_type: str) -> None:
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add an Asgi app integrated http function.
 
         :param asgi_middleware: :class:`AsgiMiddleware` instance.
@@ -2043,7 +2057,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                     auth_level=self.auth_level,
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
-            return await asgi_middleware.handle_async(req, context)
+            return await http_middleware.handle_async(req, context)
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
@@ -2058,11 +2072,10 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware],
-                      http_type: str) -> None:
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi app integrated http function.
 
-        :param wsgi_middleware: :class:`WsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware` instance.
 
         :return: None
         """
@@ -2072,19 +2085,4 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                     auth_level=self.auth_level,
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
-            return wsgi_middleware.handle(req, context)
-
-class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
-    """Interface to extend for building third party http function apps."""
-
-    def _add_http_app(self,
-                      http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware],
-                      http_type: str) -> None:
-                """Add a Wsgi or Asgi app integrated http function.
-
-        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
-
-        :return: None
-        """
-        pass
+            return http_middleware.handle(req, context)
