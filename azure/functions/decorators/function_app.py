@@ -2014,7 +2014,7 @@ class Blueprint(TriggerApi, BindingApi):
     pass
 
 
-class AsgiFunctionApp(FunctionRegister, TriggerApi):
+class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
@@ -2027,7 +2027,10 @@ class AsgiFunctionApp(FunctionRegister, TriggerApi):
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(AsgiMiddleware(app))
 
-    def _add_http_app(self, asgi_middleware: AsgiMiddleware) -> None:
+        def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware],
+                      http_type: str) -> None:
         """Add an Asgi app integrated http function.
 
         :param asgi_middleware: :class:`AsgiMiddleware` instance.
@@ -2043,7 +2046,7 @@ class AsgiFunctionApp(FunctionRegister, TriggerApi):
             return await asgi_middleware.handle_async(req, context)
 
 
-class WsgiFunctionApp(FunctionRegister, TriggerApi):
+class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.
@@ -2054,7 +2057,9 @@ class WsgiFunctionApp(FunctionRegister, TriggerApi):
         self._add_http_app(WsgiMiddleware(app))
 
     def _add_http_app(self,
-                      wsgi_middleware: WsgiMiddleware) -> None:
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware],
+                      http_type: str) -> None:
         """Add a Wsgi app integrated http function.
 
         :param wsgi_middleware: :class:`WsgiMiddleware` instance.
@@ -2068,3 +2073,18 @@ class WsgiFunctionApp(FunctionRegister, TriggerApi):
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
+
+class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+    """Interface to extend for building third party http function apps."""
+
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware],
+                      http_type: str) -> None:
+                """Add a Wsgi or Asgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware` or class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+        pass
