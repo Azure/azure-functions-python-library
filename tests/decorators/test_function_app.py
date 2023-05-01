@@ -13,7 +13,8 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi, ExternalHttpFunctionApp
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, \
+    TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -549,7 +550,7 @@ class TestFunctionApp(unittest.TestCase):
     @patch("azure.functions.decorators.function_app.ExternalHttpFunctionApp"
            ".__abstractmethods__", set())
     def test_external_http_function_app(self):
-        with self.assertRaises(NotImplementedError) as err:
+        with self.assertRaises(NotImplementedError):
             app = ExternalHttpFunctionApp(auth_level=AuthLevel.ANONYMOUS)
             app._add_http_app(AsgiMiddleware(object()))
 
