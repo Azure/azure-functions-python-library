@@ -2028,7 +2028,7 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
         :return: None
         """
-        pass
+        raise NotImplementedError()
 
 
 class AsgiFunctionApp(ExternalHttpFunctionApp):

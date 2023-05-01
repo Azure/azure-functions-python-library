@@ -4,6 +4,7 @@ import inspect
 import json
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
@@ -12,7 +13,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -544,6 +545,13 @@ class TestFunctionApp(unittest.TestCase):
 
         self.assertEqual(err.exception.args[0],
                          "Please pass WsgiMiddleware instance as parameter.")
+
+    @patch("azure.functions.decorators.function_app.ExternalHttpFunctionApp"
+           ".__abstractmethods__", set())
+    def test_external_http_function_app(self):
+        with self.assertRaises(NotImplementedError) as err:
+            app = ExternalHttpFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
 
     def _test_http_external_app(self, app, is_async):
         funcs = app.get_functions()
