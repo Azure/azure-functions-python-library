@@ -4,6 +4,7 @@ import inspect
 import json
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
@@ -12,7 +13,8 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, \
+    TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from tests.decorators.test_core import DummyTrigger
@@ -526,6 +528,31 @@ class TestFunctionApp(unittest.TestCase):
 
         self.assertEqual(len(funcs), 1)
         self.assertTrue(funcs[0].is_http_function())
+
+    def test_asgi_function_app_add_wsgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = AsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(WsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass AsgiMiddleware instance as parameter.")
+
+    def test_wsgi_function_app_add_asgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = WsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass WsgiMiddleware instance as parameter.")
+
+    @patch("azure.functions.decorators.function_app.ExternalHttpFunctionApp"
+           ".__abstractmethods__", set())
+    def test_external_http_function_app(self):
+        with self.assertRaises(NotImplementedError):
+            app = ExternalHttpFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
 
     def _test_http_external_app(self, app, is_async):
         funcs = app.get_functions()

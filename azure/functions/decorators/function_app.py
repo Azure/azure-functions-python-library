@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import abc
 import json
 import logging
 from abc import ABC
@@ -254,8 +255,7 @@ class DecoratorApi(ABC):
         return self._app_script_file
 
     def _validate_type(self,
-                       func: Union[Callable[..., Any],
-                                   FunctionBuilder]) \
+                       func: Union[Callable[..., Any], FunctionBuilder]) \
             -> FunctionBuilder:
         """Validate the type of the function object and return the created
         :class:`FunctionBuilder` object.
@@ -817,7 +817,7 @@ class TriggerApi(DecoratorApi, ABC):
             lease_collection_name=lease_collection_name,
             lease_connection_string_setting=lease_connection_string_setting,
             lease_database_name=lease_database_name,
-            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists, # NoQA
+            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists,  # NoQA
             leases_collection_throughput=leases_collection_throughput,
             lease_collection_prefix=lease_collection_prefix,
             checkpoint_interval=checkpoint_interval,
@@ -2014,7 +2014,24 @@ class Blueprint(TriggerApi, BindingApi):
     pass
 
 
-class AsgiFunctionApp(FunctionRegister, TriggerApi):
+class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+    """Interface to extend for building third party http function apps."""
+
+    @abc.abstractmethod
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
+        """Add a Wsgi or Asgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+        raise NotImplementedError()
+
+
+class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
@@ -2027,13 +2044,21 @@ class AsgiFunctionApp(FunctionRegister, TriggerApi):
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(AsgiMiddleware(app))
 
-    def _add_http_app(self, asgi_middleware: AsgiMiddleware) -> None:
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add an Asgi app integrated http function.
 
-        :param asgi_middleware: :class:`AsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
+        if not isinstance(http_middleware, AsgiMiddleware):
+            raise TypeError("Please pass AsgiMiddleware instance"
+                            " as parameter.")
+
+        asgi_middleware: AsgiMiddleware = http_middleware
 
         @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
@@ -2043,7 +2068,7 @@ class AsgiFunctionApp(FunctionRegister, TriggerApi):
             return await asgi_middleware.handle_async(req, context)
 
 
-class WsgiFunctionApp(FunctionRegister, TriggerApi):
+class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.
@@ -2054,13 +2079,20 @@ class WsgiFunctionApp(FunctionRegister, TriggerApi):
         self._add_http_app(WsgiMiddleware(app))
 
     def _add_http_app(self,
-                      wsgi_middleware: WsgiMiddleware) -> None:
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi app integrated http function.
 
-        :param wsgi_middleware: :class:`WsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
+        if not isinstance(http_middleware, WsgiMiddleware):
+            raise TypeError("Please pass WsgiMiddleware instance"
+                            " as parameter.")
+
+        wsgi_middleware: WsgiMiddleware = http_middleware
 
         @self.http_type(http_type='wsgi')
         @self.route(methods=(method for method in HttpMethod),
