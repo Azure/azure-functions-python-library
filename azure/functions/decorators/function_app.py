@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import abc
 import json
 import logging
 from abc import ABC
@@ -2016,6 +2017,7 @@ class Blueprint(TriggerApi, BindingApi):
 class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
     """Interface to extend for building third party http function apps."""
 
+    @abc.abstractmethod
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware]) -> None:
