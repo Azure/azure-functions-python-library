@@ -2053,3 +2053,43 @@ class TestFunctionsApp(unittest.TestCase):
             "tableName": "dummy_table_name",
             "connection": "dummy_out_conn"
         })
+
+    def test_function_app_full_bindings_metadata_key_order(self):
+        app = self.func_app
+
+        @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
+                   methods=(HttpMethod.GET, HttpMethod.PATCH),
+                   auth_level=AuthLevel.FUNCTION, route='dummy_route',
+                   trigger_extra_fields={"dummy_field": "dummy"},
+                   binding_extra_fields={"dummy_field": "dummy"})
+        @app.table_input(arg_name="in", table_name="dummy_table_name",
+                         connection="dummy_in_conn",
+                         row_key="dummy_key",
+                         partition_key="dummy_partition_key",
+                         take=1,
+                         filter="dummy_filter")
+        @app.table_output(arg_name="out", table_name="dummy_table_name",
+                          connection="dummy_out_conn",
+                          row_key="dummy_key",
+                          partition_key="dummy_partition_key")
+        def dummy():
+            pass
+
+        self._test_function_metadata_order(app)
+
+    def test_function_app_generic_http_trigger_metadata_key_order(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        def dummy():
+            pass
+
+        self._test_function_metadata_order(app)
+
+    def _test_function_metadata_order(self, app):
+        func = self._get_user_function(app)
+        last_metadata_payload = str(func)
+        for _ in range(3):
+            new_metadata_payload = str(func)
+            self.assertEqual(new_metadata_payload, last_metadata_payload)
+            last_metadata_payload = new_metadata_payload
