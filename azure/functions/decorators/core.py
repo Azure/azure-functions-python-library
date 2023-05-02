@@ -115,7 +115,8 @@ class Binding(ABC):
 
         :return: Dictionary representation of the binding.
         """
-        for p in getattr(self, 'init_params', []):
+        params = list(dict.fromkeys(getattr(self, 'init_params', [])))
+        for p in params:
             if p not in Binding.EXCLUDED_INIT_PARAMS:
                 self._dict[to_camel_case(p)] = getattr(self, p, None)
 

@@ -214,11 +214,11 @@ class FunctionBuilder(object):
         # http trigger
         if Trigger.is_supported_trigger_type(trigger, HttpTrigger):
             if getattr(trigger, 'route', None) is None:
-                getattr(trigger, 'init_params').add('route')
+                getattr(trigger, 'init_params').append('route')
                 setattr(trigger, 'route', function_name)
             if getattr(trigger, 'auth_level',
                        None) is None and auth_level is not None:
-                getattr(trigger, 'init_params').add('auth_level')
+                getattr(trigger, 'init_params').append('auth_level')
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
             self._function._is_http_function = True

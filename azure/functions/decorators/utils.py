@@ -56,8 +56,8 @@ class BuildDictMeta(type):
 
             self = args[0]
 
-            init_params = set(inspect.signature(func).parameters.keys())
-            init_params.update(kwargs.keys())
+            init_params = list(inspect.signature(func).parameters.keys())
+            init_params.extend(list(kwargs.keys()))
             for key in kwargs.keys():
                 if not hasattr(self, key):
                     setattr(self, key, kwargs[key])
