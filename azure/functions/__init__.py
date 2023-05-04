@@ -9,7 +9,8 @@ from ._http import HttpRequest, HttpResponse
 from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
-                         AsgiFunctionApp, WsgiFunctionApp)
+                         AsgiFunctionApp, WsgiFunctionApp,
+                         ExternalHttpFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi)
@@ -85,6 +86,7 @@ __all__ = (
     'TriggerApi',
     'BindingApi',
     'Blueprint',
+    'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
     'WsgiFunctionApp',
     'DataType',
