@@ -407,6 +407,11 @@ class TriggerApi(DecoratorApi, ABC):
                       schedule: str,
                       run_on_startup: Optional[bool] = None,
                       use_monitor: Optional[bool] = None,
+                      retry_strategy: Optional[str] = None,
+                      retry_max_retry_count: Optional[int] = None,
+                      retry_delay_interval: Optional[str] = None,
+                      retry_minimum_interval: Optional[str] = None,
+                      retry_maximum_interval: Optional[str] = None,
                       data_type: Optional[Union[DataType, str]] = None,
                       **kwargs: Any) -> Callable[..., Any]:
         """The schedule or timer decorator adds :class:`TimerTrigger` to the
@@ -442,6 +447,11 @@ class TriggerApi(DecoratorApi, ABC):
                         schedule=schedule,
                         run_on_startup=run_on_startup,
                         use_monitor=use_monitor,
+                        retry_strategy=retry_strategy,
+                        retry_max_retry_count=retry_max_retry_count,
+                        retry_delay_interval=retry_delay_interval,
+                        retry_minimum_interval=retry_minimum_interval,
+                        retry_maximum_interval=retry_maximum_interval,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
