@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>functions.extension.extension_meta &#8212; azure-functions 1.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for functions.extension.extension_meta</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span class="c1"># Licensed under the MIT License.</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">.app_extension_hooks</span> <span class="kn">import</span> <span class="n">AppExtensionHooks</span>
+<span class="kn">from</span> <span class="nn">.func_extension_hooks</span> <span class="kn">import</span> <span class="n">FuncExtensionHooks</span>
+<span class="kn">from</span> <span class="nn">.extension_hook_meta</span> <span class="kn">import</span> <span class="n">ExtensionHookMeta</span>
+<span class="kn">from</span> <span class="nn">.extension_scope</span> <span class="kn">import</span> <span class="n">ExtensionScope</span>
+<span class="kn">from</span> <span class="nn">.function_extension_exception</span> <span class="kn">import</span> <span class="n">FunctionExtensionException</span>
+
+
+<div class="viewcode-block" id="ExtensionMeta"><a class="viewcode-back" href="../../../functions.extension.html#functions.ExtensionMeta">[docs]</a><span class="k">class</span> <span class="nc">ExtensionMeta</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The metaclass handles extension registration.</span>
+
+<span class="sd">    AppExtension is registered in __init__, it is applied to all triggers.</span>
+<span class="sd">    FuncExtension is registered in __call__, as users need to instantiate it</span>
+<span class="sd">    inside hook script.</span>
+
+<span class="sd">    After registration, the extension class will be flatten into the following</span>
+<span class="sd">    structure to speed up worker lookup:</span>
+<span class="sd">        _func_exts[&lt;trigger_name&gt;].&lt;hook_name&gt;.(ext_name, ext_impl)</span>
+<span class="sd">        (e.g. _func_exts[&#39;HttpTrigger&#39;].pre_invocation.ext_impl)</span>
+
+<span class="sd">        _app_exts.&lt;hook_name&gt;.(ext_name, ext_impl)</span>
+<span class="sd">        (e.g. _app_exts.pre_invocation_app_level.ext_impl)</span>
+
+<span class="sd">    The extension tree information is stored in _info for diagnostic</span>
+<span class="sd">    purpose. The dictionary is serializable to json:</span>
+<span class="sd">        _info[&#39;FuncExtension&#39;][&#39;&lt;Trigger&gt;&#39;] = list(&lt;Extension&gt;)</span>
+<span class="sd">        _info[&#39;AppExtension&#39;] = list(&lt;Extension&gt;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_func_exts</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FuncExtensionHooks</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_app_exts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AppExtensionHooks</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Executes on &#39;import extension&#39;, once the AppExtension class is</span>
+<span class="sd">        loaded, call the setup() method and add the life-cycle hooks into</span>
+<span class="sd">        _app_exts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ExtensionMeta</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="n">ExtensionMeta</span><span class="o">.</span><span class="n">_get_extension_scope</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+        <span class="c1"># Only register application extension here</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="n">ExtensionScope</span><span class="o">.</span><span class="n">APPLICATION</span><span class="p">:</span>
+            <span class="n">ExtensionMeta</span><span class="o">.</span><span class="n">_register_application_extension</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Executes on &#39;inst = extension(__file__)&#39;, once the FuncExtension</span>
+<span class="sd">        class is instantiate, overwrite the __init__() method and add the</span>
+<span class="sd">        instance into life-cycle hooks.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="n">ExtensionMeta</span><span class="o">.</span><span class="n">_get_extension_scope</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+        <span class="c1"># Only register function extension here</span>
+        <span class="k">if</span> <span class="n">scope</span> <span class="ow">is</span> <span class="n">ExtensionScope</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span>
+            <span class="n">instance</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ExtensionMeta</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">ExtensionMeta</span><span class="o">.</span><span class="n">_register_function_extension</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">instance</span>
+        <span class="k">elif</span> <span class="n">scope</span> <span class="ow">is</span> <span class="n">ExtensionScope</span><span class="o">.</span><span class="n">APPLICATION</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FunctionExtensionException</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Python worker extension with scope:</span><span class="si">{</span><span class="n">scope</span><span class="si">}</span><span class="s1"> should not be&#39;</span>
+                <span class="s1">&#39;instantiable. Please access via class method directly.&#39;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">FunctionExtensionException</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Python worker extension:</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1"> is not properly &#39;</span>
+                <span class="s1">&#39;implemented from AppExtensionBase or FuncExtensionBase.&#39;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ExtensionMeta.get_function_hooks"><a class="viewcode-back" href="../../../functions.extension.html#functions.ExtensionMeta.get_function_hooks">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_function_hooks</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FuncExtensionHooks</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all function extension hooks indexed by trigger name.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[FuncExtensionHooks]:</span>
+<span class="sd">            Example to look up a certain life-cycle name:</span>
+<span class="sd">            get_function_hooks(&#39;HttpTrigger&#39;).pre_invocation.ext_name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_func_exts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="ExtensionMeta.get_application_hooks"><a class="viewcode-back" href="../../../functions.extension.html#functions.ExtensionMeta.get_application_hooks">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_application_hooks</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AppExtensionHooks</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return all application hooks</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Optional[AppExtensionHooks]:</span>
+<span class="sd">            Example to look up a certain life-cycle name:</span>
+<span class="sd">            get_application_hooks().pre_invocation_app_level.ext_name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_app_exts</span></div>
+
+<div class="viewcode-block" id="ExtensionMeta.get_registered_extensions_json"><a class="viewcode-back" href="../../../functions.extension.html#functions.ExtensionMeta.get_registered_extensions_json">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_registered_extensions_json</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a json string of the registered</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str:</span>
+<span class="sd">            The json string will be constructed in a structure of</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;FuncExtension&quot;: {</span>
+<span class="sd">                    &quot;&lt;TriggerA&gt;&quot;: [</span>
+<span class="sd">                        &quot;ExtensionName&quot;</span>
+<span class="sd">                    ]</span>
+<span class="sd">                },</span>
+<span class="sd">                &quot;AppExtension&quot;: [</span>
+<span class="sd">                    &quot;ExtensionName&quot;</span>
+<span class="sd">                ]</span>
+<span class="sd">            }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_info</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_extension_scope</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExtensionScope</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the scope of an extension&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">extension</span><span class="p">,</span> <span class="s1">&#39;_scope&#39;</span><span class="p">,</span> <span class="n">ExtensionScope</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_set_hooks_for_function</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">trigger_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+        <span class="n">ext_hooks</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_func_exts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>
+            <span class="n">trigger_name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_create_default_function_hook</span><span class="p">()</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Flatten extension class to cls._func_exts</span>
+        <span class="k">for</span> <span class="n">hook_name</span> <span class="ow">in</span> <span class="n">ext_hooks</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="n">hook_impl</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="n">hook_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">hook_impl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">hook_meta</span> <span class="o">=</span> <span class="n">ExtensionHookMeta</span><span class="p">(</span>
+                    <span class="n">ext_name</span><span class="o">=</span><span class="n">ext</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">ext_impl</span><span class="o">=</span><span class="n">hook_impl</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">ext_hooks</span><span class="p">,</span> <span class="n">hook_name</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hook_meta</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_set_hooks_for_application</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">ext</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_app_exts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_app_exts</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_create_default_app_hook</span><span class="p">()</span>
+
+        <span class="c1"># Check for definition in AppExtensionHooks NamedTuple</span>
+        <span class="k">for</span> <span class="n">hook_name</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_app_exts</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+            <span class="n">hook_impl</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="n">hook_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">hook_impl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_app_exts</span><span class="p">,</span> <span class="n">hook_name</span><span class="p">)</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ExtensionHookMeta</span><span class="p">(</span>
+                    <span class="n">ext_name</span><span class="o">=</span><span class="n">ext</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+                    <span class="n">ext_impl</span><span class="o">=</span><span class="n">hook_impl</span>
+                <span class="p">))</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_register_function_extension</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flatten the function extension structure into function hooks&quot;&quot;&quot;</span>
+        <span class="c1"># Should skip registering FuncExtensionBase, cannot use isinstance(),</span>
+        <span class="c1"># referring to func_extension_hooks introduces a dependency cycle</span>
+        <span class="k">if</span> <span class="n">extension</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;FuncExtensionBase&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">trigger_name</span> <span class="o">=</span> <span class="n">extension</span><span class="o">.</span><span class="n">_trigger_name</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_set_hooks_for_function</span><span class="p">(</span><span class="n">trigger_name</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+
+        <span class="c1"># Record function extension information</span>
+        <span class="n">hooks_info</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="s1">&#39;FuncExtension&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">trigger_name</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">hooks_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extension</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_register_application_extension</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flatten the application extension structure into function hooks&quot;&quot;&quot;</span>
+        <span class="c1"># Should skip registering AppExtensionBase, cannot use isinstance(),</span>
+        <span class="c1"># referring to app_extension_hooks introduces a dependency cycle</span>
+        <span class="k">if</span> <span class="n">extension</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;AppExtensionBase&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">extension</span><span class="p">,</span> <span class="s1">&#39;init&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">extension</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_set_hooks_for_application</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span>
+
+        <span class="c1"># Record application extension information</span>
+        <span class="n">hooks_info</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;AppExtension&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">hooks_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">extension</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>   <span class="c1"># type: ignore</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_create_default_function_hook</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FuncExtensionHooks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FuncExtensionHooks</span><span class="p">(</span>
+            <span class="n">post_function_load</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">pre_invocation</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">post_invocation</span><span class="o">=</span><span class="p">[]</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_create_default_app_hook</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AppExtensionHooks</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AppExtensionHooks</span><span class="p">(</span>
+            <span class="n">post_function_load_app_level</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">pre_invocation_app_level</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">post_invocation_app_level</span><span class="o">=</span><span class="p">[]</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">azure-functions</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../functions.html">functions package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Microsoft Corp..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

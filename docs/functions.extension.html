@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>functions.extension package &#8212; azure-functions 1.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="functions.decorators package" href="functions.decorators.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="functions-extension-package">
+<h1>functions.extension package<a class="headerlink" href="#functions-extension-package" title="Permalink to this heading">¶</a></h1>
+<section id="module-functions.extension.app_extension_base">
+<span id="submodules"></span><h2>Submodules<a class="headerlink" href="#module-functions.extension.app_extension_base" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.app_extension_base.</span></span><span class="sig-name descname"><span class="pre">AppExtensionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An abstract class defines the global life-cycle hooks to be implemented
+by customer’s extension, will be applied to all functions.</p>
+<p>An AppExtension should be treated as a static class. Must not contain
+__init__ method since it is not instantiable.</p>
+<p>Please place your initialization code in init() classmethod, consider
+accepting extension settings in configure() classmethod from customers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase.configure">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.configure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is intended to be called by Azure Functions
+customers. This is a contract between extension developers and
+azure functions customers. If multiple .configure() are called,
+the extension system cannot guarantee the calling order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase.init">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function will be executed when the extension is loaded.
+Happens when Azure Functions customers import the extension module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase.post_function_load_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_function_load_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.post_function_load_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase.post_function_load_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;classmethod. It will be called right
+after a customer’s function is loaded. In this stage, the customer’s
+logger is not fully initialized from the Python worker. Please use
+print() to emit a message if necessary.</p>
+<section id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>function_name: str</dt><dd><p>The name of customer’s function (e.g. HttpTrigger)</p>
+</dd>
+<dt>function_directory: str</dt><dd><p>The path to customer’s function directory
+(e.g. /home/site/wwwroot/HttpTrigger)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase.post_invocation_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_invocation_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_ret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.post_invocation_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase.post_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;staticmethod. It will be called right
+after a customer’s function is being executed.</p>
+<section id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+<dt>func_ret: typing.Optional[object]</dt><dd><p>Return value from Azure Functions. This is usually the value
+defined in function.json $return section. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific types or input binding types.”</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.app_extension_base.AppExtensionBase.pre_invocation_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_invocation_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.pre_invocation_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_base.AppExtensionBase.pre_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;staticmethod. It will be called right
+before a customer’s function is being executed.</p>
+<section id="id2">
+<h3>Parameters<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.app_extension_hooks"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.app_extension_hooks.AppExtensionHooks">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.app_extension_hooks.</span></span><span class="sig-name descname"><span class="pre">AppExtensionHooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_function_load_app_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_invocation_app_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_invocation_app_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_hooks.html#AppExtensionHooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.app_extension_hooks.AppExtensionHooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
+<p>The definition of which type of global hooks are supported in SDK.
+ExtensionMeta will lookup the AppExtension life-cycle type from here.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.app_extension_hooks.AppExtensionHooks.post_function_load_app_level">
+<span class="sig-name descname"><span class="pre">post_function_load_app_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.app_extension_hooks.AppExtensionHooks.post_function_load_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.app_extension_hooks.AppExtensionHooks.post_invocation_app_level">
+<span class="sig-name descname"><span class="pre">post_invocation_app_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.app_extension_hooks.AppExtensionHooks.post_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.app_extension_hooks.AppExtensionHooks.pre_invocation_app_level">
+<span class="sig-name descname"><span class="pre">pre_invocation_app_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.app_extension_hooks.AppExtensionHooks.pre_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.extension_hook_meta"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.extension_hook_meta.ExtensionHookMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.extension_hook_meta.</span></span><span class="sig-name descname"><span class="pre">ExtensionHookMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ext_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext_impl</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/extension_hook_meta.html#ExtensionHookMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
+<p>The metadata of a single life-cycle hook.
+The ext_name has the class name of an extension class.
+The ext_impl has the callable function that is used by the worker.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.extension_hook_meta.ExtensionHookMeta.ext_impl">
+<span class="sig-name descname"><span class="pre">ext_impl</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span></em><a class="headerlink" href="#functions.extension.extension_hook_meta.ExtensionHookMeta.ext_impl" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.extension_hook_meta.ExtensionHookMeta.ext_name">
+<span class="sig-name descname"><span class="pre">ext_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#functions.extension.extension_hook_meta.ExtensionHookMeta.ext_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.extension_meta"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.extension_meta.ExtensionMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.extension_meta.</span></span><span class="sig-name descname"><span class="pre">ExtensionMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_meta.ExtensionMeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></p>
+<p>The metaclass handles extension registration.</p>
+<p>AppExtension is registered in __init__, it is applied to all triggers.
+FuncExtension is registered in __call__, as users need to instantiate it
+inside hook script.</p>
+<p>After registration, the extension class will be flatten into the following
+structure to speed up worker lookup:</p>
+<blockquote>
+<div><p>_func_exts[&lt;trigger_name&gt;].&lt;hook_name&gt;.(ext_name, ext_impl)
+(e.g. _func_exts[‘HttpTrigger’].pre_invocation.ext_impl)</p>
+<p>_app_exts.&lt;hook_name&gt;.(ext_name, ext_impl)
+(e.g. _app_exts.pre_invocation_app_level.ext_impl)</p>
+</div></blockquote>
+<p>The extension tree information is stored in _info for diagnostic
+purpose. The dictionary is serializable to json:</p>
+<blockquote>
+<div><p>_info[‘FuncExtension’][‘&lt;Trigger&gt;’] = list(&lt;Extension&gt;)
+_info[‘AppExtension’] = list(&lt;Extension&gt;)</p>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.extension_meta.ExtensionMeta.get_application_hooks">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_application_hooks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#functions.extension.app_extension_hooks.AppExtensionHooks" title="functions.extension.app_extension_hooks.AppExtensionHooks"><span class="pre">AppExtensionHooks</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_application_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_meta.ExtensionMeta.get_application_hooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all application hooks</p>
+<section id="returns">
+<h3>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Optional[AppExtensionHooks]:</dt><dd><p>Example to look up a certain life-cycle name:
+get_application_hooks().pre_invocation_app_level.ext_name</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.extension_meta.ExtensionMeta.get_function_hooks">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_function_hooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#functions.extension.func_extension_hooks.FuncExtensionHooks" title="functions.extension.func_extension_hooks.FuncExtensionHooks"><span class="pre">FuncExtensionHooks</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_function_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_meta.ExtensionMeta.get_function_hooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all function extension hooks indexed by trigger name.</p>
+<section id="id3">
+<h3>Returns<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Optional[FuncExtensionHooks]:</dt><dd><p>Example to look up a certain life-cycle name:
+get_function_hooks(‘HttpTrigger’).pre_invocation.ext_name</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.extension_meta.ExtensionMeta.get_registered_extensions_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_registered_extensions_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_registered_extensions_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_meta.ExtensionMeta.get_registered_extensions_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a json string of the registered</p>
+<section id="id4">
+<h3>Returns<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<dl>
+<dt>str:</dt><dd><p>The json string will be constructed in a structure of
+{</p>
+<blockquote>
+<div><dl>
+<dt>“FuncExtension”: {</dt><dd><dl class="simple">
+<dt>“&lt;TriggerA&gt;”: [</dt><dd><p>“ExtensionName”</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>},
+“AppExtension”: [</p>
+<blockquote>
+<div><p>“ExtensionName”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.extension_scope"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.extension_scope.ExtensionScope">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.extension_scope.</span></span><span class="sig-name descname"><span class="pre">ExtensionScope</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/extension_scope.html#ExtensionScope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.extension_scope.ExtensionScope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>There are two valid scopes of the worker extension framework.</p>
+<dl class="simple">
+<dt>UNKNOWN:</dt><dd><p>If an extension does not have the _scope field defined, the extension
+is in the unknown scope. This marks the extension in an invalid state.</p>
+</dd>
+<dt>APPLICATION:</dt><dd><p>It is injected in AppExtensionBase._scope. Any implementation of
+AppExtensionBase will be applied into all triggers.</p>
+</dd>
+<dt>FUNCTION:</dt><dd><p>It is injected in FuncExtensionBase._scope. Any implementation of
+FuncExtensionBase requires initialization in customer’s function app
+trigger.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.extension_scope.ExtensionScope.APPLICATION">
+<span class="sig-name descname"><span class="pre">APPLICATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#functions.extension.extension_scope.ExtensionScope.APPLICATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.extension_scope.ExtensionScope.FUNCTION">
+<span class="sig-name descname"><span class="pre">FUNCTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#functions.extension.extension_scope.ExtensionScope.FUNCTION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.extension_scope.ExtensionScope.UNKNOWN">
+<span class="sig-name descname"><span class="pre">UNKNOWN</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#functions.extension.extension_scope.ExtensionScope.UNKNOWN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.func_extension_base"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.func_extension_base.FuncExtensionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.func_extension_base.</span></span><span class="sig-name descname"><span class="pre">FuncExtensionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.func_extension_base.FuncExtensionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An abstract class defines the life-cycle hooks which to be implemented
+by customer’s extension.</p>
+<p>Everytime when a new extension is initialized in customer function scripts,
+the ExtensionManager._func_exts field records the extension to this
+specific function name.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.func_extension_base.FuncExtensionBase.post_function_load">
+<span class="sig-name descname"><span class="pre">post_function_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.post_function_load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.func_extension_base.FuncExtensionBase.post_function_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right after a customer’s function loaded.
+In this stage, the customer’s logger is not fully initialized, so it
+is not provided. Please use print() to emit message if necessary.</p>
+<section id="id5">
+<h3>Parameters<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>function_name: str</dt><dd><p>The name of customer’s function (e.g. HttpTrigger)</p>
+</dd>
+<dt>function_directory: str</dt><dd><p>The path to customer’s function directory
+(e.g. /home/site/wwwroot/HttpTrigger)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.func_extension_base.FuncExtensionBase.post_invocation">
+<span class="sig-name descname"><span class="pre">post_invocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_ret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.post_invocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.func_extension_base.FuncExtensionBase.post_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right after a customer’s function
+is executed.</p>
+<section id="id6">
+<h3>Parameters<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+<dt>func_ret: typing.Optional[object]</dt><dd><p>Return value from Azure Functions. This is usually the value
+defined in function.json $return section. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.func_extension_base.FuncExtensionBase.pre_invocation">
+<span class="sig-name descname"><span class="pre">pre_invocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.pre_invocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.func_extension_base.FuncExtensionBase.pre_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right before customer’s function
+is being executed.</p>
+<section id="id7">
+<h3>Parameters<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.func_extension_hooks"></span><dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.func_extension_hooks.FuncExtensionHooks">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.func_extension_hooks.</span></span><span class="sig-name descname"><span class="pre">FuncExtensionHooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_function_load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_invocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_invocation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/func_extension_hooks.html#FuncExtensionHooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.func_extension_hooks.FuncExtensionHooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NamedTuple</span></code></p>
+<p>The definition of which type of function hooks are supported in SDK.
+ExtensionMeta will lookup the FuncExtension life-cycle type from here.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.func_extension_hooks.FuncExtensionHooks.post_function_load">
+<span class="sig-name descname"><span class="pre">post_function_load</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.func_extension_hooks.FuncExtensionHooks.post_function_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.func_extension_hooks.FuncExtensionHooks.post_invocation">
+<span class="sig-name descname"><span class="pre">post_invocation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.func_extension_hooks.FuncExtensionHooks.post_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="functions.extension.func_extension_hooks.FuncExtensionHooks.pre_invocation">
+<span class="sig-name descname"><span class="pre">pre_invocation</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#functions.extension.extension_hook_meta.ExtensionHookMeta" title="functions.extension.extension_hook_meta.ExtensionHookMeta"><span class="pre">ExtensionHookMeta</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#functions.extension.func_extension_hooks.FuncExtensionHooks.pre_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-functions.extension.function_extension_exception"></span><dl class="py exception">
+<dt class="sig sig-object py" id="functions.extension.function_extension_exception.FunctionExtensionException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.function_extension_exception.</span></span><span class="sig-name descname"><span class="pre">FunctionExtensionException</span></span><a class="reference internal" href="_modules/functions/extension/function_extension_exception.html#FunctionExtensionException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.function_extension_exception.FunctionExtensionException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception emitted from Azure Functions Python Worker extension</p>
+</dd></dl>
+
+</section>
+<section id="module-functions.extension">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-functions.extension" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.</span></span><span class="sig-name descname"><span class="pre">AppExtensionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An abstract class defines the global life-cycle hooks to be implemented
+by customer’s extension, will be applied to all functions.</p>
+<p>An AppExtension should be treated as a static class. Must not contain
+__init__ method since it is not instantiable.</p>
+<p>Please place your initialization code in init() classmethod, consider
+accepting extension settings in configure() classmethod from customers.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase.configure">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.configure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is intended to be called by Azure Functions
+customers. This is a contract between extension developers and
+azure functions customers. If multiple .configure() are called,
+the extension system cannot guarantee the calling order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase.init">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.init"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>The function will be executed when the extension is loaded.
+Happens when Azure Functions customers import the extension module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase.post_function_load_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_function_load_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.post_function_load_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase.post_function_load_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;classmethod. It will be called right
+after a customer’s function is loaded. In this stage, the customer’s
+logger is not fully initialized from the Python worker. Please use
+print() to emit a message if necessary.</p>
+<section id="id8">
+<h3>Parameters<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>function_name: str</dt><dd><p>The name of customer’s function (e.g. HttpTrigger)</p>
+</dd>
+<dt>function_directory: str</dt><dd><p>The path to customer’s function directory
+(e.g. /home/site/wwwroot/HttpTrigger)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase.post_invocation_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">post_invocation_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_ret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.post_invocation_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase.post_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;staticmethod. It will be called right
+after a customer’s function is being executed.</p>
+<section id="id9">
+<h3>Parameters<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+<dt>func_ret: typing.Optional[object]</dt><dd><p>Return value from Azure Functions. This is usually the value
+defined in function.json $return section. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific types or input binding types.”</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.AppExtensionBase.pre_invocation_app_level">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pre_invocation_app_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/app_extension_base.html#AppExtensionBase.pre_invocation_app_level"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.AppExtensionBase.pre_invocation_app_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>This must be implemented as a &#64;staticmethod. It will be called right
+before a customer’s function is being executed.</p>
+<section id="id10">
+<h3>Parameters<a class="headerlink" href="#id10" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.ExtensionMeta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.</span></span><span class="sig-name descname"><span class="pre">ExtensionMeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bases</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.ExtensionMeta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABCMeta</span></code></p>
+<p>The metaclass handles extension registration.</p>
+<p>AppExtension is registered in __init__, it is applied to all triggers.
+FuncExtension is registered in __call__, as users need to instantiate it
+inside hook script.</p>
+<p>After registration, the extension class will be flatten into the following
+structure to speed up worker lookup:</p>
+<blockquote>
+<div><p>_func_exts[&lt;trigger_name&gt;].&lt;hook_name&gt;.(ext_name, ext_impl)
+(e.g. _func_exts[‘HttpTrigger’].pre_invocation.ext_impl)</p>
+<p>_app_exts.&lt;hook_name&gt;.(ext_name, ext_impl)
+(e.g. _app_exts.pre_invocation_app_level.ext_impl)</p>
+</div></blockquote>
+<p>The extension tree information is stored in _info for diagnostic
+purpose. The dictionary is serializable to json:</p>
+<blockquote>
+<div><p>_info[‘FuncExtension’][‘&lt;Trigger&gt;’] = list(&lt;Extension&gt;)
+_info[‘AppExtension’] = list(&lt;Extension&gt;)</p>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.ExtensionMeta.get_application_hooks">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_application_hooks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#functions.extension.app_extension_hooks.AppExtensionHooks" title="functions.extension.app_extension_hooks.AppExtensionHooks"><span class="pre">AppExtensionHooks</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_application_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.ExtensionMeta.get_application_hooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all application hooks</p>
+<section id="id11">
+<h3>Returns<a class="headerlink" href="#id11" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Optional[AppExtensionHooks]:</dt><dd><p>Example to look up a certain life-cycle name:
+get_application_hooks().pre_invocation_app_level.ext_name</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.ExtensionMeta.get_function_hooks">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_function_hooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#functions.extension.func_extension_hooks.FuncExtensionHooks" title="functions.extension.func_extension_hooks.FuncExtensionHooks"><span class="pre">FuncExtensionHooks</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_function_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.ExtensionMeta.get_function_hooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all function extension hooks indexed by trigger name.</p>
+<section id="id12">
+<h3>Returns<a class="headerlink" href="#id12" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>Optional[FuncExtensionHooks]:</dt><dd><p>Example to look up a certain life-cycle name:
+get_function_hooks(‘HttpTrigger’).pre_invocation.ext_name</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.ExtensionMeta.get_registered_extensions_json">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_registered_extensions_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/functions/extension/extension_meta.html#ExtensionMeta.get_registered_extensions_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.ExtensionMeta.get_registered_extensions_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a json string of the registered</p>
+<section id="id13">
+<h3>Returns<a class="headerlink" href="#id13" title="Permalink to this heading">¶</a></h3>
+<dl>
+<dt>str:</dt><dd><p>The json string will be constructed in a structure of
+{</p>
+<blockquote>
+<div><dl>
+<dt>“FuncExtension”: {</dt><dd><dl class="simple">
+<dt>“&lt;TriggerA&gt;”: [</dt><dd><p>“ExtensionName”</p>
+</dd>
+</dl>
+<p>]</p>
+</dd>
+</dl>
+<p>},
+“AppExtension”: [</p>
+<blockquote>
+<div><p>“ExtensionName”</p>
+</div></blockquote>
+<p>]</p>
+</div></blockquote>
+<p>}</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="functions.extension.FuncExtensionBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.</span></span><span class="sig-name descname"><span class="pre">FuncExtensionBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.FuncExtensionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An abstract class defines the life-cycle hooks which to be implemented
+by customer’s extension.</p>
+<p>Everytime when a new extension is initialized in customer function scripts,
+the ExtensionManager._func_exts field records the extension to this
+specific function name.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.FuncExtensionBase.post_function_load">
+<span class="sig-name descname"><span class="pre">post_function_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.post_function_load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.FuncExtensionBase.post_function_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right after a customer’s function loaded.
+In this stage, the customer’s logger is not fully initialized, so it
+is not provided. Please use print() to emit message if necessary.</p>
+<section id="id14">
+<h3>Parameters<a class="headerlink" href="#id14" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>function_name: str</dt><dd><p>The name of customer’s function (e.g. HttpTrigger)</p>
+</dd>
+<dt>function_directory: str</dt><dd><p>The path to customer’s function directory
+(e.g. /home/site/wwwroot/HttpTrigger)</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.FuncExtensionBase.post_invocation">
+<span class="sig-name descname"><span class="pre">post_invocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_ret</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.post_invocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.FuncExtensionBase.post_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right after a customer’s function
+is executed.</p>
+<section id="id15">
+<h3>Parameters<a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+<dt>func_ret: typing.Optional[object]</dt><dd><p>Return value from Azure Functions. This is usually the value
+defined in function.json $return section. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="functions.extension.FuncExtensionBase.pre_invocation">
+<span class="sig-name descname"><span class="pre">pre_invocation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#functions.Context" title="functions._abc.Context"><span class="pre">Context</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">func_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">object</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/functions/extension/func_extension_base.html#FuncExtensionBase.pre_invocation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.FuncExtensionBase.pre_invocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This hook will be called right before customer’s function
+is being executed.</p>
+<section id="id16">
+<h3>Parameters<a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h3>
+<dl class="simple">
+<dt>logger: logging.Logger</dt><dd><p>A logger provided by Python worker. Extension developer should
+use this logger to emit telemetry to Azure Functions customers.</p>
+</dd>
+<dt>context: azure.functions.Context</dt><dd><p>This will include the function_name, function_directory and an
+invocation_id of this specific invocation.</p>
+</dd>
+<dt>func_args: typing.Dict[str, object]</dt><dd><p>Arguments that are passed into the Azure Functions. The name of
+each parameter is defined in function.json. Extension developers
+may also want to do isinstance() check if you want to apply
+operations to specific trigger types or input binding types.</p>
+</dd>
+</dl>
+</section>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="functions.extension.FunctionExtensionException">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">functions.extension.</span></span><span class="sig-name descname"><span class="pre">FunctionExtensionException</span></span><a class="reference internal" href="_modules/functions/extension/function_extension_exception.html#FunctionExtensionException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#functions.extension.FunctionExtensionException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Exception emitted from Azure Functions Python Worker extension</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">azure-functions</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="functions.html">functions package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="functions.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="functions.decorators.html">functions.decorators package</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">functions.extension package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-functions.extension.app_extension_base">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-functions.extension">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html#module-functions.blob">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functions.html#module-functions">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="functions.html">functions package</a><ul>
+      <li>Previous: <a href="functions.decorators.html" title="previous chapter">functions.decorators package</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Microsoft Corp..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/functions.extension.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

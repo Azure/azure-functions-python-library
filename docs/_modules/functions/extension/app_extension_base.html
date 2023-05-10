@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>functions.extension.app_extension_base &#8212; azure-functions 1.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for functions.extension.app_extension_base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span class="c1"># Licensed under the MIT License.</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">from</span> <span class="nn">logging</span> <span class="kn">import</span> <span class="n">Logger</span>
+<span class="kn">from</span> <span class="nn">.extension_meta</span> <span class="kn">import</span> <span class="n">ExtensionMeta</span>
+<span class="kn">from</span> <span class="nn">.extension_scope</span> <span class="kn">import</span> <span class="n">ExtensionScope</span>
+<span class="kn">from</span> <span class="nn">.._abc</span> <span class="kn">import</span> <span class="n">Context</span>
+
+
+<div class="viewcode-block" id="AppExtensionBase"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase">[docs]</a><span class="k">class</span> <span class="nc">AppExtensionBase</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ExtensionMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An abstract class defines the global life-cycle hooks to be implemented</span>
+<span class="sd">    by customer&#39;s extension, will be applied to all functions.</span>
+
+<span class="sd">    An AppExtension should be treated as a static class. Must not contain</span>
+<span class="sd">    __init__ method since it is not instantiable.</span>
+
+<span class="sd">    Please place your initialization code in init() classmethod, consider</span>
+<span class="sd">    accepting extension settings in configure() classmethod from customers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_scope</span> <span class="o">=</span> <span class="n">ExtensionScope</span><span class="o">.</span><span class="n">APPLICATION</span>
+
+<div class="viewcode-block" id="AppExtensionBase.init"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase.init">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The function will be executed when the extension is loaded.</span>
+<span class="sd">        Happens when Azure Functions customers import the extension module.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="AppExtensionBase.configure"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase.configure">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This function is intended to be called by Azure Functions</span>
+<span class="sd">        customers. This is a contract between extension developers and</span>
+<span class="sd">        azure functions customers. If multiple .configure() are called,</span>
+<span class="sd">        the extension system cannot guarantee the calling order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># DO NOT decorate this with @abc.abstractstatismethod</span>
+    <span class="c1"># since implementation by subclass is not mandatory</span>
+<div class="viewcode-block" id="AppExtensionBase.post_function_load_app_level"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase.post_function_load_app_level">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_function_load_app_level</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                                     <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                     <span class="n">function_directory</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                     <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This must be implemented as a @classmethod. It will be called right</span>
+<span class="sd">        after a customer&#39;s function is loaded. In this stage, the customer&#39;s</span>
+<span class="sd">        logger is not fully initialized from the Python worker. Please use</span>
+<span class="sd">        print() to emit a message if necessary.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        function_name: str</span>
+<span class="sd">            The name of customer&#39;s function (e.g. HttpTrigger)</span>
+<span class="sd">        function_directory: str</span>
+<span class="sd">            The path to customer&#39;s function directory</span>
+<span class="sd">            (e.g. /home/site/wwwroot/HttpTrigger)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># DO NOT decorate this with @abc.abstractstatismethod</span>
+    <span class="c1"># since implementation by subclass is not mandatory</span>
+<div class="viewcode-block" id="AppExtensionBase.pre_invocation_app_level"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase.pre_invocation_app_level">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">pre_invocation_app_level</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                                 <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+                                 <span class="n">context</span><span class="p">:</span> <span class="n">Context</span><span class="p">,</span>
+                                 <span class="n">func_args</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+                                 <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This must be implemented as a @staticmethod. It will be called right</span>
+<span class="sd">        before a customer&#39;s function is being executed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logger: logging.Logger</span>
+<span class="sd">            A logger provided by Python worker. Extension developer should</span>
+<span class="sd">            use this logger to emit telemetry to Azure Functions customers.</span>
+<span class="sd">        context: azure.functions.Context</span>
+<span class="sd">            This will include the function_name, function_directory and an</span>
+<span class="sd">            invocation_id of this specific invocation.</span>
+<span class="sd">        func_args: typing.Dict[str, object]</span>
+<span class="sd">            Arguments that are passed into the Azure Functions. The name of</span>
+<span class="sd">            each parameter is defined in function.json. Extension developers</span>
+<span class="sd">            may also want to do isinstance() check if you want to apply</span>
+<span class="sd">            operations to specific trigger types or input binding types.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="c1"># DO NOT decorate this with @abc.abstractstatismethod</span>
+    <span class="c1"># since implementation by subclass is not mandatory</span>
+<div class="viewcode-block" id="AppExtensionBase.post_invocation_app_level"><a class="viewcode-back" href="../../../functions.extension.html#functions.AppExtensionBase.post_invocation_app_level">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">post_invocation_app_level</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+                                  <span class="n">logger</span><span class="p">:</span> <span class="n">Logger</span><span class="p">,</span>
+                                  <span class="n">context</span><span class="p">:</span> <span class="n">Context</span><span class="p">,</span>
+                                  <span class="n">func_args</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">{},</span>
+                                  <span class="n">func_ret</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                  <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+                                  <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This must be implemented as a @staticmethod. It will be called right</span>
+<span class="sd">        after a customer&#39;s function is being executed.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logger: logging.Logger</span>
+<span class="sd">            A logger provided by Python worker. Extension developer should</span>
+<span class="sd">            use this logger to emit telemetry to Azure Functions customers.</span>
+<span class="sd">        context: azure.functions.Context</span>
+<span class="sd">            This will include the function_name, function_directory and an</span>
+<span class="sd">            invocation_id of this specific invocation.</span>
+<span class="sd">        func_args: typing.Dict[str, object]</span>
+<span class="sd">            Arguments that are passed into the Azure Functions. The name of</span>
+<span class="sd">            each parameter is defined in function.json. Extension developers</span>
+<span class="sd">            may also want to do isinstance() check if you want to apply</span>
+<span class="sd">            operations to specific trigger types or input binding types.</span>
+<span class="sd">        func_ret: typing.Optional[object]</span>
+<span class="sd">            Return value from Azure Functions. This is usually the value</span>
+<span class="sd">            defined in function.json $return section. Extension developers</span>
+<span class="sd">            may also want to do isinstance() check if you want to apply</span>
+<span class="sd">            operations to specific types or input binding types.&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">azure-functions</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../functions.html">functions package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Microsoft Corp..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

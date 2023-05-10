@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>functions._http_wsgi &#8212; azure-functions 1.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for functions._http_wsgi</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span class="c1"># Licensed under the MIT License.</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span><span class="p">,</span> <span class="n">StringIO</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">linesep</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">ParseResult</span><span class="p">,</span> <span class="n">urlparse</span><span class="p">,</span> <span class="n">unquote_to_bytes</span>
+<span class="kn">from</span> <span class="nn">wsgiref.headers</span> <span class="kn">import</span> <span class="n">Headers</span>
+
+<span class="kn">from</span> <span class="nn">._abc</span> <span class="kn">import</span> <span class="n">Context</span>
+<span class="kn">from</span> <span class="nn">._http</span> <span class="kn">import</span> <span class="n">HttpRequest</span><span class="p">,</span> <span class="n">HttpResponse</span>
+<span class="kn">from</span> <span class="nn">._thirdparty.werkzeug._compat</span> <span class="kn">import</span> <span class="n">string_types</span><span class="p">,</span> <span class="n">wsgi_encoding_dance</span>
+
+
+<span class="k">class</span> <span class="nc">WsgiRequest</span><span class="p">:</span>
+    <span class="n">_environ_cache</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">func_req</span><span class="p">:</span> <span class="n">HttpRequest</span><span class="p">,</span>
+                 <span class="n">func_ctx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Context</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">url</span><span class="p">:</span> <span class="n">ParseResult</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">func_req</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">func_req_body</span> <span class="o">=</span> <span class="n">func_req</span><span class="o">.</span><span class="n">get_body</span><span class="p">()</span> <span class="ow">or</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+
+        <span class="c1"># Convert function request headers to lowercase header</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lowercased_headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">func_req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Implement interfaces for PEP 3333 environ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_req</span><span class="p">,</span> <span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_info</span> <span class="o">=</span> <span class="n">unquote_to_bytes</span><span class="p">(</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query_string</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;query&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lowercased_headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-type&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">content_length</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">func_req_body</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s1">&#39;hostname&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_port</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_port</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lowercased_headers</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">server_protocol</span> <span class="o">=</span> <span class="s1">&#39;HTTP/1.1&#39;</span>
+
+        <span class="c1"># Propagate http request headers into HTTP_ environ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_http_environ</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_http_headers</span><span class="p">(</span>
+            <span class="n">func_req</span><span class="o">.</span><span class="n">headers</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Wsgi environ</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_version</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_url_scheme</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">scheme</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_input</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">(</span><span class="n">func_req_body</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_multithread</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_multiprocess</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_run_once</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Azure Functions context</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_function_directory</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span>
+                                             <span class="s1">&#39;function_directory&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_function_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span> <span class="s1">&#39;function_name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_invocation_id</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span> <span class="s1">&#39;invocation_id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_thread_local_storage</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span>
+                                               <span class="s1">&#39;thread_local_storage&#39;</span><span class="p">,</span>
+                                               <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_trace_context</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span> <span class="s1">&#39;trace_context&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">af_retry_context</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">func_ctx</span><span class="p">,</span> <span class="s1">&#39;retry_context&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">to_environ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">errors_buffer</span><span class="p">:</span> <span class="n">StringIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environ_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environ_cache</span>
+
+        <span class="n">environ</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;REQUEST_METHOD&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_method</span><span class="p">,</span>
+            <span class="s1">&#39;SCRIPT_NAME&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">script_name</span><span class="p">,</span>
+            <span class="s1">&#39;PATH_INFO&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">path_info</span><span class="p">,</span>
+            <span class="s1">&#39;QUERY_STRING&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_string</span><span class="p">,</span>
+            <span class="s1">&#39;CONTENT_TYPE&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_type</span><span class="p">,</span>
+            <span class="s1">&#39;CONTENT_LENGTH&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">content_length</span><span class="p">,</span>
+            <span class="s1">&#39;SERVER_NAME&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_name</span><span class="p">,</span>
+            <span class="s1">&#39;SERVER_PORT&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_port</span><span class="p">,</span>
+            <span class="s1">&#39;SERVER_PROTOCOL&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_protocol</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.version&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_version</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.url_scheme&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_url_scheme</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.input&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_input</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.errors&#39;</span><span class="p">:</span> <span class="n">errors_buffer</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.multithread&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_multithread</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.multiprocess&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_multiprocess</span><span class="p">,</span>
+            <span class="s1">&#39;wsgi.run_once&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wsgi_run_once</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.function_directory&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">af_function_directory</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.function_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">af_function_name</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.invocation_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">af_invocation_id</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.thread_local_storage&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">af_thread_local_storage</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.trace_context&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">af_trace_context</span><span class="p">,</span>
+            <span class="s1">&#39;azure_functions.retry_context&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">af_retry_context</span>
+        <span class="p">}</span>
+        <span class="n">environ</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_http_environ</span><span class="p">)</span>
+
+        <span class="c1"># Ensure WSGI string fits in IOS-8859-1 code points</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">string_types</span><span class="p">):</span>
+                <span class="n">environ</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">wsgi_encoding_dance</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="c1"># Remove None values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_environ_cache</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">environ</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_environ_cache</span>
+
+    <span class="k">def</span> <span class="nf">_get_port</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parsed_url</span><span class="p">,</span> <span class="n">lowercased_headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="n">port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span>
+        <span class="k">if</span> <span class="n">lowercased_headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x-forwarded-port&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">lowercased_headers</span><span class="p">[</span><span class="s1">&#39;x-forwarded-port&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parsed_url</span><span class="p">,</span> <span class="s1">&#39;port&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">parsed_url</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="o">==</span> <span class="s1">&#39;https&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">443</span>
+        <span class="k">return</span> <span class="n">port</span>
+
+    <span class="k">def</span> <span class="nf">_get_http_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                          <span class="n">func_headers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="c1"># Content-Type -&gt; HTTP_CONTENT_TYPE</span>
+        <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s1">&#39;HTTP_</span><span class="si">{</span><span class="n">k</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;_&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span>
+                <span class="n">func_headers</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+
+<span class="k">class</span> <span class="nc">WsgiResponse</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_code</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_app</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">app</span><span class="p">,</span> <span class="n">environ</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;WsgiResponse&#39;</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">()</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="ow">or</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">app</span><span class="p">(</span><span class="n">environ</span><span class="p">,</span> <span class="n">res</span><span class="o">.</span><span class="n">_start_response</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="k">def</span> <span class="nf">to_func_response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HttpResponse</span><span class="p">:</span>
+        <span class="n">lowercased_headers</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">HttpResponse</span><span class="p">(</span>
+            <span class="n">body</span><span class="o">=</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">),</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_status_code</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_headers</span><span class="p">,</span>
+            <span class="n">mimetype</span><span class="o">=</span><span class="n">lowercased_headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-type&#39;</span><span class="p">),</span>
+            <span class="n">charset</span><span class="o">=</span><span class="n">lowercased_headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content-encoding&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># PEP 3333 start response implementation</span>
+    <span class="k">def</span> <span class="nf">_start_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">response_headers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_headers</span> <span class="o">=</span> <span class="n">Headers</span><span class="p">(</span><span class="n">response_headers</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_status_code</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># 200 OK</span>
+
+
+<div class="viewcode-block" id="WsgiMiddleware"><a class="viewcode-back" href="../../functions.html#functions.WsgiMiddleware">[docs]</a><span class="k">class</span> <span class="nc">WsgiMiddleware</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This middleware is to adapt a WSGI supported Python server</span>
+<span class="sd">    framework into Azure Functions. It can be used by either calling the</span>
+<span class="sd">    .handle() function or exposing the .main property in a HttpTrigger.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;azure.functions.WsgiMiddleware&#39;</span><span class="p">)</span>
+    <span class="n">_usage_reported</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate a WSGI middleware to convert Azure Functions HTTP</span>
+<span class="sd">        request into WSGI Python object. Example on handling WSGI app in a HTTP</span>
+<span class="sd">        trigger by overwriting the .main() method:</span>
+
+<span class="sd">        import azure.functions as func</span>
+
+<span class="sd">        from FlaskApp import app</span>
+
+<span class="sd">        main = func.WsgiMiddleware(app.wsgi_app).main</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_usage_reported</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Instantiating Azure Functions WSGI middleware.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_usage_reported</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_app</span> <span class="o">=</span> <span class="n">app</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wsgi_error_buffer</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">main</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span>
+
+<div class="viewcode-block" id="WsgiMiddleware.handle"><a class="viewcode-back" href="../../functions.html#functions.WsgiMiddleware.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">:</span> <span class="n">HttpRequest</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Context</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method to convert an Azure Functions HTTP request into a WSGI</span>
+<span class="sd">        Python object. Example on handling WSGI app in a HTTP trigger by</span>
+<span class="sd">        calling .handle() in .main() method:</span>
+
+<span class="sd">        import azure.functions as func</span>
+
+<span class="sd">        from FlaskApp import app</span>
+
+<span class="sd">        def main(req, context):</span>
+<span class="sd">            return func.WsgiMiddleware(app.wsgi_app).handle(req, context)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">wsgi_request</span> <span class="o">=</span> <span class="n">WsgiRequest</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="n">environ</span> <span class="o">=</span> <span class="n">wsgi_request</span><span class="o">.</span><span class="n">to_environ</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_wsgi_error_buffer</span><span class="p">)</span>
+        <span class="n">wsgi_response</span> <span class="o">=</span> <span class="n">WsgiResponse</span><span class="o">.</span><span class="n">from_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app</span><span class="p">,</span> <span class="n">environ</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_handle_errors</span><span class="p">(</span><span class="n">wsgi_response</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">wsgi_response</span><span class="o">.</span><span class="n">to_func_response</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_handle_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wsgi_response</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wsgi_error_buffer</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wsgi_error_buffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="n">linesep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_wsgi_error_buffer</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">wsgi_response</span><span class="o">.</span><span class="n">_status_code</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wsgi_response</span><span class="o">.</span><span class="n">_buffer</span><span class="p">))</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">azure-functions</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../functions.html">functions package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Microsoft Corp..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

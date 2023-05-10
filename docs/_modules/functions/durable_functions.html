@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>functions.durable_functions &#8212; azure-functions 1.14.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for functions.durable_functions</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) Microsoft Corporation. All rights reserved.</span>
+<span class="c1"># Licensed under the MIT License.</span>
+
+<span class="kn">import</span> <span class="nn">typing</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">azure.functions</span> <span class="kn">import</span> <span class="n">_durable_functions</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta</span>
+
+
+<span class="c1"># Durable Function Orchestration Trigger</span>
+<div class="viewcode-block" id="OrchestrationTriggerConverter"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter">[docs]</a><span class="k">class</span> <span class="nc">OrchestrationTriggerConverter</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">InConverter</span><span class="p">,</span>
+                                    <span class="n">meta</span><span class="o">.</span><span class="n">OutConverter</span><span class="p">,</span>
+                                    <span class="n">binding</span><span class="o">=</span><span class="s1">&#39;orchestrationTrigger&#39;</span><span class="p">,</span>
+                                    <span class="n">trigger</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="OrchestrationTriggerConverter.check_input_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter.check_input_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_input_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">pytype</span><span class="p">,</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">OrchestrationContext</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrchestrationTriggerConverter.check_output_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter.check_output_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_output_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="c1"># Implicit output should accept any return type</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="OrchestrationTriggerConverter.decode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter.decode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+               <span class="n">data</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">trigger_metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">OrchestrationContext</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">OrchestrationContext</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrchestrationTriggerConverter.encode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter.encode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">expected_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">:</span>
+        <span class="c1"># Durable function context should be a json</span>
+        <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">obj</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OrchestrationTriggerConverter.has_implicit_output"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.OrchestrationTriggerConverter.has_implicit_output">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">has_implicit_output</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<div class="viewcode-block" id="EnitityTriggerConverter"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter">[docs]</a><span class="k">class</span> <span class="nc">EnitityTriggerConverter</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">InConverter</span><span class="p">,</span>
+                              <span class="n">meta</span><span class="o">.</span><span class="n">OutConverter</span><span class="p">,</span>
+                              <span class="n">binding</span><span class="o">=</span><span class="s1">&#39;entityTrigger&#39;</span><span class="p">,</span>
+                              <span class="n">trigger</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="EnitityTriggerConverter.check_input_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter.check_input_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_input_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">pytype</span><span class="p">,</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">EntityContext</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnitityTriggerConverter.check_output_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter.check_output_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_output_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="c1"># Implicit output should accept any return type</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="EnitityTriggerConverter.decode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter.decode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+               <span class="n">data</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">trigger_metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">EntityContext</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">EntityContext</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnitityTriggerConverter.encode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter.encode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">expected_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">:</span>
+        <span class="c1"># Durable function context should be a json</span>
+        <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">obj</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EnitityTriggerConverter.has_implicit_output"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.EnitityTriggerConverter.has_implicit_output">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">has_implicit_output</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+
+
+<span class="c1"># Durable Function Activity Trigger</span>
+<div class="viewcode-block" id="ActivityTriggerConverter"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter">[docs]</a><span class="k">class</span> <span class="nc">ActivityTriggerConverter</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">InConverter</span><span class="p">,</span>
+                               <span class="n">meta</span><span class="o">.</span><span class="n">OutConverter</span><span class="p">,</span>
+                               <span class="n">binding</span><span class="o">=</span><span class="s1">&#39;activityTrigger&#39;</span><span class="p">,</span>
+                               <span class="n">trigger</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="ActivityTriggerConverter.check_input_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter.check_input_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_input_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="c1"># Activity Trigger&#39;s arguments should accept any types</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ActivityTriggerConverter.check_output_type_annotation"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter.check_output_type_annotation">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">check_output_type_annotation</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">pytype</span><span class="p">):</span>
+        <span class="c1"># The activity trigger should accept any JSON serializable types</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="ActivityTriggerConverter.decode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter.decode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span>
+               <span class="n">data</span><span class="p">:</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">trigger_metadata</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">:</span>
+        <span class="n">data_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">type</span>
+
+        <span class="c1"># Durable functions extension always returns a string of json</span>
+        <span class="c1"># See durable functions library&#39;s call_activity_task docs</span>
+        <span class="k">if</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;string&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">callback</span> <span class="o">=</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">_deserialize_custom_object</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span><span class="p">:</span>
+                <span class="c1"># String failover if the content is not json serializable</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s1">&#39;activity trigger input must be a string or a &#39;</span>
+                    <span class="sa">f</span><span class="s1">&#39;valid json serializable (</span><span class="si">{</span><span class="n">data</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;unsupported activity trigger payload type: </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="ActivityTriggerConverter.encode"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter.encode">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Any</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+               <span class="n">expected_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">callback</span> <span class="o">=</span> <span class="n">_durable_functions</span><span class="o">.</span><span class="n">_serialize_custom_object</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;activity trigger output must be json serializable (</span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta</span><span class="o">.</span><span class="n">Datum</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">result</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ActivityTriggerConverter.has_implicit_output"><a class="viewcode-back" href="../../functions.html#functions.durable_functions.ActivityTriggerConverter.has_implicit_output">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">has_implicit_output</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">azure-functions</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../functions.html">functions package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;Microsoft Corp..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
