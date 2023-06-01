@@ -2103,46 +2103,46 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
             return wsgi_middleware.handle(req, context)
 
 
-    def dapr_service_invocation_trigger(self,
-                                  arg_name: str,
-                                  method_name: str,
-                                  data_type: Optional[
-                                      Union[DataType, str]] = None,
-                                  **kwargs: Any) -> Callable[..., Any]:
-        """The dapr_service_invocation_trigger decorator adds
-        :class:`DaprServiceInvocationTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining DaprServiceInvocationTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the event hub.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+def dapr_service_invocation_trigger(self,
+                                arg_name: str,
+                                method_name: str,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs: Any) -> Callable[..., Any]:
+    """The dapr_service_invocation_trigger decorator adds
+    :class:`DaprServiceInvocationTrigger`
+    to the :class:`FunctionBuilder` object
+    for building :class:`Function` object used in worker function
+    indexing model. This is equivalent to defining DaprServiceInvocationTrigger
+    in the function.json which enables function to be triggered when new
+    message(s) are sent to the event hub.
+    All optional fields will be given default value by function host when
+    they are parsed by function host.
 
-        Ref: https://aka.ms/azure-function-binding-event-hubs
+    Ref: https://aka.ms/azure-function-binding-event-hubs
 
-        :param arg_name: The name of the variable that represents
-        :param method_name: The name of the service method to be invoked by Dapr.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+    :param arg_name: The name of the variable that represents
+    :param method_name: The name of the service method to be invoked by Dapr.
+    :param data_type: Defines how Functions runtime should treat the
+    parameter value.
+    :param kwargs: Keyword arguments for specifying additional binding
+    fields to include in the binding json.
 
-        :return: Decorator function.
-        """
+    :return: Decorator function.
+    """
 
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_trigger(
-                    trigger=DaprServiceInvocationTrigger(
-                        name=arg_name,
-                        method_name=method_name,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        **kwargs))
-                return fb
+    @self._configure_function_builder
+    def wrap(fb):
+        def decorator():
+            fb.add_trigger(
+                trigger=DaprServiceInvocationTrigger(
+                    name=arg_name,
+                    method_name=method_name,
+                    data_type=parse_singular_param_to_enum(data_type,
+                                                            DataType),
+                    **kwargs))
+            return fb
 
-            return decorator()
+        return decorator()
 
-        return wrap
+    return wrap
