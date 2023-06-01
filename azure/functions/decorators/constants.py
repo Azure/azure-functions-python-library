@@ -19,4 +19,4 @@ BLOB = "blob"
 EVENT_GRID_TRIGGER = "eventGridTrigger"
 EVENT_GRID = "eventGrid"
 TABLE = "table"
-DAPR_SERVICE_INVOCATION_TRIGGER='daprServiceInvocationTrigger'
+DAPR_SERVICE_INVOCATION_TRIGGER="daprServiceInvocationTrigger"
