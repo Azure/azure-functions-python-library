@@ -23,6 +23,7 @@ from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
+from .decorators.dapr_function_app import DaprFunctionApp
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -93,7 +94,8 @@ __all__ = (
     'AuthLevel',
     'Cardinality',
     'AccessRights',
-    'HttpMethod'
+    'HttpMethod',
+    'DaprFunctionApp'
 )
 
 __version__ = '1.14.1b3'
