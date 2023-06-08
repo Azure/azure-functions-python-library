@@ -157,7 +157,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                          arg_name: str,
                          state_store: str,
                          key: str,
-                         dapr_address: Optional[str],
+                         dapr_address: Optional[
+                             Union[DataType, str]] = None,
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) \
@@ -209,7 +210,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                          secret_store_name: str,
                          key: str,
                          metadata: str,
-                         dapr_address: Optional[str],
+                         dapr_address: Optional[
+                             Union[DataType, str]] = None,
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) \
@@ -262,7 +264,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                           arg_name: str,
                           state_store: str,
                           key: str,
-                          dapr_address: Optional[str],
+                          dapr_address: Optional[
+                             Union[DataType, str]] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -317,7 +320,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                           app_id: str,
                           method_name: str,
                           http_verb: str,
-                          dapr_address: Optional[str],
+                          dapr_address: Optional[
+                             Union[DataType, str]] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -373,7 +377,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                           arg_name: str,
                           pub_sub_name: str,
                           topic: str,
-                          dapr_address: Optional[str],
+                          dapr_address: Optional[
+                             Union[DataType, str]] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -427,7 +432,8 @@ class DaprBindingApi(DecoratorApi, ABC):
                           arg_name: str,
                           binding_name: str,
                           operation: str,
-                          dapr_address: Optional[str],
+                          dapr_address: Optional[
+                             Union[DataType, str]] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -477,7 +483,7 @@ class DaprBindingApi(DecoratorApi, ABC):
 
         return wrap
 
-class DaprFunctionApp(FunctionRegister, DaprTriggerApi):
+class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi):
 
     def __init__(self,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):

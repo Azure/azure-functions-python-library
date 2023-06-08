@@ -77,13 +77,13 @@ class DaprSecretInput(InputBinding):
 
     def __init__(self,
                  name: str,
-                 secretS_store_name: str,
+                 secret_store_name: str,
                  key: str,
                  metadata: str,
                  dapr_address: Optional[str],
                  data_type: Optional[DataType] = None,
                  **kwargs):
-        self.secretS_store_name = secretS_store_name
+        self.secret_store_name = secret_store_name
         self.key = key
         self.metadata = metadata
         self.dapr_address = dapr_address
