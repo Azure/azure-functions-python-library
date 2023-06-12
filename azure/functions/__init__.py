@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# Testing label creation
 
 from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
