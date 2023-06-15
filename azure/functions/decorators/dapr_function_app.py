@@ -104,7 +104,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                            arg_name: str,
                            pub_sub_name: str,
                            topic: str,
-                           route: str,
+                           route: Optional[str] = None,
                            data_type: Optional[
                                Union[DataType, str]] = None,
                            **kwargs: Any) -> Callable[..., Any]:

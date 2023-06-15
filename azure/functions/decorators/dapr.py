@@ -45,7 +45,7 @@ class DaprTopicTrigger(Trigger):
                  name: str,
                  pub_sub_name: str,
                  topic: str,
-                 route: str,
+                 route: Optional[str] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.pub_sub_name = pub_sub_name
