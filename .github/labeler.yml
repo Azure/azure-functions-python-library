@@ -1,0 +1,3 @@
+# Add 'SDKBreakingChange' label if any changes detected within __init__.py file
+SDKBreakingChange:
+  - '**/__init__.py'
