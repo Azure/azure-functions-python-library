@@ -126,7 +126,7 @@ class Function(object):
         """
         return self._bindings
 
-    def get_setting(self, setting_name: str) -> Setting:
+    def get_setting(self, setting_name: str) -> Optional[Setting]:
         """Get a specific setting attached to the function.
 
         :param setting_name: The name of the setting to search for.
@@ -137,10 +137,16 @@ class Function(object):
                 return setting
         return None
 
-    def get_setting_values(self, setting_name: str) -> str:
+    def get_function_name(self) -> Optional[str]:
+        function_name_setting = \
+            self.get_setting("function_name")
+        return function_name_setting.get_settings_value("name") \
+            if function_name_setting else self._name
+
+    def get_setting_values(self, setting_name: str):
         """ Gets the values of a specific setting attached to the function.
         """
-        setting  = self.get_setting(setting_name)
+        setting = self.get_setting(setting_name)
         return setting.get_dict_repr() if setting else None
 
     def get_raw_bindings(self) -> List[str]:
@@ -197,11 +203,6 @@ class FunctionBuilder(object):
     def __call__(self, *args, **kwargs):
         pass
 
-    # def configure_function_name(self, function_name: str) -> 'FunctionBuilder':
-    #     self._function.set_function_name(function_name)
-
-    #     return self
-
     def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
         self._function.set_http_type(http_type)
 
@@ -227,7 +228,7 @@ class FunctionBuilder(object):
         :param auth_level: Http auth level that will be set if http
         trigger function auth level is None.
         """
-        function_name = self._function.get_setting("function_name")
+        function_name = self._function.get_function_name()
         trigger = self._function.get_trigger()
         if trigger is None:
             raise ValueError(
@@ -1971,9 +1972,9 @@ class BindingApi(DecoratorApi, ABC):
 
 class SettingsApi(DecoratorApi, ABC):
 
-    def function_name(self, name: str, 
+    def function_name(self, name: str,
                       setting_extra_fields: Dict[str, Any] = {},
-              ) -> Callable[..., Any]:
+                      ) -> Callable[..., Any]:
         """Set name of the :class:`Function` object.
 
         :param name: Name of the function.
@@ -1995,7 +1996,7 @@ class SettingsApi(DecoratorApi, ABC):
 
     def retry(self,
               strategy: str,
-              max_retry_count: int = 0,
+              max_retry_count: str,
               delay_interval: Optional[str] = None,
               minimum_interval: Optional[str] = None,
               maximum_interval: Optional[str] = None,

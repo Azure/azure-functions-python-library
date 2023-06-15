@@ -34,14 +34,6 @@ class TestFunction(unittest.TestCase):
         self.assertEqual(self.func.get_user_function(), self.dummy)
         self.assertEqual(self.func.function_script_file, "dummy.py")
 
-    def test_set_function_name(self):
-        self.func.set_function_name("func_name")
-        self.assertEqual(self.func.get_function_name(), "func_name")
-        self.func.set_function_name()
-        self.assertEqual(self.func.get_function_name(), "func_name")
-        self.func.set_function_name("func_name_2")
-        self.assertEqual(self.func.get_function_name(), "func_name_2")
-
     def test_add_trigger(self):
         with self.assertRaises(ValueError) as err:
             trigger1 = HttpTrigger(name="req1", methods=(HttpMethod.GET,),
@@ -74,9 +66,8 @@ class TestFunction(unittest.TestCase):
                               auth_level=AuthLevel.ANONYMOUS, route="dummy")
         self.func.add_binding(output)
         self.func.add_trigger(trigger)
-        self.func.set_function_name("func_name")
 
-        self.assertEqual(self.func.get_function_name(), "func_name")
+        self.assertEqual(self.func.get_function_name(), "dummy")
         self.assertEqual(self.func.get_user_function(), self.dummy)
         assert_json(self, self.func, {"scriptFile": "dummy.py",
                                       "bindings": [
@@ -134,7 +125,7 @@ class TestFunctionBuilder(unittest.TestCase):
 
     def test_validate_function_missing_trigger(self):
         with self.assertRaises(ValueError) as err:
-            self.fb.configure_function_name('dummy').build()
+            #  self.fb.configure_function_name('dummy').build()
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
@@ -148,7 +139,7 @@ class TestFunctionBuilder(unittest.TestCase):
                               auth_level=AuthLevel.ANONYMOUS,
                               route='dummy')
         with self.assertRaises(ValueError) as err:
-            self.fb.configure_function_name('dummy').add_trigger(trigger)
+            self.fb.add_trigger(trigger)
             getattr(self.fb, "_function").get_bindings().clear()
             self.fb.build()
 
@@ -160,29 +151,29 @@ class TestFunctionBuilder(unittest.TestCase):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS)
-        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         self.fb.build()
 
     def test_build_function_http_route_default(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS)
-        self.fb.configure_function_name('dummy_route').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         func = self.fb.build()
 
-        self.assertEqual(func.get_trigger().route, "dummy_route")
+        self.assertEqual(func.get_trigger().route, "dummy")
 
-    def test_build_function_with_name_and_bindings(self):
+    def test_build_function_with_bindings(self):
         test_trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                                    data_type=DataType.UNDEFINED,
                                    auth_level=AuthLevel.ANONYMOUS,
                                    route='dummy')
         test_input = HttpOutput(name='out', data_type=DataType.UNDEFINED)
 
-        func = self.fb.configure_function_name('func_name').add_trigger(
+        func = self.fb.add_trigger(
             test_trigger).add_binding(test_input).build()
 
-        self.assertEqual(func.get_function_name(), "func_name")
+        self.assertEqual(func.get_function_name(), "dummy")
         assert_json(self, func, {
             "scriptFile": "dummy.py",
             "bindings": [
@@ -209,7 +200,7 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_build_function_with_function_app_auth_level(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED)
-        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         func = self.fb.build(auth_level=AuthLevel.ANONYMOUS)
 
         self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
@@ -397,7 +388,6 @@ class TestFunctionApp(unittest.TestCase):
         app = DummyFunctionApp()
 
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
-        self.assertIsNotNone(getattr(app, "function_name", None))
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
 
@@ -417,7 +407,6 @@ class TestFunctionApp(unittest.TestCase):
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
 
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
-        self.assertIsNotNone(getattr(app, "function_name", None))
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
         self.assertIsNone(getattr(app, "_require_auth_level"))

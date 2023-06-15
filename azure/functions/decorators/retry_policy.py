@@ -21,8 +21,6 @@ class RetryPolicy(Setting):
         self.minimum_interval = minimum_interval
         self.maximum_interval = maximum_interval
         super().__init__(setting_type=RETRY_POLICY)
-    
-    def get_value(self, name: str) -> str:
-        return self.get_dict_repr().get(name, None)
 
-
+    def get_value(self, name: str) -> Optional[str]:
+        return self.get_dict_repr().get(name)

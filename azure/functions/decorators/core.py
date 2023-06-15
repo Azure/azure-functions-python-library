@@ -165,16 +165,18 @@ class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
 
 class Setting(ABC, metaclass=ABCBuildDictMeta):
 
-    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'type'}
+    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_type'}
 
     def get_setting_type(self) -> str:
         return self.setting_type
 
-    def __init__(self, setting_type: Optional[str] = None) -> None:
+    def __init__(self, setting_type: str) -> None:
         if setting_type is not None:
-             self.setting_type = setting_type
-        self._dict = {}
-        
+            self.setting_type = setting_type
+        self._dict: Dict = {
+            "setting_type": self.setting_type
+        }
+
     def get_dict_repr(self) -> Dict:
         """Build a dictionary of a particular binding. The keys are camel
         cased binding field names defined in `init_params` list and
@@ -190,3 +192,6 @@ class Setting(ABC, metaclass=ABCBuildDictMeta):
                 self._dict[to_camel_case(p)] = getattr(self, p, None)
 
         return self._dict
+
+    def get_settings_value(self, name: str) -> Optional[str]:
+        return self.get_dict_repr().get(name)
