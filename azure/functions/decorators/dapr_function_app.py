@@ -25,8 +25,7 @@ class DaprTriggerApi(TriggerApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-trigger-dapr
+        Ref: https://aka.ms/azure-function-dapr-trigger-service-invocation
 
         :param arg_name: The name of the variable that represents
         :param method_name: The name of the method on a remote Dapr App. 
@@ -70,8 +69,7 @@ class DaprTriggerApi(TriggerApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-trigger-dapr
+        Ref: https://aka.ms/azure-function-dapr-trigger-binding
 
         :param arg_name: The name of the variable that represents
         :param binding_name: The name of the Dapr trigger.
@@ -118,8 +116,7 @@ class DaprTriggerApi(TriggerApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-trigger-dapr
+        Ref: https://aka.ms/azure-function-dapr-trigger-topic
 
         :param arg_name: The name of the variable that represents
         :param pub_sub_name: The pub/sub name.
@@ -171,8 +168,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-state-input-binding
 
         :param arg_name: The name of the variable that represents DaprState
         input object in function code.
@@ -224,8 +220,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-secret-input-binding
 
         :param arg_name: The name of the variable that represents DaprState
         input object in function code.
@@ -279,8 +274,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-state-output-binding
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
@@ -335,8 +329,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-invoke-output-binding
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
@@ -392,8 +385,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-publish-output-binding
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
@@ -447,8 +439,7 @@ class DaprBindingApi(BindingApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        TODO: need to add ref for documentation
-        Ref: https://aka.ms/azure-function-binding-dapr
+        Ref: https://aka.ms/azure-function-dapr-binding-output-binding
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
