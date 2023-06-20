@@ -93,15 +93,6 @@ class Function(object):
         """
         self._settings.append(setting)
 
-    # def set_function_name(self, function_name: Optional[str] = None) -> None:
-    #     """Set or update the name for the function if :param:`function_name`
-    #      is not None. If not set, function name will default to python
-    #     function name.
-    #     :param function_name: Name the function set to.
-    #     """
-    #     if function_name:
-    #         self._name = function_name
-
     def set_http_type(self, http_type: str) -> None:
         """Set or update the http type for the function if :param:`http_type`
         .
