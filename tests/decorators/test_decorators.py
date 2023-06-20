@@ -2093,3 +2093,20 @@ class TestFunctionsApp(unittest.TestCase):
             new_metadata_payload = str(func)
             self.assertEqual(new_metadata_payload, last_metadata_payload)
             last_metadata_payload = new_metadata_payload
+
+    def test_function_app_retry_default_args(self):
+        app = self.func_app
+
+        @app.schedule(arg_name="req", schedule="dummy_schedule")
+        @app.retry(strategy="fixed", max_retry_count="2", delay_interval="4")
+        def dummy_func():
+            pass
+
+        func = self._get_user_function(app)
+        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_setting("retry_policy").get_dict_repr(), {
+            'setting_type': 'retry_policy',
+            'strategy': 'fixed',
+            'maxRetryCount': '2',
+            'delayInterval': '4'
+        })
