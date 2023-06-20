@@ -21,5 +21,4 @@ class TimerTrigger(Trigger):
         self.schedule = schedule
         self.run_on_startup = run_on_startup
         self.use_monitor = use_monitor
-
         super().__init__(name=name, data_type=data_type)

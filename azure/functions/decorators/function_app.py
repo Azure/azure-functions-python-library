@@ -143,12 +143,6 @@ class Function(object):
         return function_name_setting.get_settings_value("name") \
             if function_name_setting else self._name
 
-    def get_setting_values(self, setting_name: str):
-        """ Gets the values of a specific setting attached to the function.
-        """
-        setting = self.get_setting(setting_name)
-        return setting.get_dict_repr() if setting else None
-
     def get_raw_bindings(self) -> List[str]:
         return [json.dumps(b.get_dict_repr(), cls=StringifyEnumJsonEncoder)
                 for b in self._bindings]

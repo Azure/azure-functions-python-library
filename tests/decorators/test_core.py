@@ -4,7 +4,7 @@
 import unittest
 
 from azure.functions.decorators.core import BindingDirection, DataType, \
-    InputBinding, OutputBinding, Trigger
+    InputBinding, OutputBinding, Trigger, Setting
 
 
 class DummyTrigger(Trigger):
@@ -29,6 +29,12 @@ class DummyInputBinding(InputBinding):
                  data_type: DataType = DataType.UNDEFINED,
                  **kwargs):
         super().__init__(name=name, data_type=data_type)
+
+
+class DummySetting(Setting):
+
+    def __init__(self, setting_type: str) -> None:
+        super().__init__(setting_type=setting_type)
 
 
 class DummyOutputBinding(OutputBinding):
@@ -100,3 +106,27 @@ class TestBindings(unittest.TestCase):
                 self.assertTrue(len(trigger_type_name) > 0,
                                 f"binding_type {trigger_name} can not be "
                                 f"empty str!")
+
+
+class TestSettings(unittest.TestCase):
+
+    def test_setting_creation(self):
+        test_setting = DummySetting(setting_type="TestSetting")
+
+        expected_dict = {'setting_type': "TestSetting"}
+
+        self.assertEqual(test_setting.get_setting_type(), "TestSetting")
+        self.assertEqual(test_setting.get_dict_repr(), expected_dict)
+
+    def test_get_dict_repr(self):
+        class NewSetting(DummySetting):
+
+            def __init__(self, name: str):
+                self.name = name
+                super().__init__(setting_type="TestSetting")
+
+        test_setting = NewSetting(name="NewSetting")
+
+        expected_dict = {'setting_type': "TestSetting", "name": "NewSetting"}
+
+        self.assertEqual(test_setting.get_dict_repr(), expected_dict)

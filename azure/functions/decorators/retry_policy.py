@@ -11,9 +11,9 @@ class RetryPolicy(Setting):
     def __init__(self,
                  strategy: str,
                  max_retry_count: str,
-                 delay_interval: Optional[str],
-                 minimum_interval: Optional[str],
-                 maximum_interval: Optional[str],
+                 delay_interval: Optional[str] = None,
+                 minimum_interval: Optional[str] = None,
+                 maximum_interval: Optional[str] = None,
                  **kwargs):
         self.strategy = strategy
         self.max_retry_count = max_retry_count
@@ -21,6 +21,3 @@ class RetryPolicy(Setting):
         self.minimum_interval = minimum_interval
         self.maximum_interval = maximum_interval
         super().__init__(setting_type=RETRY_POLICY)
-
-    def get_value(self, name: str) -> Optional[str]:
-        return self.get_dict_repr().get(name)

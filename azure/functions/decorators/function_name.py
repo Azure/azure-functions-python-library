@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+
 from azure.functions.decorators.constants import FUNCTION_NAME
 from azure.functions.decorators.core import Setting
 
