@@ -129,6 +129,9 @@ class DaprTriggerApi(TriggerApi, ABC):
 
         :return: Decorator function.
         """
+        #TODO: This check is temporary, it should be removed once route issue is fixed at python worker.
+        #Currently, python worker treats route as HttpTrigger attribute and expects value for route.
+        #route could be nil for dapr topic trigger.
         if not route : 
             route = topic
 
