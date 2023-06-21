@@ -98,4 +98,4 @@ __all__ = (
     'DaprFunctionApp'
 )
 
-__version__ = '1.14.1b3'
+__version__ = '1.15.0'
