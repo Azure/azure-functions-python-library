@@ -17,6 +17,7 @@ from azure.functions.decorators.function_app import FunctionBuilder, \
     TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.retry_policy import RetryPolicy
 from tests.decorators.test_core import DummyTrigger
 from tests.decorators.testutils import assert_json
 
@@ -204,6 +205,21 @@ class TestFunctionBuilder(unittest.TestCase):
         func = self.fb.build(auth_level=AuthLevel.ANONYMOUS)
 
         self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
+
+    def test_build_function_with_retry_policy_setting(self):
+        setting = RetryPolicy(strategy="exponential", max_retry_count="2",
+                              minimum_interval="1", maximum_interval="5")
+        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
+                              data_type=DataType.UNDEFINED,
+                              auth_level=AuthLevel.ANONYMOUS)
+        self.fb.add_trigger(trigger)
+        self.fb.add_setting(setting)
+        func = self.fb.build()
+
+        self.assertEqual(func.get_settings_json("retry_policy"),
+                         {'setting_type': 'retry_policy',
+                          'strategy': 'exponential', 'maxRetryCount': '2',
+                          'minimumInterval': '1', 'maximumInterval': '5'})
 
 
 class TestScaffold(unittest.TestCase):

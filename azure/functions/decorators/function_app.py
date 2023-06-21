@@ -128,7 +128,20 @@ class Function(object):
                 return setting
         return None
 
+    def get_settings_json(self, setting_name) -> Optional[Dict]:
+        """Get a dictionary representation of a setting.
+
+        :param: setting_name: The name of the setting to search for.
+        :return: The dictionary representation of the setting (or None if not
+        found).
+        """
+        setting = self.get_setting(setting_name)
+        return setting.get_dict_repr() if setting else None
+
     def get_function_name(self) -> Optional[str]:
+        """Get the name of the function.
+        :return: The name of the function.
+        """
         function_name_setting = \
             self.get_setting("function_name")
         return function_name_setting.get_settings_value("name") \
