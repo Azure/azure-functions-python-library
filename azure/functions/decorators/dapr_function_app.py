@@ -129,6 +129,8 @@ class DaprTriggerApi(TriggerApi, ABC):
 
         :return: Decorator function.
         """
+        if not route : 
+            route = topic
 
         @self._configure_function_builder
         def wrap(fb):
