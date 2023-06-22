@@ -1951,7 +1951,8 @@ class SettingsApi(DecoratorApi, ABC):
     def function_name(self, name: str,
                       setting_extra_fields: Dict[str, Any] = {},
                       ) -> Callable[..., Any]:
-        """Set name of the :class:`Function` object.
+        """Optional: Sets name of the :class:`Function` object. If not set,
+        it will default to the name of the method name.
 
         :param name: Name of the function.
         :return: Decorator function.
