@@ -128,7 +128,7 @@ class Function(object):
                 return setting
         return None
 
-    def get_settings_json(self, setting_name) -> Optional[Dict]:
+    def get_settings_dict(self, setting_name) -> Optional[Dict]:
         """Get a dictionary representation of a setting.
 
         :param: setting_name: The name of the setting to search for.
@@ -175,13 +175,6 @@ class Function(object):
         :return: The python function customer defined.
         """
         return self._func
-
-    # def get_function_name(self) -> str:
-    #     """Get the function name.
-
-    #     :return: Function name.
-    #     """
-    #     return self._name
 
     def get_function_json(self) -> str:
         """Get the json stringified form of function.
@@ -317,23 +310,6 @@ class DecoratorApi(ABC):
             return wrap(fb)
 
         return decorator
-
-    # def function_name(self, name: str) -> Callable[..., Any]:
-    #     """Set name of the :class:`Function` object.
-
-    #     :param name: Name of the function.
-    #     :return: Decorator function.
-    #     """
-
-    #     @self._configure_function_builder
-    #     def wrap(fb):
-    #         def decorator():
-    #             fb.configure_function_name(name)
-    #             return fb
-
-    #         return decorator()
-
-    #     return wrap
 
     def http_type(self, http_type: str) -> Callable[..., Any]:
         """Set http type of the :class:`Function` object.
@@ -1969,6 +1945,8 @@ class BindingApi(DecoratorApi, ABC):
 
 
 class SettingsApi(DecoratorApi, ABC):
+    """Interface to extend for using existing settings decorator in
+    functions."""
 
     def function_name(self, name: str,
                       setting_extra_fields: Dict[str, Any] = {},

@@ -164,6 +164,10 @@ class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
 
 
 class Setting(ABC, metaclass=ABCBuildDictMeta):
+    """ Abstract class for all settings of a function app.
+        This class represents all the decorators that cannot be
+        classified as bindings or triggers. e.g function_name, retry etc.
+    """
 
     EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_type'}
 
