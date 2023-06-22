@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import abc
+import dataclasses
 import json
 import logging
 from abc import ABC
@@ -9,7 +10,9 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
     Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
-from azure.functions.decorators.core import Binding, Trigger, DataType, \
+from azure.functions.decorators.core import Binding, HTTPAuthorizationType, \
+    ManifestAuthType, Trigger, \
+    DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
@@ -2014,13 +2017,11 @@ class Blueprint(TriggerApi, BindingApi):
     pass
 
 
-class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
-    """Interface to extend for building third party http function apps."""
-
+class HTTPMiddleware(FunctionRegister, TriggerApi, ABC):
     @abc.abstractmethod
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware, Any]) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
@@ -2031,7 +2032,7 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
         raise NotImplementedError()
 
 
-class AsgiFunctionApp(ExternalHttpFunctionApp):
+class AsgiFunctionApp(HTTPMiddleware):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`AsgiFunctionApp` object.
@@ -2068,7 +2069,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
             return await asgi_middleware.handle_async(req, context)
 
 
-class WsgiFunctionApp(ExternalHttpFunctionApp):
+class WsgiFunctionApp(HTTPMiddleware):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`WsgiFunctionApp` object.
@@ -2100,3 +2101,148 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
+
+
+class ExternalHttpFunctionApp(FunctionRegister, ABC):
+    """Interface to extend for building third party http function apps."""
+
+    def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
+        super().__init__(auth_level, *args, **kwargs)
+
+    def route(self,
+              route: Optional[str] = None,
+              trigger_arg_name: str = 'req',
+              binding_arg_name: str = '$return',
+              methods: Optional[
+                  Union[Iterable[str], Iterable[HttpMethod]]] = None,
+              auth_level: Optional[Union[AuthLevel, str]] = None,
+              trigger_extra_fields: Dict[str, Any] = {},
+              binding_extra_fields: Dict[str, Any] = {}
+              ) -> Callable[..., Any]:
+        """The route decorator adds :class:`HttpTrigger` and
+        :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining HttpTrigger
+        and HttpOutput binding in the function.json which enables your
+        function be triggered when http requests hit the specified route.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-http
+
+        :param route: Route for the http endpoint, if None, it will be set
+        to function name if present or user defined python function name.
+        :param trigger_arg_name: Argument name for :class:`HttpRequest`,
+        defaults to 'req'.
+        :param binding_arg_name: Argument name for :class:`HttpResponse`,
+        defaults to '$return'.
+        :param methods: A tuple of the HTTP methods to which the function
+        responds.
+        :param auth_level: Determines what keys, if any, need to be present
+        on the request in order to invoke the function.
+        :return: Decorator function.
+        :param trigger_extra_fields: Additional fields to include in trigger
+        json. For example,
+        >>> data_type='STRING' # 'dataType': 'STRING' in trigger json
+        :param binding_extra_fields: Additional fields to include in binding
+        json. For example,
+        >>> data_type='STRING' # 'dataType': 'STRING' in binding json
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(trigger=HttpTrigger(
+                        name=trigger_arg_name,
+                        methods=parse_iterable_param_to_enums(methods,
+                                                              HttpMethod),
+                        auth_level=parse_singular_param_to_enum(auth_level,
+                                                                AuthLevel),
+                        route=route, **trigger_extra_fields))
+                fb.add_binding(binding=HttpOutput(
+                        name=binding_arg_name, **binding_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+
+class ManifestAuth:
+    def __init__(self, auth_type: ManifestAuthType,
+                 authorization_type: HTTPAuthorizationType,
+                 verification_token: Dict[str, str] = None,
+                 client_url: str = None,
+                 scope: str = None,
+                 authorization_url: str = None,
+                 authorization_content_type: str = None):
+        self.auth_type: ManifestAuthType = auth_type
+        self.authorization_type: HTTPAuthorizationType = authorization_type
+        self.verification_token = verification_token
+        self.client_url: str = client_url
+        self.scope: str = scope
+        self.authorization_url: str = authorization_url
+        self.authorization_content_type: str = authorization_content_type
+
+
+@dataclasses.dataclass
+class PluginManifest:
+    """Sample manifest.
+    More info: https://platform.openai.com/docs/plugins/getting-started
+{
+"schema_version": "v1",
+"name_for_human": "TODO List",
+"name_for_model": "todo",
+"description_for_human": "Manage your TODO list. You can add, remove and
+view your TODOs.",
+"description_for_model": "Help the user with managing a TODO list. You
+can add, remove and view your TODOs.",
+"auth": {
+    "type": "none"
+},
+"api": {
+    "type": "openapi",
+    "url": "http://localhost:3333/openapi.yaml"
+},
+"logo_url": "http://localhost:3333/logo.png",
+"contact_email": "support@example.com",
+"legal_info_url": "http://www.example.com/legal"
+}
+    """
+    def __init__(self, schema_version: str,
+                 name_for_human: str,
+                 name_for_model: str,
+                 description_for_human: str,
+                 description_for_model: str,
+                 logo_url: str,
+                 contact_email: str,
+                 legal_info_url: str,
+                 open_api_yml_url_or_path: str,
+                 auth: ManifestAuth,
+                 api_has_user_authentication: bool = False):
+        self.schema_version = schema_version
+        self.name_for_human = name_for_human
+        self.name_for_model = name_for_model
+        self.description_for_human = description_for_human
+        self.description_for_model = description_for_model
+        self.logo_url = logo_url
+        self.contact_email = contact_email
+        self.legal_info_url = legal_info_url
+        self.api = {
+            "type": "openapi",
+            "url": open_api_yml_url_or_path,
+            "has_user_authentication": api_has_user_authentication
+        }
+        self.auth = auth
+
+
+class OpenAIPluginFunctionApp(ExternalHttpFunctionApp):
+    def __init__(self, plugin_manifest: PluginManifest,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.ANONYMOUS):
+        """Constructor of :class:`OpenAIFunctionApp` object.
+
+        :param plugin_manifest: OpenAI plugin manifest which is fetched with
+        .well_known/ai_plugin.json call
+        """
+        self.plugin_manifest = plugin_manifest
+        super().__init__(auth_level=http_auth_level)

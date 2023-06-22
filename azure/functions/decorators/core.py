@@ -65,6 +65,19 @@ class AccessRights(StringifyEnum):
     and all related message handling. """
 
 
+# OpenAI related Enums
+class ManifestAuthType(StringifyEnum):
+    NONE = "none"
+    USER_HTTP = "user_http"
+    SERVICE_HTTP = "service_http"
+    OAUTH = "oauth"
+
+
+class HTTPAuthorizationType(StringifyEnum):
+    BEARER = "bearer"
+    BASIC = "basic"
+
+
 class Binding(ABC):
     """Abstract binding class which captures common attributes and
     functions. :meth:`get_dict_repr` can auto generate the function.json for
