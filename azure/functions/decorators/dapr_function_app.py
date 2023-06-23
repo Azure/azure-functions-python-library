@@ -4,10 +4,11 @@ from abc import ABC
 from typing import Any, Callable, Optional, Union
 from azure.functions.decorators.core import DataType, AuthLevel
 from azure.functions.decorators.utils import parse_singular_param_to_enum
-from azure.functions.decorators.function_app import BindingApi, FunctionRegister, \
-    TriggerApi
-from azure.functions.decorators.dapr import DaprBindingOutput, DaprBindingTrigger, \
-    DaprInvokeOutput, DaprPublishOutput, DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, DaprStateOutput, DaprTopicTrigger
+from azure.functions.decorators.function_app import BindingApi, \
+    FunctionRegister, TriggerApi
+from azure.functions.decorators.dapr import DaprBindingOutput, \
+    DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
+    DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, DaprStateOutput, DaprTopicTrigger
 
 
 class DaprTriggerApi(TriggerApi, ABC):
@@ -22,7 +23,7 @@ class DaprTriggerApi(TriggerApi, ABC):
         :class:`DaprServiceInvocationTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining 
+        indexing model. This is equivalent to defining
         DaprServiceInvocationTrigger
         in the function.json which enables function to be triggered when new
         service invocation occurs through Dapr.
@@ -50,7 +51,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                         name=arg_name,
                         method_name=method_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                            DataType),
+                                DataType),
                         **kwargs))
                 return fb
 
@@ -62,7 +63,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                              arg_name: str,
                              binding_name: str,
                              data_type: Optional[
-                                Union[DataType, str]] = None,
+                                    Union[DataType, str]] = None,
                              **kwargs: Any) -> Callable[..., Any]:
         """The dapr_binding_trigger decorator adds
         :class:`DaprBindingTrigger`
@@ -95,7 +96,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                         name=arg_name,
                         binding_name=binding_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                            DataType),
+                                DataType),
                         **kwargs))
                 return fb
 
@@ -139,7 +140,7 @@ class DaprTriggerApi(TriggerApi, ABC):
         # issue is fixed at python worker.
         # Currently, python worker treats route as HttpTrigger attribute and
         # expects value for route. Route could be nil for dapr topic trigger.
-        if not route :
+        if not route:
             route = topic
 
         @self._configure_function_builder
@@ -162,7 +163,7 @@ class DaprTriggerApi(TriggerApi, ABC):
 
 
 class DaprBindingApi(BindingApi, ABC):
-    
+
     def dapr_state_input(self,
                          arg_name: str,
                          state_store: str,
@@ -207,7 +208,7 @@ class DaprBindingApi(BindingApi, ABC):
                         key=key,
                         dapr_address=dapr_address,
                         data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
+                            DataType),
                         **kwargs))
                 return fb
 
@@ -222,7 +223,7 @@ class DaprBindingApi(BindingApi, ABC):
                           metadata: str,
                           dapr_address: Optional[str] = None,
                           data_type: Optional[
-                                Union[DataType, str]] = None,
+                            Union[DataType, str]] = None,
                           **kwargs) \
             -> Callable[..., Any]:
         """The dapr_secret_input decorator adds
@@ -319,7 +320,7 @@ class DaprBindingApi(BindingApi, ABC):
                         key=key,
                         dapr_address=dapr_address,
                         data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
+                            DataType),
                         **kwargs))
                 return fb
 
@@ -334,7 +335,7 @@ class DaprBindingApi(BindingApi, ABC):
                            http_verb: str,
                            dapr_address: Optional[str] = None,
                            data_type: Optional[
-                                Union[DataType, str]] = None,
+                            Union[DataType, str]] = None,
                            **kwargs) \
             -> Callable[..., Any]:
         """The dapr_invoke_output decorator adds

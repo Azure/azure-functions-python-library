@@ -31,13 +31,13 @@ class TestDapr(unittest.TestCase):
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
-                                    {
+                                     {
                                         "direction": BindingDirection.IN,
                                         "type":
                                         DAPR_SERVICE_INVOCATION_TRIGGER,
                                         "name": "req",
                                         "methodName": "dummy_method_name"
-                                    }
+                                     }
                                  ]
                                  })
 
