@@ -8,7 +8,8 @@ from azure.functions.decorators.function_app import BindingApi, \
     FunctionRegister, TriggerApi
 from azure.functions.decorators.dapr import DaprBindingOutput, \
     DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
-    DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, DaprStateOutput, DaprTopicTrigger
+    DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, DaprStateOutput, \
+    DaprTopicTrigger
 
 
 class DaprTriggerApi(TriggerApi, ABC):
@@ -51,7 +52,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                         name=arg_name,
                         method_name=method_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                                DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -63,7 +64,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                              arg_name: str,
                              binding_name: str,
                              data_type: Optional[
-                                    Union[DataType, str]] = None,
+                                 Union[DataType, str]] = None,
                              **kwargs: Any) -> Callable[..., Any]:
         """The dapr_binding_trigger decorator adds
         :class:`DaprBindingTrigger`
@@ -96,7 +97,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                         name=arg_name,
                         binding_name=binding_name,
                         data_type=parse_singular_param_to_enum(data_type,
-                                DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -153,7 +154,7 @@ class DaprTriggerApi(TriggerApi, ABC):
                         topic=topic,
                         route=route,
                         data_type=parse_singular_param_to_enum(data_type,
-                            DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -208,7 +209,7 @@ class DaprBindingApi(BindingApi, ABC):
                         key=key,
                         dapr_address=dapr_address,
                         data_type=parse_singular_param_to_enum(data_type,
-                            DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -223,7 +224,7 @@ class DaprBindingApi(BindingApi, ABC):
                           metadata: str,
                           dapr_address: Optional[str] = None,
                           data_type: Optional[
-                            Union[DataType, str]] = None,
+                              Union[DataType, str]] = None,
                           **kwargs) \
             -> Callable[..., Any]:
         """The dapr_secret_input decorator adds
@@ -279,7 +280,7 @@ class DaprBindingApi(BindingApi, ABC):
                           key: str,
                           dapr_address: Optional[str] = None,
                           data_type: Optional[
-                                Union[DataType, str]] = None,
+                              Union[DataType, str]] = None,
                           **kwargs) \
             -> Callable[..., Any]:
         """The dapr_state_output decorator adds
@@ -320,7 +321,7 @@ class DaprBindingApi(BindingApi, ABC):
                         key=key,
                         dapr_address=dapr_address,
                         data_type=parse_singular_param_to_enum(data_type,
-                            DataType),
+                                                               DataType),
                         **kwargs))
                 return fb
 
@@ -335,7 +336,7 @@ class DaprBindingApi(BindingApi, ABC):
                            http_verb: str,
                            dapr_address: Optional[str] = None,
                            data_type: Optional[
-                            Union[DataType, str]] = None,
+                               Union[DataType, str]] = None,
                            **kwargs) \
             -> Callable[..., Any]:
         """The dapr_invoke_output decorator adds
