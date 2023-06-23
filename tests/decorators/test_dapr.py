@@ -1,13 +1,12 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 import unittest
 
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.dapr_function_app import DaprFunctionApp
-from azure.functions.decorators.constants import DAPR_BINDING, DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
+from azure.functions.decorators.constants import DAPR_BINDING, DAPR_BINDING_TRIGGER, \
+    DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
 from tests.decorators.testutils import assert_json
-
 
 class TestDapr(unittest.TestCase):
     def setUp(self):
@@ -22,7 +21,7 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy_method_name")
+                                             method_name="dummy_method_name")
         
         def dummy():
             pass
