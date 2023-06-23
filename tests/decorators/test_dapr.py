@@ -4,9 +4,11 @@ import unittest
 
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.dapr_function_app import DaprFunctionApp
-from azure.functions.decorators.constants import DAPR_BINDING, DAPR_BINDING_TRIGGER, \
-    DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
+from azure.functions.decorators.constants import DAPR_BINDING, \
+    DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, \
+    DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
 from tests.decorators.testutils import assert_json
+
 
 class TestDapr(unittest.TestCase):
     def setUp(self):
@@ -22,7 +24,6 @@ class TestDapr(unittest.TestCase):
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy_method_name")
-        
         def dummy():
             pass
 
@@ -30,12 +31,13 @@ class TestDapr(unittest.TestCase):
 
         assert_json(self, func, {"scriptFile": "function_app.py",
                                  "bindings": [
-                                     {
-                                         "direction": BindingDirection.IN,
-                                         "type": DAPR_SERVICE_INVOCATION_TRIGGER,
-                                         "name": "req",
-                                         "methodName": "dummy_method_name"
-                                     }
+                                    {
+                                        "direction": BindingDirection.IN,
+                                        "type":
+                                        DAPR_SERVICE_INVOCATION_TRIGGER,
+                                        "name": "req",
+                                        "methodName": "dummy_method_name"
+                                    }
                                  ]
                                  })
 
@@ -44,7 +46,6 @@ class TestDapr(unittest.TestCase):
 
         @app.dapr_binding_trigger(arg_name="req",
                                   binding_name="dummy_binding_name")
-        
         def dummy():
             pass
 
@@ -68,7 +69,6 @@ class TestDapr(unittest.TestCase):
                                 pub_sub_name="dummy_pub_sub_name",
                                 topic="dummy_topic",
                                 route="/dummy_route")
-        
         def dummy():
             pass
 
@@ -81,8 +81,8 @@ class TestDapr(unittest.TestCase):
                                          "type": DAPR_TOPIC_TRIGGER,
                                          "name": "req",
                                          "pubSubName": "dummy_pub_sub_name",
-                                         "topic":"dummy_topic",
-                                         "route":"/dummy_route"
+                                         "topic": "dummy_topic",
+                                         "route": "/dummy_route"
                                      }
                                  ]
                                  })
@@ -207,7 +207,7 @@ class TestDapr(unittest.TestCase):
         self.assertEqual(len(func.get_bindings()), 2)
 
         output = func.get_bindings()[0]
-        
+
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": DAPR_PUBLISH,
