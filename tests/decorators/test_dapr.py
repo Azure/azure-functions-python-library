@@ -29,17 +29,21 @@ class TestDapr(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        assert_json(self, func, {"scriptFile": "function_app.py",
-                                 "bindings": [
-                                     {
-                                         "direction": BindingDirection.IN,
-                                         "type": \
-                                            DAPR_SERVICE_INVOCATION_TRIGGER,
-                                         "name": "req",
-                                         "methodName": "dummy_method_name"
-                                     }
-                                 ]
-                                 })
+        assert_json
+        (
+            self, func, 
+            {
+                "scriptFile": "function_app.py",
+                "bindings": [
+                    {
+                        "direction": BindingDirection.IN,
+                        "type": DAPR_SERVICE_INVOCATION_TRIGGER,
+                        "name": "req",
+                        "methodName": "dummy_method_name"
+                    }
+                ]
+            }
+        )
 
     def test_dapr_binding_trigger_default_args(self):
         app = self.dapr_func_app

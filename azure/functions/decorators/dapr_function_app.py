@@ -8,8 +8,8 @@ from azure.functions.decorators.function_app import BindingApi, \
     FunctionRegister, TriggerApi
 from azure.functions.decorators.dapr import DaprBindingOutput, \
     DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
-    DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, DaprStateOutput, \
-    DaprTopicTrigger
+    DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, \
+    DaprStateOutput, DaprTopicTrigger
 
 
 class DaprTriggerApi(TriggerApi, ABC):
