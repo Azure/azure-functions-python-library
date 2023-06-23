@@ -1,0 +1,17 @@
+name: "Pull Request Labeler"
+on:
+  pull_request:
+    paths:
+    - '**/__init__.py'
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    # Add labels based on file changes using label.yml
+    - uses: actions/labeler@v4
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        configuration-path: .github/labeler.yml
