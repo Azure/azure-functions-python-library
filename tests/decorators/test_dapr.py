@@ -31,7 +31,7 @@ class TestDapr(unittest.TestCase):
 
         assert_json
         (
-            self, func, 
+            self, func,
             {
                 "scriptFile": "function_app.py",
                 "bindings": [
