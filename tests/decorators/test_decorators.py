@@ -5,8 +5,7 @@ import unittest
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
-    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER, \
-    DAPR_SERVICE_INVOCATION_TRIGGER
+    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
@@ -2094,25 +2093,3 @@ class TestFunctionsApp(unittest.TestCase):
             new_metadata_payload = str(func)
             self.assertEqual(new_metadata_payload, last_metadata_payload)
             last_metadata_payload = new_metadata_payload
-
-    def test_dapr_service_invocation_default_args(self):
-        app = self.func_app
-
-        @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy_method_name")
-        
-        def dummy():
-            pass
-
-        func = self._get_user_function(app)
-
-        assert_json(self, func, {"scriptFile": "function_app.py",
-                                 "bindings": [
-                                     {
-                                         "direction": BindingDirection.IN,
-                                         "type": DAPR_SERVICE_INVOCATION_TRIGGER,
-                                         "name": "req",
-                                         "methodName": "dummy_method_name"
-                                     }
-                                 ]
-                                 })

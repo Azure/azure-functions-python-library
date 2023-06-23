@@ -159,8 +159,7 @@ class DaprBindingApi(BindingApi, ABC):
                          arg_name: str,
                          state_store: str,
                          key: str,
-                         dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                         dapr_address: Optional[str] = None,
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) \
@@ -211,8 +210,7 @@ class DaprBindingApi(BindingApi, ABC):
                          secret_store_name: str,
                          key: str,
                          metadata: str,
-                         dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                         dapr_address: Optional[str] = None,
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) \
@@ -264,8 +262,7 @@ class DaprBindingApi(BindingApi, ABC):
                           arg_name: str,
                           state_store: str,
                           key: str,
-                          dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                          dapr_address: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -319,8 +316,7 @@ class DaprBindingApi(BindingApi, ABC):
                           app_id: str,
                           method_name: str,
                           http_verb: str,
-                          dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                          dapr_address: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -375,8 +371,7 @@ class DaprBindingApi(BindingApi, ABC):
                           arg_name: str,
                           pub_sub_name: str,
                           topic: str,
-                          dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                          dapr_address: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
@@ -429,8 +424,7 @@ class DaprBindingApi(BindingApi, ABC):
                           arg_name: str,
                           binding_name: str,
                           operation: str,
-                          dapr_address: Optional[
-                             Union[DataType, str]] = None,
+                          dapr_address: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) \
