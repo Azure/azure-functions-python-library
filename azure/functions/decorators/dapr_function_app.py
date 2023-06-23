@@ -55,11 +55,11 @@ class DaprTriggerApi(TriggerApi, ABC):
         return wrap
 
     def dapr_binding_trigger(self,
-                                arg_name: str,
-                                binding_name: str,
-                                data_type: Optional[
-                                    Union[DataType, str]] = None,
-                                **kwargs: Any) -> Callable[..., Any]:
+                            arg_name: str,
+                            binding_name: str,
+                            data_type: Optional[
+                                Union[DataType, str]] = None,
+                            **kwargs: Any) -> Callable[..., Any]:
         """The dapr_binding_trigger decorator adds
         :class:`DaprBindingTrigger`
         to the :class:`FunctionBuilder` object
@@ -129,9 +129,10 @@ class DaprTriggerApi(TriggerApi, ABC):
 
         :return: Decorator function.
         """
-        #TODO: This check is temporary, it should be removed once route issue is fixed at python worker.
-        #Currently, python worker treats route as HttpTrigger attribute and expects value for route.
-        #route could be nil for dapr topic trigger.
+        #TODO: This is a temporary check, it should be removed once route issue is 
+        # fixed at python worker.
+        # Currently, python worker treats route as HttpTrigger attribute and 
+        # expects value for route. Route could be nil for dapr topic trigger.
         if not route : 
             route = topic
 
@@ -168,7 +169,8 @@ class DaprBindingApi(BindingApi, ABC):
         :class:`DaprStateInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining DaprStateInput
-        in the function.json which enables function to read state from underlying state store component.
+        in the function.json which enables function to read state from underlying 
+        state store component.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -178,7 +180,8 @@ class DaprBindingApi(BindingApi, ABC):
         input object in function code.
         :param state_store: State store containing the state.
         :param key: The name of the key.
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default 
+        it will be set to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
@@ -204,16 +207,16 @@ class DaprBindingApi(BindingApi, ABC):
             return decorator()
 
         return wrap
-    
+
     def dapr_secret_input(self,
-                         arg_name: str,
-                         secret_store_name: str,
-                         key: str,
-                         metadata: str,
-                         dapr_address: Optional[str] = None,
-                         data_type: Optional[
+                          arg_name: str,
+                          secret_store_name: str,
+                          key: str,
+                          metadata: str,
+                          dapr_address: Optional[str] = None,
+                          data_type: Optional[
                              Union[DataType, str]] = None,
-                         **kwargs) \
+                          **kwargs) \
             -> Callable[..., Any]:
         """The dapr_secret_input decorator adds
         :class:`DaprSecretInput` to the :class:`FunctionBuilder` object
@@ -230,7 +233,8 @@ class DaprBindingApi(BindingApi, ABC):
         :param secret_store_name: The name of the secret store to get the secret from.
         :param key: The key identifying the name of the secret to get.
         :param metadata: An array of metadata properties in the form "key1=value1&amp;key2=value2".
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default 
+        it will be set to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
@@ -257,7 +261,7 @@ class DaprBindingApi(BindingApi, ABC):
             return decorator()
 
         return wrap
-    
+
     def dapr_state_output(self,
                           arg_name: str,
                           state_store: str,
@@ -284,7 +288,8 @@ class DaprBindingApi(BindingApi, ABC):
         input object in function code.
         :param state_store: State store containing the state for keys.
         :param key: The name of the key.
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default 
+        it will be set to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -312,14 +317,14 @@ class DaprBindingApi(BindingApi, ABC):
         return wrap
 
     def dapr_invoke_output(self,
-                          arg_name: str,
-                          app_id: str,
-                          method_name: str,
-                          http_verb: str,
-                          dapr_address: Optional[str] = None,
-                          data_type: Optional[
+                           arg_name: str,
+                           app_id: str,
+                           method_name: str,
+                           http_verb: str,
+                           dapr_address: Optional[str] = None,
+                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) \
+                           **kwargs) \
             -> Callable[..., Any]:
         """The dapr_invoke_output decorator adds
         :class:`DaprInvokeOutput` to the :class:`FunctionBuilder` object
@@ -339,7 +344,8 @@ class DaprBindingApi(BindingApi, ABC):
         :param app_id: The dapr app name to invoke.
         :param method_name: The method name of the app to invoke.
         :param http_verb: The http verb of the app to invoke.
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default 
+        it will be set to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -366,15 +372,15 @@ class DaprBindingApi(BindingApi, ABC):
             return decorator()
 
         return wrap
-    
+
     def dapr_publish_output(self,
-                          arg_name: str,
-                          pub_sub_name: str,
-                          topic: str,
-                          dapr_address: Optional[str] = None,
-                          data_type: Optional[
+                            arg_name: str,
+                            pub_sub_name: str,
+                            topic: str,
+                            dapr_address: Optional[str] = None,
+                            data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) \
+                            **kwargs) \
             -> Callable[..., Any]:
         """The dapr_publish_output decorator adds
         :class:`DaprPublishOutput` to the :class:`FunctionBuilder` object
@@ -393,7 +399,8 @@ class DaprBindingApi(BindingApi, ABC):
         input object in function code.
         :param pub_sub_name: The pub/sub name to publish to.
         :param topic:  The name of the topic to publish to.
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default 
+        ßit will be set to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -419,22 +426,23 @@ class DaprBindingApi(BindingApi, ABC):
             return decorator()
 
         return wrap
-    
+
     def dapr_binding_output(self,
-                          arg_name: str,
-                          binding_name: str,
-                          operation: str,
-                          dapr_address: Optional[str] = None,
-                          data_type: Optional[
+                            arg_name: str,
+                            binding_name: str,
+                            operation: str,
+                            dapr_address: Optional[str] = None,
+                            data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) \
+                            **kwargs) \
             -> Callable[..., Any]:
         """The dapr_binding_output decorator adds
         :class:`DaprBindingOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model.
         This is equivalent to defining DaprBindingOutput
-        in the function.json which enables function to send a value to a Dapr output binding.
+        in the function.json which enables function to send a value to 
+        a Dapr output binding.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -446,7 +454,8 @@ class DaprBindingApi(BindingApi, ABC):
         input object in function code.
         :param binding_name: The configured name of the binding.
         :param operation:  The configured operation.
-        :param dapr_address: Dapr address, it is optional field, by default it will be set to http://localhost:{daprHttpPort}.
+        :param dapr_address: Dapr address, it is optional field, by default it will be set 
+        to http://localhost:{daprHttpPort}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -472,6 +481,7 @@ class DaprBindingApi(BindingApi, ABC):
             return decorator()
 
         return wrap
+
 
 class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi):
 

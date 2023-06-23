@@ -2,9 +2,11 @@
 #  Licensed under the MIT License.
 from typing import Optional
 
-from azure.functions.decorators.constants import DAPR_BINDING, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_BINDING_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
-from azure.functions.decorators.core import InputBinding, Trigger, DataType, OutputBinding, \
-    Cardinality
+from azure.functions.decorators.constants import DAPR_BINDING, DAPR_INVOKE, DAPR_PUBLISH, \
+    DAPR_SECRET, DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_BINDING_TRIGGER, DAPR_STATE, \
+    DAPR_TOPIC_TRIGGER
+from azure.functions.decorators.core import InputBinding, Trigger, DataType, \
+    OutputBinding
 
 
 class DaprServiceInvocationTrigger(Trigger):
@@ -21,6 +23,7 @@ class DaprServiceInvocationTrigger(Trigger):
         self.method_name = method_name
         super().__init__(name=name, data_type=data_type)
 
+
 class DaprBindingTrigger(Trigger):
 
     @staticmethod
@@ -34,6 +37,7 @@ class DaprBindingTrigger(Trigger):
                  **kwargs):
         self.binding_name = binding_name
         super().__init__(name=name, data_type=data_type)
+
 
 class DaprTopicTrigger(Trigger):
 
@@ -53,6 +57,7 @@ class DaprTopicTrigger(Trigger):
         self.route = route
         super().__init__(name=name, data_type=data_type)
 
+
 class DaprStateInput(InputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -69,6 +74,7 @@ class DaprStateInput(InputBinding):
         self.key = key
         self.dapr_address = dapr_address
         super().__init__(name=name, data_type=data_type)
+
 
 class DaprSecretInput(InputBinding):
     @staticmethod
@@ -89,6 +95,7 @@ class DaprSecretInput(InputBinding):
         self.dapr_address = dapr_address
         super().__init__(name=name, data_type=data_type)
 
+
 class DaprStateOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -105,6 +112,7 @@ class DaprStateOutput(OutputBinding):
         self.key = key
         self.dapr_address = dapr_address
         super().__init__(name=name, data_type=data_type)
+
 
 class DaprInvokeOutput(OutputBinding):
     @staticmethod
@@ -125,6 +133,7 @@ class DaprInvokeOutput(OutputBinding):
         self.dapr_address = dapr_address
         super().__init__(name=name, data_type=data_type)
 
+
 class DaprPublishOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -141,6 +150,7 @@ class DaprPublishOutput(OutputBinding):
         self.topic = topic
         self.dapr_address = dapr_address
         super().__init__(name=name, data_type=data_type)
+
 
 class DaprBindingOutput(OutputBinding):
     @staticmethod

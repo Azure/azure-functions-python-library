@@ -43,7 +43,7 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_binding_trigger(arg_name="req",
-                                       binding_name="dummy_binding_name")
+                                  binding_name="dummy_binding_name")
         
         def dummy():
             pass
@@ -91,10 +91,10 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_state_input(arg_name="in",
-                             state_store="dummy_state_store",
-                             key="dummy_key")
+                              state_store="dummy_state_store",
+                              key="dummy_key")
         def dummy():
             pass
 
@@ -116,11 +116,11 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_secret_input(arg_name="in",
-                             secret_store_name="dummy_secret_store_name",
-                             key="dummy_key",
-                             metadata="dummy_metadata")
+                               secret_store_name="dummy_secret_store_name",
+                               key="dummy_key",
+                               metadata="dummy_metadata")
         def dummy():
             pass
 
@@ -129,7 +129,7 @@ class TestDapr(unittest.TestCase):
         self.assertEqual(len(func.get_bindings()), 2)
 
         output = func.get_bindings()[0]
-        
+
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.IN,
             "type": DAPR_SECRET,
@@ -143,10 +143,10 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_state_output(arg_name="out",
-                             state_store="dummy_state_store",
-                             key="dummy_key")
+                               state_store="dummy_state_store",
+                               key="dummy_key")
         def dummy():
             pass
 
@@ -155,7 +155,7 @@ class TestDapr(unittest.TestCase):
         self.assertEqual(len(func.get_bindings()), 2)
 
         output = func.get_bindings()[0]
-        
+
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": DAPR_STATE,
@@ -168,11 +168,11 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_invoke_output(arg_name="out",
-                             app_id="dummy_app_id",
-                             method_name="dummy_method_name",
-                             http_verb="dummy_http_verb")
+                                app_id="dummy_app_id",
+                                method_name="dummy_method_name",
+                                http_verb="dummy_http_verb")
         def dummy():
             pass
 
@@ -181,7 +181,7 @@ class TestDapr(unittest.TestCase):
         self.assertEqual(len(func.get_bindings()), 2)
 
         output = func.get_bindings()[0]
-        
+
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": DAPR_INVOKE,
@@ -195,10 +195,10 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_publish_output(arg_name="out",
-                             pub_sub_name="dummy_pub_sub_name",
-                             topic="dummy_topic")
+                                 pub_sub_name="dummy_pub_sub_name",
+                                 topic="dummy_topic")
         def dummy():
             pass
 
@@ -220,10 +220,10 @@ class TestDapr(unittest.TestCase):
         app = self.dapr_func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
-                                       method_name="dummy")
+                                             method_name="dummy")
         @app.dapr_binding_output(arg_name="out",
-                             binding_name="dummy_binding_name",
-                             operation="dummy_operation")
+                                 binding_name="dummy_binding_name",
+                                 operation="dummy_operation")
         def dummy():
             pass
 
@@ -232,7 +232,7 @@ class TestDapr(unittest.TestCase):
         self.assertEqual(len(func.get_bindings()), 2)
 
         output = func.get_bindings()[0]
-        
+
         self.assertEqual(output.get_dict_repr(), {
             "direction": BindingDirection.OUT,
             "type": DAPR_BINDING,
