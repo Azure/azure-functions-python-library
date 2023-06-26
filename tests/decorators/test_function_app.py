@@ -217,7 +217,7 @@ class TestFunctionBuilder(unittest.TestCase):
         func = self.fb.build()
 
         self.assertEqual(func.get_settings_dict("retry_policy"),
-                         {'setting_type': 'retry_policy',
+                         {'setting_name': 'retry_policy',
                           'strategy': 'exponential', 'maxRetryCount': '2',
                           'minimumInterval': '1', 'maximumInterval': '5'})
 

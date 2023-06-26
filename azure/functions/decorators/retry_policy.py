@@ -2,8 +2,9 @@
 #  Licensed under the MIT License.
 from typing import Optional
 
-from azure.functions.decorators.constants import RETRY_POLICY
 from azure.functions.decorators.core import Setting
+
+RETRY_POLICY = "retry_policy"
 
 
 class RetryPolicy(Setting):
@@ -20,4 +21,4 @@ class RetryPolicy(Setting):
         self.delay_interval = delay_interval
         self.minimum_interval = minimum_interval
         self.maximum_interval = maximum_interval
-        super().__init__(setting_type=RETRY_POLICY)
+        super().__init__(setting_name=RETRY_POLICY)

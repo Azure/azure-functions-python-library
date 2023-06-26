@@ -47,6 +47,11 @@ class Function(object):
 
         :param func: User defined python function instance.
         :param script_file: File name indexed by worker to find function.
+        :param trigger: The trigger object of the function.
+        :param bindings: The list of binding objects of a function.
+        :param settings: The list of setting objects of a function.
+        :param http_type: Http function type.
+        :param is_http_function: Whether the function is a http function.
         """
         self._name: str = func.__name__
         self._func = func
@@ -124,7 +129,7 @@ class Function(object):
         :return: The setting attached to the function (or None if not found).
         """
         for setting in self._settings:
-            if setting.setting_type == setting_name:
+            if setting.setting_name == setting_name:
                 return setting
         return None
 
@@ -1955,6 +1960,8 @@ class SettingsApi(DecoratorApi, ABC):
         it will default to the name of the method name.
 
         :param name: Name of the function.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
         :return: Decorator function.
         """
 
@@ -1963,7 +1970,6 @@ class SettingsApi(DecoratorApi, ABC):
             def decorator():
                 fb.add_setting(setting=FunctionName(
                     name=name,
-                    setting_type="setting",
                     **setting_extra_fields))
                 return fb
 
@@ -1986,7 +1992,7 @@ class SettingsApi(DecoratorApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: https://aka.ms/azure-function-retry <FIX LINK>
+        Ref: https://aka.ms/azure_functions_retries
 
         :param strategy: The retry strategy to use.
         :param max_retry_count: The maximum number of retry attempts.
@@ -1996,7 +2002,8 @@ class SettingsApi(DecoratorApi, ABC):
         :param maximum_interval: The maximum delay interval between retry
         attempts.
         :param setting_extra_fields: Keyword arguments for specifying
-        additional setting fields to include in the setting json.
+        additional setting fields.
+        :return: Decorator function.
         """
 
         @self._configure_function_builder

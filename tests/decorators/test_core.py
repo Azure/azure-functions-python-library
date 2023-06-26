@@ -33,8 +33,8 @@ class DummyInputBinding(InputBinding):
 
 class DummySetting(Setting):
 
-    def __init__(self, setting_type: str) -> None:
-        super().__init__(setting_type=setting_type)
+    def __init__(self, setting_name: str) -> None:
+        super().__init__(setting_name=setting_name)
 
 
 class DummyOutputBinding(OutputBinding):
@@ -111,22 +111,27 @@ class TestBindings(unittest.TestCase):
 class TestSettings(unittest.TestCase):
 
     def test_setting_creation(self):
-        test_setting = DummySetting(setting_type="TestSetting")
-
-        expected_dict = {'setting_type': "TestSetting"}
-
-        self.assertEqual(test_setting.get_setting_type(), "TestSetting")
-        self.assertEqual(test_setting.get_dict_repr(), expected_dict)
+        """
+        Tests that the setting_name is set correctly
+        """
+        # DummySetting is a test setting that inherits from Setting
+        test_setting = DummySetting(setting_name="TestSetting")
+        self.assertEqual(test_setting.get_setting_name(), "TestSetting")
 
     def test_get_dict_repr(self):
+        """
+        Tests that the get_dict_repr method returns the correct dict
+        when a new setting is intialized
+        """
+
         class NewSetting(DummySetting):
 
             def __init__(self, name: str):
                 self.name = name
-                super().__init__(setting_type="TestSetting")
+                super().__init__(setting_name="TestSetting")
 
         test_setting = NewSetting(name="NewSetting")
 
-        expected_dict = {'setting_type': "TestSetting", "name": "NewSetting"}
+        expected_dict = {'setting_name': "TestSetting", "name": "NewSetting"}
 
         self.assertEqual(test_setting.get_dict_repr(), expected_dict)

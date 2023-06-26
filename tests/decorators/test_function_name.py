@@ -10,7 +10,7 @@ class TestFunctionName(unittest.TestCase):
     def test_retry_policy_setting_creation(self):
         function_name = FunctionName(name="TestFunctionName")
 
-        self.assertEqual(function_name.get_setting_type(), "function_name")
+        self.assertEqual(function_name.get_setting_name(), "function_name")
         self.assertEqual(function_name.get_dict_repr(),
-                         {'setting_type': 'function_name',
+                         {'setting_name': 'function_name',
                           'name': 'TestFunctionName'})

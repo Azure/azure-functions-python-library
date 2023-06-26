@@ -169,16 +169,15 @@ class Setting(ABC, metaclass=ABCBuildDictMeta):
         classified as bindings or triggers. e.g function_name, retry etc.
     """
 
-    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_type'}
+    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_name'}
 
-    def get_setting_type(self) -> str:
-        return self.setting_type
+    def get_setting_name(self) -> str:
+        return self.setting_name
 
-    def __init__(self, setting_type: str) -> None:
-        if setting_type is not None:
-            self.setting_type = setting_type
+    def __init__(self, setting_name: str) -> None:
+        self.setting_name = setting_name
         self._dict: Dict = {
-            "setting_type": self.setting_type
+            "setting_name": self.setting_name
         }
 
     def get_dict_repr(self) -> Dict:
