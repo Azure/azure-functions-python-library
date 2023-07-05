@@ -4,7 +4,7 @@
 import unittest
 
 from azure.functions.decorators.core import BindingDirection, DataType, \
-    InputBinding, OutputBinding, Trigger
+    InputBinding, OutputBinding, Trigger, Setting
 
 
 class DummyTrigger(Trigger):
@@ -29,6 +29,12 @@ class DummyInputBinding(InputBinding):
                  data_type: DataType = DataType.UNDEFINED,
                  **kwargs):
         super().__init__(name=name, data_type=data_type)
+
+
+class DummySetting(Setting):
+
+    def __init__(self, setting_name: str) -> None:
+        super().__init__(setting_name=setting_name)
 
 
 class DummyOutputBinding(OutputBinding):
@@ -100,3 +106,33 @@ class TestBindings(unittest.TestCase):
                 self.assertTrue(len(trigger_type_name) > 0,
                                 f"binding_type {trigger_name} can not be "
                                 f"empty str!")
+
+
+class TestSettings(unittest.TestCase):
+
+    def test_setting_creation(self):
+        """
+        Tests that the setting_name is set correctly
+        """
+        # DummySetting is a test setting that inherits from Setting
+        test_setting = DummySetting(setting_name="TestSetting")
+        self.assertEqual(test_setting.get_setting_name(), "TestSetting")
+
+    def test_get_dict_repr(self):
+        """
+        Tests that the get_dict_repr method returns the correct dict
+        when a new setting is intialized
+        """
+
+        class NewSetting(DummySetting):
+
+            def __init__(self, name: str):
+                self.name = name
+                super().__init__(setting_name="TestSetting")
+
+        test_setting = NewSetting(name="NewSetting")
+
+        expected_dict = {'setting_name': "TestSetting", "name": "NewSetting"}
+
+        self.assertEqual(test_setting.get_dict_repr(), expected_dict)
+        self.assertEqual(test_setting.get_settings_value("name"), "NewSetting")
