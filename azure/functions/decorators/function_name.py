@@ -8,7 +8,7 @@ FUNCTION_NAME = "function_name"
 
 class FunctionName(Setting):
 
-    def __init__(self, name: str,
+    def __init__(self, function_name: str,
                  **kwargs):
-        self.name = name
+        self.function_name = function_name
         super().__init__(setting_name=FUNCTION_NAME)

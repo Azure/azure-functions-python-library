@@ -61,7 +61,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(func.get_function_name(), "dummy_function")
+        self.assertEqual("dummy_function", func.get_function_name())
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
         self.assertTrue(func.get_trigger().route, "dummy")
 
@@ -2107,6 +2107,6 @@ class TestFunctionsApp(unittest.TestCase):
         self.assertEqual(func.get_setting("retry_policy").get_dict_repr(), {
             'setting_name': 'retry_policy',
             'strategy': 'fixed',
-            'maxRetryCount': '2',
-            'delayInterval': '4'
+            'max_retry_count': '2',
+            'delay_interval': '4'
         })

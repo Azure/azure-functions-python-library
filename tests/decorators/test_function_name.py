@@ -8,9 +8,9 @@ from azure.functions.decorators.function_name import FunctionName
 class TestFunctionName(unittest.TestCase):
 
     def test_retry_policy_setting_creation(self):
-        function_name = FunctionName(name="TestFunctionName")
+        function_name = FunctionName(function_name="TestFunctionName")
 
         self.assertEqual(function_name.get_setting_name(), "function_name")
         self.assertEqual(function_name.get_dict_repr(),
                          {'setting_name': 'function_name',
-                          'name': 'TestFunctionName'})
+                          'function_name': 'TestFunctionName'})

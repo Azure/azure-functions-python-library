@@ -149,7 +149,7 @@ class Function(object):
         """
         function_name_setting = \
             self.get_setting("function_name")
-        return function_name_setting.get_settings_value("name") \
+        return function_name_setting.get_settings_value("function_name") \
             if function_name_setting else self._name
 
     def get_raw_bindings(self) -> List[str]:
@@ -1969,7 +1969,7 @@ class SettingsApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_setting(setting=FunctionName(
-                    name=name,
+                    function_name=name,
                     **setting_extra_fields))
                 return fb
 

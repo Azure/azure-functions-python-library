@@ -16,8 +16,8 @@ class TestRetryPolicy(unittest.TestCase):
         self.assertEqual(retry_policy.get_dict_repr(),
                          {'setting_name': 'retry_policy',
                           'strategy': 'fixed',
-                          'maxRetryCount': '1',
-                          'delayInterval': '5'})
+                          'max_retry_count': '1',
+                          'delay_interval': '5'})
 
         retry_policy = RetryPolicy(max_retry_count="1",
                                    strategy="exponential",
@@ -26,6 +26,6 @@ class TestRetryPolicy(unittest.TestCase):
         self.assertEqual(retry_policy.get_dict_repr(),
                          {'setting_name': 'retry_policy',
                           'strategy': 'exponential',
-                          'minimumInterval': '5',
-                          'maxRetryCount': '1',
-                          'maximumInterval': '10'})
+                          'minimum_interval': '5',
+                          'max_retry_count': '1',
+                          'maximum_interval': '10'})

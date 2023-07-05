@@ -171,14 +171,14 @@ class Setting(ABC, metaclass=ABCBuildDictMeta):
 
     EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_name'}
 
-    def get_setting_name(self) -> str:
-        return self.setting_name
-
     def __init__(self, setting_name: str) -> None:
         self.setting_name = setting_name
         self._dict: Dict = {
             "setting_name": self.setting_name
         }
+
+    def get_setting_name(self) -> str:
+        return self.setting_name
 
     def get_dict_repr(self) -> Dict:
         """Build a dictionary of a particular binding. The keys are camel
@@ -192,9 +192,12 @@ class Setting(ABC, metaclass=ABCBuildDictMeta):
         params = list(dict.fromkeys(getattr(self, 'init_params', [])))
         for p in params:
             if p not in Setting.EXCLUDED_INIT_PARAMS:
-                self._dict[to_camel_case(p)] = getattr(self, p, None)
+                self._dict[p] = getattr(self, p, None)
 
         return self._dict
 
-    def get_settings_value(self, name: str) -> Optional[str]:
-        return self.get_dict_repr().get(name)
+    def get_settings_value(self, settings_attribute_key: str) -> Optional[str]:
+        """
+        Get the value of a particular setting attribute.
+        """
+        return self.get_dict_repr().get(settings_attribute_key)

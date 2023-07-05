@@ -218,8 +218,8 @@ class TestFunctionBuilder(unittest.TestCase):
 
         self.assertEqual(func.get_settings_dict("retry_policy"),
                          {'setting_name': 'retry_policy',
-                          'strategy': 'exponential', 'maxRetryCount': '2',
-                          'minimumInterval': '1', 'maximumInterval': '5'})
+                          'strategy': 'exponential', 'max_retry_count': '2',
+                          'minimum_interval': '1', 'maximum_interval': '5'})
 
 
 class TestScaffold(unittest.TestCase):

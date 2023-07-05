@@ -135,3 +135,4 @@ class TestSettings(unittest.TestCase):
         expected_dict = {'setting_name': "TestSetting", "name": "NewSetting"}
 
         self.assertEqual(test_setting.get_dict_repr(), expected_dict)
+        self.assertEqual(test_setting.get_settings_value("name"), "NewSetting")
