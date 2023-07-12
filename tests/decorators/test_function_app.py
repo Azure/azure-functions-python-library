@@ -10,10 +10,12 @@ from azure.functions import WsgiMiddleware, AsgiMiddleware
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
     TIMER_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
-    BindingDirection, SCRIPT_FILE_NAME
+    BindingDirection, HTTPAuthorizationType, ManifestAuthType, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, \
+    ManifestAuth, OpenAIPluginFunctionApp, PluginManifest, WsgiFunctionApp, \
+    HttpFunctionsAuthLevelMixin, \
+    FunctionRegister, \
     TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
@@ -595,3 +597,65 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
+
+    def test_openai_plugin_function_app_default(self):
+
+        plugin_manifest = PluginManifest(
+                schema_version="1.0",
+                name_for_human="TestAPIPlugin",
+                name_for_model="TestAPIPlugin",
+                description_for_human="TestAPIPluginDescription",
+                description_for_model="TestAPIPluginDescription",
+                logo_url="TestAPIPluginLogo",
+                contact_email="TestAPIPluginEMail",
+                legal_info_url="TestAPIPluginLegalInfo",
+                open_api_yml_url_or_path="TestAPIOpenAPIYaml",
+                auth=ManifestAuth(ManifestAuthType.NONE,
+                                  HTTPAuthorizationType.BASIC),
+                api_has_user_authentication=False,
+        )
+        app = OpenAIPluginFunctionApp(plugin_manifest)
+        funcs = app.get_functions()
+        self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def _test_openai_external_app(self, app, is_async):
+        funcs = app.get_functions()
+        # self.assertEqual(len(funcs), 1)
+        # func = funcs[0]
+        # self.assertEqual(func.get_function_name(), "http_app_func")
+        # raw_bindings = func.get_raw_bindings()
+        # raw_trigger = raw_bindings[0]
+        # raw_output_binding = raw_bindings[0]
+        # self.assertEqual(inspect.iscoroutinefunction(func.get_user_function()),
+        #                  is_async)
+        # self.assertEqual(json.loads(raw_trigger),
+        #                  json.loads(
+        #                      '{"direction": "IN", "type": "httpTrigger", '
+        #                      '"authLevel": "FUNCTION", "route": "/{*route}", '
+        #                      '"methods": ["GET", "POST", "DELETE", "HEAD", '
+        #                      '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+        # self.assertEqual(json.loads(raw_output_binding), json.loads(
+        #     '{"direction": "IN", "type": "httpTrigger", "authLevel": '
+        #     '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
+        #     '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+        #     '*route}"}'))
+        # self.assertEqual(func.get_bindings_dict(), {
+        #     "bindings": [
+        #         {
+        #             "authLevel": AuthLevel.FUNCTION,
+        #             "direction": BindingDirection.IN,
+        #             "methods": [HttpMethod.GET, HttpMethod.POST,
+        #                         HttpMethod.DELETE,
+        #                         HttpMethod.HEAD,
+        #                         HttpMethod.PATCH,
+        #                         HttpMethod.PUT, HttpMethod.OPTIONS],
+        #             "name": "req",
+        #             "route": "/{*route}",
+        #             "type": HTTP_TRIGGER
+        #         },
+        #         {
+        #             "direction": BindingDirection.OUT,
+        #             "name": "$return",
+        #             "type": HTTP_OUTPUT
+        #         }
+        #     ]})

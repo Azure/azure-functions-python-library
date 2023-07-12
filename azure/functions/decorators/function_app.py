@@ -9,6 +9,8 @@ from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
     Iterable
 
+from azure.functions import HttpResponse
+
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, HTTPAuthorizationType, \
     ManifestAuthType, Trigger, \
@@ -2246,3 +2248,10 @@ class OpenAIPluginFunctionApp(ExternalHttpFunctionApp):
         """
         self.plugin_manifest = plugin_manifest
         super().__init__(auth_level=http_auth_level)
+
+        @self.route(route=".well_known/ai_plugin.json",
+                    auth_level=http_auth_level,
+                    methods=iter(HttpMethod))
+        def well_known_ai_plugin(req: HttpRequest) -> HttpResponse:
+            return HttpResponse(self.plugin_manifest,
+                                status_code=200)

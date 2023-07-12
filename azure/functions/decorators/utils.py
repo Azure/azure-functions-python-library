@@ -47,7 +47,7 @@ class BuildDictMeta(type):
     @staticmethod
     def add_to_dict(func: Callable[..., Any]):
         def wrapper(*args, **kwargs):
-            if args is None or len(args) == 0:
+            if args is None or not args:
                 raise ValueError(
                     f'{func.__name__} has no args. Please ensure func is an '
                     f'object method.')
@@ -58,7 +58,7 @@ class BuildDictMeta(type):
 
             init_params = list(inspect.signature(func).parameters.keys())
             init_params.extend(list(kwargs.keys()))
-            for key in kwargs.keys():
+            for key in kwargs:
                 if not hasattr(self, key):
                     setattr(self, key, kwargs[key])
 
@@ -97,10 +97,11 @@ def parse_singular_param_to_enum(param: Optional[Union[T, str]],
     if isinstance(param, str):
         try:
             return class_name[param.upper()]
-        except KeyError:
+        except KeyError as e:
             raise KeyError(
                 f"Can not parse str '{param}' to {class_name.__name__}. "
-                f"Allowed values are {[e.name for e in class_name]}")
+                f"Allowed values are {[e.name for e in class_name]}"
+            ) from e
 
     return param
 
@@ -114,16 +115,17 @@ def parse_iterable_param_to_enums(
     try:
         return [class_name[value.upper()] if isinstance(value, str) else value
                 for value in param_values]
-    except KeyError:
+    except KeyError as e:
         raise KeyError(
             f"Can not parse '{param_values}' to "
             f"Optional[Iterable[{class_name.__name__}]]. "
             f"Please ensure param all list elements exist in "
-            f"{[e.name for e in class_name]}")
+            f"{[e.name for e in class_name]}"
+        ) from e
 
 
 def to_camel_case(snake_case_str: str):
-    if snake_case_str is None or len(snake_case_str) == 0:
+    if snake_case_str is None or not snake_case_str:
         raise ValueError(
             f"Please ensure arg name {snake_case_str} is not empty!")
 
@@ -169,7 +171,6 @@ def is_word(input_string: str) -> bool:
 
 class StringifyEnumJsonEncoder(JSONEncoder):
     def default(self, o):
-        if isinstance(o, StringifyEnum):
-            return str(o)
-
-        return super().default(o)
+        return str(o) \
+            if isinstance(o, StringifyEnum) \
+            else super().default(o)
