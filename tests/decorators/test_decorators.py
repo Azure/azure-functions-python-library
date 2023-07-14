@@ -2073,33 +2073,33 @@ class TestFunctionsApp(unittest.TestCase):
         func = self._get_user_function(app)
 
         assert_json(self, func, {
-                    "scriptFile": "function_app.py",
-                    "bindings": [
-                        {
-                            "direction": BindingDirection.OUT,
-                            "type": SQL,
-                            "name": "out",
-                            "commandText": "dummy_table",
-                            "connectionStringSetting": "dummy_setting",
-                            "commandType": "Text"
-                        },
-                        {
-                            "direction": BindingDirection.IN,
-                            "type": SQL,
-                            "name": "in",
-                            "commandText": "dummy_query",
-                            "connectionStringSetting": "dummy_setting",
-                            "commandType": "Text"
-                        },
-                        {
-                            "direction": BindingDirection.IN,
-                            "type": SQL_TRIGGER,
-                            "name": "trigger",
-                            "tableName": "dummy_table",
-                            "connectionStringSetting": "dummy_setting"
-                        }
-                    ]
-                })
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    "type": SQL,
+                    "name": "out",
+                    "commandText": "dummy_table",
+                    "connectionStringSetting": "dummy_setting",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "type": SQL,
+                    "name": "in",
+                    "commandText": "dummy_query",
+                    "connectionStringSetting": "dummy_setting",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "type": SQL_TRIGGER,
+                    "name": "trigger",
+                    "tableName": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                }
+            ]
+        })
 
     def test_sql_full_args(self):
         app = self.func_app
@@ -2127,41 +2127,40 @@ class TestFunctionsApp(unittest.TestCase):
         func = self._get_user_function(app)
 
         assert_json(self, func, {
-                    "scriptFile": "function_app.py",
-                    "bindings": [
-                        {
-                            "direction": BindingDirection.OUT,
-                            'dummyField': 'dummy',
-                            "dataType": DataType.STRING,
-                            "type": SQL,
-                            "name": "out",
-                            "commandText": "dummy_table",
-                            "connectionStringSetting": "dummy_setting",
-                            "commandType": "Text"
-                        },
-                        {
-                            "direction": BindingDirection.IN,
-                            'dummyField': 'dummy',
-                            "dataType": DataType.STRING,
-                            "type": SQL,
-                            "name": "in",
-                            "commandText": "dummy_query",
-                            "connectionStringSetting": "dummy_setting",
-                            "commandType": "dummy_type",
-                            "parameters": "dummy_parameters",
-                            "commandType": "Text"
-                        },
-                        {
-                            "direction": BindingDirection.IN,
-                            'dummyField': 'dummy',
-                            "dataType": DataType.STRING,
-                            "type": SQL_TRIGGER,
-                            "name": "trigger",
-                            "tableName": "dummy_table",
-                            "connectionStringSetting": "dummy_setting"
-                        }
-                    ]
-                })
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": SQL,
+                    "name": "out",
+                    "commandText": "dummy_table",
+                    "connectionStringSetting": "dummy_setting",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": SQL,
+                    "name": "in",
+                    "commandText": "dummy_query",
+                    "connectionStringSetting": "dummy_setting",
+                    "parameters": "dummy_parameters",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": SQL_TRIGGER,
+                    "name": "trigger",
+                    "tableName": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                }
+            ]
+        })
 
     def test_sql_trigger(self):
         app = self.func_app

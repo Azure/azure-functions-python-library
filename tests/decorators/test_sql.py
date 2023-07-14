@@ -19,12 +19,12 @@ class TestSql(unittest.TestCase):
         self.assertEqual(trigger.get_binding_name(), "sqlTrigger")
         self.assertEqual(trigger.get_dict_repr(),
                          {"connectionStringSetting": "dummy_setting",
-                         "dataType": DataType.UNDEFINED,
-                         "tableName": "dummy_table",
-                         "direction": BindingDirection.IN,
-                         "dummyField": "dummy",
-                         "name": "req",
-                         "type": SQL_TRIGGER})
+                          "dataType": DataType.UNDEFINED,
+                          "tableName": "dummy_table",
+                          "direction": BindingDirection.IN,
+                          "dummyField": "dummy",
+                          "name": "req",
+                          "type": SQL_TRIGGER})
 
     def test_sql_output_valid_creation(self):
         output = SqlOutput(name="req",
