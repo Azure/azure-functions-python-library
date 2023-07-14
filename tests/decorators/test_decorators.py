@@ -2080,8 +2080,7 @@ class TestFunctionsApp(unittest.TestCase):
                     "type": SQL,
                     "name": "out",
                     "commandText": "dummy_table",
-                    "connectionStringSetting": "dummy_setting",
-                    "commandType": "Text"
+                    "connectionStringSetting": "dummy_setting"
                 },
                 {
                     "direction": BindingDirection.IN,
@@ -2136,8 +2135,7 @@ class TestFunctionsApp(unittest.TestCase):
                     "type": SQL,
                     "name": "out",
                     "commandText": "dummy_table",
-                    "connectionStringSetting": "dummy_setting",
-                    "commandType": "Text"
+                    "connectionStringSetting": "dummy_setting"
                 },
                 {
                     "direction": BindingDirection.IN,
@@ -2233,7 +2231,6 @@ class TestFunctionsApp(unittest.TestCase):
             "name": "out",
             "commandText": "dummy_table",
             "connectionStringSetting": "dummy_setting",
-            "commandType": "Text"
         })
 
     def test_function_app_full_bindings_metadata_key_order(self):

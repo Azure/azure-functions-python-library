@@ -36,7 +36,6 @@ class TestSql(unittest.TestCase):
         self.assertEqual(output.get_dict_repr(),
                          {"commandText": "dummy_table",
                           "connectionStringSetting": "dummy_setting",
-                          "commandType": "Text",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.OUT,
                           "dummyField": "dummy",
