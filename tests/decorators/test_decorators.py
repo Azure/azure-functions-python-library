@@ -2111,7 +2111,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.sql_input(arg_name="in",
                        command_text="dummy_query",
                        connection_string_setting="dummy_setting",
-                       command_type="dummy_type",
+                       command_type="Text",
                        parameters="dummy_parameters",
                        data_type=DataType.STRING,
                        dummy_field="dummy")
