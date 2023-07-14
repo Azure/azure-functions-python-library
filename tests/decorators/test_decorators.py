@@ -2075,28 +2075,30 @@ class TestFunctionsApp(unittest.TestCase):
         assert_json(self, func, {
                     "scriptFile": "function_app.py",
                     "bindings": [
-                    {
-                        "direction": BindingDirection.OUT,
-                        "type": SQL,
-                        "name": "out",
-                        "commandText": "dummy_table",
-                        "connectionStringSetting": "dummy_setting"
-                    },
-                    {
-                        "direction": BindingDirection.IN,
-                        "type": SQL,
-                        "name": "in",
-                        "commandText": "dummy_query",
-                        "connectionStringSetting": "dummy_setting"
-                    },
-                    {
-                        "direction": BindingDirection.IN,
-                        "type": SQL_TRIGGER,
-                        "name": "trigger",
-                        "tableName": "dummy_table",
-                        "connectionStringSetting": "dummy_setting"
-                    }
-                ]
+                        {
+                            "direction": BindingDirection.OUT,
+                            "type": SQL,
+                            "name": "out",
+                            "commandText": "dummy_table",
+                            "connectionStringSetting": "dummy_setting",
+                            "commandType": "Text"
+                        },
+                        {
+                            "direction": BindingDirection.IN,
+                            "type": SQL,
+                            "name": "in",
+                            "commandText": "dummy_query",
+                            "connectionStringSetting": "dummy_setting",
+                            "commandType": "Text"
+                        },
+                        {
+                            "direction": BindingDirection.IN,
+                            "type": SQL_TRIGGER,
+                            "name": "trigger",
+                            "tableName": "dummy_table",
+                            "connectionStringSetting": "dummy_setting"
+                        }
+                    ]
                 })
 
     def test_sql_full_args(self):
@@ -2127,36 +2129,38 @@ class TestFunctionsApp(unittest.TestCase):
         assert_json(self, func, {
                     "scriptFile": "function_app.py",
                     "bindings": [
-                    {
-                        "direction": BindingDirection.OUT,
-                        'dummyField': 'dummy',
-                        "dataType": DataType.STRING,
-                        "type": SQL,
-                        "name": "out",
-                        "commandText": "dummy_table",
-                        "connectionStringSetting": "dummy_setting"
-                    },
-                    {
-                        "direction": BindingDirection.IN,
-                        'dummyField': 'dummy',
-                        "dataType": DataType.STRING,
-                        "type": SQL,
-                        "name": "in",
-                        "commandText": "dummy_query",
-                        "connectionStringSetting": "dummy_setting",
-                        "commandType": "dummy_type",
-                        "parameters": "dummy_parameters"
-                    },
-                    {
-                        "direction": BindingDirection.IN,
-                        'dummyField': 'dummy',
-                        "dataType": DataType.STRING,
-                        "type": SQL_TRIGGER,
-                        "name": "trigger",
-                        "tableName": "dummy_table",
-                        "connectionStringSetting": "dummy_setting"
-                    }
-                ]
+                        {
+                            "direction": BindingDirection.OUT,
+                            'dummyField': 'dummy',
+                            "dataType": DataType.STRING,
+                            "type": SQL,
+                            "name": "out",
+                            "commandText": "dummy_table",
+                            "connectionStringSetting": "dummy_setting",
+                            "commandType": "Text"
+                        },
+                        {
+                            "direction": BindingDirection.IN,
+                            'dummyField': 'dummy',
+                            "dataType": DataType.STRING,
+                            "type": SQL,
+                            "name": "in",
+                            "commandText": "dummy_query",
+                            "connectionStringSetting": "dummy_setting",
+                            "commandType": "dummy_type",
+                            "parameters": "dummy_parameters",
+                            "commandType": "Text"
+                        },
+                        {
+                            "direction": BindingDirection.IN,
+                            'dummyField': 'dummy',
+                            "dataType": DataType.STRING,
+                            "type": SQL_TRIGGER,
+                            "name": "trigger",
+                            "tableName": "dummy_table",
+                            "connectionStringSetting": "dummy_setting"
+                        }
+                    ]
                 })
 
     def test_sql_trigger(self):
@@ -2203,7 +2207,8 @@ class TestFunctionsApp(unittest.TestCase):
             "type": SQL,
             "name": "in",
             "commandText": "dummy_query",
-            "connectionStringSetting": "dummy_setting"
+            "connectionStringSetting": "dummy_setting",
+            "commandType": "Text"
         })
 
     def test_sql_output_binding(self):
@@ -2228,7 +2233,8 @@ class TestFunctionsApp(unittest.TestCase):
             "type": SQL,
             "name": "out",
             "commandText": "dummy_table",
-            "connectionStringSetting": "dummy_setting"
+            "connectionStringSetting": "dummy_setting",
+            "commandType": "Text"
         })
 
     def test_function_app_full_bindings_metadata_key_order(self):

@@ -18,13 +18,13 @@ class TestSql(unittest.TestCase):
 
         self.assertEqual(trigger.get_binding_name(), "sqlTrigger")
         self.assertEqual(trigger.get_dict_repr(),
-                          {"connectionStringSetting": "dummy_setting",
-                          "dataType": DataType.UNDEFINED,
-                          "tableName": "dummy_table",
-                          "direction": BindingDirection.IN,
-                          "dummyField": "dummy",
-                          "name": "req",
-                          "type": SQL_TRIGGER})
+                         {"connectionStringSetting": "dummy_setting",
+                         "dataType": DataType.UNDEFINED,
+                         "tableName": "dummy_table",
+                         "direction": BindingDirection.IN,
+                         "dummyField": "dummy",
+                         "name": "req",
+                         "type": SQL_TRIGGER})
 
     def test_sql_output_valid_creation(self):
         output = SqlOutput(name="req",
@@ -36,6 +36,7 @@ class TestSql(unittest.TestCase):
         self.assertEqual(output.get_dict_repr(),
                          {"commandText": "dummy_table",
                           "connectionStringSetting": "dummy_setting",
+                          "commandType": "Text",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.OUT,
                           "dummyField": "dummy",
@@ -52,6 +53,7 @@ class TestSql(unittest.TestCase):
         self.assertEqual(input.get_dict_repr(),
                          {"commandText": "dummy_query",
                           "connectionStringSetting": "dummy_setting",
+                          "commandType": "Text",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,
                           "dummyField": "dummy",
