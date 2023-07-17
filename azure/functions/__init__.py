@@ -12,6 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
+from .decorators.dapr.dapr_function_app import DaprFunctionApp
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -23,7 +24,6 @@ from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
-from .decorators.dapr_function_app import DaprFunctionApp
 
 # Import binding implementations to register them
 from . import blob  # NoQA

@@ -5,7 +5,7 @@ from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, ExternalHttpFunctionApp, AsgiFunctionApp, \
     WsgiFunctionApp, FunctionRegister, TriggerApi, BindingApi
 from .http import HttpMethod
-from .dapr_function_app import DaprFunctionApp
+from .dapr.dapr_function_app import DaprFunctionApp
 
 __all__ = [
     'FunctionApp',

@@ -497,7 +497,10 @@ class DaprBindingApi(BindingApi, ABC):
 
 
 class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi):
+    """DaprFunctionApp object used for Dapr bindings and triggers.
 
+    Ref: https://aka.ms/dapr-bindings-triggers
+    """
     def __init__(self,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
         """Constructor of :class:`DaprFunctionApp` object.

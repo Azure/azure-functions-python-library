@@ -3,7 +3,7 @@
 import unittest
 
 from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.dapr_function_app import DaprFunctionApp
+from azure.functions.decorators.dapr.dapr_function_app import DaprFunctionApp
 from azure.functions.decorators.constants import DAPR_BINDING, \
     DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, \
     DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
