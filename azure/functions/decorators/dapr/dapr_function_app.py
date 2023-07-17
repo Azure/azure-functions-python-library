@@ -5,8 +5,8 @@ from typing import Any, Callable, Optional, Union
 from azure.functions.decorators.core import DataType, AuthLevel
 from azure.functions.decorators.utils import parse_singular_param_to_enum
 from azure.functions.decorators.function_app import BindingApi, \
-    FunctionRegister, TriggerApi
-from azure.functions.decorators.dapr import DaprBindingOutput, \
+    FunctionRegister, SettingsApi, TriggerApi
+from azure.functions.decorators.dapr.dapr import DaprBindingOutput, \
     DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
     DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, \
     DaprStateOutput, DaprTopicTrigger
@@ -496,7 +496,7 @@ class DaprBindingApi(BindingApi, ABC):
         return wrap
 
 
-class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi):
+class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi, SettingsApi):
     """DaprFunctionApp object used for Dapr bindings and triggers.
 
     Ref: https://aka.ms/dapr-bindings-triggers
