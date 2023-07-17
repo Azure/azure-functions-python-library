@@ -489,7 +489,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(setting.get_settings_value("function_name"),
                          "timer_function")
 
-
     def test_function_register_register_function_register_error(self):
         class DummyFunctionApp(FunctionRegister):
             pass
