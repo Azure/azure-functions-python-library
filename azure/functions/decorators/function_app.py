@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -29,6 +29,8 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .retry_policy import RetryPolicy
+from .function_name import FunctionName
 from .warmup import WarmUpTrigger
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
@@ -45,11 +47,17 @@ class Function(object):
 
         :param func: User defined python function instance.
         :param script_file: File name indexed by worker to find function.
+        :param trigger: The trigger object of the function.
+        :param bindings: The list of binding objects of a function.
+        :param settings: The list of setting objects of a function.
+        :param http_type: Http function type.
+        :param is_http_function: Whether the function is a http function.
         """
         self._name: str = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
         self._bindings: List[Binding] = []
+        self._settings: List[Setting] = []
         self.function_script_file = script_file
         self.http_type = 'function'
         self._is_http_function = False
@@ -83,14 +91,12 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self, function_name: Optional[str] = None) -> None:
-        """Set or update the name for the function if :param:`function_name`
-         is not None. If not set, function name will default to python
-        function name.
-        :param function_name: Name the function set to.
+    def add_setting(self, setting: Setting) -> None:
+        """Add a setting instance to the function.
+
+        :param setting: The setting object to add
         """
-        if function_name:
-            self._name = function_name
+        self._settings.append(setting)
 
     def set_http_type(self, http_type: str) -> None:
         """Set or update the http type for the function if :param:`http_type`
@@ -115,6 +121,36 @@ class Function(object):
         :return: Bindings attached to the function.
         """
         return self._bindings
+
+    def get_setting(self, setting_name: str) -> Optional[Setting]:
+        """Get a specific setting attached to the function.
+
+        :param setting_name: The name of the setting to search for.
+        :return: The setting attached to the function (or None if not found).
+        """
+        for setting in self._settings:
+            if setting.setting_name == setting_name:
+                return setting
+        return None
+
+    def get_settings_dict(self, setting_name) -> Optional[Dict]:
+        """Get a dictionary representation of a setting.
+
+        :param: setting_name: The name of the setting to search for.
+        :return: The dictionary representation of the setting (or None if not
+        found).
+        """
+        setting = self.get_setting(setting_name)
+        return setting.get_dict_repr() if setting else None
+
+    def get_function_name(self) -> Optional[str]:
+        """Get the name of the function.
+        :return: The name of the function.
+        """
+        function_name_setting = \
+            self.get_setting("function_name")
+        return function_name_setting.get_settings_value("function_name") \
+            if function_name_setting else self._name
 
     def get_raw_bindings(self) -> List[str]:
         return [json.dumps(b.get_dict_repr(), cls=StringifyEnumJsonEncoder)
@@ -145,13 +181,6 @@ class Function(object):
         """
         return self._func
 
-    def get_function_name(self) -> str:
-        """Get the function name.
-
-        :return: Function name.
-        """
-        return self._name
-
     def get_function_json(self) -> str:
         """Get the json stringified form of function.
 
@@ -170,11 +199,6 @@ class FunctionBuilder(object):
     def __call__(self, *args, **kwargs):
         pass
 
-    def configure_function_name(self, function_name: str) -> 'FunctionBuilder':
-        self._function.set_function_name(function_name)
-
-        return self
-
     def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
         self._function.set_http_type(http_type)
 
@@ -186,6 +210,10 @@ class FunctionBuilder(object):
 
     def add_binding(self, binding: Binding) -> 'FunctionBuilder':
         self._function.add_binding(binding=binding)
+        return self
+
+    def add_setting(self, setting: Setting) -> 'FunctionBuilder':
+        self._function.add_setting(setting=setting)
         return self
 
     def _validate_function(self,
@@ -287,23 +315,6 @@ class DecoratorApi(ABC):
             return wrap(fb)
 
         return decorator
-
-    def function_name(self, name: str) -> Callable[..., Any]:
-        """Set name of the :class:`Function` object.
-
-        :param name: Name of the function.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.configure_function_name(name)
-                return fb
-
-            return decorator()
-
-        return wrap
 
     def http_type(self, http_type: str) -> Callable[..., Any]:
         """Set http type of the :class:`Function` object.
@@ -1938,6 +1949,80 @@ class BindingApi(DecoratorApi, ABC):
         return wrap
 
 
+class SettingsApi(DecoratorApi, ABC):
+    """Interface to extend for using existing settings decorator in
+    functions."""
+
+    def function_name(self, name: str,
+                      setting_extra_fields: Dict[str, Any] = {},
+                      ) -> Callable[..., Any]:
+        """Optional: Sets name of the :class:`Function` object. If not set,
+        it will default to the name of the method name.
+
+        :param name: Name of the function.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=FunctionName(
+                    function_name=name,
+                    **setting_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def retry(self,
+              strategy: str,
+              max_retry_count: str,
+              delay_interval: Optional[str] = None,
+              minimum_interval: Optional[str] = None,
+              maximum_interval: Optional[str] = None,
+              setting_extra_fields: Dict[str, Any] = {},
+              ) -> Callable[..., Any]:
+        """The retry decorator adds :class:`RetryPolicy` to the function
+        settings object for building :class:`Function` object used in worker
+        function indexing model. This is equivalent to defining RetryPolicy
+        in the function.json which enables function to retry on failure.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure_functions_retries
+
+        :param strategy: The retry strategy to use.
+        :param max_retry_count: The maximum number of retry attempts.
+        :param delay_interval: The delay interval between retry attempts.
+        :param minimum_interval: The minimum delay interval between retry
+        attempts.
+        :param maximum_interval: The maximum delay interval between retry
+        attempts.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=RetryPolicy(
+                    strategy=strategy,
+                    max_retry_count=max_retry_count,
+                    minimum_interval=minimum_interval,
+                    maximum_interval=maximum_interval,
+                    delay_interval=delay_interval,
+                    **setting_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+
 class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
     def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
         """Interface for declaring top level function app class which will
@@ -1987,7 +2072,7 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
     register_blueprint = register_functions
 
 
-class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
+class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
     """FunctionApp object used by worker function indexing model captures
     user defined functions and metadata.
 

@@ -14,7 +14,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.dapr.dapr_function_app import DaprFunctionApp
 from .decorators.function_app import (FunctionRegister, TriggerApi,
-                                      BindingApi)
+                                      BindingApi, SettingsApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
                         FuncExtensionBase, AppExtensionBase)
 from ._http_wsgi import WsgiMiddleware
@@ -36,8 +36,8 @@ from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
 from . import durable_functions  # NoQA
-from . import sql # NoQA
-from . import warmup # NoQA
+from . import sql  # NoQA
+from . import warmup  # NoQA
 
 
 __all__ = (
@@ -86,6 +86,7 @@ __all__ = (
     'DecoratorApi',
     'TriggerApi',
     'BindingApi',
+    'SettingsApi',
     'Blueprint',
     'ExternalHttpFunctionApp',
     'AsgiFunctionApp',
@@ -98,4 +99,4 @@ __all__ = (
     'DaprFunctionApp'
 )
 
-__version__ = '1.15.0'
+__version__ = '1.15.1b1'
