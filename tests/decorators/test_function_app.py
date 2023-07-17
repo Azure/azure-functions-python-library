@@ -467,6 +467,29 @@ class TestFunctionApp(unittest.TestCase):
         app.get_functions()
         self.assertFalse(app._require_auth_level)
 
+    def test_blueprints_with_function_name(self):
+        class DummyFunctionApp(FunctionRegister, TriggerApi):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = Blueprint()
+
+        @blueprint.function_name("timer_function")
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(blueprint)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+
+        setting = functions[0].get_setting("function_name")
+
+        self.assertEqual(setting.get_settings_value("function_name"),
+                         "timer_function")
+
+
     def test_function_register_register_function_register_error(self):
         class DummyFunctionApp(FunctionRegister):
             pass

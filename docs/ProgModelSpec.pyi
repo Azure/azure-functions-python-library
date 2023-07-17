@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional, Union, Iterable
 from azure.functions import AsgiMiddleware, WsgiMiddleware
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, Cardinality, AccessRights, Setting
-from azure.functions.decorators.function_app import FunctionBuilder
+from azure.functions.decorators.function_app import FunctionBuilder, SettingsApi
 from azure.functions.decorators.http import HttpMethod
 
 
@@ -1097,7 +1097,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         pass
 
 
-class BluePrint(TriggerApi, BindingApi):
+class BluePrint(TriggerApi, BindingApi, SettingsApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing
