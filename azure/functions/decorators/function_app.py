@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import abc
+import asyncio
 import json
 import logging
 from abc import ABC
@@ -2132,7 +2133,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         self.startup_task_done = False
 
     def __del__(self):
-        self.middleware.notify_shutdown()
+        asyncio.run(self.middleware.notify_shutdown())
 
     def _add_http_app(self,
                       http_middleware: Union[
