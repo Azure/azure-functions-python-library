@@ -1,7 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import abc
-import asyncio
 import json
 import logging
 from abc import ABC

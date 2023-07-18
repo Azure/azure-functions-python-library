@@ -218,7 +218,7 @@ class AsgiMiddleware:
         return await self.lifespan_receive_queue.get()
 
     async def _lifespan_send(self, message):
-        logging.debug("Received lifespan message %s from ASGI worker.", message)
+        logging.debug("Received lifespan message %s.", message)
         if message["type"] == "lifespan.startup.complete":
             self.lifespan_startup_event.set()
         elif message["type"] == "lifespan.shutdown.complete":
@@ -231,8 +231,6 @@ class AsgiMiddleware:
             self.lifespan_shutdown_event.set()
             if message.get("message"):
                 self._logger.error(message["message"])
-        else:
-            raise ValueError(f"Unknown lifespan message type: {message['type']}")
 
     async def _lifespan_main(self):
         scope = {
@@ -250,7 +248,7 @@ class AsgiMiddleware:
     async def notify_startup(self):
         """Notify the ASGI app that the server has started."""
         self._logger.debug("Notifying ASGI app of startup.")
-        
+
         startup_event = {"type": "lifespan.startup"}
         await self.lifespan_receive_queue.put(startup_event)
         task = asyncio.create_task(self._lifespan_main())  # NOQA
