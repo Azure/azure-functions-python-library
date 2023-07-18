@@ -23,7 +23,7 @@ class MockAsgiApplication:
 
     async def __call__(self, scope, receive, send):
         self.received_scope = scope
-        
+
         # Verify against ASGI specification
         assert scope['asgi.spec_version'] in ['2.0', '2.1']
         assert isinstance(scope['asgi.spec_version'], str)
@@ -32,7 +32,6 @@ class MockAsgiApplication:
         assert isinstance(scope['asgi.version'], str)
 
         assert isinstance(scope['type'], str)
-        assert scope['type'] in ["http", "lifespan.startup", "lifespan.shutdown"]
 
         if scope['type'] == 'lifespan.startup':
             self.startup_called = True
@@ -60,13 +59,15 @@ class MockAsgiApplication:
                 assert isinstance(k, bytes)
                 assert isinstance(v, bytes)
 
-            assert scope['client'] is None or hasattr(scope['client'], '__iter__')
+            assert scope['client'] is None or hasattr(scope['client'],
+                                                      '__iter__')
             if scope['client']:
                 assert len(scope['client']) == 2
                 assert isinstance(scope['client'][0], str)
                 assert isinstance(scope['client'][1], int)
 
-            assert scope['server'] is None or hasattr(scope['server'], '__iter__')
+            assert scope['server'] is None or hasattr(scope['server'],
+                                                      '__iter__')
             if scope['server']:
                 assert len(scope['server']) == 2
                 assert isinstance(scope['server'][0], str)
@@ -91,8 +92,10 @@ class MockAsgiApplication:
                 }
             )
 
-        self.next_request = await receive()
-        assert self.next_request['type'] == 'http.disconnect'
+            self.next_request = await receive()
+            assert self.next_request['type'] == 'http.disconnect'
+        else:
+            raise AssertionError(f"unexpected type {scope['type']}")
 
 
 class TestHttpAsgiMiddleware(unittest.TestCase):
@@ -234,5 +237,6 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
 
     def test_function_app_lifecycle_events(self):
         mock_app = MockAsgiApplication()
-        app = func.AsgiFunctionApp(app=mock_app, http_auth_level=func.AuthLevel.ANONYMOUS)
+        func.AsgiFunctionApp(app=mock_app,
+                             http_auth_level=func.AuthLevel.ANONYMOUS)
         assert mock_app.startup_called

@@ -2134,7 +2134,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
     def __del__(self):
         asyncio.run(self.middleware.notify_shutdown())
-  
+
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware]) -> None:

@@ -211,17 +211,20 @@ class AsgiMiddleware:
 
     async def notify_startup(self):
         """Notify the ASGI app that the server has started."""
-        scope = {"type": "lifespan.startup", "asgi.version": ASGI_VERSION, "asgi.spec_version": ASGI_SPEC_VERSION}
-        self._logger.debug("Notifying ASGI app that the server has started.")
+        scope = {"type": "lifespan.startup",
+                 "asgi.version": ASGI_VERSION,
+                 "asgi.spec_version": ASGI_SPEC_VERSION}
+        self._logger.debug("Notifying ASGI app of startup.")
         return await AsgiResponse.from_app(self._app,
-                                    scope,
-                                    b'')
+                                           scope,
+                                           b'')
 
     async def notify_shutdown(self):
         """Notify the ASGI app that the server is shutting down."""
-        scope = {"type": "lifespan.shutdown", "asgi.version": ASGI_VERSION, "asgi.spec_version": ASGI_SPEC_VERSION}
-        self._logger.debug("Notifying ASGI app that the server is shutting down.")
+        scope = {"type": "lifespan.shutdown",
+                 "asgi.version": ASGI_VERSION,
+                 "asgi.spec_version": ASGI_SPEC_VERSION}
+        self._logger.debug("Notifying ASGI app of shutdown.")
         return await AsgiResponse.from_app(self._app,
-                                    scope,
-                                    b'')
-
+                                           scope,
+                                           b'')
