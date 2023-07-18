@@ -2130,10 +2130,10 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
         self._add_http_app(self.middleware)
-        asyncio.run(self.middleware.notify_startup())
+        self.startup_task_done = False
 
     def __del__(self):
-        asyncio.run(self.middleware.notify_shutdown())
+        self.middleware.notify_shutdown()
 
     def _add_http_app(self,
                       http_middleware: Union[
@@ -2156,6 +2156,9 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                     auth_level=self.auth_level,
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
+            if not self.startup_task_done:
+                await asgi_middleware.notify_startup()
+                self.startup_task_done = True
             return await asgi_middleware.handle_async(req, context)
 
 

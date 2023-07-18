@@ -33,12 +33,12 @@ class MockAsgiApplication:
 
         assert isinstance(scope['type'], str)
 
-        if scope['type'] == 'lifespan.startup':
+        if scope['type'] == 'lifespan':
             self.startup_called = True
+            startup_message = await receive()
+            assert startup_message['type'] == 'lifespan.startup'
             await send({"type": "lifespan.startup.complete"})
-        elif scope['type'] == 'lifespan.shutdown':
-            self.shutdown_called = True
-            await send({"type": "lifespan.shutdown.complete"})
+
         elif scope['type'] == 'http':
             assert scope['http_version'] in ['1.0', '1.1', '2']
             assert isinstance(scope['http_version'], str)
@@ -237,6 +237,8 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
 
     def test_function_app_lifecycle_events(self):
         mock_app = MockAsgiApplication()
-        func.AsgiFunctionApp(app=mock_app,
-                             http_auth_level=func.AuthLevel.ANONYMOUS)
+        middleware = AsgiMiddleware(mock_app)
+        asyncio.get_event_loop().run_until_complete(
+            middleware.notify_startup()
+        )
         assert mock_app.startup_called

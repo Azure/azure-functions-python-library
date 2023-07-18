@@ -122,7 +122,7 @@ class AsgiResponse:
             }
 
     async def _send(self, message):
-        logging.debug("Received %s from ASGI worker.", message)
+        logging.info("Received %s from ASGI worker.", message)
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":
@@ -156,6 +156,11 @@ class AsgiMiddleware:
 
         self._app = app
         self.main = self._handle
+        self.state = {}
+        self.lifespan_receive_queue = asyncio.Queue()
+        self.lifespan_startup_event = asyncio.Event()
+        self.lifespan_shutdown_event = asyncio.Event()
+        self._ready_for_shutdown = False
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
         """Deprecated. Please use handle_async instead:
@@ -209,22 +214,51 @@ class AsgiMiddleware:
                                                     req.get_body())
         return asgi_response.to_func_response()
 
+    async def _lifespan_receive(self):
+        return await self.lifespan_receive_queue.get()
+
+    async def _lifespan_send(self, message):
+        logging.info("Received lifespan message %s from ASGI worker.", message)
+        if message["type"] == "lifespan.startup.complete":
+            self.lifespan_startup_event.set()
+        elif message["type"] == "lifespan.shutdown.complete":
+            self.lifespan_shutdown_event.set()
+        elif message["type"] == "lifespan.startup.failed":
+            self.lifespan_startup_event.set()
+            if message.get("message"):
+                self._logger.error(message["message"])
+        elif message["type"] == "lifespan.shutdown.failed":
+            self.lifespan_shutdown_event.set()
+            if message.get("message"):
+                self._logger.error(message["message"])
+        else:
+            raise ValueError(f"Unknown lifespan message type: {message['type']}")
+
+    async def _lifespan_main(self):
+        scope = {
+            "type": "lifespan",
+            "asgi.version": ASGI_VERSION,
+            "asgi.spec_version": ASGI_SPEC_VERSION,
+            "state": self.state,
+        }
+        try:
+            await self._app(scope, self._lifespan_receive, self._lifespan_send)
+        finally:
+            self.lifespan_startup_event.set()
+            self.lifespan_shutdown_event.set()
+
     async def notify_startup(self):
         """Notify the ASGI app that the server has started."""
-        scope = {"type": "lifespan.startup",
-                 "asgi.version": ASGI_VERSION,
-                 "asgi.spec_version": ASGI_SPEC_VERSION}
         self._logger.debug("Notifying ASGI app of startup.")
-        return await AsgiResponse.from_app(self._app,
-                                           scope,
-                                           b'')
+        
+        startup_event = {"type": "lifespan.startup"}
+        await self.lifespan_receive_queue.put(startup_event)
+        task = asyncio.create_task(self._lifespan_main())  # NOQA
+        await self.lifespan_startup_event.wait()
 
     async def notify_shutdown(self):
         """Notify the ASGI app that the server is shutting down."""
-        scope = {"type": "lifespan.shutdown",
-                 "asgi.version": ASGI_VERSION,
-                 "asgi.spec_version": ASGI_SPEC_VERSION}
         self._logger.debug("Notifying ASGI app of shutdown.")
-        return await AsgiResponse.from_app(self._app,
-                                           scope,
-                                           b'')
+        shutdown_event = {"type": "lifespan.shutdown"}
+        await self.lifespan_receive_queue.put(shutdown_event)
+        await self.lifespan_shutdown_event.wait()
