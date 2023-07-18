@@ -14,7 +14,7 @@ from .function_extension_exception import FunctionExtensionException
 class ExtensionMeta(abc.ABCMeta):
     """The metaclass handles extension registration.
 
-    AppExtension is regsistered in __init__, it is applied to all triggers.
+    AppExtension is registered in __init__, it is applied to all triggers.
     FuncExtension is registered in __call__, as users need to instantiate it
     inside hook script.
 
@@ -27,7 +27,7 @@ class ExtensionMeta(abc.ABCMeta):
         (e.g. _app_exts.pre_invocation_app_level.ext_impl)
 
     The extension tree information is stored in _info for diagnostic
-    purpose. The dictionary is serializible to json:
+    purpose. The dictionary is serializable to json:
         _info['FuncExtension']['<Trigger>'] = list(<Extension>)
         _info['AppExtension'] = list(<Extension>)
     """

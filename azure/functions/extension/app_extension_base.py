@@ -33,7 +33,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
         """This function is intended to be called by Azure Functions
         customers. This is a contract between extension developers and
         azure functions customers. If multiple .configure() are called,
-        the extension system cannot guarentee the calling order.
+        the extension system cannot guarantee the calling order.
         """
         pass
 
@@ -45,9 +45,9 @@ class AppExtensionBase(metaclass=ExtensionMeta):
                                      function_directory: str,
                                      *args, **kwargs) -> None:
         """This must be implemented as a @classmethod. It will be called right
-        a customer's function is loaded. In this stage, the customer's logger
-        is not fully initialized from the Python worker. Please use print()
-        to emit message if necessary.
+        after a customer's function is loaded. In this stage, the customer's
+        logger is not fully initialized from the Python worker. Please use
+        print() to emit a message if necessary.
 
         Parameters
         ----------
@@ -98,7 +98,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
                                   *args,
                                   **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
-        before a customer's function is being executed.
+        after a customer's function is being executed.
 
         Parameters
         ----------

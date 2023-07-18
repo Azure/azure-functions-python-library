@@ -1,27 +1,14 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import json
 from abc import ABC
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions import AsgiMiddleware, WsgiMiddleware
-from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
-from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
-    CosmosDBOutput, CosmosDBInput
-from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
-from azure.functions.decorators.function_app import FunctionBuilder
-from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
-    HttpMethod
-from azure.functions.decorators.queue import QueueTrigger, QueueOutput
-from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
-    ServiceBusQueueOutput, ServiceBusTopicTrigger, \
-    ServiceBusTopicOutput
-from azure.functions.decorators.timer import TimerTrigger
-from azure.functions.decorators.utils import parse_singular_param_to_enum, \
-    parse_iterable_param_to_enums, StringifyEnumJsonEncoder
-from azure.functions.http import HttpRequest
+    AuthLevel, Cardinality, AccessRights, Setting
+from azure.functions.decorators.function_app import FunctionBuilder, SettingsApi
+from azure.functions.decorators.http import HttpMethod
+
 
 class Function(object):
     """The function object represents a function in Function App. It
@@ -52,14 +39,6 @@ class Function(object):
              being added to a function which has trigger attached.
         """
 
-        pass
-
-    def set_function_name(self, function_name: Optional[str] = None) -> None:
-        """Set or update the name for the function if :param:`function_name`
-         is not None. If not set, function name will default to python
-        function name.
-        :param function_name: Name the function set to.
-        """
         pass
 
     def get_trigger(self) -> Optional[Trigger]:
@@ -104,6 +83,14 @@ class Function(object):
         """Get the function name.
 
         :return: Function name.
+        """
+        pass
+
+    def get_setting(self, setting_name: str) -> Optional[Setting]:
+        """Get a specific setting attached to the function.
+
+        :param setting_name: The name of the setting to search for.
+        :return: The setting attached to the function (or None if not found).
         """
         pass
 
@@ -1110,7 +1097,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         pass
 
 
-class BluePrint(TriggerApi, BindingApi):
+class BluePrint(TriggerApi, BindingApi, SettingsApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing

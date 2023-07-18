@@ -5,7 +5,7 @@ import unittest
 from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
-    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE
+    BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
@@ -61,11 +61,11 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(func.get_function_name(), "dummy_function")
+        self.assertEqual("dummy_function", func.get_function_name())
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
         self.assertTrue(func.get_trigger().route, "dummy")
 
-    def test_timer_trigger_default_args(self):
+    def test_schedule_trigger_default_args(self):
         app = self.func_app
 
         @app.schedule(arg_name="req", schedule="dummy_schedule")
@@ -86,12 +86,59 @@ class TestFunctionsApp(unittest.TestCase):
             ]
         })
 
-    def test_timer_trigger_full_args(self):
+    def test_schedule_trigger_full_args(self):
         app = self.func_app
 
         @app.schedule(arg_name="req", schedule="dummy_schedule",
                       run_on_startup=False, use_monitor=False,
                       data_type=DataType.STRING, dummy_field='dummy')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": TIMER_TRIGGER,
+                    "dataType": DataType.STRING,
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "schedule": "dummy_schedule",
+                    "runOnStartup": False,
+                    "useMonitor": False
+                }
+            ]
+        })
+
+    def test_timer_trigger_default_args(self):
+        app = self.func_app
+
+        @app.timer_trigger(arg_name="req", schedule="dummy_schedule")
+        def dummy_func():
+            pass
+
+        func = self._get_user_function(app)
+        self.assertEqual(func.get_function_name(), "dummy_func")
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": TIMER_TRIGGER,
+                    "direction": BindingDirection.IN,
+                    "schedule": "dummy_schedule"
+                }
+            ]
+        })
+
+    def test_timer_trigger_full_args(self):
+        app = self.func_app
+
+        @app.timer_trigger(arg_name="req", schedule="dummy_schedule",
+                           run_on_startup=False, use_monitor=False,
+                           data_type=DataType.STRING, dummy_field='dummy')
         def dummy():
             pass
 
@@ -169,6 +216,48 @@ class TestFunctionsApp(unittest.TestCase):
                     'dummyField': 'dummy',
                     "type": HTTP_OUTPUT,
                     "name": "out",
+                }
+            ]
+        })
+
+    def test_warmup_trigger_default_args(self):
+        app = self.func_app
+
+        @app.warm_up_trigger(arg_name="req")
+        def dummy_func():
+            pass
+
+        func = self._get_user_function(app)
+        self.assertEqual(func.get_function_name(), "dummy_func")
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": WARMUP_TRIGGER,
+                    "direction": BindingDirection.IN,
+                }
+            ]
+        })
+
+    def test_warmup_trigger_full_args(self):
+        app = self.func_app
+
+        @app.warm_up_trigger(arg_name="req", data_type=DataType.STRING,
+                             dummy_field='dummy')
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "req",
+                    "type": WARMUP_TRIGGER,
+                    "dataType": DataType.STRING,
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy'
                 }
             ]
         })
@@ -675,10 +764,10 @@ class TestFunctionsApp(unittest.TestCase):
             ]
         })
 
-    def test_cosmosdb_full_args(self):
+    def test_cosmosdb_v3_full_args(self):
         app = self.func_app
 
-        @app.cosmos_db_trigger(
+        @app.cosmos_db_trigger_v3(
             arg_name="trigger",
             database_name="dummy_db",
             collection_name="dummy_collection",
@@ -700,26 +789,26 @@ class TestFunctionsApp(unittest.TestCase):
             preferred_locations="dummy_loc",
             data_type=DataType.STRING,
             dummy_field="dummy")
-        @app.cosmos_db_input(arg_name="in",
-                             database_name="dummy_in_db",
-                             collection_name="dummy_in_collection",
-                             connection_string_setting="dummy_str",
-                             id="dummy_id",
-                             sql_query="dummy_query",
-                             partition_key="dummy_partitions",
-                             data_type=DataType.STRING,
-                             dummy_field="dummy")
-        @app.cosmos_db_output(arg_name="out",
-                              database_name="dummy_out_db",
-                              collection_name="dummy_out_collection",
-                              connection_string_setting="dummy_str",
-                              create_if_not_exists=False,
-                              partition_key="dummy_part_key",
-                              collection_throughput=1,
-                              use_multiple_write_locations=False,
-                              preferred_locations="dummy_location",
-                              data_type=DataType.STRING,
-                              dummy_field="dummy")
+        @app.cosmos_db_input_v3(arg_name="in",
+                                database_name="dummy_in_db",
+                                collection_name="dummy_in_collection",
+                                connection_string_setting="dummy_str",
+                                id="dummy_id",
+                                sql_query="dummy_query",
+                                partition_key="dummy_partitions",
+                                data_type=DataType.STRING,
+                                dummy_field="dummy")
+        @app.cosmos_db_output_v3(arg_name="out",
+                                 database_name="dummy_out_db",
+                                 collection_name="dummy_out_collection",
+                                 connection_string_setting="dummy_str",
+                                 create_if_not_exists=False,
+                                 partition_key="dummy_part_key",
+                                 collection_throughput=1,
+                                 use_multiple_write_locations=False,
+                                 preferred_locations="dummy_location",
+                                 data_type=DataType.STRING,
+                                 dummy_field="dummy")
         def dummy():
             pass
 
@@ -793,20 +882,134 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
-    def test_cosmosdb_default_args(self):
+    def test_cosmosdb_full_args(self):
         app = self.func_app
 
-        @app.cosmos_db_trigger(arg_name="trigger", database_name="dummy_db",
-                               collection_name="dummy_collection",
-                               connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(
+            arg_name="trigger",
+            database_name="dummy_db",
+            container_name="dummy_container",
+            connection="dummy_str",
+            lease_container_name="dummy_lease_container",
+            lease_connection="dummy_lease_conn_str",
+            lease_database_name="dummy_lease_db",
+            leases_container_throughput=1,
+            lease_container_prefix="dummy_lease_container_prefix",
+            feed_poll_delay=4,
+            lease_renew_interval=5,
+            lease_acquire_interval=6,
+            lease_expiration_interval=7,
+            max_items_per_invocation=8,
+            start_from_beginning=False,
+            start_from_time="2021-02-16T14:19:29Z",
+            create_lease_container_if_not_exists=False,
+            preferred_locations="dummy_loc",
+            data_type=DataType.STRING,
+            dummy_field="dummy")
         @app.cosmos_db_input(arg_name="in",
                              database_name="dummy_in_db",
-                             collection_name="dummy_in_collection",
-                             connection_string_setting="dummy_str")
+                             container_name="dummy_in_container",
+                             connection="dummy_str",
+                             id="dummy_id",
+                             sql_query="dummy_query",
+                             partition_key="dummy_partitions",
+                             data_type=DataType.STRING,
+                             dummy_field="dummy")
         @app.cosmos_db_output(arg_name="out",
                               database_name="dummy_out_db",
-                              collection_name="dummy_out_collection",
-                              connection_string_setting="dummy_str")
+                              container_name="dummy_out_container",
+                              connection="dummy_str",
+                              create_if_not_exists=False,
+                              partition_key="dummy_part_key",
+                              container_throughput=1,
+                              use_multiple_write_locations=False,
+                              preferred_locations="dummy_location",
+                              data_type=DataType.STRING,
+                              dummy_field="dummy")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         'dummyField': 'dummy',
+                                         "dataType": DataType.STRING,
+                                         "type": COSMOS_DB,
+                                         "name": "out",
+                                         "databaseName": "dummy_out_db",
+                                         "containerName":
+                                             "dummy_out_container",
+                                         "connection": "dummy_str",
+                                         "createIfNotExists": False,
+                                         "containerThroughput": 1,
+                                         "useMultipleWriteLocations": False,
+                                         "preferredLocations":
+                                             "dummy_location",
+                                         "partitionKey": "dummy_part_key"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
+                                         "dataType": DataType.STRING,
+                                         "type": COSMOS_DB,
+                                         "name": "in",
+                                         "databaseName": "dummy_in_db",
+                                         "containerName":
+                                             "dummy_in_container",
+                                         "connection": "dummy_str",
+                                         "id": "dummy_id",
+                                         "sqlQuery": "dummy_query",
+                                         "partitionKey": "dummy_partitions"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         'dummyField': 'dummy',
+                                         "dataType": DataType.STRING,
+                                         "type": COSMOS_DB_TRIGGER,
+                                         "name": "trigger",
+                                         "databaseName": "dummy_db",
+                                         "containerName": "dummy_container",
+                                         "connection": "dummy_str",
+                                         "leasesContainerThroughput": 1,
+                                         "feedPollDelay": 4,
+                                         "leaseRenewInterval": 5,
+                                         "leaseAcquireInterval": 6,
+                                         "leaseExpirationInterval": 7,
+                                         "maxItemsPerInvocation": 8,
+                                         "startFromBeginning": False,
+                                         "startFromTime":
+                                             "2021-02-16T14:19:29Z",
+                                         "createLeaseContainerIfNotExists":
+                                             False,
+                                         "preferredLocations": "dummy_loc",
+                                         "leaseContainerName":
+                                             "dummy_lease_container",
+                                         "leaseConnection":
+                                             "dummy_lease_conn_str",
+                                         "leaseDatabaseName": "dummy_lease_db",
+                                         "leaseContainerPrefix":
+                                             "dummy_lease_container_prefix"
+                                     }
+                                 ]
+                                 })
+
+    def test_cosmosdb_v3_default_args(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger_v3(arg_name="trigger", database_name="dummy_db",
+                                  collection_name="dummy_collection",
+                                  connection_string_setting="dummy_str")
+        @app.cosmos_db_input_v3(arg_name="in",
+                                database_name="dummy_in_db",
+                                collection_name="dummy_in_collection",
+                                connection_string_setting="dummy_str")
+        @app.cosmos_db_output_v3(arg_name="out",
+                                 database_name="dummy_out_db",
+                                 collection_name="dummy_out_collection",
+                                 connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -843,13 +1046,63 @@ class TestFunctionsApp(unittest.TestCase):
                                  ]
                                  })
 
-    def test_cosmosdb_trigger(self):
+    def test_cosmosdb_default_args(self):
         app = self.func_app
 
-        @app.cosmos_db_trigger(arg_name="trigger",
-                               database_name="dummy_db",
-                               collection_name="dummy_collection",
-                               connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger(arg_name="trigger", database_name="dummy_db",
+                               container_name="dummy_container",
+                               connection="dummy_str")
+        @app.cosmos_db_input(arg_name="in",
+                             database_name="dummy_in_db",
+                             container_name="dummy_in_container",
+                             connection="dummy_str")
+        @app.cosmos_db_output(arg_name="out",
+                              database_name="dummy_out_db",
+                              container_name="dummy_out_container",
+                              connection="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func, {"scriptFile": "function_app.py",
+                                 "bindings": [
+                                     {
+                                         "direction": BindingDirection.OUT,
+                                         "type": COSMOS_DB,
+                                         "name": "out",
+                                         "databaseName": "dummy_out_db",
+                                         "containerName":
+                                             "dummy_out_container",
+                                         "connection": "dummy_str"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": COSMOS_DB,
+                                         "name": "in",
+                                         "databaseName": "dummy_in_db",
+                                         "containerName":
+                                             "dummy_in_container",
+                                         "connection": "dummy_str"
+                                     },
+                                     {
+                                         "direction": BindingDirection.IN,
+                                         "type": COSMOS_DB_TRIGGER,
+                                         "name": "trigger",
+                                         "databaseName": "dummy_db",
+                                         "containerName": "dummy_container",
+                                         "connection": "dummy_str"
+                                     }
+                                 ]
+                                 })
+
+    def test_cosmosdb_v3_trigger(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger_v3(arg_name="trigger",
+                                  database_name="dummy_db",
+                                  collection_name="dummy_collection",
+                                  connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -867,13 +1120,37 @@ class TestFunctionsApp(unittest.TestCase):
             "connectionStringSetting": "dummy_str"
         })
 
+    def test_cosmosdb_trigger(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               container_name="dummy_container",
+                               connection="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB_TRIGGER,
+            "name": "trigger",
+            "databaseName": "dummy_db",
+            "containerName": "dummy_container",
+            "connection": "dummy_str"
+        })
+
     def test_not_http_function(self):
         app = self.func_app
 
         @app.cosmos_db_trigger(arg_name="trigger",
                                database_name="dummy_db",
-                               collection_name="dummy_collection",
-                               connection_string_setting="dummy_str")
+                               container_name="dummy_container",
+                               connection="dummy_str")
         def dummy():
             pass
 
@@ -882,17 +1159,17 @@ class TestFunctionsApp(unittest.TestCase):
 
         self.assertFalse(funcs[0].is_http_function())
 
-    def test_cosmosdb_input_binding(self):
+    def test_cosmosdb_v3_input_binding(self):
         app = self.func_app
 
-        @app.cosmos_db_trigger(arg_name="trigger",
-                               database_name="dummy_db",
-                               collection_name="dummy_collection",
-                               connection_string_setting="dummy_str")
-        @app.cosmos_db_input(arg_name="in",
-                             database_name="dummy_in_db",
-                             collection_name="dummy_in_collection",
-                             connection_string_setting="dummy_str")
+        @app.cosmos_db_trigger_v3(arg_name="trigger",
+                                  database_name="dummy_db",
+                                  collection_name="dummy_collection",
+                                  connection_string_setting="dummy_str")
+        @app.cosmos_db_input_v3(arg_name="in",
+                                database_name="dummy_in_db",
+                                collection_name="dummy_in_collection",
+                                connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -911,17 +1188,46 @@ class TestFunctionsApp(unittest.TestCase):
             "connectionStringSetting": "dummy_str"
         })
 
-    def test_cosmosdb_output_binding(self):
+    def test_cosmosdb_input_binding(self):
         app = self.func_app
 
         @app.cosmos_db_trigger(arg_name="trigger",
                                database_name="dummy_db",
-                               collection_name="dummy_collection",
-                               connection_string_setting="dummy_str")
-        @app.cosmos_db_output(arg_name="out",
-                              database_name="dummy_out_db",
-                              collection_name="dummy_out_collection",
-                              connection_string_setting="dummy_str")
+                               container_name="dummy_container",
+                               connection="dummy_str")
+        @app.cosmos_db_input(arg_name="in",
+                             database_name="dummy_in_db",
+                             container_name="dummy_in_container",
+                             connection="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": COSMOS_DB,
+            "name": "in",
+            "databaseName": "dummy_in_db",
+            "containerName":
+                "dummy_in_container",
+            "connection": "dummy_str"
+        })
+
+    def test_cosmosdb_v3_output_binding(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger_v3(arg_name="trigger",
+                                  database_name="dummy_db",
+                                  collection_name="dummy_collection",
+                                  connection_string_setting="dummy_str")
+        @app.cosmos_db_output_v3(arg_name="out",
+                                 database_name="dummy_out_db",
+                                 collection_name="dummy_out_collection",
+                                 connection_string_setting="dummy_str")
         def dummy():
             pass
 
@@ -938,6 +1244,35 @@ class TestFunctionsApp(unittest.TestCase):
             "collectionName":
                 "dummy_out_collection",
             "connectionStringSetting": "dummy_str"
+        })
+
+    def test_cosmosdb_output_binding(self):
+        app = self.func_app
+
+        @app.cosmos_db_trigger(arg_name="trigger",
+                               database_name="dummy_db",
+                               container_name="dummy_container",
+                               connection="dummy_str")
+        @app.cosmos_db_output(arg_name="out",
+                              database_name="dummy_out_db",
+                              container_name="dummy_out_container",
+                              connection="dummy_str")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": COSMOS_DB,
+            "name": "out",
+            "databaseName": "dummy_out_db",
+            "containerName":
+                "dummy_out_container",
+            "connection": "dummy_str"
         })
 
     def test_multiple_triggers(self):
@@ -980,8 +1315,8 @@ class TestFunctionsApp(unittest.TestCase):
         @app.cosmos_db_input(
             arg_name="in1",
             database_name="dummy_in_db",
-            collection_name="dummy_in_collection",
-            connection_string_setting="dummy_str",
+            container_name="dummy_in_container",
+            connection="dummy_str",
             id="dummy_id",
             sql_query="dummy_query",
             partition_key="dummy_partitions",
@@ -989,8 +1324,8 @@ class TestFunctionsApp(unittest.TestCase):
         @app.cosmos_db_input(
             arg_name="in2",
             database_name="dummy_in_db",
-            collection_name="dummy_in_collection",
-            connection_string_setting="dummy_str",
+            container_name="dummy_in_container",
+            connection="dummy_str",
             id="dummy_id",
             sql_query="dummy_query",
             partition_key="dummy_partitions",
@@ -1028,10 +1363,9 @@ class TestFunctionsApp(unittest.TestCase):
                                          "type": COSMOS_DB,
                                          "name": "in2",
                                          "databaseName": "dummy_in_db",
-                                         "collectionName":
-                                             "dummy_in_collection",
-                                         "connectionStringSetting":
-                                             "dummy_str",
+                                         "containerName":
+                                             "dummy_in_container",
+                                         "connection": "dummy_str",
                                          "id": "dummy_id",
                                          "sqlQuery": "dummy_query",
                                          "partitionKey": "dummy_partitions"
@@ -1042,10 +1376,9 @@ class TestFunctionsApp(unittest.TestCase):
                                          "type": COSMOS_DB,
                                          "name": "in1",
                                          "databaseName": "dummy_in_db",
-                                         "collectionName":
-                                             "dummy_in_collection",
-                                         "connectionStringSetting":
-                                             "dummy_str",
+                                         "containerName":
+                                             "dummy_in_container",
+                                         "connection": "dummy_str",
                                          "id": "dummy_id",
                                          "sqlQuery": "dummy_query",
                                          "partitionKey": "dummy_partitions"
@@ -1719,4 +2052,61 @@ class TestFunctionsApp(unittest.TestCase):
             "partitionKey": "dummy_partition_key",
             "tableName": "dummy_table_name",
             "connection": "dummy_out_conn"
+        })
+
+    def test_function_app_full_bindings_metadata_key_order(self):
+        app = self.func_app
+
+        @app.route(trigger_arg_name='trigger_name', binding_arg_name='out',
+                   methods=(HttpMethod.GET, HttpMethod.PATCH),
+                   auth_level=AuthLevel.FUNCTION, route='dummy_route',
+                   trigger_extra_fields={"dummy_field": "dummy"},
+                   binding_extra_fields={"dummy_field": "dummy"})
+        @app.table_input(arg_name="in", table_name="dummy_table_name",
+                         connection="dummy_in_conn",
+                         row_key="dummy_key",
+                         partition_key="dummy_partition_key",
+                         take=1,
+                         filter="dummy_filter")
+        @app.table_output(arg_name="out", table_name="dummy_table_name",
+                          connection="dummy_out_conn",
+                          row_key="dummy_key",
+                          partition_key="dummy_partition_key")
+        def dummy():
+            pass
+
+        self._test_function_metadata_order(app)
+
+    def test_function_app_generic_http_trigger_metadata_key_order(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        def dummy():
+            pass
+
+        self._test_function_metadata_order(app)
+
+    def _test_function_metadata_order(self, app):
+        func = self._get_user_function(app)
+        last_metadata_payload = str(func)
+        for _ in range(3):
+            new_metadata_payload = str(func)
+            self.assertEqual(new_metadata_payload, last_metadata_payload)
+            last_metadata_payload = new_metadata_payload
+
+    def test_function_app_retry_default_args(self):
+        app = self.func_app
+
+        @app.schedule(arg_name="req", schedule="dummy_schedule")
+        @app.retry(strategy="fixed", max_retry_count="2", delay_interval="4")
+        def dummy_func():
+            pass
+
+        func = self._get_user_function(app)
+        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_setting("retry_policy").get_dict_repr(), {
+            'setting_name': 'retry_policy',
+            'strategy': 'fixed',
+            'max_retry_count': '2',
+            'delay_interval': '4'
         })

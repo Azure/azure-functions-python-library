@@ -4,6 +4,7 @@
 import abc
 import datetime
 import io
+import threading
 import typing
 
 from azure.functions._thirdparty.werkzeug.datastructures import Headers
@@ -100,6 +101,18 @@ class Context(abc.ABC):
     @abc.abstractmethod
     def invocation_id(self) -> str:
         """Function invocation ID."""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def thread_local_storage(self) -> typing.Type[threading.local]:
+        """Thread local storage.
+
+        :attribute str invocation_id:
+            Invocation ID contained in local thread storage.
+            Enables logging from user threads when set to
+            the current context's invocation ID.
+        """
         pass
 
     @property
@@ -380,6 +393,10 @@ class Document(abc.ABC):
     def to_json(self) -> str:
         pass
 
+    @abc.abstractmethod
+    def to_dict(self) -> dict:
+        pass
+
 
 class DocumentList(abc.ABC):
     pass
@@ -422,32 +439,3 @@ class OrchestrationContext(abc.ABC):
     @abc.abstractmethod
     def body(self) -> str:
         pass
-
-
-class SqlRow(abc.ABC):
-
-    @classmethod
-    @abc.abstractmethod
-    def from_json(cls, json_data: str) -> 'SqlRow':
-        pass
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, dct: dict) -> 'SqlRow':
-        pass
-
-    @abc.abstractmethod
-    def __getitem__(self, key):
-        pass
-
-    @abc.abstractmethod
-    def __setitem__(self, key, value):
-        pass
-
-    @abc.abstractmethod
-    def to_json(self) -> str:
-        pass
-
-
-class SqlRowList(abc.ABC):
-    pass

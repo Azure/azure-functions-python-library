@@ -59,6 +59,8 @@ class AsgiRequest(WsgiRequest):
             "azure_functions.function_directory": self.af_function_directory,
             "azure_functions.function_name": self.af_function_name,
             "azure_functions.invocation_id": self.af_invocation_id,
+            "azure_functions.thread_local_storage":
+                self.af_thread_local_storage,
             "azure_functions.trace_context": self.af_trace_context,
             "azure_functions.retry_context": self.af_retry_context
         }
@@ -71,6 +73,7 @@ class AsgiResponse:
         self._headers: Union[Headers, Dict] = {}
         self._buffer: List[bytes] = []
         self._request_body: Optional[bytes] = b""
+        self._has_received_response: bool = False
 
     @classmethod
     async def from_app(cls, app, scope: Dict[str, Any],
@@ -98,6 +101,7 @@ class AsgiResponse:
 
     def _handle_http_response_body(self, message: Dict[str, Any]):
         self._buffer.append(message["body"])
+        self._has_received_response = not message.get("more_body", False)
         # XXX : Chunked bodies not supported, see
         # https://github.com/Azure/azure-functions-host/issues/4926
 
@@ -109,14 +113,16 @@ class AsgiResponse:
                 "more_body": False,
             }
             self._request_body = None
+            return reply
         else:
-            reply = {
+            while not self._has_received_response:
+                await asyncio.sleep(0.1)
+            return {
                 "type": "http.disconnect",
             }
-        return reply
 
     async def _send(self, message):
-        logging.debug(f"Received {message} from ASGI worker.")
+        logging.debug("Received %s from ASGI worker.", message)
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":
@@ -145,11 +151,10 @@ class AsgiMiddleware:
         main = func.AsgiMiddleware(app).main
         """
         if not self._usage_reported:
-            self._logger.info("Instantiating Azure Functions ASGI middleware.")
+            self._logger.debug("Starting Azure Functions ASGI middleware.")
             self._usage_reported = True
 
         self._app = app
-        self._loop = asyncio.new_event_loop()
         self.main = self._handle
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
@@ -162,18 +167,17 @@ class AsgiMiddleware:
         async def main(req, context):
             return await func.AsgiMiddleware(app).handle_async(req, context)
         """
-        warn("handle() is deprecated. Please use handle_async() instead.",
+        warn("handle() is deprecated. Please await .handle_async() instead.",
              DeprecationWarning, stacklevel=2)
-        self._logger.debug(f"Handling {req.url} as an ASGI request.")
+        self._logger.debug("Handling %s as an ASGI request.", req.url)
         self._logger.warning(
             "handle() is deprecated. Please `await .handle_async()` instead.")
         return self._handle(req, context)
 
     def _handle(self, req, context):
         asgi_request = AsgiRequest(req, context)
-        asyncio.set_event_loop(self._loop)
         scope = asgi_request.to_asgi_http_scope()
-        asgi_response = self._loop.run_until_complete(
+        asgi_response = asyncio.run(
             AsgiResponse.from_app(self._app, scope, req.get_body())
         )
 
@@ -194,7 +198,7 @@ class AsgiMiddleware:
                 return await func.AsgiMiddleware(app).handle_async(req,
                                                                    context)
         """
-        self._logger.debug(f"Awaiting {req.url} as an ASGI request.")
+        self._logger.debug("Awaiting %s as an ASGI request.", req.url)
         return await self._handle_async(req, context)
 
     async def _handle_async(self, req, context):

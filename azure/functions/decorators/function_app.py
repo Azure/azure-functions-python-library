@@ -1,31 +1,38 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import abc
 import asyncio
 import json
 import logging
 from abc import ABC
-from typing import Callable, Dict, List, Optional, Union, Iterable
+from datetime import time
+from typing import Any, Callable, Dict, List, Optional, Union, \
+    Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
-    CosmosDBOutput, CosmosDBInput
-from azure.functions.decorators.table import TableInput, TableOutput
+    CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
+    CosmosDBOutputV3
+from azure.functions.decorators.eventgrid import EventGridTrigger, \
+    EventGridOutput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
-from azure.functions.decorators.eventgrid import EventGridTrigger, \
-    EventGridOutput
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
     ServiceBusTopicOutput
+from azure.functions.decorators.table import TableInput, TableOutput
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .retry_policy import RetryPolicy
+from .function_name import FunctionName
+from .warmup import WarmUpTrigger
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 
@@ -36,16 +43,22 @@ class Function(object):
     function indexing model. Ref: https://aka.ms/azure-function-ref
     """
 
-    def __init__(self, func: Callable, script_file: str):
+    def __init__(self, func: Callable[..., Any], script_file: str):
         """Constructor of :class:`FunctionBuilder` object.
 
         :param func: User defined python function instance.
         :param script_file: File name indexed by worker to find function.
+        :param trigger: The trigger object of the function.
+        :param bindings: The list of binding objects of a function.
+        :param settings: The list of setting objects of a function.
+        :param http_type: Http function type.
+        :param is_http_function: Whether the function is a http function.
         """
         self._name: str = func.__name__
         self._func = func
         self._trigger: Optional[Trigger] = None
         self._bindings: List[Binding] = []
+        self._settings: List[Setting] = []
         self.function_script_file = script_file
         self.http_type = 'function'
         self._is_http_function = False
@@ -79,14 +92,12 @@ class Function(object):
         #  function.json is complete
         self._bindings.append(trigger)
 
-    def set_function_name(self, function_name: Optional[str] = None) -> None:
-        """Set or update the name for the function if :param:`function_name`
-         is not None. If not set, function name will default to python
-        function name.
-        :param function_name: Name the function set to.
+    def add_setting(self, setting: Setting) -> None:
+        """Add a setting instance to the function.
+
+        :param setting: The setting object to add
         """
-        if function_name:
-            self._name = function_name
+        self._settings.append(setting)
 
     def set_http_type(self, http_type: str) -> None:
         """Set or update the http type for the function if :param:`http_type`
@@ -112,6 +123,36 @@ class Function(object):
         """
         return self._bindings
 
+    def get_setting(self, setting_name: str) -> Optional[Setting]:
+        """Get a specific setting attached to the function.
+
+        :param setting_name: The name of the setting to search for.
+        :return: The setting attached to the function (or None if not found).
+        """
+        for setting in self._settings:
+            if setting.setting_name == setting_name:
+                return setting
+        return None
+
+    def get_settings_dict(self, setting_name) -> Optional[Dict]:
+        """Get a dictionary representation of a setting.
+
+        :param: setting_name: The name of the setting to search for.
+        :return: The dictionary representation of the setting (or None if not
+        found).
+        """
+        setting = self.get_setting(setting_name)
+        return setting.get_dict_repr() if setting else None
+
+    def get_function_name(self) -> Optional[str]:
+        """Get the name of the function.
+        :return: The name of the function.
+        """
+        function_name_setting = \
+            self.get_setting("function_name")
+        return function_name_setting.get_settings_value("function_name") \
+            if function_name_setting else self._name
+
     def get_raw_bindings(self) -> List[str]:
         return [json.dumps(b.get_dict_repr(), cls=StringifyEnumJsonEncoder)
                 for b in self._bindings]
@@ -134,19 +175,12 @@ class Function(object):
         stub_f_json.update(self.get_bindings_dict())  # NoQA
         return stub_f_json
 
-    def get_user_function(self) -> Callable:
+    def get_user_function(self) -> Callable[..., Any]:
         """Get the python function customer defined.
 
         :return: The python function customer defined.
         """
         return self._func
-
-    def get_function_name(self) -> str:
-        """Get the function name.
-
-        :return: Function name.
-        """
-        return self._name
 
     def get_function_json(self) -> str:
         """Get the json stringified form of function.
@@ -166,11 +200,6 @@ class FunctionBuilder(object):
     def __call__(self, *args, **kwargs):
         pass
 
-    def configure_function_name(self, function_name: str) -> 'FunctionBuilder':
-        self._function.set_function_name(function_name)
-
-        return self
-
     def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
         self._function.set_http_type(http_type)
 
@@ -182,6 +211,10 @@ class FunctionBuilder(object):
 
     def add_binding(self, binding: Binding) -> 'FunctionBuilder':
         self._function.add_binding(binding=binding)
+        return self
+
+    def add_setting(self, setting: Setting) -> 'FunctionBuilder':
+        self._function.add_setting(setting=setting)
         return self
 
     def _validate_function(self,
@@ -210,11 +243,11 @@ class FunctionBuilder(object):
         # http trigger
         if Trigger.is_supported_trigger_type(trigger, HttpTrigger):
             if getattr(trigger, 'route', None) is None:
-                getattr(trigger, 'init_params').add('route')
+                getattr(trigger, 'init_params').append('route')
                 setattr(trigger, 'route', function_name)
             if getattr(trigger, 'auth_level',
                        None) is None and auth_level is not None:
-                getattr(trigger, 'init_params').add('auth_level')
+                getattr(trigger, 'init_params').append('auth_level')
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
             self._function._is_http_function = True
@@ -250,7 +283,8 @@ class DecoratorApi(ABC):
         """
         return self._app_script_file
 
-    def _validate_type(self, func: Union[Callable, FunctionBuilder]) \
+    def _validate_type(self,
+                       func: Union[Callable[..., Any], FunctionBuilder]) \
             -> FunctionBuilder:
         """Validate the type of the function object and return the created
         :class:`FunctionBuilder` object.
@@ -271,7 +305,7 @@ class DecoratorApi(ABC):
                 "Unsupported type for function app decorator found.")
         return fb
 
-    def _configure_function_builder(self, wrap) -> Callable:
+    def _configure_function_builder(self, wrap) -> Callable[..., Any]:
         """Decorator function on user defined function to create and return
          :class:`FunctionBuilder` object from :class:`Callable` func.
         """
@@ -283,25 +317,8 @@ class DecoratorApi(ABC):
 
         return decorator
 
-    def function_name(self, name: str) -> Callable:
-        """Set name of the :class:`Function` object.
-
-        :param name: Name of the function.
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.configure_function_name(name)
-                return fb
-
-            return decorator()
-
-        return wrap
-
-    def http_type(self, http_type: str) -> Callable:
-        """Set http  type of the :class:`Function` object.
+    def http_type(self, http_type: str) -> Callable[..., Any]:
+        """Set http type of the :class:`Function` object.
 
         :param http_type: Http type of the function.
         :return: Decorator function.
@@ -347,9 +364,9 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict = {},
-              binding_extra_fields: Dict = {}
-              ) -> Callable:
+              trigger_extra_fields: Dict[str, Any] = {},
+              binding_extra_fields: Dict[str, Any] = {}
+              ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -397,14 +414,14 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def schedule(self,
-                 arg_name: str,
-                 schedule: str,
-                 run_on_startup: Optional[bool] = None,
-                 use_monitor: Optional[bool] = None,
-                 data_type: Optional[Union[DataType, str]] = None,
-                 **kwargs) -> Callable:
-        """The schedule decorator adds :class:`TimerTrigger` to the
+    def timer_trigger(self,
+                      arg_name: str,
+                      schedule: str,
+                      run_on_startup: Optional[bool] = None,
+                      use_monitor: Optional[bool] = None,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs: Any) -> Callable[..., Any]:
+        """The schedule or timer decorator adds :class:`TimerTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
         indexing model. This is equivalent to defining TimerTrigger
@@ -446,6 +463,45 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    schedule = timer_trigger
+
+    def warm_up_trigger(self,
+                        arg_name: str,
+                        data_type: Optional[Union[DataType, str]] = None,
+                        **kwargs) -> Callable:
+        """The warm up decorator adds :class:`WarmUpTrigger` to the
+        :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining WarmUpTrigger
+        in the function.json which enables your function be triggered on the
+        specified schedule.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-warmup
+
+        :param arg_name: The name of the variable that represents the
+        :class:`TimerRequest` object in function code.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=WarmUpTrigger(
+                        name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def service_bus_queue_trigger(
             self,
             arg_name: str,
@@ -455,7 +511,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_queue_change decorator adds
         :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -514,7 +570,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
-            **kwargs) -> Callable:
+            **kwargs: Any) -> Callable[..., Any]:
         """The on_service_bus_topic_change decorator adds
         :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -570,7 +626,7 @@ class TriggerApi(DecoratorApi, ABC):
                       queue_name: str,
                       connection: str,
                       data_type: Optional[DataType] = None,
-                      **kwargs) -> Callable:
+                      **kwargs) -> Callable[..., Any]:
         """The queue_trigger decorator adds :class:`QueueTrigger` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -622,7 +678,7 @@ class TriggerApi(DecoratorApi, ABC):
                                       Union[Cardinality, str]] = None,
                                   consumer_group: Optional[
                                       str] = None,
-                                  **kwargs) -> Callable:
+                                  **kwargs: Any) -> Callable[..., Any]:
         """The event_hub_message_trigger decorator adds
         :class:`EventHubTrigger`
         to the :class:`FunctionBuilder` object
@@ -671,38 +727,41 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_trigger(self,
-                          arg_name: str,
-                          database_name: str,
-                          collection_name: str,
-                          connection_string_setting: str,
-                          lease_collection_name: Optional[str] = None,
-                          lease_connection_string_setting: Optional[
-                              str] = None,
-                          lease_database_name: Optional[str] = None,
-                          create_lease_collection_if_not_exists: Optional[
-                              bool] = None,
-                          leases_collection_throughput: Optional[int] = None,
-                          lease_collection_prefix: Optional[str] = None,
-                          checkpoint_interval: Optional[int] = None,
-                          checkpoint_document_count: Optional[int] = None,
-                          feed_poll_delay: Optional[int] = None,
-                          lease_renew_interval: Optional[int] = None,
-                          lease_acquire_interval: Optional[int] = None,
-                          lease_expiration_interval: Optional[int] = None,
-                          max_items_per_invocation: Optional[int] = None,
-                          start_from_beginning: Optional[bool] = None,
-                          preferred_locations: Optional[str] = None,
-                          data_type: Optional[
-                              Union[DataType, str]] = None,
-                          **kwargs) -> \
-            Callable:
-        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
+    def cosmos_db_trigger_v3(self,
+                             arg_name: str,
+                             database_name: str,
+                             collection_name: str,
+                             connection_string_setting: str,
+                             lease_collection_name: Optional[str] = None,
+                             lease_connection_string_setting: Optional[
+                                 str] = None,
+                             lease_database_name: Optional[str] = None,
+                             create_lease_collection_if_not_exists: Optional[
+                                 bool] = None,
+                             leases_collection_throughput: Optional[int] =
+                             None,
+                             lease_collection_prefix: Optional[str] = None,
+                             checkpoint_interval: Optional[int] = None,
+                             checkpoint_document_count: Optional[int] = None,
+                             feed_poll_delay: Optional[int] = None,
+                             lease_renew_interval: Optional[int] = None,
+                             lease_acquire_interval: Optional[int] = None,
+                             lease_expiration_interval: Optional[int] = None,
+                             max_items_per_invocation: Optional[int] = None,
+                             start_from_beginning: Optional[bool] = None,
+                             preferred_locations: Optional[str] = None,
+                             data_type: Optional[
+                                 Union[DataType, str]] = None,
+                             **kwargs: Any) -> \
+            Callable[..., Any]:
+        """The cosmos_db_trigger_v3 decorator adds :class:`CosmosDBTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBTrigger
-        in the function.json which enables function to be triggered when
-        CosmosDB data is changed.
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+        This is equivalent to defining CosmosDBTrigger in the function.json
+         which enables function to be triggered when CosmosDB data is changed.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -762,7 +821,7 @@ class TriggerApi(DecoratorApi, ABC):
 
         :return: Decorator function.
         """
-        trigger = CosmosDBTrigger(
+        trigger = CosmosDBTriggerV3(
             name=arg_name,
             database_name=database_name,
             collection_name=collection_name,
@@ -770,7 +829,7 @@ class TriggerApi(DecoratorApi, ABC):
             lease_collection_name=lease_collection_name,
             lease_connection_string_setting=lease_connection_string_setting,
             lease_database_name=lease_database_name,
-            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists, # NoQA
+            create_lease_collection_if_not_exists=create_lease_collection_if_not_exists,  # NoQA
             leases_collection_throughput=leases_collection_throughput,
             lease_collection_prefix=lease_collection_prefix,
             checkpoint_interval=checkpoint_interval,
@@ -795,12 +854,142 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    def cosmos_db_trigger(self,
+                          arg_name: str,
+                          connection: str,
+                          database_name: str,
+                          container_name: str,
+                          lease_connection: Optional[str] = None,
+                          lease_database_name: Optional[str] = None,
+                          lease_container_name: Optional[str] = None,
+                          create_lease_container_if_not_exists: Optional[
+                              bool] = None,
+                          leases_container_throughput: Optional[int] = None,
+                          lease_container_prefix: Optional[str] = None,
+                          feed_poll_delay: Optional[int] = None,
+                          lease_acquire_interval: Optional[int] = None,
+                          lease_expiration_interval: Optional[int] = None,
+                          lease_renew_interval: Optional[int] = None,
+                          max_items_per_invocation: Optional[int] = None,
+                          start_from_beginning: Optional[time] = None,
+                          start_from_time: Optional[time] = None,
+                          preferred_locations: Optional[str] = None,
+                          data_type: Optional[
+                              Union[DataType, str]] = None,
+                          **kwargs: Any) -> \
+            Callable[..., Any]:
+        """The cosmos_db_trigger decorator adds :class:`CosmosDBTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+        This is equivalent to defining CosmosDBTrigger in the function.json
+        which enables function to be triggered when CosmosDB data is changed.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
+
+        :param arg_name: The name of the variable that represents
+        :class:`DocumentList` object in function code
+        :param connection: The name of an app setting or setting collection
+        that specifies how to connect to the Azure Cosmos DB account being
+         monitored.
+        :param database_name: The name of the Azure Cosmos DB database with
+        the collection being monitored
+        :param container_name: The name of the container being monitored
+        :param lease_connection: (Optional) The name of an app setting or
+         setting container that specifies how to connect to the Azure Cosmos
+         DB account that holds the lease container
+        :param lease_database_name: The name of the database that holds the
+        collection used to store leases
+        :param lease_container_name: (Optional) The name of the container used
+            to store leases. When not set, the value leases is used
+        :param create_lease_container_if_not_exists: (Optional) When set to
+        true, the leases container is automatically created when it doesn't
+         already exist. The default value is false. When using Azure AD
+         identities if you set the value to true, creating containers is not an
+          allowed operation and your Function won't be able to start
+        :param leases_container_throughput: (Optional) Defines the number of
+        Request Units to assign when the leases container is created. This
+        setting is only used when createLeaseContainerIfNotExists is set to
+        true. This parameter is automatically set when the binding is created
+        using the portal
+        :param lease_container_prefix: (Optional) When set, the value is added
+        as a prefix to the leases created in the Lease container for this
+        function. Using a prefix allows two separate Azure Functions to share
+        the same Lease container by using different prefixes
+        :param feed_poll_delay: The time (in milliseconds) for the delay
+        between polling a partition for new changes on the feed, after all
+        current changes are drained
+        :param lease_acquire_interval: When set, it defines,
+        in milliseconds, the interval to kick off a task to compute if
+        partitions are distributed evenly among known host instances
+        :param lease_expiration_interval: When set, it defines,
+        in milliseconds, the interval for which the lease is taken on a
+        lease representing a partition
+        :param lease_renew_interval: When set, it defines, in milliseconds,
+        the renew interval for all leases for partitions currently held by
+        an instance
+        :param max_items_per_invocation: When set, this property sets the
+        maximum number of items received per Function call
+        :param start_from_beginning: This option tells the Trigger to read
+        changes from the beginning of the collection's change history
+        instead of starting at the current time
+        :param start_from_time: (Optional) Gets or sets the date and time from
+        which to initialize the change feed read operation. The recommended
+        format is ISO 8601 with the UTC designator, such as
+        2021-02-16T14:19:29Z. This is only used to set the initial trigger
+        state. After the trigger has a lease state, changing this value has
+        no effect
+        :param preferred_locations: Defines preferred locations (regions)
+        for geo-replicated database accounts in the Azure Cosmos DB service
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+        trigger = CosmosDBTrigger(
+            name=arg_name,
+            connection=connection,
+            database_name=database_name,
+            container_name=container_name,
+            lease_connection=lease_connection,
+            lease_database_name=lease_database_name,
+            lease_container_name=lease_container_name,
+            create_lease_container_if_not_exists=create_lease_container_if_not_exists,  # NoQA
+            leases_container_throughput=leases_container_throughput,
+            lease_container_prefix=lease_container_prefix,
+            feed_poll_delay=feed_poll_delay,
+            lease_acquire_interval=lease_acquire_interval,
+            lease_expiration_interval=lease_expiration_interval,
+            lease_renew_interval=lease_renew_interval,
+            max_items_per_invocation=max_items_per_invocation,
+            start_from_beginning=start_from_beginning,
+            start_from_time=start_from_time,
+            preferred_locations=preferred_locations,
+            data_type=parse_singular_param_to_enum(data_type, DataType),
+            **kwargs)
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(trigger=trigger)
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def blob_trigger(self,
                      arg_name: str,
                      path: str,
                      connection: str,
                      data_type: Optional[DataType] = None,
-                     **kwargs) -> Callable:
+                     **kwargs) -> Callable[..., Any]:
         """
         The blob_change_trigger decorator adds :class:`BlobTrigger` to the
         :class:`FunctionBuilder` object
@@ -845,7 +1034,7 @@ class TriggerApi(DecoratorApi, ABC):
                            arg_name: str,
                            data_type: Optional[
                                Union[DataType, str]] = None,
-                           **kwargs) -> Callable:
+                           **kwargs) -> Callable[..., Any]:
         """
         The event_grid_trigger decorator adds
         :class:`EventGridTrigger`
@@ -886,7 +1075,7 @@ class TriggerApi(DecoratorApi, ABC):
                         type: str,
                         data_type: Optional[Union[DataType, str]] = None,
                         **kwargs
-                        ) -> Callable:
+                        ) -> Callable[..., Any]:
         """
         The generic_trigger decorator adds :class:`GenericTrigger`
         to the :class:`FunctionBuilder` object for building :class:`Function`
@@ -938,7 +1127,7 @@ class BindingApi(DecoratorApi, ABC):
                                  access_rights: Optional[Union[
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The service_bus_queue_output decorator adds
         :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -990,7 +1179,7 @@ class BindingApi(DecoratorApi, ABC):
                                  access_rights: Optional[Union[
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The service_bus_topic_output decorator adds
         :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1040,7 +1229,7 @@ class BindingApi(DecoratorApi, ABC):
                      queue_name: str,
                      connection: str,
                      data_type: Optional[DataType] = None,
-                     **kwargs) -> Callable:
+                     **kwargs) -> Callable[..., Any]:
         """The queue_output decorator adds :class:`QueueOutput` to the
         :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1088,7 +1277,7 @@ class BindingApi(DecoratorApi, ABC):
                          data_type: Optional[
                              Union[DataType, str]] = None,
                          **kwargs) -> \
-            Callable:
+            Callable[..., Any]:
         """The event_hub_output decorator adds
         :class:`EventHubOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
@@ -1130,25 +1319,28 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_output(self,
-                         arg_name: str,
-                         database_name: str,
-                         collection_name: str,
-                         connection_string_setting: str,
-                         create_if_not_exists: Optional[bool] = None,
-                         partition_key: Optional[str] = None,
-                         collection_throughput: Optional[int] = None,
-                         use_multiple_write_locations: Optional[
-                             bool] = None,
-                         preferred_locations: Optional[str] = None,
-                         data_type: Optional[
-                             Union[DataType, str]] = None,
-                         **kwargs) \
-            -> Callable:
-        """The cosmos_db_output decorator adds
+    def cosmos_db_output_v3(self,
+                            arg_name: str,
+                            database_name: str,
+                            collection_name: str,
+                            connection_string_setting: str,
+                            create_if_not_exists: Optional[bool] = None,
+                            partition_key: Optional[str] = None,
+                            collection_throughput: Optional[int] = None,
+                            use_multiple_write_locations: Optional[
+                                bool] = None,
+                            preferred_locations: Optional[str] = None,
+                            data_type: Optional[
+                                Union[DataType, str]] = None,
+                            **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_output_v3 decorator adds
         :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBOutput
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+         This is equivalent to defining CosmosDBOutput
         in the function.json which enables function to write to the CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1186,7 +1378,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBOutput(
+                    binding=CosmosDBOutputV3(
                         name=arg_name,
                         database_name=database_name,
                         collection_name=collection_name,
@@ -1194,7 +1386,7 @@ class BindingApi(DecoratorApi, ABC):
                         create_if_not_exists=create_if_not_exists,
                         partition_key=partition_key,
                         collection_throughput=collection_throughput,
-                        use_multiple_write_locations=use_multiple_write_locations, # NoQA
+                        use_multiple_write_locations=use_multiple_write_locations,  # NoQA
                         preferred_locations=preferred_locations,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -1205,22 +1397,99 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def cosmos_db_input(self,
-                        arg_name: str,
-                        database_name: str,
-                        collection_name: str,
-                        connection_string_setting: str,
-                        id: Optional[str] = None,
-                        sql_query: Optional[str] = None,
-                        partition_key: Optional[str] = None,
-                        data_type: Optional[
-                            Union[DataType, str]] = None,
-                        **kwargs) \
-            -> Callable:
-        """The cosmos_db_input decorator adds
+    def cosmos_db_output(self,
+                         arg_name: str,
+                         connection: str,
+                         database_name: str,
+                         container_name: str,
+                         create_if_not_exists: Optional[bool] = None,
+                         partition_key: Optional[str] = None,
+                         container_throughput: Optional[int] = None,
+                         preferred_locations: Optional[str] = None,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_output decorator adds
+        :class:`CosmosDBOutput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+        This is equivalent to defining CosmosDBOutput
+        in the function.json which enables function to write to the CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
+
+        :param arg_name: The name of the variable that represents CosmosDB
+        output object in function code.
+        :param connection: The name of an app setting or
+        setting collection that specifies how to connect to the Azure Cosmos
+        DB account being monitored
+        :param database_name: The name of the Azure Cosmos DB database with
+        the collection being monitored
+        :param container_name: The name of the container being monitored
+        :param create_if_not_exists: A boolean value to indicate whether the
+        collection is created when it doesn't exist
+        :param partition_key: When CreateIfNotExists is true, it defines the
+        partition key path for the created collection
+        :param container_throughput: When createIfNotExists is true, it defines
+        the throughput of the created container
+        PreferredLocations, it can leverage multi-region writes in the Azure
+        Cosmos DB service
+        :param preferred_locations: Defines preferred locations (regions)
+        for geo-replicated database accounts in the Azure Cosmos DB service
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=CosmosDBOutput(
+                        name=arg_name,
+                        connection=connection,
+                        database_name=database_name,
+                        container_name=container_name,
+                        create_if_not_exists=create_if_not_exists,
+                        partition_key=partition_key,
+                        container_throughput=container_throughput,
+                        preferred_locations=preferred_locations,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def cosmos_db_input_v3(self,
+                           arg_name: str,
+                           database_name: str,
+                           collection_name: str,
+                           connection_string_setting: str,
+                           id: Optional[str] = None,
+                           sql_query: Optional[str] = None,
+                           partition_key: Optional[str] = None,
+                           data_type: Optional[
+                               Union[DataType, str]] = None,
+                           **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_input_v3 decorator adds
         :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining CosmosDBInput
+        indexing model. This decorator will work only with extension bundle 2.x
+        or 3.x. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+        This is equivalent to defining CosmosDBInput
         in the function.json which enables function to read from CosmosDB.
         All optional fields will be given default value by function host when
         they are parsed by function host.
@@ -1251,7 +1520,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=CosmosDBInput(
+                    binding=CosmosDBInputV3(
                         name=arg_name,
                         database_name=database_name,
                         collection_name=collection_name,
@@ -1268,12 +1537,85 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
+    def cosmos_db_input(self,
+                        arg_name: str,
+                        connection: str,
+                        database_name: str,
+                        container_name: str,
+                        partition_key: Optional[str] = None,
+                        id: Optional[str] = None,
+                        sql_query: Optional[str] = None,
+                        preferred_locations: Optional[str] = None,
+                        data_type: Optional[
+                            Union[DataType, str]] = None,
+                        **kwargs) \
+            -> Callable[..., Any]:
+        """The cosmos_db_input decorator adds
+        :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above. For additional details, please refer
+        https://aka.ms/cosmosdb-v4-update.
+        This is equivalent to defining CosmosDBInput in the function.json which
+         enables function to read from CosmosDB.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
+
+        :param arg_name: The name of the variable that represents
+        :class:`DocumentList` input object in function code
+        :param connection: The name of an app setting or setting container that
+         specifies how to connect to the Azure Cosmos DB account being
+         monitored containing your Azure Cosmos DB connection string
+        :param database_name: The database containing the document
+        :param container_name: The name of the container that contains the
+        document
+        :param partition_key: Specifies the partition key value for the
+        lookup
+        :param id: The ID of the document to retrieve
+        :param sql_query: An Azure Cosmos DB SQL query used for retrieving
+        multiple documents
+        :param preferred_locations: (Optional) Defines preferred locations
+        (regions) for geo-replicated database accounts in the Azure Cosmos DB
+        service. Values should be comma-separated. For example, East US,South
+        Central US,North Europe
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=CosmosDBInput(
+                        name=arg_name,
+                        connection=connection,
+                        database_name=database_name,
+                        container_name=container_name,
+                        partition_key=partition_key,
+                        id=id,
+                        sql_query=sql_query,
+                        preferred_locations=preferred_locations,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def blob_input(self,
                    arg_name: str,
                    path: str,
                    connection: str,
                    data_type: Optional[DataType] = None,
-                   **kwargs) -> Callable:
+                   **kwargs) -> Callable[..., Any]:
         """
         The blob_input decorator adds :class:`BlobInput` to the
         :class:`FunctionBuilder` object
@@ -1321,7 +1663,7 @@ class BindingApi(DecoratorApi, ABC):
                     path: str,
                     connection: str,
                     data_type: Optional[DataType] = None,
-                    **kwargs) -> Callable:
+                    **kwargs) -> Callable[..., Any]:
         """
         The blob_output decorator adds :class:`BlobOutput` to the
         :class:`FunctionBuilder` object
@@ -1369,7 +1711,7 @@ class BindingApi(DecoratorApi, ABC):
                           topic_key_setting: str,
                           data_type: Optional[
                               Union[DataType, str]] = None,
-                          **kwargs) -> Callable:
+                          **kwargs) -> Callable[..., Any]:
         """
         The event_grid_output decorator adds
         :class:`EventGridOutput`
@@ -1420,7 +1762,7 @@ class BindingApi(DecoratorApi, ABC):
                     take: Optional[int] = None,
                     filter: Optional[str] = None,
                     data_type: Optional[
-                        Union[DataType, str]] = None) -> Callable:
+                        Union[DataType, str]] = None) -> Callable[..., Any]:
         """
         The table_input decorator adds :class:`TableInput` to the
         :class:`FunctionBuilder` object
@@ -1475,7 +1817,7 @@ class BindingApi(DecoratorApi, ABC):
                      row_key: Optional[str] = None,
                      partition_key: Optional[str] = None,
                      data_type: Optional[
-                         Union[DataType, str]] = None) -> Callable:
+                         Union[DataType, str]] = None) -> Callable[..., Any]:
         """
         The table_output decorator adds :class:`TableOutput` to the
         :class:`FunctionBuilder` object
@@ -1523,7 +1865,7 @@ class BindingApi(DecoratorApi, ABC):
                               type: str,
                               data_type: Optional[Union[DataType, str]] = None,
                               **kwargs
-                              ) -> Callable:
+                              ) -> Callable[..., Any]:
         """
         The generic_input_binding decorator adds :class:`GenericInputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
@@ -1568,7 +1910,7 @@ class BindingApi(DecoratorApi, ABC):
                                data_type: Optional[
                                    Union[DataType, str]] = None,
                                **kwargs
-                               ) -> Callable:
+                               ) -> Callable[..., Any]:
         """
         The generic_output_binding decorator adds :class:`GenericOutputBinding`
         to the :class:`FunctionBuilder` object for building :class:`Function`
@@ -1601,6 +1943,80 @@ class BindingApi(DecoratorApi, ABC):
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+
+class SettingsApi(DecoratorApi, ABC):
+    """Interface to extend for using existing settings decorator in
+    functions."""
+
+    def function_name(self, name: str,
+                      setting_extra_fields: Dict[str, Any] = {},
+                      ) -> Callable[..., Any]:
+        """Optional: Sets name of the :class:`Function` object. If not set,
+        it will default to the name of the method name.
+
+        :param name: Name of the function.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=FunctionName(
+                    function_name=name,
+                    **setting_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def retry(self,
+              strategy: str,
+              max_retry_count: str,
+              delay_interval: Optional[str] = None,
+              minimum_interval: Optional[str] = None,
+              maximum_interval: Optional[str] = None,
+              setting_extra_fields: Dict[str, Any] = {},
+              ) -> Callable[..., Any]:
+        """The retry decorator adds :class:`RetryPolicy` to the function
+        settings object for building :class:`Function` object used in worker
+        function indexing model. This is equivalent to defining RetryPolicy
+        in the function.json which enables function to retry on failure.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/azure_functions_retries
+
+        :param strategy: The retry strategy to use.
+        :param max_retry_count: The maximum number of retry attempts.
+        :param delay_interval: The delay interval between retry attempts.
+        :param minimum_interval: The minimum delay interval between retry
+        attempts.
+        :param maximum_interval: The maximum delay interval between retry
+        attempts.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=RetryPolicy(
+                    strategy=strategy,
+                    max_retry_count=max_retry_count,
+                    minimum_interval=minimum_interval,
+                    maximum_interval=maximum_interval,
+                    delay_interval=delay_interval,
+                    **setting_extra_fields))
                 return fb
 
             return decorator()
@@ -1657,7 +2073,7 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
     register_blueprint = register_functions
 
 
-class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
+class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
     """FunctionApp object used by worker function indexing model captures
     user defined functions and metadata.
 
@@ -1675,7 +2091,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         super().__init__(auth_level=http_auth_level)
 
 
-class Blueprint(TriggerApi, BindingApi):
+class Blueprint(TriggerApi, BindingApi, SettingsApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing
@@ -1687,24 +2103,18 @@ class Blueprint(TriggerApi, BindingApi):
 class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
     """Interface to extend for building third party http function apps."""
 
+    @abc.abstractmethod
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware],
-                      http_type: str) -> None:
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
-        :param http_middleware: :class:`AsgiMiddleware` or
-        :class:`WsgiMiddleware` instance.
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
 
         :return: None
         """
-
-        @self.http_type(http_type=http_type)
-        @self.route(methods=(method for method in HttpMethod),
-                    auth_level=self.auth_level,
-                    route="/{*route}")
-        def http_app_func(req: HttpRequest, context: Context):
-            return http_middleware.handle(req, context)
+        raise NotImplementedError()
 
 
 class AsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1713,14 +2123,40 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
+        :param http_auth_level: Determines what keys, if any, need to be
+        present
+        on the request in order to invoke the function.
         """
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
-        self._add_http_app(self.middleware, 'asgi')
+        self._add_http_app(self.middleware)
         asyncio.run(self.middleware.notify_startup())
 
     def __del__(self):
         asyncio.run(self.middleware.notify_shutdown())
+  
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
+        """Add an Asgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+        if not isinstance(http_middleware, AsgiMiddleware):
+            raise TypeError("Please pass AsgiMiddleware instance"
+                            " as parameter.")
+
+        asgi_middleware: AsgiMiddleware = http_middleware
+
+        @self.http_type(http_type='asgi')
+        @self.route(methods=(method for method in HttpMethod),
+                    auth_level=self.auth_level,
+                    route="/{*route}")
+        async def http_app_func(req: HttpRequest, context: Context):
+            return await asgi_middleware.handle_async(req, context)
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
@@ -1731,4 +2167,27 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: wsgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app), 'wsgi')
+        self._add_http_app(WsgiMiddleware(app))
+
+    def _add_http_app(self,
+                      http_middleware: Union[
+                          AsgiMiddleware, WsgiMiddleware]) -> None:
+        """Add a Wsgi app integrated http function.
+
+        :param http_middleware: :class:`WsgiMiddleware`
+                                or class:`AsgiMiddleware` instance.
+
+        :return: None
+        """
+        if not isinstance(http_middleware, WsgiMiddleware):
+            raise TypeError("Please pass WsgiMiddleware instance"
+                            " as parameter.")
+
+        wsgi_middleware: WsgiMiddleware = http_middleware
+
+        @self.http_type(http_type='wsgi')
+        @self.route(methods=(method for method in HttpMethod),
+                    auth_level=self.auth_level,
+                    route="/{*route}")
+        def http_app_func(req: HttpRequest, context: Context):
+            return wsgi_middleware.handle(req, context)

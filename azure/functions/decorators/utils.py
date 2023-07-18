@@ -5,7 +5,7 @@ import re
 from abc import ABCMeta
 from enum import Enum
 from json import JSONEncoder
-from typing import TypeVar, Optional, Union, Iterable, Type, Callable
+from typing import Any, TypeVar, Optional, Union, Iterable, Type, Callable
 
 T = TypeVar("T", bound=Enum)
 SNAKE_CASE_RE = re.compile(r'^([a-zA-Z]+\d*_|_+[a-zA-Z\d])\w*$')
@@ -45,7 +45,7 @@ class BuildDictMeta(type):
         return wrapper
 
     @staticmethod
-    def add_to_dict(func: Callable):
+    def add_to_dict(func: Callable[..., Any]):
         def wrapper(*args, **kwargs):
             if args is None or len(args) == 0:
                 raise ValueError(
@@ -56,8 +56,8 @@ class BuildDictMeta(type):
 
             self = args[0]
 
-            init_params = set(inspect.signature(func).parameters.keys())
-            init_params.update(kwargs.keys())
+            init_params = list(inspect.signature(func).parameters.keys())
+            init_params.extend(list(kwargs.keys()))
             for key in kwargs.keys():
                 if not hasattr(self, key):
                     setattr(self, key, kwargs[key])

@@ -3,6 +3,6 @@
 
 
 class FunctionExtensionException(Exception):
-    """Excpetion emitted from Azure Functions Python Worker extension
+    """Exception emitted from Azure Functions Python Worker extension
     """
     pass

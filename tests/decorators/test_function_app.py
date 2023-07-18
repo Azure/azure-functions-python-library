@@ -1,8 +1,10 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import inspect
 import json
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from azure.functions import WsgiMiddleware, AsgiMiddleware
 from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
@@ -11,9 +13,11 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
 from azure.functions.decorators.function_app import FunctionBuilder, \
     FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi
+    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, \
+    TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.retry_policy import RetryPolicy
 from tests.decorators.test_core import DummyTrigger
 from tests.decorators.testutils import assert_json
 
@@ -30,14 +34,6 @@ class TestFunction(unittest.TestCase):
     def test_function_creation(self):
         self.assertEqual(self.func.get_user_function(), self.dummy)
         self.assertEqual(self.func.function_script_file, "dummy.py")
-
-    def test_set_function_name(self):
-        self.func.set_function_name("func_name")
-        self.assertEqual(self.func.get_function_name(), "func_name")
-        self.func.set_function_name()
-        self.assertEqual(self.func.get_function_name(), "func_name")
-        self.func.set_function_name("func_name_2")
-        self.assertEqual(self.func.get_function_name(), "func_name_2")
 
     def test_add_trigger(self):
         with self.assertRaises(ValueError) as err:
@@ -71,9 +67,8 @@ class TestFunction(unittest.TestCase):
                               auth_level=AuthLevel.ANONYMOUS, route="dummy")
         self.func.add_binding(output)
         self.func.add_trigger(trigger)
-        self.func.set_function_name("func_name")
 
-        self.assertEqual(self.func.get_function_name(), "func_name")
+        self.assertEqual(self.func.get_function_name(), "dummy")
         self.assertEqual(self.func.get_user_function(), self.dummy)
         assert_json(self, self.func, {"scriptFile": "dummy.py",
                                       "bindings": [
@@ -131,7 +126,7 @@ class TestFunctionBuilder(unittest.TestCase):
 
     def test_validate_function_missing_trigger(self):
         with self.assertRaises(ValueError) as err:
-            self.fb.configure_function_name('dummy').build()
+            #  self.fb.configure_function_name('dummy').build()
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
@@ -145,7 +140,7 @@ class TestFunctionBuilder(unittest.TestCase):
                               auth_level=AuthLevel.ANONYMOUS,
                               route='dummy')
         with self.assertRaises(ValueError) as err:
-            self.fb.configure_function_name('dummy').add_trigger(trigger)
+            self.fb.add_trigger(trigger)
             getattr(self.fb, "_function").get_bindings().clear()
             self.fb.build()
 
@@ -157,29 +152,29 @@ class TestFunctionBuilder(unittest.TestCase):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS)
-        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         self.fb.build()
 
     def test_build_function_http_route_default(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS)
-        self.fb.configure_function_name('dummy_route').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         func = self.fb.build()
 
-        self.assertEqual(func.get_trigger().route, "dummy_route")
+        self.assertEqual(func.get_trigger().route, "dummy")
 
-    def test_build_function_with_name_and_bindings(self):
+    def test_build_function_with_bindings(self):
         test_trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                                    data_type=DataType.UNDEFINED,
                                    auth_level=AuthLevel.ANONYMOUS,
                                    route='dummy')
         test_input = HttpOutput(name='out', data_type=DataType.UNDEFINED)
 
-        func = self.fb.configure_function_name('func_name').add_trigger(
+        func = self.fb.add_trigger(
             test_trigger).add_binding(test_input).build()
 
-        self.assertEqual(func.get_function_name(), "func_name")
+        self.assertEqual(func.get_function_name(), "dummy")
         assert_json(self, func, {
             "scriptFile": "dummy.py",
             "bindings": [
@@ -206,10 +201,25 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_build_function_with_function_app_auth_level(self):
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED)
-        self.fb.configure_function_name('dummy').add_trigger(trigger)
+        self.fb.add_trigger(trigger)
         func = self.fb.build(auth_level=AuthLevel.ANONYMOUS)
 
         self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
+
+    def test_build_function_with_retry_policy_setting(self):
+        setting = RetryPolicy(strategy="exponential", max_retry_count="2",
+                              minimum_interval="1", maximum_interval="5")
+        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
+                              data_type=DataType.UNDEFINED,
+                              auth_level=AuthLevel.ANONYMOUS)
+        self.fb.add_trigger(trigger)
+        self.fb.add_setting(setting)
+        func = self.fb.build()
+
+        self.assertEqual(func.get_settings_dict("retry_policy"),
+                         {'setting_name': 'retry_policy',
+                          'strategy': 'exponential', 'max_retry_count': '2',
+                          'minimum_interval': '1', 'maximum_interval': '5'})
 
 
 class TestScaffold(unittest.TestCase):
@@ -302,8 +312,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               AsgiMiddleware)
 
-        self.assertEqual(add_http_app_mock.call_args[0][1], 'asgi')
-
     @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
@@ -313,52 +321,12 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
-        self.assertEqual(add_http_app_mock.call_args[0][1], 'wsgi')
 
-    def test_add_http_app(self):
-        app = AsgiFunctionApp(app=object())
-        funcs = app.get_functions()
-        self.assertEqual(len(funcs), 1)
-        func = funcs[0]
+    def test_add_asgi_app(self):
+        self._test_http_external_app(AsgiFunctionApp(app=object()), True)
 
-        self.assertEqual(func.get_function_name(), "http_app_func")
-
-        raw_bindings = func.get_raw_bindings()
-        raw_trigger = raw_bindings[0]
-        raw_output_binding = raw_bindings[0]
-
-        self.assertEqual(json.loads(raw_trigger),
-                         json.loads(
-                             '{"direction": "IN", "type": "httpTrigger", '
-                             '"authLevel": "FUNCTION", "route": "/{*route}", '
-                             '"methods": ["GET", "POST", "DELETE", "HEAD", '
-                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
-        self.assertEqual(json.loads(raw_output_binding), json.loads(
-            '{"direction": "IN", "type": "httpTrigger", "authLevel": '
-            '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
-            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
-            '*route}"}'))
-
-        self.assertEqual(func.get_bindings_dict(), {
-            "bindings": [
-                {
-                    "authLevel": AuthLevel.FUNCTION,
-                    "direction": BindingDirection.IN,
-                    "methods": [HttpMethod.GET, HttpMethod.POST,
-                                HttpMethod.DELETE,
-                                HttpMethod.HEAD,
-                                HttpMethod.PATCH,
-                                HttpMethod.PUT, HttpMethod.OPTIONS],
-                    "name": "req",
-                    "route": "/{*route}",
-                    "type": HTTP_TRIGGER
-                },
-                {
-                    "direction": BindingDirection.OUT,
-                    "name": "$return",
-                    "type": HTTP_OUTPUT
-                }
-            ]})
+    def test_add_wsgi_app(self):
+        self._test_http_external_app(WsgiFunctionApp(app=object()), False)
 
     def test_register_function_app_error(self):
         with self.assertRaises(TypeError) as err:
@@ -436,7 +404,6 @@ class TestFunctionApp(unittest.TestCase):
         app = DummyFunctionApp()
 
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
-        self.assertIsNotNone(getattr(app, "function_name", None))
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
 
@@ -456,7 +423,6 @@ class TestFunctionApp(unittest.TestCase):
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
 
         self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
-        self.assertIsNotNone(getattr(app, "function_name", None))
         self.assertIsNotNone(getattr(app, "_validate_type", None))
         self.assertIsNotNone(getattr(app, "_configure_function_builder", None))
         self.assertIsNone(getattr(app, "_require_auth_level"))
@@ -500,6 +466,28 @@ class TestFunctionApp(unittest.TestCase):
 
         app.get_functions()
         self.assertFalse(app._require_auth_level)
+
+    def test_blueprints_with_function_name(self):
+        class DummyFunctionApp(FunctionRegister, TriggerApi):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = Blueprint()
+
+        @blueprint.function_name("timer_function")
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(blueprint)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+
+        setting = functions[0].get_setting("function_name")
+
+        self.assertEqual(setting.get_settings_value("function_name"),
+                         "timer_function")
 
     def test_function_register_register_function_register_error(self):
         class DummyFunctionApp(FunctionRegister):
@@ -567,3 +555,70 @@ class TestFunctionApp(unittest.TestCase):
 
         self.assertEqual(len(funcs), 1)
         self.assertTrue(funcs[0].is_http_function())
+
+    def test_asgi_function_app_add_wsgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = AsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(WsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass AsgiMiddleware instance as parameter.")
+
+    def test_wsgi_function_app_add_asgi_app(self):
+        with self.assertRaises(TypeError) as err:
+            app = WsgiFunctionApp(app=object(),
+                                  http_auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
+
+        self.assertEqual(err.exception.args[0],
+                         "Please pass WsgiMiddleware instance as parameter.")
+
+    @patch("azure.functions.decorators.function_app.ExternalHttpFunctionApp"
+           ".__abstractmethods__", set())
+    def test_external_http_function_app(self):
+        with self.assertRaises(NotImplementedError):
+            app = ExternalHttpFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+            app._add_http_app(AsgiMiddleware(object()))
+
+    def _test_http_external_app(self, app, is_async):
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+        func = funcs[0]
+        self.assertEqual(func.get_function_name(), "http_app_func")
+        raw_bindings = func.get_raw_bindings()
+        raw_trigger = raw_bindings[0]
+        raw_output_binding = raw_bindings[0]
+        self.assertEqual(inspect.iscoroutinefunction(func.get_user_function()),
+                         is_async)
+        self.assertEqual(json.loads(raw_trigger),
+                         json.loads(
+                             '{"direction": "IN", "type": "httpTrigger", '
+                             '"authLevel": "FUNCTION", "route": "/{*route}", '
+                             '"methods": ["GET", "POST", "DELETE", "HEAD", '
+                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+        self.assertEqual(json.loads(raw_output_binding), json.loads(
+            '{"direction": "IN", "type": "httpTrigger", "authLevel": '
+            '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
+            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+            '*route}"}'))
+        self.assertEqual(func.get_bindings_dict(), {
+            "bindings": [
+                {
+                    "authLevel": AuthLevel.FUNCTION,
+                    "direction": BindingDirection.IN,
+                    "methods": [HttpMethod.GET, HttpMethod.POST,
+                                HttpMethod.DELETE,
+                                HttpMethod.HEAD,
+                                HttpMethod.PATCH,
+                                HttpMethod.PUT, HttpMethod.OPTIONS],
+                    "name": "req",
+                    "route": "/{*route}",
+                    "type": HTTP_TRIGGER
+                },
+                {
+                    "direction": BindingDirection.OUT,
+                    "name": "$return",
+                    "type": HTTP_OUTPUT
+                }
+            ]})

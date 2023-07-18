@@ -115,7 +115,8 @@ class Binding(ABC):
 
         :return: Dictionary representation of the binding.
         """
-        for p in getattr(self, 'init_params', []):
+        params = list(dict.fromkeys(getattr(self, 'init_params', [])))
+        for p in params:
             if p not in Binding.EXCLUDED_INIT_PARAMS:
                 self._dict[to_camel_case(p)] = getattr(self, p, None)
 
@@ -160,3 +161,43 @@ class OutputBinding(Binding, ABC, metaclass=ABCBuildDictMeta):
                  type: Optional[str] = None) -> None:
         super().__init__(direction=BindingDirection.OUT,
                          name=name, data_type=data_type, type=type)
+
+
+class Setting(ABC, metaclass=ABCBuildDictMeta):
+    """ Abstract class for all settings of a function app.
+        This class represents all the decorators that cannot be
+        classified as bindings or triggers. e.g function_name, retry etc.
+    """
+
+    EXCLUDED_INIT_PARAMS = {'self', 'kwargs', 'setting_name'}
+
+    def __init__(self, setting_name: str) -> None:
+        self.setting_name = setting_name
+        self._dict: Dict = {
+            "setting_name": self.setting_name
+        }
+
+    def get_setting_name(self) -> str:
+        return self.setting_name
+
+    def get_dict_repr(self) -> Dict:
+        """Build a dictionary of a particular binding. The keys are camel
+        cased binding field names defined in `init_params` list and
+        :class:`Binding` class. \n
+        This method is invoked in function :meth:`get_raw_bindings` of class
+        :class:`Function` to generate json dict for each binding.
+
+        :return: Dictionary representation of the binding.
+        """
+        params = list(dict.fromkeys(getattr(self, 'init_params', [])))
+        for p in params:
+            if p not in Setting.EXCLUDED_INIT_PARAMS:
+                self._dict[p] = getattr(self, p, None)
+
+        return self._dict
+
+    def get_settings_value(self, settings_attribute_key: str) -> Optional[str]:
+        """
+        Get the value of a particular setting attribute.
+        """
+        return self.get_dict_repr().get(settings_attribute_key)
