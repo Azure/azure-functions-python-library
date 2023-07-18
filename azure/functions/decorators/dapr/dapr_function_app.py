@@ -496,7 +496,8 @@ class DaprBindingApi(BindingApi, ABC):
         return wrap
 
 
-class DaprFunctionApp(FunctionRegister, DaprTriggerApi, DaprBindingApi, SettingsApi):
+class DaprFunctionApp(FunctionRegister, DaprTriggerApi, 
+                      DaprBindingApi, SettingsApi):
     """DaprFunctionApp object used for Dapr bindings and triggers.
 
     Ref: https://aka.ms/dapr-bindings-triggers
