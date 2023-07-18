@@ -122,7 +122,7 @@ class AsgiResponse:
             }
 
     async def _send(self, message):
-        logging.info("Received %s from ASGI worker.", message)
+        logging.debug("Received %s from ASGI worker.", message)
         if message["type"] == "http.response.start":
             self._handle_http_response_start(message)
         elif message["type"] == "http.response.body":
@@ -218,7 +218,7 @@ class AsgiMiddleware:
         return await self.lifespan_receive_queue.get()
 
     async def _lifespan_send(self, message):
-        logging.info("Received lifespan message %s from ASGI worker.", message)
+        logging.debug("Received lifespan message %s from ASGI worker.", message)
         if message["type"] == "lifespan.startup.complete":
             self.lifespan_startup_event.set()
         elif message["type"] == "lifespan.shutdown.complete":
