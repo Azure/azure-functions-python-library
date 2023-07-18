@@ -17,71 +17,81 @@ class MockAsgiApplication:
     response_headers = [
         [b"content-type", b"text/plain"],
     ]
+    startup_called = False
+    shutdown_called = False
 
     async def __call__(self, scope, receive, send):
         self.received_scope = scope
+        
         # Verify against ASGI specification
-        assert scope['type'] == 'http'
-        assert isinstance(scope['type'], str)
-
         assert scope['asgi.spec_version'] in ['2.0', '2.1']
         assert isinstance(scope['asgi.spec_version'], str)
 
         assert scope['asgi.version'] in ['2.0', '2.1', '2.2']
         assert isinstance(scope['asgi.version'], str)
 
-        assert scope['http_version'] in ['1.0', '1.1', '2']
-        assert isinstance(scope['http_version'], str)
+        assert isinstance(scope['type'], str)
+        assert scope['type'] in ["http", "lifespan.startup", "lifespan.shutdown"]
 
-        assert scope['method'] in ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']
-        assert isinstance(scope['method'], str)
+        if scope['type'] == 'lifespan.startup':
+            self.startup_called = True
+            await send({"type": "lifespan.startup.complete"})
+        elif scope['type'] == 'lifespan.shutdown':
+            self.shutdown_called = True
+            await send({"type": "lifespan.shutdown.complete"})
+        elif scope['type'] == 'http':
+            assert scope['http_version'] in ['1.0', '1.1', '2']
+            assert isinstance(scope['http_version'], str)
 
-        assert scope['scheme'] in ['http', 'https']
-        assert isinstance(scope['scheme'], str)
+            assert scope['method'] in ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']
+            assert isinstance(scope['method'], str)
 
-        assert isinstance(scope['path'], str)
-        assert isinstance(scope['raw_path'], bytes)
-        assert isinstance(scope['query_string'], bytes)
-        assert isinstance(scope['root_path'], str)
+            assert scope['scheme'] in ['http', 'https']
+            assert isinstance(scope['scheme'], str)
 
-        assert hasattr(scope['headers'], '__iter__')
-        for k, v in scope['headers']:
-            assert isinstance(k, bytes)
-            assert isinstance(v, bytes)
+            assert isinstance(scope['path'], str)
+            assert isinstance(scope['raw_path'], bytes)
+            assert isinstance(scope['query_string'], bytes)
+            assert isinstance(scope['root_path'], str)
 
-        assert scope['client'] is None or hasattr(scope['client'], '__iter__')
-        if scope['client']:
-            assert len(scope['client']) == 2
-            assert isinstance(scope['client'][0], str)
-            assert isinstance(scope['client'][1], int)
+            assert hasattr(scope['headers'], '__iter__')
+            for k, v in scope['headers']:
+                assert isinstance(k, bytes)
+                assert isinstance(v, bytes)
 
-        assert scope['server'] is None or hasattr(scope['server'], '__iter__')
-        if scope['server']:
-            assert len(scope['server']) == 2
-            assert isinstance(scope['server'][0], str)
-            assert isinstance(scope['server'][1], int)
+            assert scope['client'] is None or hasattr(scope['client'], '__iter__')
+            if scope['client']:
+                assert len(scope['client']) == 2
+                assert isinstance(scope['client'][0], str)
+                assert isinstance(scope['client'][1], int)
 
-        self.received_request = await receive()
-        assert self.received_request['type'] == 'http.request'
-        assert isinstance(self.received_request['body'], bytes)
-        assert isinstance(self.received_request['more_body'], bool)
+            assert scope['server'] is None or hasattr(scope['server'], '__iter__')
+            if scope['server']:
+                assert len(scope['server']) == 2
+                assert isinstance(scope['server'][0], str)
+                assert isinstance(scope['server'][1], int)
 
-        self.next_request = await receive()
-        assert self.next_request['type'] == 'http.disconnect'
+            self.received_request = await receive()
+            assert self.received_request['type'] == 'http.request'
+            assert isinstance(self.received_request['body'], bytes)
+            assert isinstance(self.received_request['more_body'], bool)
 
-        await send(
-            {
-                "type": "http.response.start",
-                "status": self.response_code,
-                "headers": self.response_headers,
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": self.response_body,
-            }
-        )
+            self.next_request = await receive()
+            assert self.next_request['type'] == 'http.disconnect'
+
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": self.response_code,
+                    "headers": self.response_headers,
+                }
+            )
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": self.response_body,
+                }
+            )
 
 
 class TestHttpAsgiMiddleware(unittest.TestCase):
@@ -214,3 +224,8 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         # Verify asserted
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_body(), test_body)
+
+    def test_function_app_lifecycle_events(self):
+        mock_app = MockAsgiApplication()
+        app = func.AsgiFunctionApp(app=mock_app, http_auth_level=func.AuthLevel.ANONYMOUS)
+        assert mock_app.startup_called

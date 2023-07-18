@@ -11,12 +11,15 @@ from ._abc import Context
 from ._http import HttpRequest, HttpResponse
 from ._http_wsgi import WsgiRequest
 
+ASGI_VERSION = "2.1"
+ASGI_SPEC_VERSION = "2.1"
+
 
 class AsgiRequest(WsgiRequest):
     def __init__(self, func_req: HttpRequest,
                  func_ctx: Optional[Context] = None):
-        self.asgi_version = "2.1"
-        self.asgi_spec_version = "2.1"
+        self.asgi_version = ASGI_VERSION
+        self.asgi_spec_version = ASGI_SPEC_VERSION
         self._headers = func_req.headers
         super().__init__(func_req, func_ctx)
 
@@ -201,3 +204,20 @@ class AsgiMiddleware:
                                                     scope,
                                                     req.get_body())
         return asgi_response.to_func_response()
+
+    async def notify_startup(self):
+        """Notify the ASGI app that the server has started."""
+        scope = {"type": "lifespan.startup", "asgi.version": ASGI_VERSION, "asgi.spec_version": ASGI_SPEC_VERSION}
+        self._logger.debug("Notifying ASGI app that the server has started.")
+        return await AsgiResponse.from_app(self._app,
+                                    scope,
+                                    b'')
+
+    async def notify_shutdown(self):
+        """Notify the ASGI app that the server is shutting down."""
+        scope = {"type": "lifespan.shutdown", "asgi.version": ASGI_VERSION, "asgi.spec_version": ASGI_SPEC_VERSION}
+        self._logger.debug("Notifying ASGI app that the server is shutting down.")
+        return await AsgiResponse.from_app(self._app,
+                                    scope,
+                                    b'')
+

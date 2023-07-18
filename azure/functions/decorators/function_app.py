@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+import asyncio
 import json
 import logging
 from abc import ABC
@@ -1714,7 +1715,12 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: asgi app object.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(AsgiMiddleware(app), 'asgi')
+        self.middleware = AsgiMiddleware(app)
+        self._add_http_app(self.middleware, 'asgi')
+        asyncio.run(self.middleware.notify_startup())
+
+    def __del__(self):
+        asyncio.run(self.middleware.notify_shutdown())
 
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
