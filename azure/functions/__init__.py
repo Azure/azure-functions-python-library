@@ -12,7 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp)
 from ._durable_functions import OrchestrationContext, EntityContext
-from .decorators.dapr.dapr_function_app import DaprFunctionApp
+from .decorators.dapr.dapr_function_app import DaprFunctionApp, DaprBlueprint
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -96,7 +96,8 @@ __all__ = (
     'Cardinality',
     'AccessRights',
     'HttpMethod',
-    'DaprFunctionApp'
+    'DaprFunctionApp',
+    'DaprBlueprint'
 )
 
 __version__ = '1.15.1b1'

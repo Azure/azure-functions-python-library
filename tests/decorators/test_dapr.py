@@ -2,8 +2,8 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.dapr.dapr_function_app import DaprFunctionApp
+from azure.functions.decorators.core import SCRIPT_FILE_NAME, AuthLevel, BindingDirection
+from azure.functions.decorators.dapr.dapr_function_app import DaprBlueprint, DaprFunctionApp
 from azure.functions.decorators.constants import DAPR_BINDING, \
     DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, \
     DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
@@ -244,3 +244,31 @@ class TestDapr(unittest.TestCase):
             "bindingName": "dummy_binding_name",
             "operation": "dummy_operation"
         })
+
+    def test_register_dapr_blueprint(self):
+        bp = DaprBlueprint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return "hello"
+
+        app = DaprFunctionApp()
+        app.register_blueprint(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
+        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
+
+    def test_register_dapr_blueprint_app_auth_level(self):
+        bp = DaprBlueprint()
+
+        @bp.route("name")
+        def hello(name: str):
+            return "hello"
+
+        app = DaprFunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
+        app.register_blueprint(bp)
+
+        self.assertEqual(len(app.get_functions()), 1)
+        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
+                         AuthLevel.ANONYMOUS)

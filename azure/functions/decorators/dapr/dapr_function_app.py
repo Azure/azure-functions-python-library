@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Any, Callable, Optional, Union
 from azure.functions.decorators.core import DataType, AuthLevel
 from azure.functions.decorators.utils import parse_singular_param_to_enum
-from azure.functions.decorators.function_app import BindingApi, \
+from azure.functions.decorators.function_app import BindingApi, Blueprint, \
     FunctionRegister, SettingsApi, TriggerApi
 from azure.functions.decorators.dapr.dapr import DaprBindingOutput, \
     DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
@@ -495,6 +495,13 @@ class DaprBindingApi(BindingApi, ABC):
 
         return wrap
 
+class DaprBlueprint(Blueprint, DaprTriggerApi, DaprBindingApi):
+    """Functions container class where all the functions
+    loaded in it can be registered in :class:`FunctionRegister` subclasses
+    but itself can not be indexed directly. The class contains all existing
+    supported trigger and binding decorator functions.
+    """
+    pass    
 
 class DaprFunctionApp(FunctionRegister, DaprTriggerApi, 
                       DaprBindingApi, SettingsApi):
