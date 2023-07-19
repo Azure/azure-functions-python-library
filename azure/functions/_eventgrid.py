@@ -30,8 +30,10 @@ class EventGridEvent(azf_abc.EventGridEvent):
     def id(self) -> str:
         return self.__id
 
-    def get_json(self) -> typing.Any:
-        return self.__data
+    @property
+    def get_json(self) -> str:
+        import json
+        return json.dumps(self.__data)
 
     @property
     def topic(self) -> str:
@@ -83,8 +85,10 @@ class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
     def id(self) -> str:
         return self.__id
 
-    def get_json(self) -> typing.Any:
-        return self.__data
+    @property
+    def get_json(self) -> str:
+        import json
+        return json.dumps(self.__data)
 
     @property
     def subject(self) -> str:
