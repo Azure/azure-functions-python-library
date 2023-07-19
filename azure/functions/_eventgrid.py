@@ -26,6 +26,7 @@ class EventGridEvent(azf_abc.EventGridEvent):
         self.__event_time = event_time
         self.__data_version = data_version
 
+
     @property
     def id(self) -> str:
         return self.__id
