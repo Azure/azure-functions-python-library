@@ -2250,7 +2250,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
         super().__init__(auth_level=http_auth_level)
 
 
-class Blueprint(TriggerApi, BindingApi):
+class Blueprint(TriggerApi, BindingApi, SettingsApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing
