@@ -495,15 +495,17 @@ class DaprBindingApi(BindingApi, ABC):
 
         return wrap
 
+
 class DaprBlueprint(Blueprint, DaprTriggerApi, DaprBindingApi):
     """Functions container class where all the functions
     loaded in it can be registered in :class:`FunctionRegister` subclasses
     but itself can not be indexed directly. The class contains all existing
     supported trigger and binding decorator functions.
     """
-    pass    
+    pass
 
-class DaprFunctionApp(FunctionRegister, DaprTriggerApi, 
+
+class DaprFunctionApp(FunctionRegister, DaprTriggerApi,
                       DaprBindingApi, SettingsApi):
     """DaprFunctionApp object used for Dapr bindings and triggers.
 
