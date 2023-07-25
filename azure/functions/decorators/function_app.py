@@ -2133,7 +2133,8 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         self.startup_task_done = False
 
     def __del__(self):
-        asyncio.run(self.middleware.notify_shutdown())
+        if self.startup_task_done:
+            asyncio.run(self.middleware.notify_shutdown())
 
     def _add_http_app(self,
                       http_middleware: Union[

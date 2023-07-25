@@ -271,10 +271,10 @@ class AsgiMiddleware:
 
     async def notify_shutdown(self):
         """Notify the ASGI app that the server is shutting down."""
-        self._logger.debug("Notifying ASGI app of shutdown.")
         if not self.lifespan_receive_queue or not self.lifespan_shutdown_event:
             raise RuntimeError("notify_startup() must be called first.")
 
+        self._logger.debug("Notifying ASGI app of shutdown.")
         shutdown_event = {"type": "lifespan.shutdown"}
         await self.lifespan_receive_queue.put(shutdown_event)
         await self.lifespan_shutdown_event.wait()
