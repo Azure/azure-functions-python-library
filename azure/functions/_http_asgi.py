@@ -4,6 +4,7 @@
 from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
 import asyncio
+from asyncio import Event, Queue
 from warnings import warn
 from wsgiref.headers import Headers
 
@@ -13,8 +14,6 @@ from ._http_wsgi import WsgiRequest
 
 ASGI_VERSION = "2.1"
 ASGI_SPEC_VERSION = "2.1"
-
-ASGIQueue = asyncio.Queue[Dict[str, Any]]
 
 
 class AsgiRequest(WsgiRequest):
@@ -159,9 +158,9 @@ class AsgiMiddleware:
         self._app = app
         self.main = self._handle
         self.state = {}
-        self.lifespan_receive_queue: ASGIQueue = asyncio.Queue()
-        self.lifespan_startup_event = asyncio.Event()
-        self.lifespan_shutdown_event = asyncio.Event()
+        self.lifespan_receive_queue: Queue = Queue()
+        self.lifespan_startup_event = Event()
+        self.lifespan_shutdown_event = Event()
         self._ready_for_shutdown = False
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
