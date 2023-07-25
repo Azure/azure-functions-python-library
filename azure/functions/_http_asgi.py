@@ -161,7 +161,7 @@ class AsgiMiddleware:
         self.lifespan_receive_queue: Optional[Queue] = None
         self.lifespan_startup_event: Optional[Event] = None
         self.lifespan_shutdown_event: Optional[Event] = None
-        self._ready_for_shutdown = False
+        self._startup_succeeded = False
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
         """Deprecated. Please use handle_async instead:
@@ -226,16 +226,24 @@ class AsgiMiddleware:
             raise RuntimeError("notify_startup() must be called first.")
         if message["type"] == "lifespan.startup.complete":
             self.lifespan_startup_event.set()
+            self._startup_succeeded = True
         elif message["type"] == "lifespan.shutdown.complete":
             self.lifespan_shutdown_event.set()
         elif message["type"] == "lifespan.startup.failed":
             self.lifespan_startup_event.set()
+            self._startup_succeeded = False
             if message.get("message"):
-                self._logger.error(message["message"])
+                self._logger.error("Failed ASGI startup with message '%s'.",
+                                   message["message"])
+            else:
+                self._logger.error("Failed ASGI startup event.")
         elif message["type"] == "lifespan.shutdown.failed":
             self.lifespan_shutdown_event.set()
             if message.get("message"):
-                self._logger.error(message["message"])
+                self._logger.error("Failed ASGI shutdown with message '%s'.",
+                                   message["message"])
+            else:
+                self._logger.error("Failed ASGI shutdown event.")
 
     async def _lifespan_main(self):
         scope = {
@@ -268,6 +276,7 @@ class AsgiMiddleware:
         await self.lifespan_receive_queue.put(startup_event)
         task = asyncio.create_task(self._lifespan_main())  # NOQA
         await self.lifespan_startup_event.wait()
+        return self._startup_succeeded
 
     async def notify_shutdown(self):
         """Notify the ASGI app that the server is shutting down."""

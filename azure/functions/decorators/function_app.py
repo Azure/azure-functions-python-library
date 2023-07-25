@@ -2158,8 +2158,11 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
             if not self.startup_task_done:
-                await asgi_middleware.notify_startup()
+                success = await asgi_middleware.notify_startup()
+                if not success:
+                    raise RuntimeError("ASGI middleware startup failed.")
                 self.startup_task_done = True
+
             return await asgi_middleware.handle_async(req, context)
 
 
