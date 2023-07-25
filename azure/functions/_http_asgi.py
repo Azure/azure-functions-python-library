@@ -158,9 +158,9 @@ class AsgiMiddleware:
         self._app = app
         self.main = self._handle
         self.state = {}
-        self.lifespan_receive_queue: Queue = Queue()
-        self.lifespan_startup_event = Event()
-        self.lifespan_shutdown_event = Event()
+        self.lifespan_receive_queue: Optional[Queue] = None
+        self.lifespan_startup_event: Optional[Event] = None
+        self.lifespan_shutdown_event: Optional[Event] = None
         self._ready_for_shutdown = False
 
     def handle(self, req: HttpRequest, context: Optional[Context] = None):
@@ -216,10 +216,14 @@ class AsgiMiddleware:
         return asgi_response.to_func_response()
 
     async def _lifespan_receive(self):
+        if not self.lifespan_receive_queue:
+            raise RuntimeError("notify_startup() must be called first.")
         return await self.lifespan_receive_queue.get()
 
     async def _lifespan_send(self, message):
         logging.debug("Received lifespan message %s.", message)
+        if not self.lifespan_startup_event or not self.lifespan_shutdown_event:
+            raise RuntimeError("notify_startup() must be called first.")
         if message["type"] == "lifespan.startup.complete":
             self.lifespan_startup_event.set()
         elif message["type"] == "lifespan.shutdown.complete":
@@ -240,6 +244,8 @@ class AsgiMiddleware:
             "asgi.spec_version": ASGI_SPEC_VERSION,
             "state": self.state,
         }
+        if not self.lifespan_startup_event or not self.lifespan_shutdown_event:
+            raise RuntimeError("notify_startup() must be called first.")
         try:
             await self._app(scope, self._lifespan_receive, self._lifespan_send)
         finally:
@@ -250,6 +256,14 @@ class AsgiMiddleware:
         """Notify the ASGI app that the server has started."""
         self._logger.debug("Notifying ASGI app of startup.")
 
+        # Initialize signals and queues
+        if not self.lifespan_receive_queue:
+            self.lifespan_receive_queue = Queue()
+        if not self.lifespan_startup_event:
+            self.lifespan_startup_event = Event()
+        if not self.lifespan_shutdown_event:
+            self.lifespan_shutdown_event = Event()
+
         startup_event = {"type": "lifespan.startup"}
         await self.lifespan_receive_queue.put(startup_event)
         task = asyncio.create_task(self._lifespan_main())  # NOQA
@@ -258,6 +272,9 @@ class AsgiMiddleware:
     async def notify_shutdown(self):
         """Notify the ASGI app that the server is shutting down."""
         self._logger.debug("Notifying ASGI app of shutdown.")
+        if not self.lifespan_receive_queue or not self.lifespan_shutdown_event:
+            raise RuntimeError("notify_startup() must be called first.")
+
         shutdown_event = {"type": "lifespan.shutdown"}
         await self.lifespan_receive_queue.put(shutdown_event)
         await self.lifespan_shutdown_event.wait()

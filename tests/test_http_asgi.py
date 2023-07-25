@@ -167,10 +167,6 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         return MockContext(invocation_id, thread_local_storage, function_name,
                            function_directory, trace_context, retry_context)
 
-    # Ensure there is a working event loop before each test
-    def setUp(self):
-        asyncio.set_event_loop(asyncio.new_event_loop())
-
     def test_middleware_calls_app(self):
         app = MockAsgiApplication()
         test_body = b'Hello world!'

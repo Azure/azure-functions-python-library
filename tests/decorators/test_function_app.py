@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-import asyncio
 import inspect
 import json
 import unittest
@@ -261,9 +260,6 @@ class TestScaffold(unittest.TestCase):
 
 class TestFunctionApp(unittest.TestCase):
     def setUp(self):
-        # Ensure there is a working event loop before each test
-        asyncio.set_event_loop(asyncio.new_event_loop())
-
         def dummy_func():
             pass
 
