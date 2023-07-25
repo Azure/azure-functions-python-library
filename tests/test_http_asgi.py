@@ -43,15 +43,23 @@ class MockAsgiApplication:
             startup_message = await receive()
             assert startup_message['type'] == 'lifespan.startup'
             if self.fail_startup:
-                await send({"type": "lifespan.startup.failed",
-                            "message": "failed on purpose"})
+                if isinstance(self.fail_startup, str):
+                    await send({
+                        "type": "lifespan.startup.failed",
+                        "message": self.fail_startup})
+                else:
+                    await send({"type": "lifespan.startup.failed"})
             else:
                 await send({"type": "lifespan.startup.complete"})
             shutdown_message = await receive()
             assert shutdown_message['type'] == 'lifespan.shutdown'
             if self.fail_shutdown:
-                await send({"type": "lifespan.shutdown.failed",
-                            "message": "failed on purpose"})
+                if isinstance(self.fail_shutdown, str):
+                    await send({
+                        "type": "lifespan.shutdown.failed",
+                        "message": self.fail_shutdown})
+                else:
+                    await send({"type": "lifespan.shutdown.failed"})
             else:
                 await send({"type": "lifespan.shutdown.complete"})
 
@@ -266,44 +274,26 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         )
         assert mock_app.shutdown_called
 
-    def test_function_app_lifecycle_events_with_start_failure(self):
-        mock_app = MockAsgiApplication(True, False)
-        middleware = AsgiMiddleware(mock_app)
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_startup()
-        )
-        assert mock_app.startup_called
+    def test_function_app_lifecycle_events_with_failures(self):
+        apps = [
+            MockAsgiApplication(False, True),
+            MockAsgiApplication(True, False),
+            MockAsgiApplication(True, True),
+            MockAsgiApplication("bork", False),
+            MockAsgiApplication(False, "bork"),
+            MockAsgiApplication("bork", "bork"),
+        ]
+        for mock_app in apps:
+            middleware = AsgiMiddleware(mock_app)
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_startup()
+            )
+            assert mock_app.startup_called
 
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_shutdown()
-        )
-        assert mock_app.shutdown_called
-
-    def test_function_app_lifecycle_events_with_stop_failure(self):
-        mock_app = MockAsgiApplication(False, True)
-        middleware = AsgiMiddleware(mock_app)
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_startup()
-        )
-        assert mock_app.startup_called
-
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_shutdown()
-        )
-        assert mock_app.shutdown_called
-
-    def test_function_app_lifecycle_events_with_both_failures(self):
-        mock_app = MockAsgiApplication(True, True)
-        middleware = AsgiMiddleware(mock_app)
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_startup()
-        )
-        assert mock_app.startup_called
-
-        asyncio.get_event_loop().run_until_complete(
-            middleware.notify_shutdown()
-        )
-        assert mock_app.shutdown_called
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_shutdown()
+            )
+            assert mock_app.shutdown_called
 
     def test_calling_shutdown_without_startup_errors(self):
         mock_app = MockAsgiApplication()
