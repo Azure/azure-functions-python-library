@@ -10,6 +10,7 @@ from azure.functions._abc import TraceContext, RetryContext
 from azure.functions._http_asgi import (
     AsgiMiddleware
 )
+import pytest
 
 
 class MockAsgiApplication:
@@ -303,3 +304,11 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
             middleware.notify_shutdown()
         )
         assert mock_app.shutdown_called
+
+    def test_calling_shutdown_without_startup_errors(self):
+        mock_app = MockAsgiApplication()
+        middleware = AsgiMiddleware(mock_app)
+        with pytest.raises(RuntimeError):
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_shutdown()
+            )
