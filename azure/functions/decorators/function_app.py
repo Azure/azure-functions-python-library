@@ -1074,6 +1074,7 @@ class TriggerApi(DecoratorApi, ABC):
                     arg_name: str,
                     table_name: str,
                     connection_string_setting: str,
+                    leases_table_name: Optional[str] = None,
                     data_type: Optional[DataType] = None,
                     **kwargs) -> Callable[..., Any]:
         """The sql_trigger decorator adds :class:`SqlTrigger`
@@ -1095,6 +1096,9 @@ class TriggerApi(DecoratorApi, ABC):
         :param connection_string_setting: The name of an app setting that
         contains the connection string for the database against which the
         query or stored procedure is being executed
+        :param leases_table_name: The name of the table used to store
+        leases. If not specified, the leases table name will be
+        Leases_{FunctionId}_{TableId}.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -1111,6 +1115,7 @@ class TriggerApi(DecoratorApi, ABC):
                         name=arg_name,
                         table_name=table_name,
                         connection_string_setting=connection_string_setting,
+                        leases_table_name=leases_table_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))

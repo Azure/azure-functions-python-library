@@ -52,8 +52,10 @@ class SqlTrigger(Trigger):
                  name: str,
                  table_name: str,
                  connection_string_setting: str,
+                 leases_table_name: Optional[str] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.table_name = table_name
         self.connection_string_setting = connection_string_setting
+        self.leases_table_name = leases_table_name
         super().__init__(name=name, data_type=data_type)
