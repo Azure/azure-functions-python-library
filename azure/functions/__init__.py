@@ -100,4 +100,4 @@ __all__ = (
     'DaprBlueprint'
 )
 
-__version__ = '1.15.1b1'
+__version__ = '1.15.1b2'
