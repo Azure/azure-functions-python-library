@@ -25,6 +25,8 @@ from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusTopicOutput
 from azure.functions.decorators.table import TableInput, TableOutput
 from azure.functions.decorators.timer import TimerTrigger
+from azure.functions.decorators.redis import RedisPubSubTrigger, RedisListTrigger, \
+    RedisStreamTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
@@ -1039,9 +1041,9 @@ class TriggerApi(DecoratorApi, ABC):
         :class:`EventGridTrigger`
         to the :class:`FunctionBuilder` object
         for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining event grid trigger
-        in the function.json which enables function to be triggered to
-        respond to an event sent to an event grid topic.
+        indexing model. This is equivalent to defining RedisPubSubTrigger
+        in the function.json which enables function to be triggered when
+        messages are published to a redis pubsub channel.
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
@@ -1060,6 +1062,163 @@ class TriggerApi(DecoratorApi, ABC):
                 fb.add_trigger(
                     trigger=EventGridTrigger(
                         name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def redis_pubsub_trigger(self,
+                             arg_name: str,
+                             connectionStringSetting: str,
+                             channel: str,
+                             data_type: Optional[Union[DataType, str]] = None,
+                             **kwargs) -> Callable[..., Any]:
+        """
+        The redis_pubsub_trigger decorator adds
+        :class:`RedisPubSubTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining RedisPubSubTrigger
+        in the function.json which enables function to be triggered when
+        messages are published to a redis pubsub channel.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        :param arg_name: the variable name used in function code for the
+            parameter that receives the event data.
+        :param connectionStringSetting: Redis connection string setting.
+        :param channel: Redis pubsub channel name.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=RedisPubSubTrigger(
+                        name=arg_name,
+                        connectionStringSetting=connectionStringSetting,
+                        channel=channel,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def redis_list_trigger(self,
+                           arg_name: str,
+                           connectionStringSetting: str,
+                           key: str,
+                           pollingIntervalInMs: Optional[int] = 1000,
+                           messagesPerWorker: Optional[int] = 100,
+                           count: Optional[int] = 10,
+                           listPopFromBeginning: Optional[bool] = True,
+                           data_type: Optional[Union[DataType, str]] = None,
+                           **kwargs) -> Callable[..., Any]:
+        """
+        The redis_pubsub_trigger decorator adds
+        :class:`RedisListTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining RedisListTrigger
+        in the function.json which enables function to be triggered when
+        entries are added to a redis list.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        :param arg_name: the variable name used in function code for the
+            parameter that receives the event data.
+        :param connectionStringSetting: Redis connection string setting.
+        :param key: Key to read from.
+        :param pollingIntervalInMs: How often to poll Redis in ms.
+        :param messagesPerWorker: The number of messages each functions
+            instance is expected to handle.
+        :param count: Number of elements to pull from Redis at one time.
+        :param listPopFromBeginning: Decides if the function will pop elements
+            from the front or end of the list.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=RedisListTrigger(
+                        name=arg_name,
+                        connectionStringSetting=connectionStringSetting,
+                        key=key,
+                        pollingIntervalInMs=pollingIntervalInMs,
+                        messagesPerWorker=messagesPerWorker,
+                        count=count,
+                        listPopFromBeginning=listPopFromBeginning,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def redis_stream_trigger(self,
+                             arg_name: str,
+                             connectionStringSetting: str,
+                             key: str,
+                             pollingIntervalInMs: Optional[int] = 1000,
+                             messagesPerWorker: Optional[int] = 100,
+                             count: Optional[int] = 10,
+                             deleteAfterProcess: Optional[bool] = False,
+                             data_type: Optional[Union[DataType, str]] = None,
+                             **kwargs) -> Callable[..., Any]:
+        """
+        The redis_pubsub_trigger decorator adds
+        :class:`RedisStreamTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining RedisStreamTrigger
+        in the function.json which enables function to be triggered when
+        messages are published to a redis pubsub channel.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        :param arg_name: the variable name used in function code for the
+            parameter that receives the event data.
+        :param connectionStringSetting: Redis connection string setting.
+        :param key: Key to read from.
+        :param pollingIntervalInMs: How often to poll Redis in ms.
+        :param messagesPerWorker: The number of messages each functions
+            instance is expected to handle.
+        :param count: Number of elements to pull from Redis at one time.
+        :param deleteAfterProcess: Decides if the function will delete the
+            stream entries after processing.
+        parameter value.
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=RedisStreamTrigger(
+                        name=arg_name,
+                        connectionStringSetting=connectionStringSetting,
+                        connectionStringSetting=connectionStringSetting,
+                        key=key,
+                        pollingIntervalInMs=pollingIntervalInMs,
+                        messagesPerWorker=messagesPerWorker,
+                        count=count,
+                        deleteAfterProcess=deleteAfterProcess,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
