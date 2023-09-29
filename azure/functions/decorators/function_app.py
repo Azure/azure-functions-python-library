@@ -1321,6 +1321,7 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+
 class BindingApi(DecoratorApi, ABC):
     """Interface to extend for using existing binding decorator functions."""
 
