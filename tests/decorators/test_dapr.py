@@ -2,19 +2,17 @@
 #  Licensed under the MIT License.
 import unittest
 
-from azure.functions.decorators.core import SCRIPT_FILE_NAME, AuthLevel, \
-    BindingDirection
-from azure.functions.decorators.dapr.dapr_function_app import DaprBlueprint, \
-    DaprFunctionApp
+from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.constants import DAPR_BINDING, \
     DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, \
     DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
+from azure.functions.decorators.function_app import FunctionApp
 from tests.decorators.testutils import assert_json
 
 
 class TestDapr(unittest.TestCase):
     def setUp(self):
-        self.dapr_func_app = DaprFunctionApp()
+        self.func_app = FunctionApp()
 
     def _get_user_function(self, app):
         funcs = app.get_functions()
@@ -22,7 +20,7 @@ class TestDapr(unittest.TestCase):
         return funcs[0]
 
     def test_dapr_service_invocation_trigger_default_args(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy_method_name")
@@ -48,7 +46,7 @@ class TestDapr(unittest.TestCase):
         )
 
     def test_dapr_binding_trigger_default_args(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_binding_trigger(arg_name="req",
                                   binding_name="dummy_binding_name")
@@ -69,7 +67,7 @@ class TestDapr(unittest.TestCase):
                                  })
 
     def test_dapr_topic_trigger_default_args(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_topic_trigger(arg_name="req",
                                 pub_sub_name="dummy_pub_sub_name",
@@ -94,7 +92,7 @@ class TestDapr(unittest.TestCase):
                                  })
 
     def test_dapr_state_input_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -119,7 +117,7 @@ class TestDapr(unittest.TestCase):
         })
 
     def test_dapr_secret_input_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -146,7 +144,7 @@ class TestDapr(unittest.TestCase):
         })
 
     def test_dapr_state_output_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -171,7 +169,7 @@ class TestDapr(unittest.TestCase):
         })
 
     def test_dapr_invoke_output_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -198,7 +196,7 @@ class TestDapr(unittest.TestCase):
         })
 
     def test_dapr_publish_output_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -223,7 +221,7 @@ class TestDapr(unittest.TestCase):
         })
 
     def test_dapr_binding_output_binding(self):
-        app = self.dapr_func_app
+        app = self.func_app
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy")
@@ -246,31 +244,3 @@ class TestDapr(unittest.TestCase):
             "bindingName": "dummy_binding_name",
             "operation": "dummy_operation"
         })
-
-    def test_register_dapr_blueprint(self):
-        bp = DaprBlueprint()
-
-        @bp.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
-            return "hello"
-
-        app = DaprFunctionApp()
-        app.register_blueprint(bp)
-
-        self.assertEqual(len(app.get_functions()), 1)
-        self.assertEqual(app.auth_level, AuthLevel.FUNCTION)
-        self.assertEqual(app.app_script_file, SCRIPT_FILE_NAME)
-
-    def test_register_dapr_blueprint_app_auth_level(self):
-        bp = DaprBlueprint()
-
-        @bp.route("name")
-        def hello(name: str):
-            return "hello"
-
-        app = DaprFunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
-        app.register_blueprint(bp)
-
-        self.assertEqual(len(app.get_functions()), 1)
-        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
-                         AuthLevel.ANONYMOUS)

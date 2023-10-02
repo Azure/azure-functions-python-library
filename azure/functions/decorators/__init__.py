@@ -5,7 +5,6 @@ from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, ExternalHttpFunctionApp, AsgiFunctionApp, \
     WsgiFunctionApp, FunctionRegister, TriggerApi, BindingApi, SettingsApi
 from .http import HttpMethod
-from .dapr.dapr_function_app import DaprFunctionApp, DaprBlueprint
 
 __all__ = [
     'FunctionApp',
@@ -23,7 +22,5 @@ __all__ = [
     'AuthLevel',
     'Cardinality',
     'AccessRights',
-    'HttpMethod',
-    'DaprFunctionApp',
-    'DaprBlueprint'
+    'HttpMethod'
 ]
