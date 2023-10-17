@@ -38,6 +38,38 @@ class TestServiceBus(unittest.TestCase):
 
     MOCKED_AZURE_PARTNER_ID = '6ceef68b-0794-45dd-bb2e-630748515552'
 
+    def test_servicebusmessage_initialize_without_args(self):
+        # given
+        expected_body = b""
+        expexceted_content_type = None
+        expected_correlation_id = None
+
+        # when
+        test_sb_message = func.ServiceBusMessage()
+
+        # then
+        assert expected_body == test_sb_message.get_body()
+        assert expexceted_content_type == test_sb_message.content_type
+        assert expected_correlation_id == test_sb_message.correlation_id
+
+    def test_servicebusmessage_initialize_all_arguments(self):
+        # given
+        expected_body: bytes = b"Body"
+        expected_content_type: str = "Content Type"
+        expected_correlation_id: str = "Correlation ID"
+
+        # when
+        test_sb_message = func.ServiceBusMessage(
+            body=expected_body,
+            content_type=expected_content_type,
+            correlation_id=expected_correlation_id
+        )
+
+        # then
+        assert expected_body == test_sb_message.get_body()
+        assert expected_content_type == test_sb_message.content_type
+        assert expected_correlation_id == test_sb_message.correlation_id
+
     def test_servicebus_input_type(self):
         check_input_type = (
             azf_sb.ServiceBusMessageInConverter.check_input_type_annotation
