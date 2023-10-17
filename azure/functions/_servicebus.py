@@ -168,7 +168,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         str
             The message identifier
         """
-        return None
+        return ""
 
     @property
     def partition_key(self) -> Optional[str]:
@@ -310,7 +310,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If user has set properties for the message, returns a dictionary.
             If nothing is set, returns an empty dictionary.
         """
-        return None
+        return {}
 
     @property
     def metadata(self) -> Optional[Dict[str, Any]]:
