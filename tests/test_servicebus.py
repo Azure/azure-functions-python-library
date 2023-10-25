@@ -159,54 +159,11 @@ class TestServiceBus(unittest.TestCase):
 
     def test_abstract_servicebus_message(self):
         test_sb_message = func.ServiceBusMessage()
+        abstract_sb_message = func._abc.ServiceBusMessage
 
-        # Testing abstract class methods -- all should return None type
-        self.assertIsInstance(super(type(test_sb_message.get_body())),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.content_type)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.correlation_id)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.dead_letter_source)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.delivery_count)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.enqueued_time_utc)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.expires_at_utc)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.expiration_time)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.label)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.lock_token)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.message_id)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.partition_key)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.reply_to)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.reply_to_session_id)),
-                              type(super(type(None))))
-        self.assertIsInstance(
-            super(type(test_sb_message.scheduled_enqueue_time)),
-            type(super(type(None))))
-        self.assertIsInstance(
-            super(type(test_sb_message.scheduled_enqueue_time_utc)),
-            type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.sequence_number)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.session_id)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.time_to_live)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.to)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.user_properties)),
-                              type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.metadata)),
-                              type(super(type(None))))
+        self.assertIsInstance(test_sb_message, abstract_sb_message)
+        with self.assertRaises(TypeError):
+            func._abc.ServiceBusMessage()
 
     def test_servicebus_input_type(self):
         check_input_type = (
