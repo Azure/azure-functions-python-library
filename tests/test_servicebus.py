@@ -69,25 +69,25 @@ class TestServiceBus(unittest.TestCase):
         assert expected_body == test_sb_message.get_body()
         assert expected_content_type == test_sb_message.content_type
         assert expected_correlation_id == test_sb_message.correlation_id
-        assert None == test_sb_message.dead_letter_source
-        assert None == test_sb_message.delivery_count
-        assert None == test_sb_message.enqueued_time_utc
-        assert None == test_sb_message.expires_at_utc
-        assert None == test_sb_message.expiration_time
-        assert None == test_sb_message.label
-        assert None == test_sb_message.lock_token
-        assert "" == test_sb_message.message_id
-        assert None == test_sb_message.partition_key
-        assert None == test_sb_message.reply_to
-        assert None == test_sb_message.reply_to_session_id
-        assert None == test_sb_message.scheduled_enqueue_time
-        assert None == test_sb_message.scheduled_enqueue_time_utc
-        assert None == test_sb_message.sequence_number
-        assert None == test_sb_message.session_id
-        assert None == test_sb_message.time_to_live
-        assert None == test_sb_message.to
-        assert {} == test_sb_message.user_properties
-        assert None == test_sb_message.metadata
+        self.assertIsNone(test_sb_message.dead_letter_source)
+        self.assertIsNone(test_sb_message.delivery_count)
+        self.assertIsNone(test_sb_message.enqueued_time_utc)
+        self.assertIsNone(test_sb_message.expires_at_utc)
+        self.assertIsNone(test_sb_message.expiration_time)
+        self.assertIsNone(test_sb_message.label)
+        self.assertIsNone(test_sb_message.lock_token)
+        self.assertIsNone(test_sb_message.message_id)
+        self.assertIsNone(test_sb_message.partition_key)
+        self.assertIsNone(test_sb_message.reply_to)
+        self.assertIsNone(test_sb_message.reply_to_session_id)
+        self.assertIsNone(test_sb_message.scheduled_enqueue_time)
+        self.assertIsNone(test_sb_message.scheduled_enqueue_time_utc)
+        self.assertIsNone(test_sb_message.sequence_number)
+        self.assertIsNone(test_sb_message.session_id)
+        self.assertIsNone(test_sb_message.time_to_live)
+        self.assertIsNone(test_sb_message.to)
+        self.assertDictEqual(test_sb_message.user_properties, {})
+        self.assertIsNone(test_sb_message.metadata)
 
     def test_servicebus_message_initialize_all_args(self):
         # given
@@ -159,30 +159,54 @@ class TestServiceBus(unittest.TestCase):
 
     def test_abstract_servicebus_message(self):
         test_sb_message = func.ServiceBusMessage()
-        
+
         # Testing abstract class methods -- all should return None type
-        self.assertIsInstance(super(type(test_sb_message.get_body())), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.content_type)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.correlation_id)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.dead_letter_source)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.delivery_count)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.enqueued_time_utc)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.expires_at_utc)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.expiration_time)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.label)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.lock_token)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.message_id)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.partition_key)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.reply_to)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.reply_to_session_id)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.scheduled_enqueue_time)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.scheduled_enqueue_time_utc)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.sequence_number)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.session_id)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.time_to_live)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.to)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.user_properties)), type(super(type(None))))
-        self.assertIsInstance(super(type(test_sb_message.metadata)), type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.get_body())),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.content_type)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.correlation_id)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.dead_letter_source)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.delivery_count)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.enqueued_time_utc)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.expires_at_utc)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.expiration_time)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.label)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.lock_token)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.message_id)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.partition_key)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.reply_to)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.reply_to_session_id)),
+                              type(super(type(None))))
+        self.assertIsInstance(
+            super(type(test_sb_message.scheduled_enqueue_time)),
+            type(super(type(None))))
+        self.assertIsInstance(
+            super(type(test_sb_message.scheduled_enqueue_time_utc)),
+            type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.sequence_number)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.session_id)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.time_to_live)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.to)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.user_properties)),
+                              type(super(type(None))))
+        self.assertIsInstance(super(type(test_sb_message.metadata)),
+                              type(super(type(None))))
 
     def test_servicebus_input_type(self):
         check_input_type = (
