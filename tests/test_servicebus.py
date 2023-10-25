@@ -76,7 +76,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertIsNone(test_sb_message.expiration_time)
         self.assertIsNone(test_sb_message.label)
         self.assertIsNone(test_sb_message.lock_token)
-        self.assertIsNone(test_sb_message.message_id)
+        assert "" == test_sb_message.message_id
         self.assertIsNone(test_sb_message.partition_key)
         self.assertIsNone(test_sb_message.reply_to)
         self.assertIsNone(test_sb_message.reply_to_session_id)
