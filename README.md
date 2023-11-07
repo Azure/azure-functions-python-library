@@ -7,8 +7,7 @@
 
 ## Overview
 
-Python support for Azure Functions is based on Python 3.7/3.8/3.9 and 3.10, serverless hosting on Linux and the Functions 2.0, 3.0
-and 4.0 runtime.
+Python support for Azure Functions is based on Python 3.7, 3.8, 3.9, 3.10, and 3.11, serverless hosting on Linux, and the Functions 2.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)), 3.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)) and 4.0 runtime.
 
 Here is the current status of Python in Azure Functions:
 
