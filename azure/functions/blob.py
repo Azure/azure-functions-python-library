@@ -6,6 +6,7 @@ from typing import Any, Optional, Union
 
 from azure.functions import _abc as azf_abc
 from . import meta
+from . import ConnectionInfo
 
 
 class InputStream(azf_abc.InputStream):
@@ -60,7 +61,7 @@ class InputStream(azf_abc.InputStream):
 
 class BlobConverter(meta.InConverter,
                     meta.OutConverter,
-                    binding='blob',
+                    binding='blob2',
                     trigger='blobTrigger'):
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
@@ -100,6 +101,8 @@ class BlobConverter(meta.InConverter,
             data = data.value.encode('utf-8')
         elif data_type == 'bytes':
             data = data.value
+        elif data_type == 'model_binding_data':
+            return ConnectionInfo.decode(data, trigger_metadata=trigger_metadata)
         else:
             raise ValueError(
                 f'unexpected type of data received for the "blob" binding '

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from ._abc import TimerRequest, InputStream, Context, Out
+from ._abc import TimerRequest, InputStream, ConnectionInfo, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
@@ -26,6 +26,7 @@ from ._sql import SqlRow, SqlRowList
 
 # Import binding implementations to register them
 from . import blob  # NoQA
+from . import connectionInfo  # NoQA
 from . import cosmosdb  # NoQA
 from . import eventgrid  # NoQA
 from . import eventhub  # NoQA
@@ -48,6 +49,7 @@ __all__ = (
     'Out',
 
     # Binding rich types, sorted alphabetically.
+    'ConnectionInfo',
     'Document',
     'DocumentList',
     'EventGridEvent',
