@@ -4,7 +4,7 @@
 from typing import Dict, List
 import json
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 import azure.functions as func
 import azure.functions.servicebus as azf_sb
@@ -37,6 +37,133 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_TO = 'mocked_to'
 
     MOCKED_AZURE_PARTNER_ID = '6ceef68b-0794-45dd-bb2e-630748515552'
+
+    def test_servicebusmessage_initialize_without_args(self):
+        # given
+        expected_body = b""
+        expexceted_content_type = None
+        expected_correlation_id = None
+
+        # when
+        test_sb_message = func.ServiceBusMessage()
+
+        # then
+        assert expected_body == test_sb_message.get_body()
+        assert expexceted_content_type == test_sb_message.content_type
+        assert expected_correlation_id == test_sb_message.correlation_id
+
+    def test_servicebusmessage_initialize_all_arguments(self):
+        # given
+        expected_body: bytes = b"Body"
+        expected_content_type: str = "Content Type"
+        expected_correlation_id: str = "Correlation ID"
+
+        # when
+        test_sb_message = func.ServiceBusMessage(
+            body=expected_body,
+            content_type=expected_content_type,
+            correlation_id=expected_correlation_id
+        )
+
+        # then
+        assert expected_body == test_sb_message.get_body()
+        assert expected_content_type == test_sb_message.content_type
+        assert expected_correlation_id == test_sb_message.correlation_id
+        self.assertIsNone(test_sb_message.dead_letter_source)
+        self.assertIsNone(test_sb_message.delivery_count)
+        self.assertIsNone(test_sb_message.enqueued_time_utc)
+        self.assertIsNone(test_sb_message.expires_at_utc)
+        self.assertIsNone(test_sb_message.expiration_time)
+        self.assertIsNone(test_sb_message.label)
+        self.assertIsNone(test_sb_message.lock_token)
+        assert "" == test_sb_message.message_id
+        self.assertIsNone(test_sb_message.partition_key)
+        self.assertIsNone(test_sb_message.reply_to)
+        self.assertIsNone(test_sb_message.reply_to_session_id)
+        self.assertIsNone(test_sb_message.scheduled_enqueue_time)
+        self.assertIsNone(test_sb_message.scheduled_enqueue_time_utc)
+        self.assertIsNone(test_sb_message.sequence_number)
+        self.assertIsNone(test_sb_message.session_id)
+        self.assertIsNone(test_sb_message.time_to_live)
+        self.assertIsNone(test_sb_message.to)
+        self.assertDictEqual(test_sb_message.user_properties, {})
+        self.assertIsNone(test_sb_message.metadata)
+
+    def test_servicebus_message_initialize_all_args(self):
+        # given
+        body = "body"
+        trigger_metadata = "trigger metadata"
+        content_type = "content type"
+        correlation_id = "correlation id"
+        dead_letter_source = "dead letter source"
+        delivery_count = 1
+        enqueued_time_utc = date(2022, 5, 1)
+        expires_at_utc = date(2022, 5, 1)
+        label = "label"
+        lock_token = "lock token"
+        message_id = "message id"
+        partition_key = "partition key"
+        reply_to = "reply to"
+        reply_to_session_id = "reply to session id"
+        scheduled_enqueue_time_utc = date(2022, 5, 1)
+        sequence_number = 1
+        session_id = "session id"
+        time_to_live = timedelta(hours=1)
+        to = "to"
+        user_properties = {"user": "properties"}
+
+        # when
+        sb_message = azf_sb.ServiceBusMessage(
+            body=body,
+            trigger_metadata=trigger_metadata,
+            content_type=content_type,
+            correlation_id=correlation_id,
+            dead_letter_source=dead_letter_source,
+            delivery_count=delivery_count,
+            enqueued_time_utc=enqueued_time_utc,
+            expires_at_utc=expires_at_utc,
+            label=label,
+            lock_token=lock_token,
+            message_id=message_id,
+            partition_key=partition_key,
+            reply_to=reply_to,
+            reply_to_session_id=reply_to_session_id,
+            scheduled_enqueue_time_utc=scheduled_enqueue_time_utc,
+            sequence_number=sequence_number,
+            session_id=session_id,
+            time_to_live=time_to_live,
+            to=to,
+            user_properties=user_properties)
+
+        # then
+        self.assertEqual(sb_message.get_body(), body)
+        self.assertEqual(sb_message.content_type, content_type)
+        self.assertEqual(sb_message.correlation_id, correlation_id)
+        self.assertEqual(sb_message.dead_letter_source, dead_letter_source)
+        self.assertEqual(sb_message.delivery_count, delivery_count)
+        self.assertEqual(sb_message.enqueued_time_utc, enqueued_time_utc)
+        self.assertEqual(sb_message.expires_at_utc, expires_at_utc)
+        self.assertEqual(sb_message.label, label)
+        self.assertEqual(sb_message.lock_token, lock_token)
+        self.assertEqual(sb_message.message_id, message_id)
+        self.assertEqual(sb_message.partition_key, partition_key)
+        self.assertEqual(sb_message.reply_to, reply_to)
+        self.assertEqual(sb_message.reply_to_session_id, reply_to_session_id)
+        self.assertEqual(sb_message.scheduled_enqueue_time_utc,
+                         scheduled_enqueue_time_utc)
+        self.assertEqual(sb_message.sequence_number, sequence_number)
+        self.assertEqual(sb_message.session_id, session_id)
+        self.assertEqual(sb_message.time_to_live, time_to_live)
+        self.assertEqual(sb_message.to, to)
+        self.assertEqual(sb_message.user_properties, user_properties)
+
+    def test_abstract_servicebus_message(self):
+        test_sb_message = func.ServiceBusMessage()
+        abstract_sb_message = func._abc.ServiceBusMessage
+
+        self.assertIsInstance(test_sb_message, abstract_sb_message)
+        with self.assertRaises(TypeError):
+            func._abc.ServiceBusMessage()
 
     def test_servicebus_input_type(self):
         check_input_type = (
