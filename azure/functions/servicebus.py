@@ -34,8 +34,9 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             session_id: Optional[str] = None,
             time_to_live: Optional[datetime.timedelta] = None,
             to: Optional[str] = None,
-            user_properties: Dict[str, object]) -> None:
-
+            user_properties: Dict[str, object]):
+        super().__init__(body=body, content_type=content_type,
+                         correlation_id=correlation_id)
         self.__body = body
         self.__trigger_metadata = trigger_metadata
         self.__content_type = content_type
