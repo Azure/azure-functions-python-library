@@ -10,6 +10,7 @@ from azure.functions._abc import TraceContext, RetryContext
 from azure.functions._http_asgi import (
     AsgiMiddleware
 )
+import pytest
 
 
 class MockAsgiApplication:
@@ -18,71 +19,109 @@ class MockAsgiApplication:
     response_headers = [
         [b"content-type", b"text/plain"],
     ]
+    startup_called = False
+    shutdown_called = False
+
+    def __init__(self, fail_startup=False, fail_shutdown=False):
+        self.fail_startup = fail_startup
+        self.fail_shutdown = fail_shutdown
 
     async def __call__(self, scope, receive, send):
         self.received_scope = scope
-        # Verify against ASGI specification
-        assert scope['type'] == 'http'
-        assert isinstance(scope['type'], str)
 
+        # Verify against ASGI specification
         assert scope['asgi.spec_version'] in ['2.0', '2.1']
         assert isinstance(scope['asgi.spec_version'], str)
 
         assert scope['asgi.version'] in ['2.0', '2.1', '2.2']
         assert isinstance(scope['asgi.version'], str)
 
-        assert scope['http_version'] in ['1.0', '1.1', '2']
-        assert isinstance(scope['http_version'], str)
+        assert isinstance(scope['type'], str)
 
-        assert scope['method'] in ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']
-        assert isinstance(scope['method'], str)
+        if scope['type'] == 'lifespan':
+            self.startup_called = True
+            startup_message = await receive()
+            assert startup_message['type'] == 'lifespan.startup'
+            if self.fail_startup:
+                if isinstance(self.fail_startup, str):
+                    await send({
+                        "type": "lifespan.startup.failed",
+                        "message": self.fail_startup})
+                else:
+                    await send({"type": "lifespan.startup.failed"})
+            else:
+                await send({"type": "lifespan.startup.complete"})
+            shutdown_message = await receive()
+            assert shutdown_message['type'] == 'lifespan.shutdown'
+            if self.fail_shutdown:
+                if isinstance(self.fail_shutdown, str):
+                    await send({
+                        "type": "lifespan.shutdown.failed",
+                        "message": self.fail_shutdown})
+                else:
+                    await send({"type": "lifespan.shutdown.failed"})
+            else:
+                await send({"type": "lifespan.shutdown.complete"})
 
-        assert scope['scheme'] in ['http', 'https']
-        assert isinstance(scope['scheme'], str)
+            self.shutdown_called = True
 
-        assert isinstance(scope['path'], str)
-        assert isinstance(scope['raw_path'], bytes)
-        assert isinstance(scope['query_string'], bytes)
-        assert isinstance(scope['root_path'], str)
+        elif scope['type'] == 'http':
+            assert scope['http_version'] in ['1.0', '1.1', '2']
+            assert isinstance(scope['http_version'], str)
 
-        assert hasattr(scope['headers'], '__iter__')
-        for k, v in scope['headers']:
-            assert isinstance(k, bytes)
-            assert isinstance(v, bytes)
+            assert scope['method'] in ['POST', 'GET', 'PUT', 'DELETE', 'PATCH']
+            assert isinstance(scope['method'], str)
 
-        assert scope['client'] is None or hasattr(scope['client'], '__iter__')
-        if scope['client']:
-            assert len(scope['client']) == 2
-            assert isinstance(scope['client'][0], str)
-            assert isinstance(scope['client'][1], int)
+            assert scope['scheme'] in ['http', 'https']
+            assert isinstance(scope['scheme'], str)
 
-        assert scope['server'] is None or hasattr(scope['server'], '__iter__')
-        if scope['server']:
-            assert len(scope['server']) == 2
-            assert isinstance(scope['server'][0], str)
-            assert isinstance(scope['server'][1], int)
+            assert isinstance(scope['path'], str)
+            assert isinstance(scope['raw_path'], bytes)
+            assert isinstance(scope['query_string'], bytes)
+            assert isinstance(scope['root_path'], str)
 
-        self.received_request = await receive()
-        assert self.received_request['type'] == 'http.request'
-        assert isinstance(self.received_request['body'], bytes)
-        assert isinstance(self.received_request['more_body'], bool)
+            assert hasattr(scope['headers'], '__iter__')
+            for k, v in scope['headers']:
+                assert isinstance(k, bytes)
+                assert isinstance(v, bytes)
 
-        await send(
-            {
-                "type": "http.response.start",
-                "status": self.response_code,
-                "headers": self.response_headers,
-            }
-        )
-        await send(
-            {
-                "type": "http.response.body",
-                "body": self.response_body,
-            }
-        )
+            assert scope['client'] is None or hasattr(scope['client'],
+                                                      '__iter__')
+            if scope['client']:
+                assert len(scope['client']) == 2
+                assert isinstance(scope['client'][0], str)
+                assert isinstance(scope['client'][1], int)
 
-        self.next_request = await receive()
-        assert self.next_request['type'] == 'http.disconnect'
+            assert scope['server'] is None or hasattr(scope['server'],
+                                                      '__iter__')
+            if scope['server']:
+                assert len(scope['server']) == 2
+                assert isinstance(scope['server'][0], str)
+                assert isinstance(scope['server'][1], int)
+
+            self.received_request = await receive()
+            assert self.received_request['type'] == 'http.request'
+            assert isinstance(self.received_request['body'], bytes)
+            assert isinstance(self.received_request['more_body'], bool)
+
+            await send(
+                {
+                    "type": "http.response.start",
+                    "status": self.response_code,
+                    "headers": self.response_headers,
+                }
+            )
+            await send(
+                {
+                    "type": "http.response.body",
+                    "body": self.response_body,
+                }
+            )
+
+            self.next_request = await receive()
+            assert self.next_request['type'] == 'http.disconnect'
+        else:
+            raise AssertionError(f"unexpected type {scope['type']}")
 
 
 class TestHttpAsgiMiddleware(unittest.TestCase):
@@ -221,3 +260,45 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         # Verify asserted
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_body(), test_body)
+
+    def test_function_app_lifecycle_events(self):
+        mock_app = MockAsgiApplication()
+        middleware = AsgiMiddleware(mock_app)
+        asyncio.get_event_loop().run_until_complete(
+            middleware.notify_startup()
+        )
+        assert mock_app.startup_called
+
+        asyncio.get_event_loop().run_until_complete(
+            middleware.notify_shutdown()
+        )
+        assert mock_app.shutdown_called
+
+    def test_function_app_lifecycle_events_with_failures(self):
+        apps = [
+            MockAsgiApplication(False, True),
+            MockAsgiApplication(True, False),
+            MockAsgiApplication(True, True),
+            MockAsgiApplication("bork", False),
+            MockAsgiApplication(False, "bork"),
+            MockAsgiApplication("bork", "bork"),
+        ]
+        for mock_app in apps:
+            middleware = AsgiMiddleware(mock_app)
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_startup()
+            )
+            assert mock_app.startup_called
+
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_shutdown()
+            )
+            assert mock_app.shutdown_called
+
+    def test_calling_shutdown_without_startup_errors(self):
+        mock_app = MockAsgiApplication()
+        middleware = AsgiMiddleware(mock_app)
+        with pytest.raises(RuntimeError):
+            asyncio.get_event_loop().run_until_complete(
+                middleware.notify_shutdown()
+            )
