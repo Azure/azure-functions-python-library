@@ -120,7 +120,8 @@ class Binding(ABC):
             if p not in Binding.EXCLUDED_INIT_PARAMS:
                 self._dict[to_camel_case(p)] = getattr(self, p, None)
 
-        self._dict["properties"] = {"SupportsDeferredBinding":True}
+        if self.type is not "httpTrigger":
+            self._dict["properties"] = {"SupportsDeferredBinding":True}
 
         return self._dict
 
