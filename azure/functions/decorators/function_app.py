@@ -4,6 +4,7 @@ import abc
 import dataclasses
 import json
 import logging
+import mimetypes
 from abc import ABC
 from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
@@ -2239,7 +2240,8 @@ can add, remove and view your TODOs.",
 
 
 class OpenAIPluginFunctionApp(ExternalHttpFunctionApp):
-    def __init__(self, plugin_manifest: PluginManifest,
+    def __init__(self, plugin_manifest: Optional[PluginManifest],
+                 manifest_folder_path: str,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.ANONYMOUS):
         """Constructor of :class:`OpenAIFunctionApp` object.
 
@@ -2247,11 +2249,25 @@ class OpenAIPluginFunctionApp(ExternalHttpFunctionApp):
         .well_known/ai_plugin.json call
         """
         self.plugin_manifest = plugin_manifest
+        self.manifest_folder_path = manifest_folder_path
         super().__init__(auth_level=http_auth_level)
 
         @self.route(route=".well_known/ai_plugin.json",
-                    auth_level=http_auth_level,
                     methods=iter(HttpMethod))
-        def well_known_ai_plugin(req: HttpRequest) -> HttpResponse:
-            return HttpResponse(self.plugin_manifest,
-                                status_code=200)
+        def well_known_ai_plugin(req: HttpRequest, context: Context) \
+                -> HttpResponse:
+            if not self.plugin_manifest:
+                filename = f"{context.function_directory}/{manifest_folder_path}/ai_plugin.json"
+
+                with open(filename, 'rb') as f:
+                    mimetype = mimetypes.guess_type(filename)
+                    return HttpResponse(f.read(), mimetype="application/json")
+            else:
+                return HttpResponse(json.dumps(self.plugin_manifest), mimetype="application/json")
+
+        @self.route(route=".well_known/openapi.yaml", methods=iter(HttpMethod))
+        def well_known_open_api_yaml(req: HttpRequest, context: Context) -> HttpResponse:
+            filename = f"{context.function_directory}/{manifest_folder_path}/openapi.yaml"
+
+            with open(filename, 'rb') as f:
+                return HttpResponse(f.read(), mimetype="text/yaml")
