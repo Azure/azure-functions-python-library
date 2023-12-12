@@ -10,7 +10,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
-                         ExternalHttpFunctionApp)
+                         ExternalHttpFunctionApp, BlobSource)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
@@ -94,7 +94,8 @@ __all__ = (
     'AuthLevel',
     'Cardinality',
     'AccessRights',
-    'HttpMethod'
+    'HttpMethod',
+    'BlobSource'
 )
 
 __version__ = '1.18.0b4'

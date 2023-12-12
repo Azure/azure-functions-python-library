@@ -1,10 +1,10 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional
+from typing import Optional, Union
 
 from azure.functions.decorators.constants import BLOB_TRIGGER, BLOB
-from azure.functions.decorators.core import Trigger, OutputBinding, DataType, \
-    InputBinding
+from azure.functions.decorators.core import BlobSource, Trigger, \
+    OutputBinding, DataType, InputBinding
 
 
 class BlobTrigger(Trigger):
@@ -12,10 +12,13 @@ class BlobTrigger(Trigger):
                  name: str,
                  path: str,
                  connection: str,
+                 source: Union[BlobSource, str],
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.path = path
         self.connection = connection
+        self.source = BlobSource[source] \
+            if isinstance(source, str) else source
         super().__init__(name=name, data_type=data_type)
 
     @staticmethod
