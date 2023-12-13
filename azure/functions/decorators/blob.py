@@ -1,6 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from typing import Optional, Union
+from typing import Optional
 
 from azure.functions.decorators.constants import BLOB_TRIGGER, BLOB
 from azure.functions.decorators.core import BlobSource, Trigger, \
@@ -12,7 +12,7 @@ class BlobTrigger(Trigger):
                  name: str,
                  path: str,
                  connection: str,
-                 source: Union[BlobSource, str],
+                 source: BlobSource,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.path = path

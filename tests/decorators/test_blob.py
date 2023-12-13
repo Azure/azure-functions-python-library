@@ -12,7 +12,7 @@ class TestBlob(unittest.TestCase):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
-                              source="EventGrid",
+                              source=BlobSource.EVENT_GRID,
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
 
@@ -24,7 +24,7 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
-            'source': 'EventGrid',
+            'source': BlobSource.EVENT_GRID,
             "connection": "dummy_connection"
         })
 
@@ -32,7 +32,7 @@ class TestBlob(unittest.TestCase):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
-                              source=BlobSource.EventGrid,
+                              source=BlobSource.EVENT_GRID,
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
 
@@ -44,7 +44,7 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
-            'source': 'EventGrid',
+            'source': BlobSource.EVENT_GRID,
             "connection": "dummy_connection"
         })
 
