@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import importlib
 import json
 import logging
 import sys
@@ -72,7 +73,10 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (azf_abc.HttpResponse, str))
+        from azfuncextbase import ResponseTrackerMeta
+        class_response = ResponseTrackerMeta.get_response_type()
+
+        return  issubclass(pytype, azf_abc.HttpResponse) or issubclass(pytype, class_response)
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
@@ -136,7 +140,10 @@ class HttpRequestConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, azf_abc.HttpRequest)
+        from azfuncextbase import RequestTrackerMeta
+        class_request = RequestTrackerMeta.get_request_type()
+
+        return issubclass(pytype, azf_abc.HttpRequest) or issubclass(pytype, class_request)
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
@@ -155,3 +162,5 @@ class HttpRequestConverter(meta.InConverter,
             body_type=val['body'].type,
             body=val['body'].value,
         )
+
+
