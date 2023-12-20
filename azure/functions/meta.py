@@ -6,7 +6,13 @@ import collections.abc
 import datetime
 import json
 import re
+import sys
+
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
+if sys.version_info >= (3, 8):
+    from typing import get_origin, get_args
+else:
+    from ._thirdparty.typing_inspect import get_origin, get_args
 
 from ._thirdparty import typing_inspect
 from ._utils import (
@@ -16,16 +22,17 @@ from ._utils import (
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
-    is_iterable_anno = (
-        typing_inspect.is_generic_type(annotation)
-        and issubclass(typing_inspect.get_origin(annotation),
-                       collections.abc.Iterable)
-    )
+    is_iterable_anno = issubclass(get_origin(annotation), collections.abc.Iterable)
 
+    if sys.version_info < (3, 9):
+        # Before python 3.9, standard types are not supported in type hint
+        is_iterable_anno = typing_inspect.is_generic_type(annotation) and is_iterable_anno
+    
     if not is_iterable_anno:
         return False
 
-    args = typing_inspect.get_args(annotation)
+    args = get_args(annotation)
+
     if not args:
         return False
 
