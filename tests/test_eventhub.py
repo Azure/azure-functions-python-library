@@ -23,8 +23,8 @@ class TestEventHub(unittest.TestCase):
             azf_eh.EventHubConverter.check_input_type_annotation
         )
         if sys.version_info >= (3, 9):
-            self.assertTrue(check_input_type(list[func.EventGridEvent]))        
-            self.assertTrue(check_input_type(list[str]))    
+            self.assertTrue(check_input_type(list[func.EventGridEvent]))
+            self.assertTrue(check_input_type(list[str]))
 
         self.assertTrue(check_input_type(func.EventHubEvent))
         self.assertTrue(check_input_type(List[func.EventHubEvent]))
@@ -38,9 +38,9 @@ class TestEventHub(unittest.TestCase):
         )
 
         if sys.version_info >= (3, 9):
-            self.assertTrue(check_output_type(list[func.EventGridEvent]))        
-            self.assertTrue(check_output_type(list[str]))           
-        
+            self.assertTrue(check_output_type(list[func.EventGridEvent]))
+            self.assertTrue(check_output_type(list[str]))
+
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(List[str]))

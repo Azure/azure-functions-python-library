@@ -38,7 +38,7 @@ class Kafka(unittest.TestCase):
         if sys.version_info >= (3, 9):
             self.assertTrue(check_input_type(list[func.KafkaEvent]))
             self.assertTrue(check_input_type(list[str]))
-                    
+
         self.assertTrue(check_input_type(func.KafkaEvent))
         self.assertTrue(check_input_type(List[func.KafkaEvent]))
         self.assertFalse(check_input_type(str))
