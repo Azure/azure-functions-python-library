@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
 from typing import List
 import unittest
 import json
@@ -33,6 +34,11 @@ class Kafka(unittest.TestCase):
         check_input_type = (
             azf_ka.KafkaConverter.check_input_type_annotation
         )
+
+        if sys.version_info >= (3, 9):
+            self.assertTrue(check_input_type(list[func.KafkaEvent]))
+            self.assertTrue(check_input_type(list[str]))
+                    
         self.assertTrue(check_input_type(func.KafkaEvent))
         self.assertTrue(check_input_type(List[func.KafkaEvent]))
         self.assertFalse(check_input_type(str))
@@ -43,6 +49,12 @@ class Kafka(unittest.TestCase):
         check_output_type = (
             azf_ka.KafkaTriggerConverter.check_output_type_annotation
         )
+
+        if sys.version_info >= (3, 9):
+            self.assertTrue(check_output_type(list[func.KafkaEvent]))
+            self.assertTrue(check_output_type(list[str]))
+            self.assertTrue(check_output_type(list[bytes]))
+
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(List[str]))
