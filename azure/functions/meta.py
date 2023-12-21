@@ -22,17 +22,17 @@ from ._utils import (
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
+    origin = get_origin(annotation)
     if sys.version_info >= (3, 9):
         # Since python 3.9, standard collection types
         # are supported in type hint
-        origin = get_origin(annotation)
         is_iterable_anno = (origin is not None
                             and issubclass(origin, collections.abc.Iterable))
     else:
         is_iterable_anno = (
             typing_inspect.is_generic_type(annotation)
-            and issubclass(get_origin(annotation),
-                           collections.abc.Iterable)
+            and origin is not None
+            and issubclass(origin, collections.abc.Iterable)
         )
 
     if not is_iterable_anno:
