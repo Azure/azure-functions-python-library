@@ -281,7 +281,8 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(msg.get_body(), b'body_bytes')
 
         # Test individual ServiceBus properties respectively
-        self.assertEqual(msg.application_properties, {})
+        self.assertEqual(msg.application_properties,
+                         {'application': 'value'})
         self.assertEqual(msg.content_type,
                          self.MOCKED_CONTENT_TYPE)
         self.assertEqual(msg.correlation_id,
@@ -429,7 +430,7 @@ class TestServiceBus(unittest.TestCase):
             trigger_metadata=self._generate_multiple_trigger_metadata()
         )
 
-        expceted_bodies: List[str] = [
+        expected_bodies: List[str] = [
             json.dumps({"lucky_number": 23}),
             json.dumps({"lucky_number": 34}),
             json.dumps({"lucky_number": 45}),
@@ -444,8 +445,9 @@ class TestServiceBus(unittest.TestCase):
         for i in range(len(servicebus_msgs)):
             msg = servicebus_msgs[i]
             body_data = msg.get_body().decode('utf-8')
-            self.assertEqual(body_data, expceted_bodies[i])
-            self.assertEqual(msg.application_properties, {})
+            self.assertEqual(body_data, expected_bodies[i])
+            self.assertDictEqual(msg.application_properties,
+                                 {"application": "value"})
             self.assertEqual(msg.content_type,
                              self.MOCKED_CONTENT_TYPE)
             self.assertEqual(msg.correlation_id,
@@ -646,7 +648,10 @@ class TestServiceBus(unittest.TestCase):
             }
         }''')
         mocked_metadata['ApplicationProperties'] = meta.Datum(type='json', value='''
-        {}''')
+        {
+            "application": "value"
+        }
+        ''')
         mocked_metadata['UserProperties'] = meta.Datum(type='json', value='''
         {
             "$AzureWebJobsParentId": "6ceef68b-0794-45dd-bb2e-630748515552",

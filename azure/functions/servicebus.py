@@ -447,7 +447,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 body=message_bodies[i],
                 trigger_metadata=trigger_metadata,
                 application_properties=cls._get_from_metadata_array(
-                    trigger_metadata, 'ApplicationProperties', i),
+                    trigger_metadata, 'ApplicationPropertiesArray', i),
                 content_type=cls._get_from_metadata_array(
                     trigger_metadata, 'ContentTypeArray', i),
                 correlation_id=cls._get_from_metadata_array(
