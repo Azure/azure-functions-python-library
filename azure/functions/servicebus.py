@@ -17,13 +17,18 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             self, *,
             body: bytes,
             trigger_metadata: Optional[Mapping[str, Any]] = None,
+            application_properties: Dict[str, Any],
             content_type: Optional[str] = None,
             correlation_id: Optional[str] = None,
+            dead_letter_error_description: Optional[str] = None,
+            dead_letter_reason: Optional[str] = None,
             dead_letter_source: Optional[str] = None,
             delivery_count: Optional[int] = None,
+            enqueued_sequence_number: Optional[int] = None,
             enqueued_time_utc: Optional[datetime.datetime] = None,
             expires_at_utc: Optional[datetime.datetime] = None,
             label: Optional[str] = None,
+            locked_until: Optional[datetime.datetime] = None,
             lock_token: Optional[str] = None,
             message_id: str,
             partition_key: Optional[str] = None,
@@ -32,20 +37,28 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
             scheduled_enqueue_time_utc: Optional[datetime.datetime] = None,
             sequence_number: Optional[int] = None,
             session_id: Optional[str] = None,
+            state: Optional[int] = None,
+            subject: Optional[str] = None,
             time_to_live: Optional[datetime.timedelta] = None,
             to: Optional[str] = None,
+            transaction_partition_key: Optional[str] = None,
             user_properties: Dict[str, object]):
         super().__init__(body=body, content_type=content_type,
                          correlation_id=correlation_id)
         self.__body = body
         self.__trigger_metadata = trigger_metadata
+        self.__application_properties = application_properties
         self.__content_type = content_type
         self.__correlation_id = correlation_id
+        self.__dead_letter_error_description = dead_letter_error_description
+        self.__dead_letter_reason = dead_letter_reason
         self.__dead_letter_source = dead_letter_source
         self.__delivery_count = delivery_count
+        self.__enqueued_sequence_number = enqueued_sequence_number
         self.__enqueued_time_utc = enqueued_time_utc
         self.__expires_at_utc = expires_at_utc
         self.__label = label
+        self.__locked_until = locked_until
         self.__lock_token = lock_token
         self.__message_id = message_id
         self.__partition_key = partition_key
@@ -54,8 +67,11 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         self.__scheduled_enqueue_time_utc = scheduled_enqueue_time_utc
         self.__sequence_number = sequence_number
         self.__session_id = session_id
+        self.__state = state
+        self.__subject = subject
         self.__time_to_live = time_to_live
         self.__to = to
+        self.__transaction_partition_key = transaction_partition_key
         self.__user_properties = user_properties
 
         # Cache for trigger metadata after Python object conversion
@@ -63,6 +79,10 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
 
     def get_body(self) -> bytes:
         return self.__body
+
+    @property
+    def application_properties(self) -> Dict[str, Any]:
+        return self.__application_properties
 
     @property
     def content_type(self) -> Optional[str]:
@@ -73,12 +93,24 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         return self.__correlation_id
 
     @property
+    def dead_letter_error_description(self) -> Optional[str]:
+        return self.__dead_letter_error_description
+
+    @property
     def dead_letter_source(self) -> Optional[str]:
         return self.__dead_letter_source
 
     @property
+    def dead_letter_reason(self) -> Optional[str]:
+        return self.__dead_letter_reason
+
+    @property
     def delivery_count(self) -> Optional[int]:
         return self.__delivery_count
+
+    @property
+    def enqueued_sequence_number(self) -> Optional[int]:
+        return self.__enqueued_sequence_number
 
     @property
     def enqueued_time_utc(self) -> Optional[datetime.datetime]:
@@ -102,6 +134,10 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
     @property
     def label(self) -> Optional[str]:
         return self.__label
+
+    @property
+    def locked_until(self) -> Optional[datetime.datetime]:
+        return self.__locked_until
 
     @property
     def lock_token(self) -> Optional[str]:
@@ -141,12 +177,24 @@ class ServiceBusMessage(azf_sbus.ServiceBusMessage):
         return self.__session_id
 
     @property
+    def state(self) -> Optional[int]:
+        return self.__state
+
+    @property
+    def subject(self) -> Optional[str]:
+        return self.__subject
+
+    @property
     def time_to_live(self) -> Optional[datetime.timedelta]:
         return self.__time_to_live
 
     @property
     def to(self) -> Optional[str]:
         return self.__to
+
+    @property
+    def transaction_partition_key(self) -> Optional[str]:
+        return self.__transaction_partition_key
 
     @property
     def user_properties(self) -> Dict[str, object]:
@@ -244,20 +292,31 @@ class ServiceBusMessageInConverter(meta.InConverter,
         return ServiceBusMessage(
             body=body,
             trigger_metadata=trigger_metadata,
+            application_properties=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'ApplicationProperties', python_type=dict),
             content_type=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'ContentType', python_type=str),
             correlation_id=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'CorrelationId', python_type=str),
+            dead_letter_error_description=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'DeadLetterErrorDescription',
+                python_type=str),
+            dead_letter_reason=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'DeadLetterReason', python_type=str),
             dead_letter_source=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'DeadLetterSource', python_type=str),
             delivery_count=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'DeliveryCount', python_type=int),
+            enqueued_sequence_number=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'EnqueuedSequenceNumber', python_type=int),
             enqueued_time_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'EnqueuedTimeUtc'),
             expires_at_utc=cls._parse_datetime_metadata(
                 trigger_metadata, 'ExpiresAtUtc'),
             label=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'Label', python_type=str),
+            locked_until=cls._parse_datetime_metadata(
+                trigger_metadata, 'LockedUntil'),
             lock_token=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'LockToken', python_type=str),
             message_id=cls._decode_trigger_metadata_field(
@@ -274,10 +333,16 @@ class ServiceBusMessageInConverter(meta.InConverter,
                 trigger_metadata, 'SequenceNumber', python_type=int),
             session_id=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'SessionId', python_type=str),
+            state=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'State', python_type=int),
+            subject=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'Subject', python_type=str),
             time_to_live=cls._parse_timedelta_metadata(
                 trigger_metadata, 'TimeToLive'),
             to=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'To', python_type=str),
+            transaction_partition_key=cls._decode_trigger_metadata_field(
+                trigger_metadata, 'TransactionPartitionKey', python_type=str),
             user_properties=cls._decode_trigger_metadata_field(
                 trigger_metadata, 'UserProperties', python_type=dict),
         )
@@ -381,14 +446,22 @@ class ServiceBusMessageInConverter(meta.InConverter,
             messages.append(ServiceBusMessage(
                 body=message_bodies[i],
                 trigger_metadata=trigger_metadata,
+                application_properties=cls._get_from_metadata_array(
+                    trigger_metadata, 'ApplicationProperties', i),
                 content_type=cls._get_from_metadata_array(
                     trigger_metadata, 'ContentTypeArray', i),
                 correlation_id=cls._get_from_metadata_array(
                     trigger_metadata, 'CorrelationIdArray', i),
+                dead_letter_error_description=cls._get_from_metadata_array(
+                    trigger_metadata, 'DeadLetterErrorDescriptionArray', i),
+                dead_letter_reason=cls._get_from_metadata_array(
+                    trigger_metadata, 'DeadLetterReasonArray', i),
                 dead_letter_source=cls._get_from_metadata_array(
                     trigger_metadata, 'DeadLetterSourceArray', i),
                 delivery_count=cls._get_from_metadata_array(
                     trigger_metadata, 'DeliveryCountArray', i),
+                enqueued_sequence_number=cls._get_from_metadata_array(
+                    trigger_metadata, 'EnqueuedSequenceNumberArray', i),
                 enqueued_time_utc=cls._parse_datetime(
                     cls._get_from_metadata_array(
                         trigger_metadata, 'EnqueuedTimeUtcArray', i)),
@@ -397,6 +470,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
                         trigger_metadata, 'ExpiresAtUtcArray', i)),
                 label=cls._get_from_metadata_array(
                     trigger_metadata, 'LabelArray', i),
+                locked_until=cls._parse_datetime(cls._get_from_metadata_array(
+                    trigger_metadata, 'LockedUntilArray', i)),
                 lock_token=cls._get_from_metadata_array(
                     trigger_metadata, 'LockTokenArray', i),
                 message_id=cls._get_from_metadata_array(
@@ -412,11 +487,17 @@ class ServiceBusMessageInConverter(meta.InConverter,
                     trigger_metadata, 'SequenceNumberArray', i),
                 session_id=cls._get_from_metadata_array(
                     trigger_metadata, 'SessionIdArray', i),
+                state=cls._get_from_metadata_array(
+                    trigger_metadata, 'StateArray', i),
+                subject=cls._get_from_metadata_array(
+                    trigger_metadata, 'SubjectArray', i),
                 time_to_live=cls._parse_timedelta(
                     cls._get_from_metadata_array(
                         trigger_metadata, 'TimeToLiveArray', i)),
                 to=cls._get_from_metadata_array(
                     trigger_metadata, 'ToArray', i),
+                transaction_partition_key=cls._get_from_metadata_array(
+                    trigger_metadata, 'TransactionPartitionKeyArray', i),
                 reply_to=cls._get_from_metadata_array(
                     trigger_metadata, 'ReplyToArray', i),
                 user_properties=cls._get_from_metadata_array(
