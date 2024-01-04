@@ -42,7 +42,7 @@ class TestServiceBus(unittest.TestCase):
     MOCKED_TIME_TO_LIVE = '11:22:33'
     MOCKED_TIME_TO_LIVE_TIMEDELTA = timedelta(hours=11, minutes=22, seconds=33)
     MOCKED_TO = 'mocked_to'
-    MOCKED_TRANSITION_PARTITION_KEY = 'mocked_transition_partition_key'
+    MOCKED_TRANSACTION_PARTITION_KEY = 'mocked_transaction_partition_key'
 
     MOCKED_AZURE_PARTNER_ID = '6ceef68b-0794-45dd-bb2e-630748515552'
 
@@ -328,7 +328,7 @@ class TestServiceBus(unittest.TestCase):
         self.assertEqual(msg.to,
                          self.MOCKED_TO)
         self.assertEqual(msg.transaction_partition_key,
-                         self.MOCKED_TRANSITION_PARTITION_KEY)
+                         self.MOCKED_TRANSACTION_PARTITION_KEY)
         self.assertDictEqual(msg.user_properties, {
             '$AzureWebJobsParentId': self.MOCKED_AZURE_PARTNER_ID,
             'x-opt-enqueue-sequence-number': 0
@@ -493,7 +493,7 @@ class TestServiceBus(unittest.TestCase):
             self.assertEqual(msg.to,
                              self.MOCKED_TO)
             self.assertEqual(msg.transaction_partition_key,
-                             self.MOCKED_TRANSITION_PARTITION_KEY)
+                             self.MOCKED_TRANSACTION_PARTITION_KEY)
             self.assertDictEqual(msg.user_properties, {
                 '$AzureWebJobsParentId': self.MOCKED_AZURE_PARTNER_ID,
                 'x-opt-enqueue-sequence-number': 0
@@ -608,8 +608,8 @@ class TestServiceBus(unittest.TestCase):
             'To': meta.Datum(
                 self.MOCKED_TO, 'string'
             ),
-            'TransitionPartitionKey': meta.Datum(
-                self.MOCKED_TRANSITION_PARTITION_KEY, 'string'
+            'TransactionPartitionKey': meta.Datum(
+                self.MOCKED_TRANSACTION_PARTITION_KEY, 'string'
             )
         }
         mocked_metadata['MessageReceiver'] = meta.Datum(type='json', value='''
@@ -707,7 +707,7 @@ class TestServiceBus(unittest.TestCase):
                 'Label', 'collection_string'
             ),
             'LockedUntilArray': combine_from(
-                'LockedUntilArray', 'json'
+                'LockedUntil', 'json'
             ),
             'LockTokenArray': combine_from(
                 'LockToken', 'collection_string'
