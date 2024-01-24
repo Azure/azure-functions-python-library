@@ -443,7 +443,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-
     def timer_trigger(self,
                       arg_name: str,
                       schedule: str,
