@@ -288,9 +288,9 @@ class DecoratorApi(ABC):
         """
         return self._app_script_file
 
-    def _function_name(self, name: str,
-                       setting_extra_fields: Dict[str, Any] = {},
-                       ) -> Callable[..., Any]:
+    def function_name(self, name: str,
+                      setting_extra_fields: Dict[str, Any] = {},
+                      ) -> Callable[..., Any]:
         """Optional: Sets name of the :class:`Function` object. If not set,
         it will default to the name of the method name.
 
@@ -443,19 +443,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
-                      ) -> Callable[..., Any]:
-        """Optional: Sets name of the :class:`Function` object. If not set,
-        it will default to the name of the method name.
-
-        :param name: Name of the function.
-        :param setting_extra_fields: Keyword arguments for specifying
-        additional setting fields
-        :return: Decorator function.
-        """
-
-        return self._function_name(name, setting_extra_fields)
 
     def timer_trigger(self,
                       arg_name: str,
@@ -2638,20 +2625,6 @@ class BindingApi(DecoratorApi, ABC):
 class SettingsApi(DecoratorApi, ABC):
     """Interface to extend for using existing settings decorator in
     functions."""
-
-    def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
-                      ) -> Callable[..., Any]:
-        """Optional: Sets name of the :class:`Function` object. If not set,
-        it will default to the name of the method name.
-
-        :param name: Name of the function.
-        :param setting_extra_fields: Keyword arguments for specifying
-        additional setting fields
-        :return: Decorator function.
-        """
-
-        return self._function_name(name, setting_extra_fields)
 
     def retry(self,
               strategy: str,
