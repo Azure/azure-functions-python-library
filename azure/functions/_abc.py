@@ -449,6 +449,11 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def application_properties(self) -> typing.Dict[str, typing.Any]:
+        pass
+
+    @property
+    @abc.abstractmethod
     def content_type(self) -> typing.Optional[str]:
         pass
 
@@ -459,12 +464,27 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def dead_letter_error_description(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dead_letter_reason(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
     def dead_letter_source(self) -> typing.Optional[str]:
         pass
 
     @property
     @abc.abstractmethod
     def delivery_count(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def enqueued_sequence_number(self) -> typing.Optional[int]:
         pass
 
     @property
@@ -486,6 +506,11 @@ class ServiceBusMessage(abc.ABC):
     @property
     @abc.abstractmethod
     def label(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def locked_until(self) -> typing.Optional[datetime.datetime]:
         pass
 
     @property
@@ -536,12 +561,27 @@ class ServiceBusMessage(abc.ABC):
 
     @property
     @abc.abstractmethod
+    def state(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def subject(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
     def time_to_live(self) -> typing.Optional[datetime.timedelta]:
         pass
 
     @property
     @abc.abstractmethod
     def to(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def transaction_partition_key(self) -> typing.Optional[str]:
         pass
 
     @property
