@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
 import asyncio
 from asyncio import Event, Queue
+from urllib.parse import ParseResult, urlparse
 from warnings import warn
 from wsgiref.headers import Headers
 
@@ -22,6 +23,8 @@ class AsgiRequest(WsgiRequest):
         self.asgi_version = ASGI_VERSION
         self.asgi_spec_version = ASGI_SPEC_VERSION
         self._headers = func_req.headers
+        url: ParseResult = urlparse(func_req.url)
+        self.asgi_url_scheme = url.scheme
         super().__init__(func_req, func_ctx)
 
     def _get_encoded_http_headers(self) -> List[Tuple[bytes, bytes]]:
@@ -49,7 +52,7 @@ class AsgiRequest(WsgiRequest):
             "asgi.spec_version": self.asgi_spec_version,
             "http_version": "1.1",
             "method": self.request_method,
-            "scheme": "https",
+            "scheme": self.asgi_url_scheme,
             "path": self.path_info,
             "raw_path": _raw_path,
             "query_string": _query_string,

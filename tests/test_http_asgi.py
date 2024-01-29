@@ -198,7 +198,19 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
         test_body = b'Hello world!'
         app.response_body = test_body
         app.response_code = 200
-        req = func.HttpRequest(method='get', url='/test', body=b'')
+        req = self._generate_func_request()
+        response = AsgiMiddleware(app).handle(req)
+
+        # Verify asserted
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_body(), test_body)
+
+    def test_middleware_calls_app_http(self):
+        app = MockAsgiApplication()
+        test_body = b'Hello world!'
+        app.response_body = test_body
+        app.response_code = 200
+        req = self._generate_func_request(url="http://a.b.com")
         response = AsgiMiddleware(app).handle(req)
 
         # Verify asserted
