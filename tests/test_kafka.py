@@ -10,7 +10,7 @@ import azure.functions as func
 import azure.functions.kafka as azf_ka
 import azure.functions.meta as meta
 
-from .testutils import CollectionBytes, CollectionString, CollectionSint64
+from tests.utils.testutils import CollectionBytes, CollectionString, CollectionSint64
 
 
 class Kafka(unittest.TestCase):

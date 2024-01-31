@@ -10,7 +10,7 @@ import azure.functions as func
 import azure.functions.servicebus as azf_sb
 from azure.functions import meta
 
-from .testutils import CollectionBytes, CollectionString, CollectionSint64
+from tests.utils.testutils import CollectionBytes, CollectionString, CollectionSint64
 
 
 class TestServiceBus(unittest.TestCase):
