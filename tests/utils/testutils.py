@@ -39,4 +39,3 @@ def assert_json(self, func, expected_dict):
                                 cls=StringifyEnumJsonEncoder),
                      json.dumps(expected_dict, sort_keys=True,
                                 cls=StringifyEnumJsonEncoder))
-

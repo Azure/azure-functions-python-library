@@ -25,7 +25,7 @@ jobs:
         python -m pip install -U -e .[dev]
     - name: Test with pytest
       run: |
-        pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
+        python -m pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
     - name: Codecov
       if: ${{ matrix.python-version }} == 3.9
       uses: codecov/codecov-action@v2
