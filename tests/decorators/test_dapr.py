@@ -7,7 +7,7 @@ from azure.functions.decorators.constants import DAPR_BINDING, \
     DAPR_BINDING_TRIGGER, DAPR_INVOKE, DAPR_PUBLISH, DAPR_SECRET, \
     DAPR_SERVICE_INVOCATION_TRIGGER, DAPR_STATE, DAPR_TOPIC_TRIGGER
 from azure.functions.decorators.function_app import FunctionApp
-from tests.testutils import assert_json
+from ..testutils import assert_json
 
 
 class TestDapr(unittest.TestCase):
