@@ -63,7 +63,8 @@ class QueueMessageInConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
-               trigger_metadata) -> Any:
+               trigger_metadata,
+               pytype: Optional[type] = None) -> Any:
         data_type = data.type
 
         if data_type in ['string', 'bytes']:

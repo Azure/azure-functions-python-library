@@ -109,7 +109,9 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
 
     @classmethod
     def decode(
-        cls, data: meta.Datum, *, trigger_metadata
+        cls, data: meta.Datum, *,
+        trigger_metadata,
+        pytype: typing.Optional[type] = None
     ) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
         data_type = data.type
 
@@ -167,7 +169,9 @@ class KafkaTriggerConverter(KafkaConverter,
 
     @classmethod
     def decode(
-        cls, data: meta.Datum, *, trigger_metadata
+        cls, data: meta.Datum, *,
+        trigger_metadata,
+        pytype: typing.Optional[type] = None
     ) -> typing.Union[KafkaEvent, typing.List[KafkaEvent]]:
         data_type = data.type
 

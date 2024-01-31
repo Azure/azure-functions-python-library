@@ -25,7 +25,8 @@ class OrchestrationTriggerConverter(meta.InConverter,
     @classmethod
     def decode(cls,
                data: meta.Datum, *,
-               trigger_metadata) -> _durable_functions.OrchestrationContext:
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> _durable_functions.OrchestrationContext:
         return _durable_functions.OrchestrationContext(data.value)
 
     @classmethod
@@ -55,7 +56,8 @@ class EnitityTriggerConverter(meta.InConverter,
     @classmethod
     def decode(cls,
                data: meta.Datum, *,
-               trigger_metadata) -> _durable_functions.EntityContext:
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> _durable_functions.EntityContext:
         return _durable_functions.EntityContext(data.value)
 
     @classmethod
@@ -87,7 +89,8 @@ class ActivityTriggerConverter(meta.InConverter,
     @classmethod
     def decode(cls,
                data: meta.Datum, *,
-               trigger_metadata) -> typing.Any:
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> typing.Any:
         data_type = data.type
 
         # Durable functions extension always returns a string of json

@@ -25,7 +25,8 @@ class SqlConverter(meta.InConverter, meta.OutConverter,
     def decode(cls,
                data: meta.Datum,
                *,
-               trigger_metadata) -> typing.Optional[sql.SqlRowList]:
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> typing.Optional[sql.SqlRowList]:
         if data is None or data.type is None:
             return None
 

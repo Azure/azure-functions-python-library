@@ -27,7 +27,8 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
-               trigger_metadata) -> azf_eventgrid.EventGridEvent:
+               trigger_metadata,
+               pytype: Optional[type] = None) -> azf_eventgrid.EventGridEvent:
         data_type = data.type
 
         if data_type == 'json':

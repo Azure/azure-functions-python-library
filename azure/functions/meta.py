@@ -382,7 +382,7 @@ class InConverter(_BaseConverter, binding=None):
 
     @classmethod
     @abc.abstractmethod
-    def decode(cls, data: Datum, *, trigger_metadata) -> Any:
+    def decode(cls, data: Datum, *, trigger_metadata, pytype: Optional[type] = None) -> Any:
         raise NotImplementedError
 
     @classmethod

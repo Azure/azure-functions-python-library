@@ -90,7 +90,7 @@ class BlobConverter(meta.InConverter,
             raise NotImplementedError
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata) -> Any:
+    def decode(cls, data: meta.Datum, *, trigger_metadata, pytype: Optional[type] = None) -> Any:
         if data is None or data.type is None:
             return None
 

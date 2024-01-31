@@ -140,7 +140,8 @@ class HttpRequestConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
-               trigger_metadata) -> typing.Any:
+               trigger_metadata, 
+               pytype: typing.Optional[type] = None) -> typing.Any:
         if data.type != 'http':
             raise NotImplementedError
 

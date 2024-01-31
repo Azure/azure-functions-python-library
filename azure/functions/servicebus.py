@@ -219,7 +219,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
     @classmethod
     def decode_single_message(
         cls, data: meta.Datum, *,
-        trigger_metadata: Mapping[str, meta.Datum]
+        trigger_metadata: Mapping[str, meta.Datum],
+        pytype: Optional[type] = None
     ) -> ServiceBusMessage:
         if data is None:
             # ServiceBus message with no payload are possible.
