@@ -19,7 +19,7 @@ from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.retry_policy import RetryPolicy
 from test_core import DummyTrigger
-from testutils import assert_json
+from tests.testutils import assert_json
 
 
 class TestFunction(unittest.TestCase):

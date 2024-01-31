@@ -1,4 +1,7 @@
+import json
 from typing import List
+
+from azure.functions.decorators.utils import StringifyEnumJsonEncoder
 
 
 class CollectionBytes:
@@ -29,3 +32,11 @@ class CollectionSint64:
     """
     def __init__(self, data: List[int]):
         self.sint64 = data
+
+
+def assert_json(self, func, expected_dict):
+    self.assertEqual(json.dumps(json.loads(str(func)), sort_keys=True,
+                                cls=StringifyEnumJsonEncoder),
+                     json.dumps(expected_dict, sort_keys=True,
+                                cls=StringifyEnumJsonEncoder))
+
