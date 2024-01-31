@@ -260,33 +260,6 @@ class InputStream(io.BufferedIOBase, abc.ABC):
         """The blob's primary location URI."""
         pass
 
-class ConnectionInfo(io.BufferedIOBase, abc.ABC):
-    """File-like object representing ModelBindingData."""
-
-    @property
-    @abc.abstractmethod
-    def version(self) -> typing.Optional[str]:
-        """The version of the blob."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def source(self) -> typing.Optional[str]:
-        """The source of the blob."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def content_type(self) -> typing.Optional[str]:
-        """The content_type of the blob."""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def content(self) -> typing.Optional[str]:
-        """The content of the blob."""
-        pass
-
 
 class QueueMessage(abc.ABC):
 
