@@ -593,3 +593,39 @@ class ServiceBusMessage(abc.ABC):
     @abc.abstractmethod
     def metadata(self) -> typing.Optional[typing.Dict[str, typing.Any]]:
         pass
+
+class Table(abc.ABC):
+
+    @abc.abstractmethod
+    def get_binding_name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def connection(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def table_name(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def row_key(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def partition_key(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def take(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def filter(self) -> str:
+        pass
