@@ -18,8 +18,8 @@ from azure.functions.decorators.function_app import BindingApi, \
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.retry_policy import RetryPolicy
-from tests.decorators.test_core import DummyTrigger
-from tests.decorators.testutils import assert_json
+from test_core import DummyTrigger
+from tests.utils.testutils import assert_json
 
 
 class TestFunction(unittest.TestCase):
