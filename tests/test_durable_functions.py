@@ -214,14 +214,14 @@ class TestDurableFunctions(unittest.TestCase):
             ActivityTriggerConverter.has_implicit_output()
         )
 
+    def test_durable_client_no_implicit_return(self):
+        self.assertFalse(
+            DurableClientConverter.has_implicit_output()
+        )
+
     def test_enitity_trigger_check_output_type_annotation(self):
         self.assertTrue(
             EnitityTriggerConverter.check_output_type_annotation(pytype=None)
-        )
-
-    def test_durable_client_check_output_type_annotation(self):
-        self.assertFalse(
-            DurableClientConverter.check_output_type_annotation(pytype=None)
         )
 
     def test_activity_trigger_converter_decode_no_implementation_exception(
