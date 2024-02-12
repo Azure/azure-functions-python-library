@@ -185,7 +185,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
 
     @classmethod
     def decode(
-        cls, data: meta.Datum, *, trigger_metadata: Mapping[str, meta.Datum]
+        cls, data: meta.Datum, *, trigger_metadata: Mapping[str, meta.Datum],
+        pytype: Optional[type] = None
     ) -> Union[ServiceBusMessage, List[ServiceBusMessage]]:
         """Returns the application setting from environment variable.
 
@@ -220,7 +221,6 @@ class ServiceBusMessageInConverter(meta.InConverter,
     def decode_single_message(
         cls, data: meta.Datum, *,
         trigger_metadata: Mapping[str, meta.Datum],
-        pytype: Optional[type] = None
     ) -> ServiceBusMessage:
         if data is None:
             # ServiceBus message with no payload are possible.

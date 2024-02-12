@@ -37,7 +37,9 @@ class TimerRequestConverter(meta.InConverter,
         return issubclass(pytype, azf_abc.TimerRequest)
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata, pytype: typing.Optional[type] = None) -> typing.Any:
+    def decode(cls, data: meta.Datum, *,
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> typing.Any:
         if data.type != 'json':
             raise NotImplementedError
 

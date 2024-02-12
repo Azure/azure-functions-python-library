@@ -18,5 +18,7 @@ class WarmUpTriggerConverter(meta.InConverter, binding='warmupTrigger',
         return issubclass(pytype, WarmUpContext)
 
     @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata, pytype: typing.Optional[type] = None) -> typing.Any:
+    def decode(cls, data: meta.Datum, *,
+               trigger_metadata,
+               pytype: typing.Optional[type] = None) -> typing.Any:
         return WarmUpContext()

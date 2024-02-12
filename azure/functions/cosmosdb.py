@@ -26,7 +26,8 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
                data: meta.Datum,
                *,
                trigger_metadata,
-               pytype: typing.Optional[type] = None) -> typing.Optional[cdb.DocumentList]:
+               pytype: typing.Optional[type] = None)\
+            -> typing.Optional[cdb.DocumentList]:
         if data is None or data.type is None:
             return None
 

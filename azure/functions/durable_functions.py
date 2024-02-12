@@ -26,7 +26,8 @@ class OrchestrationTriggerConverter(meta.InConverter,
     def decode(cls,
                data: meta.Datum, *,
                trigger_metadata,
-               pytype: typing.Optional[type] = None) -> _durable_functions.OrchestrationContext:
+               pytype: typing.Optional[type] = None)\
+            -> _durable_functions.OrchestrationContext:
         return _durable_functions.OrchestrationContext(data.value)
 
     @classmethod
@@ -57,7 +58,8 @@ class EnitityTriggerConverter(meta.InConverter,
     def decode(cls,
                data: meta.Datum, *,
                trigger_metadata,
-               pytype: typing.Optional[type] = None) -> _durable_functions.EntityContext:
+               pytype: typing.Optional[type] = None)\
+            -> _durable_functions.EntityContext:
         return _durable_functions.EntityContext(data.value)
 
     @classmethod

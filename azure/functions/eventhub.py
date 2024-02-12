@@ -31,7 +31,7 @@ class EventHubConverter(meta.InConverter, meta.OutConverter,
     @classmethod
     def decode(
         cls, data: meta.Datum, *,
-        trigger_metadata, 
+        trigger_metadata,
         pytype: Optional[type] = None
     ) -> Union[_eventhub.EventHubEvent, List[_eventhub.EventHubEvent]]:
         data_type = data.type
