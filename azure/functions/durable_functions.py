@@ -128,8 +128,8 @@ class ActivityTriggerConverter(meta.InConverter,
 
 # Durable Function Activity Trigger
 class DurableClientConverter(meta.InConverter,
-                               meta.OutConverter,
-                               binding='durableClient'):
+                             meta.OutConverter,
+                             binding='durableClient'):
 
     @classmethod
     def has_trigger_support(cls) -> bool:
@@ -174,5 +174,5 @@ class DurableClientConverter(meta.InConverter,
         return result
 
     @classmethod
-    def has_implicit_output(cls, bind_name: typing.Optional[str]) -> bool:
+    def has_implicit_output(cls) -> bool:
         return False

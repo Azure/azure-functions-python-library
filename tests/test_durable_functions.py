@@ -7,7 +7,8 @@ import json
 from azure.functions.durable_functions import (
     OrchestrationTriggerConverter,
     EnitityTriggerConverter,
-    ActivityTriggerConverter
+    ActivityTriggerConverter,
+    DurableClientConverter
 )
 from azure.functions._durable_functions import (
     OrchestrationContext,
@@ -216,6 +217,11 @@ class TestDurableFunctions(unittest.TestCase):
     def test_enitity_trigger_check_output_type_annotation(self):
         self.assertTrue(
             EnitityTriggerConverter.check_output_type_annotation(pytype=None)
+        )
+
+    def test_durable_client_check_output_type_annotation(self):
+        self.assertFalse(
+            DurableClientConverter.check_output_type_annotation(pytype=None)
         )
 
     def test_activity_trigger_converter_decode_no_implementation_exception(
