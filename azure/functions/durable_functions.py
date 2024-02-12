@@ -130,49 +130,6 @@ class ActivityTriggerConverter(meta.InConverter,
 class DurableClientConverter(meta.InConverter,
                              meta.OutConverter,
                              binding='durableClient'):
-
-    @classmethod
-    def has_trigger_support(cls) -> bool:
-        return False
-
-    @classmethod
-    def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, bytes))
-
-    @classmethod
-    def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, bytes, bytearray))
-
-    @classmethod
-    def encode(cls, obj: typing.Any, *,
-               expected_type: typing.Optional[type]) -> meta.Datum:
-        if isinstance(obj, str):
-            return meta.Datum(type='string', value=obj)
-
-        elif isinstance(obj, (bytes, bytearray)):
-            return meta.Datum(type='bytes', value=bytes(obj))
-
-        else:
-            raise NotImplementedError
-
-    @classmethod
-    def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
-        data_type = data.type
-
-        if data_type == 'string':
-            result = data.value
-        elif data_type == 'bytes':
-            result = data.value
-        elif data_type == 'json':
-            result = data.value
-        else:
-            raise ValueError(
-                f'unexpected type of data received for the "generic" binding '
-                f': {data_type!r}'
-            )
-
-        return result
-
     @classmethod
     def has_implicit_output(cls) -> bool:
         return False
