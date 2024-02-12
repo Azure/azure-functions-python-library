@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 import abc
+import asyncio
 import json
 import logging
 from abc import ABC
@@ -286,6 +287,30 @@ class DecoratorApi(ABC):
         :return: Script file name.
         """
         return self._app_script_file
+
+    def function_name(self, name: str,
+                      setting_extra_fields: Dict[str, Any] = {},
+                      ) -> Callable[..., Any]:
+        """Optional: Sets name of the :class:`Function` object. If not set,
+        it will default to the name of the method name.
+
+        :param name: Name of the function.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=FunctionName(
+                    function_name=name,
+                    **setting_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
 
     def _validate_type(self,
                        func: Union[Callable[..., Any], FunctionBuilder]) \
@@ -2600,30 +2625,6 @@ class SettingsApi(DecoratorApi, ABC):
     """Interface to extend for using existing settings decorator in
     functions."""
 
-    def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
-                      ) -> Callable[..., Any]:
-        """Optional: Sets name of the :class:`Function` object. If not set,
-        it will default to the name of the method name.
-
-        :param name: Name of the function.
-        :param setting_extra_fields: Keyword arguments for specifying
-        additional setting fields
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_setting(setting=FunctionName(
-                    function_name=name,
-                    **setting_extra_fields))
-                return fb
-
-            return decorator()
-
-        return wrap
-
     def retry(self,
               strategy: str,
               max_retry_count: str,
@@ -2774,7 +2775,13 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         on the request in order to invoke the function.
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(AsgiMiddleware(app))
+        self.middleware = AsgiMiddleware(app)
+        self._add_http_app(self.middleware)
+        self.startup_task_done = False
+
+    def __del__(self):
+        if self.startup_task_done:
+            asyncio.run(self.middleware.notify_shutdown())
 
     def _add_http_app(self,
                       http_middleware: Union[
@@ -2797,6 +2804,12 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                     auth_level=self.auth_level,
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
+            if not self.startup_task_done:
+                success = await asgi_middleware.notify_startup()
+                if not success:
+                    raise RuntimeError("ASGI middleware startup failed.")
+                self.startup_task_done = True
+
             return await asgi_middleware.handle_async(req, context)
 
 

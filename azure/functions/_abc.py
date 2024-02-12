@@ -439,3 +439,157 @@ class OrchestrationContext(abc.ABC):
     @abc.abstractmethod
     def body(self) -> str:
         pass
+
+
+class ServiceBusMessage(abc.ABC):
+
+    @abc.abstractmethod
+    def get_body(self) -> typing.Union[str, bytes]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def application_properties(self) -> typing.Dict[str, typing.Any]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def content_type(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def correlation_id(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dead_letter_error_description(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dead_letter_reason(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dead_letter_source(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def delivery_count(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def enqueued_sequence_number(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def enqueued_time_utc(self) -> typing.Optional[datetime.datetime]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def expires_at_utc(self) -> typing.Optional[datetime.datetime]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def expiration_time(self) -> typing.Optional[datetime.datetime]:
+        """(Deprecated, use expires_at_utc instead)"""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def label(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def locked_until(self) -> typing.Optional[datetime.datetime]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def lock_token(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def message_id(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def partition_key(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def reply_to(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def reply_to_session_id(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def scheduled_enqueue_time(self) -> typing.Optional[datetime.datetime]:
+        """(Deprecated, use scheduled_enqueue_time_utc instead)"""
+        pass
+
+    @property
+    @abc.abstractmethod
+    def scheduled_enqueue_time_utc(self) -> typing.Optional[datetime.datetime]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def sequence_number(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def session_id(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def state(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def subject(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def time_to_live(self) -> typing.Optional[datetime.timedelta]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def to(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def transaction_partition_key(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def user_properties(self) -> typing.Dict[str, typing.Any]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def metadata(self) -> typing.Optional[typing.Dict[str, typing.Any]]:
+        pass

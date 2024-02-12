@@ -12,7 +12,7 @@ from azure.functions.decorators.core import DataType, AuthLevel, \
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
-from tests.decorators.testutils import assert_json
+from tests.utils.testutils import assert_json
 
 
 class TestFunctionsApp(unittest.TestCase):
