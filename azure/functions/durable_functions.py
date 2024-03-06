@@ -126,7 +126,7 @@ class ActivityTriggerConverter(meta.InConverter,
         return True
 
 
-# Durable Function Activity Trigger
+# Durable Functions Durable Client Bindings
 class DurableClientConverter(meta.InConverter,
                              meta.OutConverter,
                              binding='durableClient'):
