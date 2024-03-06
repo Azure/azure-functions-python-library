@@ -124,3 +124,12 @@ class ActivityTriggerConverter(meta.InConverter,
     @classmethod
     def has_implicit_output(cls) -> bool:
         return True
+
+
+# Durable Functions Durable Client Bindings
+class DurableClientConverter(meta.InConverter,
+                             meta.OutConverter,
+                             binding='durableClient'):
+    @classmethod
+    def has_implicit_output(cls) -> bool:
+        return False
