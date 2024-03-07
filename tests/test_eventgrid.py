@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 from datetime import datetime
+import sys
 import unittest
 from typing import List
 
@@ -21,6 +22,11 @@ class MyTestCase(unittest.TestCase):
     def test_eventgrid_output_type(self):
         check_output_type = azf_event_grid.EventGridEventOutConverter.\
             check_output_type_annotation
+
+        if sys.version_info >= (3, 9):
+            self.assertTrue(check_output_type(list[func.EventGridOutputEvent]))
+            self.assertTrue(check_output_type(list[str]))
+
         self.assertTrue(check_output_type(func.EventGridOutputEvent))
         self.assertTrue(check_output_type(List[func.EventGridOutputEvent]))
         self.assertTrue(check_output_type(str))
