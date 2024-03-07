@@ -30,7 +30,7 @@ class WsgiRequest:
         self.request_method = getattr(func_req, 'method', None)
         self.script_name = ''
         self.path_info = unquote_to_bytes(
-            getattr(url, 'path', None)).decode('latin-1')  # type: ignore
+            getattr(url, 'path', None)).decode('utf-8')  # type: ignore
         self.query_string = getattr(url, 'query', None)
         self.content_type = self._lowercased_headers.get('content-type')
         self.content_length = str(len(func_req_body))
