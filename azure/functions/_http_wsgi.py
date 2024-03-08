@@ -29,7 +29,7 @@ class WsgiRequest:
         # Implement interfaces for PEP 3333 environ
         self.request_method = getattr(func_req, 'method', None)
         self.script_name = ''
-        self.path_info = unquote_to_bytes(getattr(url, 'path', None)).decode(
+        self.path_info = unquote_to_bytes(getattr(url, 'path', None)).decode( #ignore
             'latin-1' if type(self) is WsgiRequest else 'utf-8'
         )
 
