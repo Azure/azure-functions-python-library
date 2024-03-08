@@ -2747,7 +2747,13 @@ class Blueprint(TriggerApi, BindingApi, SettingsApi):
     pass
 
 
-class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+class ExternalHttpFunctionApp(
+    FunctionRegister,
+    TriggerApi,
+    SettingsApi,
+    BindingApi,
+    ABC
+):
     """Interface to extend for building third party http function apps."""
 
     @abc.abstractmethod
