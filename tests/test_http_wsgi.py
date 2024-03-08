@@ -3,6 +3,7 @@
 import threading
 import unittest
 from io import StringIO, BytesIO
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +15,7 @@ from azure.functions._http_wsgi import (
     WsgiResponse,
     WsgiMiddleware
 )
-
+from azure.functions._http_asgi import AsgiRequest
 
 class WsgiException(Exception):
     def __init__(self, message=''):
@@ -210,6 +211,18 @@ class TestHttpWsgi(unittest.TestCase):
         func_response = main(func_request, func_context)
         self.assertEqual(func_response.status_code, 200)
         self.assertEqual(func_response.get_body(), b'sample string')
+
+    def test_path_encoding_utf8(self):
+        url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
+        request = AsgiRequest(self._generate_func_request(url=url))
+
+        self.assertEqual(request.path_info, '/Pippi Långstrump')
+
+    def test_path_encoding_latin1(self):
+        url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
+        request = WsgiRequest(self._generate_func_request(url=url))
+
+        self.assertEqual(request.path_info, '/Pippi LÃ¥ngstrump')
 
     def _generate_func_request(
             self,
