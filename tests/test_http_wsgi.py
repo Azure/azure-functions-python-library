@@ -3,7 +3,6 @@
 import threading
 import unittest
 from io import StringIO, BytesIO
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -16,6 +15,7 @@ from azure.functions._http_wsgi import (
     WsgiMiddleware
 )
 from azure.functions._http_asgi import AsgiRequest
+
 
 class WsgiException(Exception):
     def __init__(self, message=''):
