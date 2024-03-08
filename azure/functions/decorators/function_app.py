@@ -277,6 +277,42 @@ class DecoratorApi(ABC):
         self._function_builders: List[FunctionBuilder] = []
         self._app_script_file: str = SCRIPT_FILE_NAME
 
+    def _invoke_df_decorator(self, df_decorator):
+        """
+        Invoke a Durable Functions decorator from the DF SDK, and store the
+        resulting :class:`FunctionBuilder` object within the `DecoratorApi`.
+
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                # override function builder with result of decorator
+                fb = df_decorator(fb._function._func)
+
+                # remove old function builder from `self` and replace
+                # it with the result of the DF decorator
+                self._function_builders.pop()
+                self._function_builders.append(fb)
+                return fb2
+            return decorator()
+        return wrap
+
+    def _get_durable_blueprint(self):
+        """Attempt to import the Durable Functions SDK from which DF decorators are
+        implemented.
+        """
+
+        try:
+            import azure.durable_functions as df
+            df_bp = df.Blueprint()
+            return df_bp
+        except ImportError:
+            error_message = "Attempted to use a Durable Functions decorator, "\
+                "but the `azure-functions-durable` SDK package could not be found. "\
+                "Please install `azure-functions-durable` to use Durable Functions."
+            raise Exception(error_message)
+
     @property
     def app_script_file(self) -> str:
         """Name of function app script file in which all the functions
@@ -442,6 +478,59 @@ class TriggerApi(DecoratorApi, ABC):
             return decorator()
 
         return wrap
+
+    def orchestration_trigger(self, context_name: str,
+                              orchestration: Optional[str] = None):
+        """Register an Orchestrator Function.
+
+        Parameters
+        ----------
+        context_name: str
+            Parameter name of the DurableOrchestrationContext object.
+        orchestration: Optional[str]
+            Name of Orchestrator Function.
+            By default, the name of the method is used.
+        """
+        df_bp = self._get_durable_blueprint()
+        df_decorator = df_bp.orchestration_trigger(context_name,
+                                                   orchestration)
+        result = self._invoke_df_decorator(df_decorator)
+        return result
+
+    def entity_trigger(self, context_name: str,
+                       entity_name: Optional[str] = None):
+        """Register an Entity Function.
+
+        Parameters
+        ----------
+        context_name: str
+            Parameter name of the Entity input.
+        entity_name: Optional[str]
+            Name of Entity Function.
+        """
+
+        df_bp = self._get_durable_blueprint()
+        df_decorator = df_bp.entity_trigger(context_name,
+                                            entity_name)
+        result = self._invoke_df_decorator(df_decorator)
+        return result
+
+    def activity_trigger(self, input_name: str,
+                         activity: Optional[str] = None):
+        """Register an Activity Function.
+
+        Parameters
+        ----------
+        input_name: str
+            Parameter name of the Activity input.
+        activity: Optional[str]
+            Name of Activity Function.
+        """
+
+        df_bp = self._get_durable_blueprint()
+        df_decorator = df_bp.activity_trigger(input_name, activity)
+        result = self._invoke_df_decorator(df_decorator)
+        return result
 
     def timer_trigger(self,
                       arg_name: str,
@@ -1349,6 +1438,37 @@ class TriggerApi(DecoratorApi, ABC):
 
 class BindingApi(DecoratorApi, ABC):
     """Interface to extend for using existing binding decorator functions."""
+
+    def durable_client_input(self,
+                             client_name: str,
+                             task_hub: Optional[str] = None,
+                             connection_name: Optional[str] = None
+                             ):
+        """Register a Durable-client Function.
+
+        Parameters
+        ----------
+        client_name: str
+            Parameter name of durable client.
+        task_hub: Optional[str]
+            Used in scenarios where multiple function apps share the
+            same storage account but need to be isolated from each other.
+            If not specified, the default value from host.json is used.
+            This value must match the value used by the target
+            orchestrator functions.
+        connection_name: Optional[str]
+            The name of an app setting that contains a storage account
+            connection string.  The storage account represented by this
+            connection string must be the same one used by the target
+            orchestrator functions. If not specified, the default storage
+            account connection string for the function app is used.
+        """
+        df_bp = self._get_durable_blueprint()
+        df_decorator = df_bp.durable_client_input(client_name,
+                                                  task_hub,
+                                                  connection_name)
+        result = self._invoke_df_decorator(df_decorator)
+        return result
 
     def service_bus_queue_output(self,
                                  arg_name: str,
