@@ -29,8 +29,11 @@ class WsgiRequest:
         # Implement interfaces for PEP 3333 environ
         self.request_method = getattr(func_req, 'method', None)
         self.script_name = ''
-        self.path_info = unquote_to_bytes(
-            getattr(url, 'path', None)).decode('latin-1')  # type: ignore
+        self.path_info = (
+            unquote_to_bytes(getattr(url, 'path', None))  # type: ignore
+            .decode('latin-1' if type(self) is WsgiRequest else 'utf-8')
+        )
+
         self.query_string = getattr(url, 'query', None)
         self.content_type = self._lowercased_headers.get('content-type')
         self.content_length = str(len(func_req_body))
