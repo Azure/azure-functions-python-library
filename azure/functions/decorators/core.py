@@ -65,6 +65,14 @@ class AccessRights(StringifyEnum):
     and all related message handling. """
 
 
+class BlobSource(StringifyEnum):
+    """Source of the blob trigger."""
+    EVENT_GRID = "EventGrid"
+    """Event Grid is the source of the blob trigger."""
+    LOGS_AND_CONTAINER_SCAN = "LogsAndContainerScan"
+    """Standard polling mechanism to detect changes in the container."""
+
+
 class Binding(ABC):
     """Abstract binding class which captures common attributes and
     functions. :meth:`get_dict_repr` can auto generate the function.json for

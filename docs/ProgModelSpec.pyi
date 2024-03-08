@@ -4,7 +4,7 @@ from abc import ABC
 from typing import Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions import AsgiMiddleware, WsgiMiddleware
-from azure.functions.decorators.core import Binding, Trigger, DataType, \
+from azure.functions.decorators.core import Binding, BlobSource, Trigger, DataType, \
     AuthLevel, Cardinality, AccessRights, Setting
 from azure.functions.decorators.function_app import FunctionBuilder, SettingsApi
 from azure.functions.decorators.http import HttpMethod
@@ -495,6 +495,7 @@ class TriggerApi(DecoratorApi, ABC):
                      arg_name: str,
                      path: str,
                      connection: str,
+                     source: BlobSource = BlobSource.LOGS_AND_CONTAINER_SCAN,
                      data_type: Optional[DataType] = None,
                      **kwargs) -> Callable:
         """
@@ -512,6 +513,12 @@ class TriggerApi(DecoratorApi, ABC):
         :param path: The path to the blob.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Blobs.
+        :param source: Sets the source of the triggering event. 
+        Use EventGrid for an Event Grid-based blob trigger, 
+        which provides much lower latency. 
+        The default is LogsAndContainerScan, 
+        which uses the standard polling mechanism to detect changes 
+        in the container.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
