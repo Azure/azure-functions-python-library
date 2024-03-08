@@ -288,6 +288,30 @@ class DecoratorApi(ABC):
         """
         return self._app_script_file
 
+    def function_name(self, name: str,
+                      setting_extra_fields: Dict[str, Any] = {},
+                      ) -> Callable[..., Any]:
+        """Optional: Sets name of the :class:`Function` object. If not set,
+        it will default to the name of the method name.
+
+        :param name: Name of the function.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_setting(setting=FunctionName(
+                    function_name=name,
+                    **setting_extra_fields))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def _validate_type(self,
                        func: Union[Callable[..., Any], FunctionBuilder]) \
             -> FunctionBuilder:
@@ -2609,30 +2633,6 @@ class BindingApi(DecoratorApi, ABC):
 class SettingsApi(DecoratorApi, ABC):
     """Interface to extend for using existing settings decorator in
     functions."""
-
-    def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
-                      ) -> Callable[..., Any]:
-        """Optional: Sets name of the :class:`Function` object. If not set,
-        it will default to the name of the method name.
-
-        :param name: Name of the function.
-        :param setting_extra_fields: Keyword arguments for specifying
-        additional setting fields
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_setting(setting=FunctionName(
-                    function_name=name,
-                    **setting_extra_fields))
-                return fb
-
-            return decorator()
-
-        return wrap
 
     def retry(self,
               strategy: str,
