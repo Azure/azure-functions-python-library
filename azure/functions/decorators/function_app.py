@@ -287,13 +287,12 @@ class DecoratorApi(ABC):
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
-                # override function builder with result of decorator
-                fb = df_decorator(fb._function._func)
+                function_builder = df_decorator(fb._function._func)
 
                 # remove old function builder from `self` and replace
                 # it with the result of the DF decorator
                 self._function_builders.pop()
-                self._function_builders.append(fb)
+                self._function_builders.append(function_builder)
                 return fb2
             return decorator()
         return wrap
