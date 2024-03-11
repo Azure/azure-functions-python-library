@@ -293,7 +293,7 @@ class DecoratorApi(ABC):
                 # it with the result of the DF decorator
                 self._function_builders.pop()
                 self._function_builders.append(function_builder)
-                return fb2
+                return function_builder
             return decorator()
         return wrap
 
@@ -308,8 +308,9 @@ class DecoratorApi(ABC):
             return df_bp
         except ImportError:
             error_message = "Attempted to use a Durable Functions decorator, "\
-                "but the `azure-functions-durable` SDK package could not be found. "\
-                "Please install `azure-functions-durable` to use Durable Functions."
+                "but the `azure-functions-durable` SDK package could not be "\
+                "found. Please install `azure-functions-durable` to use "\
+                "Durable Functions."
             raise Exception(error_message)
 
     @property
