@@ -34,6 +34,20 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             self.__set_body(body)
 
     @property
+    def application_properties(self) -> Dict[str, Any]:
+        """Gets the application properties bag, which can be used for
+        custom message metadata.
+
+        Returns:
+        --------
+        Dict[str, Any]:
+            If user has set application properties for the message,
+            returns a dictionary.
+            If nothing is set, returns an empty dictionary.
+        """
+        return {}
+
+    @property
     def content_type(self) -> Optional[str]:
         """Optionally describes the payload of the message,
         with a descriptor following the format of RFC2045
@@ -58,6 +72,30 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             Otherwise, returns None.
         """
         return self.__correlation_id
+
+    @property
+    def dead_letter_error_description(self) -> Optional[str]:
+        """Optionally describes the dead letter error description for the message.
+
+        Returns:
+        --------
+        Optional[str]
+            If dead letter error description is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
+    def dead_letter_reason(self) -> Optional[str]:
+        """Optionally describes the dead letter reason description for the message.
+
+        Returns:
+        --------
+        Optional[str]
+            If dead letter reason description is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
 
     @property
     def dead_letter_source(self) -> Optional[str]:
@@ -85,6 +123,21 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         --------
         Optional[str]
             If delivery count is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
+    def enqueued_sequence_number(self) -> Optional[int]:
+        """For messages that have been auto-forwarded, this property reflects
+        the sequence number that had first been assigned to the message at its
+        original point of submission. This property is read-only. Optionally
+        describes the enqueued sequence number of the message.
+
+        Returns:
+        --------
+        Optional[int]
+            If enqueued sequence number is set, returns an integer.
             Otherwise, returns None.
         """
         return None
@@ -134,6 +187,24 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         --------
         Optional[str]
             If label is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
+    def locked_until(self) -> Optional[datetime.datetime]:
+        """For messages retrieved under a lock (peek-lock receive mode, not
+        pre-settled) this property reflects the UTC instant until which the
+        message is held locked in the queue/subscription. When the lock
+        expires, the DeliveryCount is incremented and the message is again
+        available for retrieval. This property is read-only.Optionally
+        describes the date and time in UTC until which the message will be
+        locked in the queue/subscription.
+
+        Returns:
+        --------
+        Optional[datetime.datetime]
+            If locked until is set, returns a datetime.
             Otherwise, returns None.
         """
         return None
@@ -268,6 +339,37 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         return None
 
     @property
+    def state(self) -> Optional[int]:
+        """The state of the message can be Active, Deferred, or Scheduled.
+        Deferred messages have Deferred state, scheduled messages have
+        Scheduled state, all other messages have Active state. States are
+        represented by corresponding integer values. Active = 0,
+        Deferred = 1, Scheduled = 2.
+
+        Returns:
+        --------
+        Optional[int]
+            If state is set, returns an integer.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
+    def subject(self) -> Optional[str]:
+        """This property enables the application to indicate the purpose of the
+        message to the receiver in a standardized fashion, similar to an email
+        subject line. The mapped AMQP property is "subject". Optionally
+        describes the application specific label.
+
+        Returns:
+        --------
+        Optional[str]
+            If subject is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
     def time_to_live(self) -> Optional[datetime.timedelta]:
         """	This value is the relative duration after which the message
         expires, starting from the instant the message has been accepted and
@@ -296,6 +398,22 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         --------
         Optional[str]
             If the recipient is set, returns a string.
+            Otherwise, returns None.
+        """
+        return None
+
+    @property
+    def transaction_partition_key(self) -> Optional[str]:
+        """If a message is sent via a transfer queue in the scope of a transaction,
+        this value selects the transfer queue partition: This is functionally
+        equivalent to PartitionKey and ensures that messages are kept together
+        and in order as they are transferred. Optionally describes the
+        partition key. Maximum length is 128 characters.
+
+        Returns:
+        --------
+        Optional[str]
+            If transaction partition key is set, returns a string.
             Otherwise, returns None.
         """
         return None
