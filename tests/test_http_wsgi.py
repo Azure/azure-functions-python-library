@@ -222,7 +222,7 @@ class TestHttpWsgi(unittest.TestCase):
         url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
         request = WsgiRequest(self._generate_func_request(url=url))
 
-        self.assertEqual(request.path_info, '/Pippi LÃ¥ngstrump')
+        self.assertEqual(request.path_info, u'/Pippi L\u00c3\u00a5ngstrump')
 
     def _generate_func_request(
             self,
