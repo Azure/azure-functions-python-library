@@ -11,15 +11,15 @@ from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
     TIMER_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
-from azure.functions.decorators.function_app import FunctionBuilder, \
-    FunctionApp, Function, Blueprint, DecoratorApi, AsgiFunctionApp, \
-    WsgiFunctionApp, HttpFunctionsAuthLevelMixin, FunctionRegister, \
-    TriggerApi, ExternalHttpFunctionApp
+from azure.functions.decorators.function_app import BindingApi, \
+    FunctionBuilder, FunctionApp, Function, Blueprint, DecoratorApi, \
+    AsgiFunctionApp, WsgiFunctionApp, HttpFunctionsAuthLevelMixin, \
+    FunctionRegister, TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.retry_policy import RetryPolicy
-from tests.decorators.test_core import DummyTrigger
-from tests.decorators.testutils import assert_json
+from test_core import DummyTrigger
+from tests.utils.testutils import assert_json
 
 
 class TestFunction(unittest.TestCase):
@@ -473,6 +473,31 @@ class TestFunctionApp(unittest.TestCase):
 
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
         blueprint = Blueprint()
+
+        @blueprint.function_name("timer_function")
+        @blueprint.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(blueprint)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+
+        setting = functions[0].get_setting("function_name")
+
+        self.assertEqual(setting.get_settings_value("function_name"),
+                         "timer_function")
+
+    def test_legacy_blueprints_with_function_name(self):
+        class LegacyBluePrint(TriggerApi, BindingApi):
+            pass
+
+        class DummyFunctionApp(FunctionRegister, TriggerApi):
+            pass
+
+        app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
+        blueprint = LegacyBluePrint()
 
         @blueprint.function_name("timer_function")
         @blueprint.schedule(arg_name="name", schedule="10****")

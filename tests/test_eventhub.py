@@ -11,7 +11,7 @@ import azure.functions as func
 import azure.functions.eventhub as azf_eh
 import azure.functions.meta as meta
 
-from .testutils import CollectionBytes, CollectionString
+from tests.utils.testutils import CollectionBytes, CollectionString
 
 
 class TestEventHub(unittest.TestCase):
