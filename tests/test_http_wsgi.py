@@ -14,6 +14,7 @@ from azure.functions._http_wsgi import (
     WsgiResponse,
     WsgiMiddleware
 )
+from azure.functions._http_asgi import AsgiRequest
 
 
 class WsgiException(Exception):
@@ -210,6 +211,18 @@ class TestHttpWsgi(unittest.TestCase):
         func_response = main(func_request, func_context)
         self.assertEqual(func_response.status_code, 200)
         self.assertEqual(func_response.get_body(), b'sample string')
+
+    def test_path_encoding_utf8(self):
+        url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
+        request = AsgiRequest(self._generate_func_request(url=url))
+
+        self.assertEqual(request.path_info, u'/Pippi L\u00e5ngstrump')
+
+    def test_path_encoding_latin1(self):
+        url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
+        request = WsgiRequest(self._generate_func_request(url=url))
+
+        self.assertEqual(request.path_info, u'/Pippi L\u00c3\u00a5ngstrump')
 
     def _generate_func_request(
             self,
