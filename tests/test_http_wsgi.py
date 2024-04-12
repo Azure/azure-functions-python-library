@@ -216,7 +216,7 @@ class TestHttpWsgi(unittest.TestCase):
         url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
         request = AsgiRequest(self._generate_func_request(url=url))
 
-        self.assertEqual(request.path_info, '/Pippi Långstrump')
+        self.assertEqual(request.path_info, u'Pippi L\u00e5ngstrump')
 
     def test_path_encoding_latin1(self):
         url = 'http://example.com/Pippi%20L%C3%A5ngstrump'
