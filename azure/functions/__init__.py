@@ -98,4 +98,4 @@ __all__ = (
     'BlobSource'
 )
 
-__version__ = '1.19.0b3'
+__version__ = '1.19.0'
