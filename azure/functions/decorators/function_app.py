@@ -35,6 +35,7 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .openai import AssistantSkillTrigger
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1337,6 +1338,32 @@ class TriggerApi(DecoratorApi, ABC):
                         pub_sub_name=pub_sub_name,
                         topic=topic,
                         route=route,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_skill_trigger(self,
+                                arg_name: str,
+                                task_description: str,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs: Any) -> Callable[..., Any]:
+        """
+        PYDocs to be added
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=AssistantSkillTrigger(
+                        name=arg_name,
+                        task_description=task_description,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
