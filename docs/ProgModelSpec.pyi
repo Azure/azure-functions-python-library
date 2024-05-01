@@ -1241,7 +1241,8 @@ class ThirdPartyHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 
 class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
-                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 prefix: str = ""):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
@@ -1251,7 +1252,8 @@ class AsgiFunctionApp(ThirdPartyHttpFunctionApp):
 
 class WsgiFunctionApp(ThirdPartyHttpFunctionApp):
     def __init__(self, app,
-                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 prefix: str = ""):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
