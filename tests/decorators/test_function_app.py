@@ -558,6 +558,10 @@ class TestFunctionApp(unittest.TestCase):
                               http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
+    def test_asgi_function_app_prefix(self):
+        app = AsgiFunctionApp(app=object(), prefix="v1")
+        self.assertEqual(app.prefix, "v1")
+
     def test_asgi_function_app_is_http_function(self):
         app = AsgiFunctionApp(app=object())
         funcs = app.get_functions()
@@ -573,6 +577,10 @@ class TestFunctionApp(unittest.TestCase):
         app = WsgiFunctionApp(app=object(),
                               http_auth_level=AuthLevel.ANONYMOUS)
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
+
+    def test_wsgi_function_app_prefix(self):
+        app = WsgiFunctionApp(app=object(), prefix="v1")
+        self.assertEqual(app.prefix, "v1")
 
     def test_wsgi_function_app_is_http_function(self):
         app = WsgiFunctionApp(app=object())
