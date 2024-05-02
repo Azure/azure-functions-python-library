@@ -199,6 +199,8 @@ class Function(object):
 
 
 class FunctionBuilder(object):
+    function_bindings = {}
+
     def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)
 
@@ -226,6 +228,12 @@ class FunctionBuilder(object):
                            auth_level: Optional[AuthLevel] = None) -> None:
         """
         Validates the function information before building the function.
+
+        Functions with the same function name are not supported and should
+        fail indexing. If a function name is not defined, the default is the
+        method name. This also means that two functions with the same
+        method name will also fail indexing.
+        https://github.com/Azure/azure-functions-python-worker/issues/1489
 
         :param auth_level: Http auth level that will be set if http
         trigger function auth level is None.
@@ -257,6 +265,16 @@ class FunctionBuilder(object):
                         parse_singular_param_to_enum(auth_level, AuthLevel))
             self._function._is_http_function = True
 
+        # This dict contains the function name and its bindings for all
+        # functions in an app. If a previous function has the same name,
+        # indexing will fail here.
+        if self.function_bindings.get(function_name, None) is not None:
+            raise ValueError(
+                f"Function {function_name} does not have a unique"
+                f" function name. Please change @app.function_name() or"
+                f" the function method name to be unique.")
+        self.function_bindings[function_name] = bindings
+
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
         Validates and builds the function object.
@@ -266,6 +284,22 @@ class FunctionBuilder(object):
         """
         self._validate_function(auth_level)
         return self._function
+
+    def validate_function_names(self):
+        """
+        Functions should have unique function names. If two functions
+        have the same function name, the worker should fail
+        during indexing.
+
+        If the function name decorator is not applied, the function
+        name defaults to the method name. This means that two functions
+        can not have the same method name as well without having unique
+        function names.
+
+        Scenarios that fail / should fail indexing:
+        - same function name
+        - no function name, same method name
+        """
 
 
 class DecoratorApi(ABC):

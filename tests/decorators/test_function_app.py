@@ -17,6 +17,7 @@ from azure.functions.decorators.function_app import BindingApi, \
     FunctionRegister, TriggerApi, ExternalHttpFunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.retry_policy import RetryPolicy
 from test_core import DummyTrigger
 from tests.utils.testutils import assert_json
@@ -220,6 +221,127 @@ class TestFunctionBuilder(unittest.TestCase):
                          {'setting_name': 'retry_policy',
                           'strategy': 'exponential', 'max_retry_count': '2',
                           'minimum_interval': '1', 'maximum_interval': '5'})
+
+    def test_unique_method_names(self):
+        app = FunctionApp()
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 2)
+
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello")[0], TimerTrigger)
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello2")[0], TimerTrigger)
+
+    def test_unique_function_names(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        @app.function_name("hello2")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 2)
+
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello")[0], TimerTrigger)
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello2")[0], TimerTrigger)
+
+    def test_same_method_names(self):
+        app = FunctionApp()
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str): # NoQA
+            return name
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_same_function_names(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str): # NoQA
+            return name
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_same_function_name_different_method_name(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_same_function_and_method_name(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
 
 
 class TestScaffold(unittest.TestCase):
