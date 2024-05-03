@@ -343,6 +343,151 @@ class TestFunctionBuilder(unittest.TestCase):
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
+    def test_blueprint_unique_method_names(self):
+        app = FunctionApp()
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        app.register_blueprint(bp)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 2)
+
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello")[0], TimerTrigger)
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello2")[0], TimerTrigger)
+
+    def test_blueprint_unique_function_names(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.function_name("hello2")
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        app.register_blueprint(bp)
+
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 2)
+
+        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello")[0], TimerTrigger)
+        self.assertIsInstance(app._function_builders[0].function_bindings.get(
+            "hello2")[0], TimerTrigger)
+
+    def test_blueprint_same_method_names(self):
+        app = FunctionApp()
+
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str): # NoQA
+            return name
+
+        app.register_blueprint(bp)
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_blueprint_same_function_names(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.function_name("hello")
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str): # NoQA
+            return name
+
+        app.register_blueprint(bp)
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_blueprint_same_function_name_different_method_name(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.function_name("hello")
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        app.register_blueprint(bp)
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
+    def test_blueprint_same_function_and_method_name(self):
+        app = FunctionApp()
+
+        @app.function_name("hello")
+        @app.schedule(arg_name="name", schedule="10****")
+        def hello2(name: str):
+            return name
+
+        bp = Blueprint()
+
+        @bp.schedule(arg_name="name", schedule="10****")
+        def hello(name: str):
+            return name
+
+        app.register_blueprint(bp)
+
+        with self.assertRaises(ValueError) as err:
+            app.get_functions()
+        self.assertEqual(err.exception.args[0],
+                         "Function hello does not have a unique"
+                         " function name. Please change @app.function_name()"
+                         " or the function method name to be unique.")
+
 
 class TestScaffold(unittest.TestCase):
     def setUp(self):
