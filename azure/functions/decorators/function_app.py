@@ -35,7 +35,9 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
-from .openai import AssistantSkillTrigger
+from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, AssistantCreateOutput, \
+    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, semantic_search_system_prompt, \
+    SemanticSearchInput
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1443,7 +1445,7 @@ class TriggerApi(DecoratorApi, ABC):
                                     Union[DataType, str]] = None,
                                 **kwargs: Any) -> Callable[..., Any]:
         """
-        PYDocs to be added
+        TODO: PYDocs
         """
 
         @self._configure_function_builder
@@ -2758,6 +2760,232 @@ class BindingApi(DecoratorApi, ABC):
                         binding_name=binding_name,
                         operation=operation,
                         dapr_address=dapr_address,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def text_completion_input(self,
+                              arg_name: str,
+                              prompt: str,
+                              model: Optional[str] = OpenAIModels.DefaultChatModel,
+                              temperature: Optional[str] = "0.5",
+                              top_p: Optional[str] = None,
+                              max_tokens: Optional[str] = "100",
+                              data_type: Optional[
+                                  Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=TextCompletionInput(
+                        name=arg_name,
+                        prompt=prompt,
+                        model=model,
+                        temperature=temperature,
+                        top_p=top_p,
+                        max_tokens=max_tokens,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_create_output(self, arg_name: str,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantCreateOutput(
+                        name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_query_input(self,
+                              arg_name: str,
+                              id: str,
+                              timestamp_utc: str,
+                              data_type: Optional[
+                                  Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantQueryInput(
+                        name=arg_name,
+                        id=id,
+                        timestamp_utc=timestamp_utc,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_post_input(self, arg_name: str,
+                             id: str,
+                             user_message: str,
+                             data_type: Optional[
+                                 Union[DataType, str]] = None,
+                             **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantPostInput(
+                        name=arg_name,
+                        id=id,
+                        user_message=user_message,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def embeddings_input(self,
+                         arg_name: str,
+                         input: str,
+                         input_type: InputType,
+                         model: Optional[str] = None,
+                         max_chunk_length: Optional[int] = 8 * 1024,
+                         max_overlap: Optional[int] = 128,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=EmbeddingsInput(
+                        name=arg_name,
+                        input=input,
+                        input_type=input_type,
+                        model=model,
+                        max_chunk_length=max_chunk_length,
+                        max_overlap=max_overlap,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def semantic_search_input(self,
+                              arg_name: str,
+                              connnection_name: str,
+                              collection: str,
+                              query: Optional[str] = None,
+                              embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                              chat_model: Optional[str] = OpenAIModels.DefaultChatModel,
+                              system_prompt: Optional[str] = semantic_search_system_prompt,
+                              max_knowledge_count: Optional[int] = 1,
+                              data_type: Optional[
+                                  Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=SemanticSearchInput(
+                        name=arg_name,
+                        connnection_name=connnection_name,
+                        collection=collection,
+                        query=query,
+                        embeddings_model=embeddings_model,
+                        chat_model=chat_model,
+                        system_prompt=system_prompt,
+                        max_knowledge_count=max_knowledge_count,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def embeddings_store_output(self,
+                                arg_name: str,
+                                input: str,
+                                input_type: InputType,
+                                connection_name: str,
+                                collection: str,
+                                model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                                max_chunk_length: Optional[int] = 8 * 1024,
+                                max_overlap: Optional[int] = 128,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs) \
+            -> Callable[..., Any]:
+        """
+        TODO: pydocs
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=SemanticSearchInput(
+                        name=arg_name,
+                        input=input,
+                        input_type=input_type,
+                        connnection_name=connection_name,
+                        collection=collection,
+                        model=model,
+                        max_chunk_length=max_chunk_length,
+                        max_overlap=max_overlap,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))

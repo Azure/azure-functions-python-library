@@ -1,7 +1,8 @@
 from typing import Optional
 
-from azure.functions.decorators.constants import ASSISTANT_SKILLS_TRIGGER, TEXT_COMPLETION, ASSISTANT_QUERY, EMBEDDINGS, \
-    SEMANTIC_SEARCH, ASSISTANT_CREATE
+from azure.functions.decorators.constants import (ASSISTANT_SKILLS_TRIGGER, TEXT_COMPLETION, ASSISTANT_QUERY,
+                                                  EMBEDDINGS, EMBEDDINGS_STORE, ASSISTANT_CREATE, ASSISTANT_POST,
+                                                  SEMANTIC_SEARCH)
 from azure.functions.decorators.core import Trigger, DataType, InputBinding, OutputBinding
 from azure.functions.decorators.utils import StringifyEnum
 
@@ -141,23 +142,49 @@ class SemanticSearchInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class SemanticSearchOutput(OutputBinding):
+# TODO: Waiting on the PR to get merged
+class AssistantPostInput(InputBinding):
 
     @staticmethod
-    def get_binding_name() -> str:
-        return SEMANTIC_SEARCH
+    def get_binding_name():
+        return ASSISTANT_POST
 
-    def __init__(self,
-                 name: str,
-                 connection_name: str,
-                 collection: str,
-                 embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+    def __init__(self, name: str,
+                 id: str,
+                 user_message: str,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
+        self.id = id
+        self.user_message = user_message
+        super().__init__(name=name, data_type=data_type)
+
+
+class EmbeddingsStoreOutput(OutputBinding):
+
+    @staticmethod
+    def get_binding_name() -> str:
+        return EMBEDDINGS_STORE
+
+    def __init__(self,
+                 name: str,
+                 input: str,
+                 input_type: InputType,
+                 connection_name: str,
+                 collection: str,
+                 model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                 max_chunk_length: Optional[int] = 8 * 1024,
+                 max_overlap: Optional[int] = 128,
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
+        self.name = name
+        self.input = input
+        self.input_type = input_type
         self.connection_name = connection_name
         self.collection = collection
-        self.embeddings_model = embeddings_model
+        self.model = model
+        self.max_chunk_length = max_chunk_length
+        self.max_overlap = max_overlap
         super().__init__(name=name, data_type=data_type)
 
 
