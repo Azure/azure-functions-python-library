@@ -2940,7 +2940,7 @@ class BindingApi(DecoratorApi, ABC):
                 fb.add_binding(
                     binding=SemanticSearchInput(
                         name=arg_name,
-                        connnection_name=connection_name,
+                        connection_name=connection_name,
                         collection=collection,
                         query=query,
                         embeddings_model=embeddings_model,
@@ -2981,7 +2981,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         input=input,
                         input_type=input_type,
-                        connnection_name=connection_name,
+                        connection_name=connection_name,
                         collection=collection,
                         model=model,
                         max_chunk_length=max_chunk_length,

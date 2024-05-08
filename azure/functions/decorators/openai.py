@@ -122,7 +122,7 @@ class SemanticSearchInput(InputBinding):
 
     def __init__(self,
                  name: str,
-                 connnection_name: str,
+                 connection_name: str,
                  collection: str,
                  query: Optional[str] = None,
                  embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
@@ -132,7 +132,7 @@ class SemanticSearchInput(InputBinding):
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
-        self.connection_name = connnection_name
+        self.connection_name = connection_name
         self.collection = collection
         self.query = query
         self.embeddings_model = embeddings_model
