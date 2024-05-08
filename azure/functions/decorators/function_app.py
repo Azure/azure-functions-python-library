@@ -37,7 +37,7 @@ from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
 from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, AssistantCreateOutput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, semantic_search_system_prompt, \
-    SemanticSearchInput
+    SemanticSearchInput, EmbeddingsStoreOutput
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -2919,7 +2919,7 @@ class BindingApi(DecoratorApi, ABC):
 
     def semantic_search_input(self,
                               arg_name: str,
-                              connnection_name: str,
+                              connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
                               embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
@@ -2940,7 +2940,7 @@ class BindingApi(DecoratorApi, ABC):
                 fb.add_binding(
                     binding=SemanticSearchInput(
                         name=arg_name,
-                        connnection_name=connnection_name,
+                        connnection_name=connection_name,
                         collection=collection,
                         query=query,
                         embeddings_model=embeddings_model,
@@ -2977,7 +2977,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=SemanticSearchInput(
+                    binding=EmbeddingsStoreOutput(
                         name=arg_name,
                         input=input,
                         input_type=input_type,
