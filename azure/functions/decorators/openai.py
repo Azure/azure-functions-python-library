@@ -1,9 +1,14 @@
 from typing import Optional
 
-from azure.functions.decorators.constants import (ASSISTANT_SKILLS_TRIGGER, TEXT_COMPLETION, ASSISTANT_QUERY,
-                                                  EMBEDDINGS, EMBEDDINGS_STORE, ASSISTANT_CREATE, ASSISTANT_POST,
+from azure.functions.decorators.constants import (ASSISTANT_SKILLS_TRIGGER,
+                                                  TEXT_COMPLETION,
+                                                  ASSISTANT_QUERY,
+                                                  EMBEDDINGS, EMBEDDINGS_STORE,
+                                                  ASSISTANT_CREATE,
+                                                  ASSISTANT_POST,
                                                   SEMANTIC_SEARCH)
-from azure.functions.decorators.core import Trigger, DataType, InputBinding, OutputBinding
+from azure.functions.decorators.core import Trigger, DataType, InputBinding, \
+    OutputBinding
 from azure.functions.decorators.utils import StringifyEnum
 
 
@@ -15,7 +20,7 @@ class InputType(StringifyEnum):
 
 class OpenAIModels(StringifyEnum):
     DefaultChatModel = "gpt-3.5-turbo"
-    DefaultEmbeddingsModel = "text-embedding-3-small"
+    DefaultEmbeddingsModel = "text-embedding-ada-002"
 
 
 class AssistantSkillTrigger(Trigger):
@@ -42,7 +47,7 @@ class TextCompletionInput(InputBinding):
     def __init__(self,
                  name: str,
                  prompt: str,
-                 model: Optional[str] = OpenAIModels.DefaultChatModel,
+                 model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,
                  temperature: Optional[str] = "0.5",
                  top_p: Optional[str] = None,
                  max_tokens: Optional[str] = "100",
@@ -85,7 +90,7 @@ class EmbeddingsInput(InputBinding):
                  input_type: InputType,
                  model: Optional[str] = None,
                  max_chunk_length: Optional[int] = 8 * 1024,
-                 max_overlap : Optional[int] = 128,
+                 max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
@@ -97,21 +102,21 @@ class EmbeddingsInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-semantic_search_system_prompt =  \
-                """You are a helpful assistant. You are responding to requests 
-                from a user about internal emails and documents. You can and 
-                should refer to the internal documents to help respond to 
-                requests. If a user makes a request that's not covered by the 
-                internal emails and documents, explain that you don't know the 
-                answer or that you don't have access to the information.
+semantic_search_system_prompt = \
+    """You are a helpful assistant. You are responding to requests
+    from a user about internal emails and documents. You can and
+    should refer to the internal documents to help respond to
+    requests. If a user makes a request that's not covered by the
+    internal emails and documents, explain that you don't know the
+    answer or that you don't have access to the information.
 
-                The following is a list of documents that you can refer to when
-                answering questions. The documents are in the format 
-                [filename]: [text] and are separated by newlines. If you answer
-                a question by referencing any of the documents, please cite the 
-                document in your answer. For example, if you answer a question 
-                by referencing info.txt, you should add "Reference: info.txt" 
-                to the end of your answer on a separate line."""
+    The following is a list of documents that you can refer to when
+    answering questions. The documents are in the format
+    [filename]: [text] and are separated by newlines. If you answer
+    a question by referencing any of the documents, please cite the
+    document in your answer. For example, if you answer a question
+    by referencing info.txt, you should add "Reference: info.txt"
+    to the end of your answer on a separate line."""
 
 
 class SemanticSearchInput(InputBinding):
@@ -125,10 +130,12 @@ class SemanticSearchInput(InputBinding):
                  connection_name: str,
                  collection: str,
                  query: Optional[str] = None,
-                 embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
-                 chat_model: Optional[str] = OpenAIModels.DefaultChatModel,
+                 embeddings_model: Optional[
+                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                 chat_model: Optional[
+                     OpenAIModels] = OpenAIModels.DefaultChatModel,
                  system_prompt: Optional[str] = semantic_search_system_prompt,
-                 max_knowledge_count : Optional[int] = 1,
+                 max_knowledge_count: Optional[int] = 1,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
@@ -172,7 +179,8 @@ class EmbeddingsStoreOutput(OutputBinding):
                  input_type: InputType,
                  connection_name: str,
                  collection: str,
-                 model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                 model: Optional[
+                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
                  max_chunk_length: Optional[int] = 8 * 1024,
                  max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,

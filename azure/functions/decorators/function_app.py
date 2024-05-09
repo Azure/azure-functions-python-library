@@ -35,8 +35,10 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
-from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, AssistantCreateOutput, \
-    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, semantic_search_system_prompt, \
+from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
+    AssistantCreateOutput, \
+    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
+    semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
@@ -297,7 +299,9 @@ class DecoratorApi(ABC):
                 self._function_builders.pop()
                 self._function_builders.append(function_builder)
                 return function_builder
+
             return decorator()
+
         return wrap
 
     def _get_durable_blueprint(self):
@@ -310,9 +314,10 @@ class DecoratorApi(ABC):
             df_bp = df.Blueprint()
             return df_bp
         except ImportError:
-            error_message = "Attempted to use a Durable Functions decorator, "\
-                "but the `azure-functions-durable` SDK package could not be "\
-                "found. Please install `azure-functions-durable` to use "\
+            error_message = \
+                "Attempted to use a Durable Functions decorator, " \
+                "but the `azure-functions-durable` SDK package could not be " \
+                "found. Please install `azure-functions-durable` to use " \
                 "Durable Functions."
             raise Exception(error_message)
 
@@ -2772,7 +2777,8 @@ class BindingApi(DecoratorApi, ABC):
     def text_completion_input(self,
                               arg_name: str,
                               prompt: str,
-                              model: Optional[str] = OpenAIModels.DefaultChatModel,
+                              model: Optional[
+                                  OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
                               temperature: Optional[str] = "0.5",
                               top_p: Optional[str] = None,
                               max_tokens: Optional[str] = "100",
@@ -2783,6 +2789,7 @@ class BindingApi(DecoratorApi, ABC):
         """
         TODO: pydocs
         """
+
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
@@ -2811,6 +2818,7 @@ class BindingApi(DecoratorApi, ABC):
         """
         TODO: pydocs
         """
+
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
@@ -2837,6 +2845,7 @@ class BindingApi(DecoratorApi, ABC):
         """
         TODO: pydocs
         """
+
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
@@ -2922,9 +2931,12 @@ class BindingApi(DecoratorApi, ABC):
                               connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
-                              embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
-                              chat_model: Optional[str] = OpenAIModels.DefaultChatModel,
-                              system_prompt: Optional[str] = semantic_search_system_prompt,
+                              embeddings_model: Optional[
+                                  OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                              chat_model: Optional[
+                                  OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              system_prompt: Optional[
+                                  str] = semantic_search_system_prompt,
                               max_knowledge_count: Optional[int] = 1,
                               data_type: Optional[
                                   Union[DataType, str]] = None,
@@ -2962,7 +2974,8 @@ class BindingApi(DecoratorApi, ABC):
                                 input_type: InputType,
                                 connection_name: str,
                                 collection: str,
-                                model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                                model: Optional[
+                                    OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
                                 max_chunk_length: Optional[int] = 8 * 1024,
                                 max_overlap: Optional[int] = 128,
                                 data_type: Optional[
