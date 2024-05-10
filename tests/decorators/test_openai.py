@@ -4,21 +4,22 @@ from azure.functions import DataType
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.openai import AssistantSkillTrigger, \
     TextCompletionInput, OpenAIModels, AssistantQueryInput, EmbeddingsInput, \
-    AssistantCreateOutput, SemanticSearchInput, EmbeddingsStoreOutput
+    AssistantCreateOutput, SemanticSearchInput, EmbeddingsStoreOutput, \
+    AssistantPostInput
 
 
 class TestOpenAI(unittest.TestCase):
 
     def test_assistant_skills_trigger_valid_creation(self):
         trigger = AssistantSkillTrigger(name="test",
-                                        task_description="test_description",
+                                        function_description="description",
                                         data_type=DataType.UNDEFINED,
                                         dummy_field="dummy")
         self.assertEqual(trigger.get_binding_name(),
                          "assistantSkillsTrigger")
         self.assertEqual(
             trigger.get_dict_repr(), {"name": "test",
-                                      "taskDescription": "test_description",
+                                      "functionDescription": "description",
                                       "dataType": DataType.UNDEFINED,
                                       'type': 'assistantSkillsTrigger',
                                       'dummyField': 'dummy',
@@ -99,6 +100,25 @@ class TestOpenAI(unittest.TestCase):
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.OUT,
                           "type": "assistantCreate"})
+
+    def test_assistant_post_input_valid_creation(self):
+        input = AssistantPostInput(name="test",
+                                   id="test_id",
+                                   model="test_model",
+                                   user_message="test_message",
+                                   data_type=DataType.UNDEFINED,
+                                   dummy_field="dummy")
+        self.assertEqual(input.get_binding_name(),
+                         "assistantPost")
+        self.assertEqual(input.get_dict_repr(),
+                         {"name": "test",
+                          "id": "test_id",
+                          "model": "test_model",
+                          "userMessage": "test_message",
+                          "dataType": DataType.UNDEFINED,
+                          "direction": BindingDirection.IN,
+                          "dummyField": "dummy",
+                          "type": "assistantPost"})
 
     def test_semantic_search_input_valid_creation(self):
         input = SemanticSearchInput(name="test",

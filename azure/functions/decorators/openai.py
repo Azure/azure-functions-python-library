@@ -31,10 +31,10 @@ class AssistantSkillTrigger(Trigger):
 
     def __init__(self,
                  name: str,
-                 task_description: str,
+                 function_description: str,
                  data_type: Optional[DataType] = None,
                  **kwargs):
-        self.task_description = task_description
+        self.function_description = function_description
         super().__init__(name=name, data_type=data_type)
 
 
@@ -159,11 +159,13 @@ class AssistantPostInput(InputBinding):
     def __init__(self, name: str,
                  id: str,
                  user_message: str,
+                 model: Optional[str] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
         self.id = id
         self.user_message = user_message
+        self.model = model
         super().__init__(name=name, data_type=data_type)
 
 

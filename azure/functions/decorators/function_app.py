@@ -1450,16 +1450,40 @@ class TriggerApi(DecoratorApi, ABC):
                                     Union[DataType, str]] = None,
                                 **kwargs: Any) -> Callable[..., Any]:
         """
-        TODO: PYDocs
-        """
+        Assistants build on top of the chat functionality to provide assistants
+        with custom skills defined as functions. This internally uses the
+        function calling feature OpenAIs GPT models to select which functions
+        to invoke and when.
+        Ref: https://platform.openai.com/docs/guides/function-calling
 
+        You can define functions that can be triggered by assistants by using
+
+        the `assistantSkillTrigger` trigger binding. These functions are
+        invoked by the extension when a assistant signals that it would like
+        to invoke a function in response to a user prompt.
+
+        The name of the function, the description provided by the trigger,
+        and the parameter name are all hints that the underlying language model
+        use to determine when and how to invoke an assistant function.
+
+        :param arg_name: The name of the variable that represents
+        :param function_description: The description of the assistant function,
+         which is provided to the model.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+
+        """
         @self._configure_function_builder
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
                     trigger=AssistantSkillTrigger(
                         name=arg_name,
-                        task_description=task_description,
+                        function_description=task_description,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -2576,8 +2600,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param state_store: State store containing the state for keys.
         :param key: The name of the key.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2631,8 +2653,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param app_id: The dapr app name to invoke.
         :param method_name: The method name of the app to invoke.
         :param http_verb: The http verb of the app to invoke.
@@ -2687,8 +2707,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param pub_sub_name: The pub/sub name to publish to.
         :param topic:  The name of the topic to publish to.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2742,8 +2760,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param binding_name: The configured name of the binding.
         :param operation:  The configured operation.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2777,17 +2793,49 @@ class BindingApi(DecoratorApi, ABC):
     def text_completion_input(self,
                               arg_name: str,
                               prompt: str,
-                              model: Optional[
-                                  OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
                               temperature: Optional[str] = "0.5",
                               top_p: Optional[str] = None,
                               max_tokens: Optional[str] = "100",
-                              data_type: Optional[
-                                  Union[DataType, str]] = None,
+                              data_type: Optional[Union[DataType, str]] = None,
                               **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The textCompletion input binding can be used to invoke the
+        OpenAI Chat Completions API and return the results to the function.
+
+        Ref: https://platform.openai.com/docs/guides/text-generation/chat-completions-vs-completions  # NoQA
+
+        The examples below define "who is" HTTP-triggered functions with a
+        hardcoded `"who is {name}?"` prompt, where `{name}` is the substituted
+        with the value in the HTTP request path. The OpenAI input binding
+        invokes the OpenAI GPT endpoint to surface the answer to the prompt to
+        the function, which then returns the result text as the response
+        content.
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param prompt: The prompt to generate completions for, encoded as a
+        string.
+        :param model: the ID of the model to use.
+        :param temperature: The sampling temperature to use, between 0 and 2.
+        Higher values like 0.8 will make the output more random, while lower
+        values like 0.2 will make it more focused and deterministic.
+        :param top_p: An alternative to sampling with temperature, called
+        nucleus sampling, where the model considers the results of the tokens
+        with top_p probability mass. So 0.1 means only the tokens comprising
+        the top 10% probability mass are considered. It's generally recommend
+        to use this or temperature
+        :param max_tokens: The maximum number of tokens to generate in the
+        completion. The token count of your prompt plus max_tokens cannot
+        exceed the model's context length. Most models have a context length of
+        2048 tokens (except for the newest models, which support 4096).
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2816,7 +2864,17 @@ class BindingApi(DecoratorApi, ABC):
                                 **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The assistantCreate output binding creates a new assistant with a
+        specified system prompt.
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2843,7 +2901,21 @@ class BindingApi(DecoratorApi, ABC):
                               **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The assistantQuery input binding fetches the assistant history and
+        passes it to the function.
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param timestamp_utc: the timestamp of the earliest message in the chat
+        history to fetch. The timestamp should be in ISO 8601 format - for
+        example, 2023-08-01T00:00:00Z.
+        :param id: The ID of the Assistant to query.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2866,12 +2938,27 @@ class BindingApi(DecoratorApi, ABC):
     def assistant_post_input(self, arg_name: str,
                              id: str,
                              user_message: str,
+                             model: Optional[str] = None,
                              data_type: Optional[
                                  Union[DataType, str]] = None,
                              **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The assistantPost output binding sends a message to the assistant and
+        saves the response in its internal state.
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param id: The ID of the assistant to update.
+        :param user_message: The user message that user has entered for
+        assistant to respond to.
+        :param model: The OpenAI chat model to use.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2882,6 +2969,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         id=id,
                         user_message=user_message,
+                        model=model,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -2903,7 +2991,27 @@ class BindingApi(DecoratorApi, ABC):
                          **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The embeddings input decorator creates embeddings which will be used to
+        measure the readiness of text strings.
+
+        Ref: https://platform.openai.com/docs/guides/embeddings
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param input: The input source containing the data to generate
+        embeddings for.
+        :param input_type: The type of the input.
+        :param model: The ID of the model to use.
+        :param max_chunk_length: The maximum number of characters to chunk the
+        input into. Default value: 8 * 1024
+        :param max_overlap: The maximum number of characters to overlap
+        between chunks. Default value: 128
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2931,19 +3039,41 @@ class BindingApi(DecoratorApi, ABC):
                               connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
-                              embeddings_model: Optional[
-                                  OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
-                              chat_model: Optional[
-                                  OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
-                              system_prompt: Optional[
-                                  str] = semantic_search_system_prompt,
+                              embeddings_model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                              chat_model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              system_prompt: Optional[str] = semantic_search_system_prompt,  # NoQA
                               max_knowledge_count: Optional[int] = 1,
                               data_type: Optional[
                                   Union[DataType, str]] = None,
                               **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        The embeddings input decorator creates embeddings which will be used to
+        measure the readiness of text strings.
+
+        Ref: https://platform.openai.com/docs/guides/embeddings
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param connection_name: app setting or environment variable which
+        contains a connection string value.
+        :param collection: The name of the collection or table to search or
+        store.
+        :param query: The semantic query text to use for searching.
+        :param embeddings_model: The ID of the model to use for embeddings.
+        The default value is "text-embedding-ada-002".
+        :param chat_model: The name of the Large Language Model to invoke for
+        chat responses. The default value is "gpt-3.5-turbo".
+        :param system_prompt: Optional The system prompt to use for prompting
+        the large language model.
+        :param max_knowledge_count: Optional. The number of knowledge items to
+        inject into the SystemPrompt. Default value: 1
+        :param data_type: Optional. Defines how Functions runtime should treat
+        the parameter value. Default value: None
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
@@ -2974,8 +3104,7 @@ class BindingApi(DecoratorApi, ABC):
                                 input_type: InputType,
                                 connection_name: str,
                                 collection: str,
-                                model: Optional[
-                                    OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                                model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
                                 max_chunk_length: Optional[int] = 8 * 1024,
                                 max_overlap: Optional[int] = 128,
                                 data_type: Optional[
@@ -2983,7 +3112,33 @@ class BindingApi(DecoratorApi, ABC):
                                 **kwargs) \
             -> Callable[..., Any]:
         """
-        TODO: pydocs
+        Supported list of embeddings store is extensible, and more can be
+        added by authoring a specially crafted NuGet package. Visit the
+        currently supported vector specific folder for specific usage
+        information:
+
+        - Azure AI Search
+        - Azure Data Explorer
+        - Azure Cosmos DB using MongoDB
+
+        :param arg_name: The name of the variable that represents DaprState
+        output object in function code.
+        :param input: The input to generate embeddings for.
+        :param input_type: The type of the input.
+        :param connection_name: The name of an app setting or environment
+        variable which contains a connection string value
+        :param collection: The collection or table to search.
+        :param model: The ID of the model to use.
+        :param max_chunk_length: The maximum number of characters to chunk the
+        input into.
+        :param max_overlap: The maximum number of characters to overlap between
+        chunks.
+        :param data_type: Optional. Defines how Functions runtime should treat
+        the parameter value. Default value: None
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
         """
 
         @self._configure_function_builder
