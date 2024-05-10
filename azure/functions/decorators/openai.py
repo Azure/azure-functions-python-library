@@ -155,7 +155,6 @@ class SemanticSearchInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-# TODO: Waiting on the PR to get merged
 class AssistantPostInput(InputBinding):
 
     @staticmethod
