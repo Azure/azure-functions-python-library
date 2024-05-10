@@ -1446,7 +1446,7 @@ class TriggerApi(DecoratorApi, ABC):
     def assistant_skill_trigger(self,
                                 arg_name: str,
                                 function_description: str,
-                                function_name : Optional[str] = None,
+                                function_name: Optional[str] = None,
                                 parameter_description_json: Optional[str] = None,  # NoQA
                                 model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
                                 data_type: Optional[
@@ -1493,6 +1493,9 @@ class TriggerApi(DecoratorApi, ABC):
                     trigger=AssistantSkillTrigger(
                         name=arg_name,
                         function_description=function_description,
+                        function_name=function_name,
+                        parameter_description_json=parameter_description_json,
+                        model=model,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
