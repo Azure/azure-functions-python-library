@@ -13,6 +13,9 @@ class TestOpenAI(unittest.TestCase):
     def test_assistant_skills_trigger_valid_creation(self):
         trigger = AssistantSkillTrigger(name="test",
                                         function_description="description",
+                                        function_name="test_function_name",
+                                        parameter_description_json="test_json",
+                                        model=OpenAIModels.DefaultChatModel,
                                         data_type=DataType.UNDEFINED,
                                         dummy_field="dummy")
         self.assertEqual(trigger.get_binding_name(),
@@ -20,6 +23,9 @@ class TestOpenAI(unittest.TestCase):
         self.assertEqual(
             trigger.get_dict_repr(), {"name": "test",
                                       "functionDescription": "description",
+                                      "functionName": "test_function_name",
+                                      "parameterDescriptionJson": "test_json",
+                                      "model": OpenAIModels.DefaultChatModel,
                                       "dataType": DataType.UNDEFINED,
                                       'type': 'assistantSkillsTrigger',
                                       'dummyField': 'dummy',

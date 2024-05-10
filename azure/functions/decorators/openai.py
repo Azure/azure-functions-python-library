@@ -32,9 +32,15 @@ class AssistantSkillTrigger(Trigger):
     def __init__(self,
                  name: str,
                  function_description: str,
+                 function_name: Optional[str] = None,
+                 parameter_description_json: Optional[str] = None,
+                 model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.function_description = function_description
+        self.function_name = function_name
+        self.parameter_description_json = parameter_description_json
+        self.model = model
         super().__init__(name=name, data_type=data_type)
 
 
