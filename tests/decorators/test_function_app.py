@@ -112,30 +112,42 @@ class TestFunction(unittest.TestCase):
 
 
 class TestFunctionBuilder(unittest.TestCase):
-    def setUp(self):
-        def dummy():
-            return "dummy"
-
-        self.dummy = dummy
-        self.fb = FunctionBuilder(self.dummy, "dummy.py")
 
     def test_function_builder_creation(self):
+        def test_function_builder_creation():
+            return "dummy"
+
+        self.dummy = test_function_builder_creation
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         self.assertTrue(callable(self.fb))
         func = getattr(self.fb, "_function")
         self.assertEqual(self.fb._function.function_script_file, "dummy.py")
         self.assertEqual(func.get_user_function(), self.dummy)
 
     def test_validate_function_missing_trigger(self):
+        def test_validate_function_missing_trigger():
+            return "dummy"
+
+        self.dummy = test_validate_function_missing_trigger
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         with self.assertRaises(ValueError) as err:
             #  self.fb.configure_function_name('dummy').build()
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
-                         "Function dummy does not have a trigger. A valid "
+                         "Function test_validate_function_missing_trigger does not have a trigger. A valid "
                          "function must have one and only one trigger "
                          "registered.")
 
     def test_validate_function_trigger_not_in_bindings(self):
+        def test_validate_function_trigger_not_in_bindings():
+            return "dummy"
+
+        self.dummy = test_validate_function_trigger_not_in_bindings
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS,
@@ -146,36 +158,54 @@ class TestFunctionBuilder(unittest.TestCase):
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
-                         f"Function dummy trigger {trigger} not present"
+                         f"Function test_validate_function_trigger_not_in_bindings trigger {trigger} not present"
                          f" in bindings {[]}")
 
     def test_validate_function_working(self):
+        def test_validate_function_working():
+            return "dummy"
+
+        self.dummy = test_validate_function_working
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
-                              auth_level=AuthLevel.ANONYMOUS)
+                              auth_level=AuthLevel.ANONYMOUS,
+                              route='test_validate_function_working')
         self.fb.add_trigger(trigger)
         self.fb.build()
 
     def test_build_function_http_route_default(self):
+        def test_build_function_http_route_default():
+            return "dummy"
+
+        self.dummy = test_build_function_http_route_default
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
                               auth_level=AuthLevel.ANONYMOUS)
         self.fb.add_trigger(trigger)
         func = self.fb.build()
 
-        self.assertEqual(func.get_trigger().route, "dummy")
+        self.assertEqual(func.get_trigger().route, "test_build_function_http_route_default")
 
     def test_build_function_with_bindings(self):
+        def test_build_function_with_bindings():
+            return "dummy"
+
+        self.dummy = test_build_function_with_bindings
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         test_trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                                    data_type=DataType.UNDEFINED,
-                                   auth_level=AuthLevel.ANONYMOUS,
-                                   route='dummy')
+                                   auth_level=AuthLevel.ANONYMOUS)
         test_input = HttpOutput(name='out', data_type=DataType.UNDEFINED)
 
         func = self.fb.add_trigger(
             test_trigger).add_binding(test_input).build()
 
-        self.assertEqual(func.get_function_name(), "dummy")
+        self.assertEqual(func.get_function_name(), "test_build_function_with_bindings")
         assert_json(self, func, {
             "scriptFile": "dummy.py",
             "bindings": [
@@ -185,7 +215,7 @@ class TestFunctionBuilder(unittest.TestCase):
                     "direction": BindingDirection.IN,
                     "name": "req",
                     "dataType": DataType.UNDEFINED,
-                    "route": "dummy",
+                    "route": "test_build_function_with_bindings",
                     "methods": [
                         HttpMethod.GET
                     ]
@@ -200,6 +230,12 @@ class TestFunctionBuilder(unittest.TestCase):
         })
 
     def test_build_function_with_function_app_auth_level(self):
+        def test_build_function_with_function_app_auth_level():
+            return "dummy"
+
+        self.dummy = test_build_function_with_function_app_auth_level
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED)
         self.fb.add_trigger(trigger)
@@ -208,11 +244,18 @@ class TestFunctionBuilder(unittest.TestCase):
         self.assertEqual(func.get_trigger().auth_level, AuthLevel.ANONYMOUS)
 
     def test_build_function_with_retry_policy_setting(self):
+        def test_build_function_with_retry_policy_setting():
+            return "dummy"
+
+        self.dummy = test_build_function_with_retry_policy_setting
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+
         setting = RetryPolicy(strategy="exponential", max_retry_count="2",
                               minimum_interval="1", maximum_interval="5")
         trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
                               data_type=DataType.UNDEFINED,
-                              auth_level=AuthLevel.ANONYMOUS)
+                              auth_level=AuthLevel.ANONYMOUS,
+                              route='test_build_function_with_retry_policy_setting')
         self.fb.add_trigger(trigger)
         self.fb.add_setting(setting)
         func = self.fb.build()
@@ -226,120 +269,120 @@ class TestFunctionBuilder(unittest.TestCase):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_unique_method_names(name: str):
             return name
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_unique_method_names2(name: str):
             return name
 
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "hello")
-        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertEqual(functions[0].get_function_name(), "test_unique_method_names")
+        self.assertEqual(functions[1].get_function_name(), "test_unique_method_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello")[0], TimerTrigger)
+            "test_unique_method_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello2")[0], TimerTrigger)
+            "test_unique_method_names2")[0], TimerTrigger)
 
     def test_unique_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_unique_function_names")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_unique_function_names(name: str):
             return name
 
-        @app.function_name("hello2")
+        @app.function_name("test_unique_function_names2")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_unique_function_names2(name: str):
             return name
 
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "hello")
-        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertEqual(functions[0].get_function_name(), "test_unique_function_names")
+        self.assertEqual(functions[1].get_function_name(), "test_unique_function_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello")[0], TimerTrigger)
+            "test_unique_function_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello2")[0], TimerTrigger)
+            "test_unique_function_names2")[0], TimerTrigger)
 
     def test_same_method_names(self):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_same_method_names(name: str):
             return name
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str): # NoQA
+        def test_same_method_names(name: str): # NoQA
             return name
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_same_method_names does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_same_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_same_function_names")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_same_function_names(name: str):
             return name
 
-        @app.function_name("hello")
+        @app.function_name("test_same_function_names")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str): # NoQA
+        def test_same_function_names(name: str): # NoQA
             return name
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_same_function_names does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_same_function_name_different_method_name(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_same_function_name_different_method_name")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_same_function_name_different_method_name(name: str):
             return name
 
-        @app.function_name("hello")
+        @app.function_name("test_same_function_name_different_method_name")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_same_function_name_different_method_name2(name: str):
             return name
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_same_function_name_different_method_name does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_same_function_and_method_name(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_same_function_and_method_name")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_same_function_and_method_name2(name: str):
             return name
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_same_function_and_method_name(name: str):
             return name
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_same_function_and_method_name does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
@@ -347,13 +390,13 @@ class TestFunctionBuilder(unittest.TestCase):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_unique_method_names(name: str):
             return name
 
         bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_blueprint_unique_method_names2(name: str):
             return name
 
         app.register_blueprint(bp)
@@ -361,26 +404,26 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "hello")
-        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertEqual(functions[0].get_function_name(), "test_blueprint_unique_method_names")
+        self.assertEqual(functions[1].get_function_name(), "test_blueprint_unique_method_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello")[0], TimerTrigger)
+            "test_blueprint_unique_method_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello2")[0], TimerTrigger)
+            "test_blueprint_unique_method_names2")[0], TimerTrigger)
 
     def test_blueprint_unique_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_blueprint_unique_function_names")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_unique_function_names(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.function_name("hello2")
+        @bp.function_name("test_blueprint_unique_function_names2")
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_blueprint_unique_function_names2(name: str):
             return name
 
         app.register_blueprint(bp)
@@ -388,24 +431,24 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "hello")
-        self.assertEqual(functions[1].get_function_name(), "hello2")
+        self.assertEqual(functions[0].get_function_name(), "test_blueprint_unique_function_names")
+        self.assertEqual(functions[1].get_function_name(), "test_blueprint_unique_function_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello")[0], TimerTrigger)
+            "test_blueprint_unique_function_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "hello2")[0], TimerTrigger)
+            "test_blueprint_unique_function_names2")[0], TimerTrigger)
 
     def test_blueprint_same_method_names(self):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_same_method_names(name: str):
             return name
 
         bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello(name: str): # NoQA
+        def test_blueprint_same_method_names(name: str): # NoQA
             return name
 
         app.register_blueprint(bp)
@@ -413,23 +456,23 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_blueprint_same_method_names does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_blueprint_same_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_blueprint_same_function_names")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_same_function_names(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.function_name("hello")
+        @bp.function_name("test_blueprint_same_function_names")
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello(name: str): # NoQA
+        def test_blueprint_same_function_names(name: str): # NoQA
             return name
 
         app.register_blueprint(bp)
@@ -437,23 +480,23 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_blueprint_same_function_names does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_blueprint_same_function_name_different_method_name(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_blueprint_same_function_name_different_method_name")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_same_function_name_different_method_name(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.function_name("hello")
+        @bp.function_name("test_blueprint_same_function_name_different_method_name")
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_blueprint_same_function_name_different_method_name2(name: str):
             return name
 
         app.register_blueprint(bp)
@@ -461,22 +504,22 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_blueprint_same_function_name_different_method_name does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_blueprint_same_function_and_method_name(self):
         app = FunctionApp()
 
-        @app.function_name("hello")
+        @app.function_name("test_blueprint_same_function_and_method_name")
         @app.schedule(arg_name="name", schedule="10****")
-        def hello2(name: str):
+        def test_blueprint_same_function_and_method_name2(name: str):
             return name
 
         bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_blueprint_same_function_and_method_name(name: str):
             return name
 
         app.register_blueprint(bp)
@@ -484,7 +527,7 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function hello does not have a unique"
+                         "Function test_blueprint_same_function_and_method_name does not have a unique"
                          " function name. Please change @app.function_name()"
                          " or the function method name to be unique.")
 
@@ -513,12 +556,12 @@ class TestScaffold(unittest.TestCase):
 
     def test_dummy_app_trigger(self):
         @self.dummy.dummy_trigger(name="dummy")
-        def dummy():
+        def test_dummy_app_trigger():
             return "dummy"
 
         self.assertEqual(len(self.dummy._function_builders), 1)
         func = self.dummy._function_builders[0].build()
-        self.assertEqual(func.get_function_name(), "dummy")
+        self.assertEqual(func.get_function_name(), "test_dummy_app_trigger")
         self.assertEqual(func.get_function_json(),
                          '{"scriptFile": "function_app.py", "bindings": [{'
                          '"direction": "IN", "dataType": "UNDEFINED", '
@@ -583,14 +626,16 @@ class TestFunctionApp(unittest.TestCase):
                 '._add_http_app')
     def test_add_wsgi(self, add_http_app_mock):
         mock_wsgi_app = object()
-        WsgiFunctionApp(app=mock_wsgi_app)
+        app = WsgiFunctionApp(app=mock_wsgi_app)
 
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
 
     def test_add_asgi_app(self):
-        self._test_http_external_app(AsgiFunctionApp(app=object()), True)
+        asgi_app = AsgiFunctionApp(app=object())
+        asgi_app.function_name("test")
+        self._test_http_external_app(asgi_app, True)
 
     def test_add_wsgi_app(self):
         self._test_http_external_app(WsgiFunctionApp(app=object()), False)
