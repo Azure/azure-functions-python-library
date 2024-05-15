@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -1114,6 +1114,8 @@ class TriggerApi(DecoratorApi, ABC):
                      arg_name: str,
                      path: str,
                      connection: str,
+                     source: BlobSource =
+                     BlobSource.LOGS_AND_CONTAINER_SCAN,
                      data_type: Optional[DataType] = None,
                      **kwargs) -> Callable[..., Any]:
         """
@@ -1131,6 +1133,12 @@ class TriggerApi(DecoratorApi, ABC):
         :param path: The path to the blob.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Blobs.
+        :param source: Sets the source of the triggering event.
+        Use EventGrid for an Event Grid-based blob trigger,
+        which provides much lower latency.
+        The default is LogsAndContainerScan,
+        which uses the standard polling mechanism to detect changes
+        in the container.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
@@ -1147,6 +1155,7 @@ class TriggerApi(DecoratorApi, ABC):
                         name=arg_name,
                         path=path,
                         connection=connection,
+                        source=source,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
