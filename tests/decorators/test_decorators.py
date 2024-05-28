@@ -1662,7 +1662,6 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
-            "source": BlobSource.LOGS_AND_CONTAINER_SCAN,
             "connection": "dummy_conn"
         })
 
