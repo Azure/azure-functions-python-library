@@ -322,11 +322,11 @@ class TestFunctionBuilder(unittest.TestCase):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****") # NoQA
-        def test_same_method_names(name: str):
+        def test_same_method_names(name: str): # NoQA
             return name
 
         @app.schedule(arg_name="name", schedule="10****") # NoQA
-        def test_same_method_names(name: str):
+        def test_same_method_names(name: str): # NoQA
             return name
 
         with self.assertRaises(ValueError) as err:
@@ -460,13 +460,13 @@ class TestFunctionBuilder(unittest.TestCase):
         app = FunctionApp()
 
         @app.schedule(arg_name="name", schedule="10****") # NoQA
-        def test_blueprint_same_method_names(name: str):
+        def test_blueprint_same_method_names(name: str): # NoQA
             return name
 
         bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****") # NoQA
-        def test_blueprint_same_method_names(name: str):
+        def test_blueprint_same_method_names(name: str): # NoQA
             return name
 
         app.register_blueprint(bp)
@@ -636,6 +636,41 @@ class TestFunctionApp(unittest.TestCase):
         fb = self.func_app._validate_type(fb)
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
+
+    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
+                '._add_http_app')
+    def test_add_asgi(self, add_http_app_mock):
+        mock_asgi_app = object()
+        AsgiFunctionApp(app=mock_asgi_app, function_name='test_add_asgi')
+
+        add_http_app_mock.assert_called_once()
+
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+                              AsgiMiddleware)
+
+    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
+                '._add_http_app')
+    def test_add_wsgi(self, add_http_app_mock):
+        mock_wsgi_app = object()
+        WsgiFunctionApp(app=mock_wsgi_app, function_name='test_add_wsgi')
+
+        add_http_app_mock.assert_called_once()
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+                              WsgiMiddleware)
+
+    def test_add_asgi_app(self):
+        self._test_http_external_app(AsgiFunctionApp(
+            app=object(),
+            function_name='test_add_asgi_app'),
+            True,
+            function_name='test_add_asgi_app')
+
+    def test_add_wsgi_app(self):
+        self._test_http_external_app(WsgiFunctionApp(
+            app=object(),
+            function_name='test_add_wsgi_app'),
+            False,
+            function_name='test_add_wsgi_app')
 
     def test_register_function_app_error(self):
         with self.assertRaises(TypeError) as err:
@@ -918,11 +953,11 @@ class TestFunctionApp(unittest.TestCase):
             app = ExternalHttpFunctionApp(auth_level=AuthLevel.ANONYMOUS)
             app._add_http_app(AsgiMiddleware(object()))
 
-    def _test_http_external_app(self, app, is_async):
+    def _test_http_external_app(self, app, is_async, function_name):
         funcs = app.get_functions()
         self.assertEqual(len(funcs), 1)
         func = funcs[0]
-        self.assertEqual(func.get_function_name(), "http_app_func")
+        self.assertEqual(func.get_function_name(), function_name)
         raw_bindings = func.get_raw_bindings()
         raw_trigger = raw_bindings[0]
         raw_output_binding = raw_bindings[0]
@@ -959,36 +994,3 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
-
-class TestAddAsgi(unittest.TestCase):
-    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
-                '._add_http_app')
-    def test_add_asgi(self, add_http_app_mock):
-        mock_asgi_app = object()
-        AsgiFunctionApp(app=mock_asgi_app)
-
-        add_http_app_mock.assert_called_once()
-
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
-                              AsgiMiddleware)
-
-class TestAddWsgi(unittest.TestCase):
-    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
-                '._add_http_app')
-    def test_add_wsgi(self, add_http_app_mock):
-        mock_wsgi_app = object()
-        app = WsgiFunctionApp(app=mock_wsgi_app)
-
-        add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
-                              WsgiMiddleware)
-
-class TestAddAsgiApp(unittest.TestCase):
-    def test_add_asgi_app(self):
-        asgi_app = AsgiFunctionApp(app=object())
-        asgi_app.function_name("test")
-        self._test_http_external_app(asgi_app, True)
-
-class TestAddWsgiApp(unittest.TestCase):
-    def test_add_wsgi_app(self):
-        self._test_http_external_app(WsgiFunctionApp(app=object()), False)
