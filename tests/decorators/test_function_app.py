@@ -484,14 +484,14 @@ class TestFunctionBuilder(unittest.TestCase):
 
         @app.function_name("test_blueprint_same_function_names") # NoQA
         @app.schedule(arg_name="name", schedule="10****")
-        def test_blueprint_same_function_names(name: str):
+        def test_blueprint_same_function_names(name: str):  # NoQA
             return name
 
         bp = Blueprint()
 
         @bp.function_name("test_blueprint_same_function_names") # NoQA
         @bp.schedule(arg_name="name", schedule="10****")
-        def test_blueprint_same_function_names(name: str):
+        def test_blueprint_same_function_names(name: str):  # NoQA
             return name
 
         app.register_blueprint(bp)
@@ -697,7 +697,7 @@ class TestFunctionApp(unittest.TestCase):
         bp = Blueprint()
 
         @bp.route("name")
-        def test_register_app_auth_level(name: str):
+        def test_register_app_auth_level_func(name: str):
             return "hello"
 
         app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
@@ -922,7 +922,8 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
     def test_wsgi_function_app_is_http_function(self):
-        app = WsgiFunctionApp(app=object())
+        app = WsgiFunctionApp(app=object(),
+                              function_name='test_wsgi_function_app_is_http_function')
         funcs = app.get_functions()
 
         self.assertEqual(len(funcs), 1)

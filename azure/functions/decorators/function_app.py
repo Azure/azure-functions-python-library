@@ -290,22 +290,6 @@ class FunctionBuilder(object):
         self._validate_function(auth_level)
         return self._function
 
-    def validate_function_names(self):
-        """
-        Functions should have unique function names. If two functions
-        have the same function name, the worker should fail
-        during indexing.
-
-        If the function name decorator is not applied, the function
-        name defaults to the method name. This means that two functions
-        can not have the same method name as well without having unique
-        function names.
-
-        Scenarios that fail / should fail indexing:
-        - same function name
-        - no function name, same method name
-        """
-
 
 class DecoratorApi(ABC):
     """Interface which contains essential decorator function building blocks
@@ -3350,12 +3334,12 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
-                      function_name: Optional[str] = 'http_app_func') -> None:
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
-        :param function_name: an optional namae for the function
+        :param function_name: name for the function
 
         :return: None
         """
@@ -3365,13 +3349,13 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 function_name: Optional[str] = 'http_app_func'):
+                 function_name: str = 'http_app_func'):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
         :param http_auth_level: Determines what keys, if any, need to be
-        present
-        on the request in order to invoke the function.
+        present on the request in order to invoke the function.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
@@ -3385,7 +3369,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
-                      function_name: Optional[str] = 'http_app_func') -> None:
+                      function_name: str = 'http_app_func') -> None:
         """Add an Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
@@ -3417,10 +3401,11 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 function_name: Optional[str] = 'http_app_func'):
+                 function_name: str = 'http_app_func'):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app), function_name)
@@ -3428,12 +3413,12 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
     def _add_http_app(self,
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
-                      function_name: Optional[str] = 'http_app_func') -> None:
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
-        :param function_name: an optional name for the function
+        :param function_name: name for the function
 
         :return: None
         """
