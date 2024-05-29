@@ -697,14 +697,15 @@ class TestFunctionApp(unittest.TestCase):
         bp = Blueprint()
 
         @bp.route("name")
-        def test_register_app_auth_level_func(name: str):
+        def test_register_app_auth_level(name: str):
             return "hello"
 
         app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
         app.register_blueprint(bp)
 
-        self.assertEqual(len(app.get_functions()), 1)
-        self.assertEqual(app.get_functions()[0].get_trigger().auth_level,
+        functions = app.get_functions()
+        self.assertEqual(len(functions), 1)
+        self.assertEqual(functions[0].get_trigger().auth_level,
                          AuthLevel.ANONYMOUS)
 
     def test_default_function_http_type(self):
@@ -922,8 +923,9 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(app.auth_level, AuthLevel.ANONYMOUS)
 
     def test_wsgi_function_app_is_http_function(self):
-        app = WsgiFunctionApp(app=object(),
-                              function_name='test_wsgi_function_app_is_http_function')
+        app = WsgiFunctionApp(
+            app=object(),
+            function_name='test_wsgi_function_app_is_http_function')
         funcs = app.get_functions()
 
         self.assertEqual(len(funcs), 1)
