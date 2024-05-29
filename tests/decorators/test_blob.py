@@ -3,14 +3,16 @@
 import unittest
 
 from azure.functions.decorators.blob import BlobTrigger, BlobOutput, BlobInput
-from azure.functions.decorators.core import BindingDirection, DataType
+from azure.functions.decorators.core import BindingDirection, BlobSource, \
+    DataType
 
 
 class TestBlob(unittest.TestCase):
-    def test_blob_trigger_valid_creation(self):
+    def test_blob_trigger_creation_with_source_as_string(self):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
+                              source=BlobSource.EVENT_GRID,
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
 
@@ -22,6 +24,27 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
+            'source': BlobSource.EVENT_GRID,
+            "connection": "dummy_connection"
+        })
+
+    def test_blob_trigger_creation_with_source_as_enum(self):
+        trigger = BlobTrigger(name="req",
+                              path="dummy_path",
+                              connection="dummy_connection",
+                              source=BlobSource.EVENT_GRID,
+                              data_type=DataType.UNDEFINED,
+                              dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "blobTrigger")
+        self.assertEqual(trigger.get_dict_repr(), {
+            "type": "blobTrigger",
+            "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
+            "name": "req",
+            "dataType": DataType.UNDEFINED,
+            "path": "dummy_path",
+            'source': BlobSource.EVENT_GRID,
             "connection": "dummy_connection"
         })
 

@@ -6,8 +6,9 @@ from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
     BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER, \
-    SQL, SQL_TRIGGER
-from azure.functions.decorators.core import DataType, AuthLevel, \
+    SQL, SQL_TRIGGER, ORCHESTRATION_TRIGGER, ACTIVITY_TRIGGER, \
+    ENTITY_TRIGGER, DURABLE_CLIENT
+from azure.functions.decorators.core import BlobSource, DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
@@ -158,6 +159,84 @@ class TestFunctionsApp(unittest.TestCase):
                     "useMonitor": False
                 }
             ]
+        })
+
+    def test_orchestration_trigger(self):
+        app = self.func_app
+
+        @app.orchestration_trigger("context")
+        def dummy1(context):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": ORCHESTRATION_TRIGGER,
+                    "direction": BindingDirection.IN
+                }
+            ]
+        })
+
+    def test_activity_trigger(self):
+        app = self.func_app
+
+        @app.activity_trigger("arg")
+        def dummy2(arg):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "arg",
+                    "type": ACTIVITY_TRIGGER,
+                    "direction": BindingDirection.IN
+                }
+            ]
+        })
+
+    def test_entity_trigger(self):
+        app = self.func_app
+
+        @app.entity_trigger("context")
+        def dummy3(context):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": ENTITY_TRIGGER,
+                    "direction": BindingDirection.IN,
+                }
+            ]
+        })
+
+    def test_durable_client(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        @app.durable_client_input(client_name="client")
+        def dummy(client):
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertTrue(func.is_http_function())
+
+        output = func.get_bindings()[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": DURABLE_CLIENT,
+            "name": "client"
         })
 
     def test_route_default_args(self):
@@ -1490,6 +1569,8 @@ class TestFunctionsApp(unittest.TestCase):
                                          "type": BLOB_TRIGGER,
                                          "name": "req",
                                          "path": "dummy_path",
+                                         "source":
+                                         BlobSource.LOGS_AND_CONTAINER_SCAN,
                                          "connection": "dummy_conn"
                                      }]})
 
@@ -1514,6 +1595,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
+            "source": BlobSource.LOGS_AND_CONTAINER_SCAN,
             "connection": "dummy_conn"
         })
 
@@ -1522,6 +1604,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
+                          source=BlobSource.EVENT_GRID,
                           connection="dummy_conn")
         @app.blob_input(arg_name="file", path="dummy_in_path",
                         connection="dummy_in_conn",
@@ -1543,6 +1626,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
+            "source": BlobSource.EVENT_GRID,
             "connection": "dummy_conn"
         })
 
@@ -1581,6 +1665,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
+            "source": BlobSource.LOGS_AND_CONTAINER_SCAN,
             "connection": "dummy_conn"
         })
 
