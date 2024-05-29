@@ -137,9 +137,9 @@ class TestFunctionBuilder(unittest.TestCase):
             self.fb.build()
 
         self.assertEqual(err.exception.args[0],
-                         "Function test_validate_function_missing_trigger does not have a trigger. A valid "
-                         "function must have one and only one trigger "
-                         "registered.")
+                         "Function test_validate_function_missing_trigger"
+                         " does not have a trigger. A valid function must have"
+                         " one and only one trigger registered.")
 
     def test_validate_function_trigger_not_in_bindings(self):
         def test_validate_function_trigger_not_in_bindings():
@@ -157,9 +157,11 @@ class TestFunctionBuilder(unittest.TestCase):
             getattr(self.fb, "_function").get_bindings().clear()
             self.fb.build()
 
-        self.assertEqual(err.exception.args[0],
-                         f"Function test_validate_function_trigger_not_in_bindings trigger {trigger} not present"
-                         f" in bindings {[]}")
+        self.assertEqual(
+            err.exception.args[0],
+            f"Function test_validate_function_trigger_not_in_bindings"
+            f" trigger {trigger} not present"
+            f" in bindings {[]}")
 
     def test_validate_function_working(self):
         def test_validate_function_working():
@@ -188,7 +190,8 @@ class TestFunctionBuilder(unittest.TestCase):
         self.fb.add_trigger(trigger)
         func = self.fb.build()
 
-        self.assertEqual(func.get_trigger().route, "test_build_function_http_route_default")
+        self.assertEqual(func.get_trigger().route,
+                         "test_build_function_http_route_default")
 
     def test_build_function_with_bindings(self):
         def test_build_function_with_bindings():
@@ -205,7 +208,8 @@ class TestFunctionBuilder(unittest.TestCase):
         func = self.fb.add_trigger(
             test_trigger).add_binding(test_input).build()
 
-        self.assertEqual(func.get_function_name(), "test_build_function_with_bindings")
+        self.assertEqual(func.get_function_name(),
+                         "test_build_function_with_bindings")
         assert_json(self, func, {
             "scriptFile": "dummy.py",
             "bindings": [
@@ -252,10 +256,11 @@ class TestFunctionBuilder(unittest.TestCase):
 
         setting = RetryPolicy(strategy="exponential", max_retry_count="2",
                               minimum_interval="1", maximum_interval="5")
-        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
-                              data_type=DataType.UNDEFINED,
-                              auth_level=AuthLevel.ANONYMOUS,
-                              route='test_build_function_with_retry_policy_setting')
+        trigger = HttpTrigger(
+            name='req', methods=(HttpMethod.GET,),
+            data_type=DataType.UNDEFINED,
+            auth_level=AuthLevel.ANONYMOUS,
+            route='test_build_function_with_retry_policy_setting')
         self.fb.add_trigger(trigger)
         self.fb.add_setting(setting)
         func = self.fb.build()
@@ -279,8 +284,10 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "test_unique_method_names")
-        self.assertEqual(functions[1].get_function_name(), "test_unique_method_names2")
+        self.assertEqual(functions[0].get_function_name(),
+                         "test_unique_method_names")
+        self.assertEqual(functions[1].get_function_name(),
+                         "test_unique_method_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
             "test_unique_method_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
@@ -302,8 +309,10 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "test_unique_function_names")
-        self.assertEqual(functions[1].get_function_name(), "test_unique_function_names2")
+        self.assertEqual(functions[0].get_function_name(),
+                         "test_unique_function_names")
+        self.assertEqual(functions[1].get_function_name(),
+                         "test_unique_function_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
             "test_unique_function_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
@@ -323,8 +332,9 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function test_same_method_names does not have a unique"
-                         " function name. Please change @app.function_name()"
+                         "Function test_same_method_names does not have"
+                         " a unique function name."
+                         " Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_same_function_names(self):
@@ -343,8 +353,9 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function test_same_function_names does not have a unique"
-                         " function name. Please change @app.function_name()"
+                         "Function test_same_function_names does not have"
+                         " a unique function name."
+                         " Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_same_function_name_different_method_name(self):
@@ -362,10 +373,12 @@ class TestFunctionBuilder(unittest.TestCase):
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
-        self.assertEqual(err.exception.args[0],
-                         "Function test_same_function_name_different_method_name does not have a unique"
-                         " function name. Please change @app.function_name()"
-                         " or the function method name to be unique.")
+        self.assertEqual(
+            err.exception.args[0],
+            "Function test_same_function_name_different_method_name"
+            " does not have a unique function name."
+            " Please change @app.function_name()"
+            " or the function method name to be unique.")
 
     def test_same_function_and_method_name(self):
         app = FunctionApp()
@@ -382,8 +395,9 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function test_same_function_and_method_name does not have a unique"
-                         " function name. Please change @app.function_name()"
+                         "Function test_same_function_and_method_name"
+                         " does not have a unique function name."
+                         " Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_blueprint_unique_method_names(self):
@@ -404,8 +418,10 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "test_blueprint_unique_method_names")
-        self.assertEqual(functions[1].get_function_name(), "test_blueprint_unique_method_names2")
+        self.assertEqual(functions[0].get_function_name(),
+                         "test_blueprint_unique_method_names")
+        self.assertEqual(functions[1].get_function_name(),
+                         "test_blueprint_unique_method_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
             "test_blueprint_unique_method_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
@@ -431,8 +447,10 @@ class TestFunctionBuilder(unittest.TestCase):
         functions = app.get_functions()
         self.assertEqual(len(functions), 2)
 
-        self.assertEqual(functions[0].get_function_name(), "test_blueprint_unique_function_names")
-        self.assertEqual(functions[1].get_function_name(), "test_blueprint_unique_function_names2")
+        self.assertEqual(functions[0].get_function_name(),
+                         "test_blueprint_unique_function_names")
+        self.assertEqual(functions[1].get_function_name(),
+                         "test_blueprint_unique_function_names2")
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
             "test_blueprint_unique_function_names")[0], TimerTrigger)
         self.assertIsInstance(app._function_builders[0].function_bindings.get(
@@ -456,8 +474,9 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function test_blueprint_same_method_names does not have a unique"
-                         " function name. Please change @app.function_name()"
+                         "Function test_blueprint_same_method_names"
+                         " does not have a unique function name."
+                         " Please change @app.function_name()"
                          " or the function method name to be unique.")
 
     def test_blueprint_same_function_names(self):
@@ -480,33 +499,38 @@ class TestFunctionBuilder(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             app.get_functions()
         self.assertEqual(err.exception.args[0],
-                         "Function test_blueprint_same_function_names does not have a unique"
-                         " function name. Please change @app.function_name()"
-                         " or the function method name to be unique.")
+                         "Function test_blueprint_same_function_names"
+                         " does not have a unique function name. Please change"
+                         " @app.function_name() or the function method name"
+                         " to be unique.")
 
     def test_blueprint_same_function_name_different_method_name(self):
         app = FunctionApp()
 
-        @app.function_name("test_blueprint_same_function_name_different_method_name")
+        @app.function_name(
+            "test_blueprint_same_function_name_different_method_name")
         @app.schedule(arg_name="name", schedule="10****")
         def test_blueprint_same_function_name_different_method_name(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.function_name("test_blueprint_same_function_name_different_method_name")
+        @bp.function_name(
+            "test_blueprint_same_function_name_different_method_name")
         @bp.schedule(arg_name="name", schedule="10****")
-        def test_blueprint_same_function_name_different_method_name2(name: str):
+        def test_blueprint_same_function_name_different_method_name2(
+                name: str):
             return name
 
         app.register_blueprint(bp)
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
-        self.assertEqual(err.exception.args[0],
-                         "Function test_blueprint_same_function_name_different_method_name does not have a unique"
-                         " function name. Please change @app.function_name()"
-                         " or the function method name to be unique.")
+        self.assertEqual(
+            err.exception.args[0],
+            "Function test_blueprint_same_function_name_different_method_name"
+            " does not have a unique function name. Please change"
+            " @app.function_name() or the function method name to be unique.")
 
     def test_blueprint_same_function_and_method_name(self):
         app = FunctionApp()
@@ -526,10 +550,12 @@ class TestFunctionBuilder(unittest.TestCase):
 
         with self.assertRaises(ValueError) as err:
             app.get_functions()
-        self.assertEqual(err.exception.args[0],
-                         "Function test_blueprint_same_function_and_method_name does not have a unique"
-                         " function name. Please change @app.function_name()"
-                         " or the function method name to be unique.")
+        self.assertEqual(
+            err.exception.args[0],
+            "Function test_blueprint_same_function_and_method_name"
+            " does not have a unique function name."
+            " Please change @app.function_name() or the function"
+            " method name to be unique.")
 
 
 class TestScaffold(unittest.TestCase):

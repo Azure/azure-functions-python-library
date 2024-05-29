@@ -204,7 +204,7 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    function_bindings = {}
+    function_bindings: dict[str, str] = {}
 
     def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)

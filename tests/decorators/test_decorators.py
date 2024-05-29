@@ -49,9 +49,11 @@ class TestFunctionsApp(unittest.TestCase):
 
         func = self._get_user_function(app)
 
-        self.assertEqual(func.get_function_name(), "test_route_is_python_function_name")
+        self.assertEqual(func.get_function_name(),
+                         "test_route_is_python_function_name")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
-        self.assertTrue(func.get_trigger().route, "test_route_is_python_function_name")
+        self.assertTrue(func.get_trigger().route,
+                        "test_route_is_python_function_name")
 
     def test_route_is_custom(self):
         app = self.func_app
@@ -75,7 +77,8 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "test_schedule_trigger_default_args")
+        self.assertEqual(func.get_function_name(),
+                         "test_schedule_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -122,7 +125,8 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "test_timer_trigger_default_args")
+        self.assertEqual(func.get_function_name(),
+                         "test_timer_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -308,7 +312,8 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "test_warmup_trigger_default_args")
+        self.assertEqual(func.get_function_name(),
+                         "test_warmup_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -1384,9 +1389,9 @@ class TestFunctionsApp(unittest.TestCase):
             app.get_functions()
 
         self.assertEqual(err.exception.args[0],
-                         "Function test_no_trigger does not have a trigger. A valid "
-                         "function must have one and only one trigger "
-                         "registered.")
+                         "Function test_no_trigger does not have a trigger."
+                         " A valid function must have one and only one"
+                         " trigger registered.")
 
     def test_multiple_input_bindings(self):
         app = self.func_app
@@ -2367,7 +2372,8 @@ class TestFunctionsApp(unittest.TestCase):
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "test_function_app_retry_default_args")
+        self.assertEqual(func.get_function_name(),
+                         "test_function_app_retry_default_args")
         self.assertEqual(func.get_setting("retry_policy").get_dict_repr(), {
             'setting_name': 'retry_policy',
             'strategy': 'fixed',
