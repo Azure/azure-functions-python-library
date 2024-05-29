@@ -169,7 +169,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.orchestration_trigger("context")
-        def dummy1(context):
+        def test_orchestration_trigger(context):
             pass
 
         func = self._get_user_function(app)
@@ -188,7 +188,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.activity_trigger("arg")
-        def dummy2(arg):
+        def test_activity_trigger(arg):
             pass
 
         func = self._get_user_function(app)
@@ -207,7 +207,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.entity_trigger("context")
-        def dummy3(context):
+        def test_entity_trigger(context):
             pass
 
         func = self._get_user_function(app)
@@ -227,7 +227,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
         @app.durable_client_input(client_name="client")
-        def dummy(client):
+        def test_durable_client(client):
             pass
 
         func = self._get_user_function(app)

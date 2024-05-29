@@ -321,12 +321,12 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_same_method_names(self):
         app = FunctionApp()
 
-        @app.schedule(arg_name="name", schedule="10****")
+        @app.schedule(arg_name="name", schedule="10****") # NoQA
         def test_same_method_names(name: str):
             return name
 
-        @app.schedule(arg_name="name", schedule="10****")
-        def test_same_method_names(name: str): # NoQA
+        @app.schedule(arg_name="name", schedule="10****") # NoQA
+        def test_same_method_names(name: str):
             return name
 
         with self.assertRaises(ValueError) as err:
@@ -340,12 +340,12 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_same_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("test_same_function_names")
+        @app.function_name("test_same_function_names") # NoQA
         @app.schedule(arg_name="name", schedule="10****")
         def test_same_function_names(name: str):
             return name
 
-        @app.function_name("test_same_function_names")
+        @app.function_name("test_same_function_names") # NoQA
         @app.schedule(arg_name="name", schedule="10****")
         def test_same_function_names(name: str): # NoQA
             return name
@@ -459,14 +459,14 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_blueprint_same_method_names(self):
         app = FunctionApp()
 
-        @app.schedule(arg_name="name", schedule="10****")
+        @app.schedule(arg_name="name", schedule="10****") # NoQA
         def test_blueprint_same_method_names(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.schedule(arg_name="name", schedule="10****")
-        def test_blueprint_same_method_names(name: str): # NoQA
+        @bp.schedule(arg_name="name", schedule="10****") # NoQA
+        def test_blueprint_same_method_names(name: str):
             return name
 
         app.register_blueprint(bp)
@@ -482,16 +482,16 @@ class TestFunctionBuilder(unittest.TestCase):
     def test_blueprint_same_function_names(self):
         app = FunctionApp()
 
-        @app.function_name("test_blueprint_same_function_names")
+        @app.function_name("test_blueprint_same_function_names") # NoQA
         @app.schedule(arg_name="name", schedule="10****")
         def test_blueprint_same_function_names(name: str):
             return name
 
         bp = Blueprint()
 
-        @bp.function_name("test_blueprint_same_function_names")
+        @bp.function_name("test_blueprint_same_function_names") # NoQA
         @bp.schedule(arg_name="name", schedule="10****")
-        def test_blueprint_same_function_names(name: str): # NoQA
+        def test_blueprint_same_function_names(name: str):
             return name
 
         app.register_blueprint(bp)
