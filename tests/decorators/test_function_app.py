@@ -637,35 +637,6 @@ class TestFunctionApp(unittest.TestCase):
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
 
-    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
-                '._add_http_app')
-    def test_add_asgi(self, add_http_app_mock):
-        mock_asgi_app = object()
-        AsgiFunctionApp(app=mock_asgi_app)
-
-        add_http_app_mock.assert_called_once()
-
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
-                              AsgiMiddleware)
-
-    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
-                '._add_http_app')
-    def test_add_wsgi(self, add_http_app_mock):
-        mock_wsgi_app = object()
-        app = WsgiFunctionApp(app=mock_wsgi_app)
-
-        add_http_app_mock.assert_called_once()
-        self.assertIsInstance(add_http_app_mock.call_args[0][0],
-                              WsgiMiddleware)
-
-    def test_add_asgi_app(self):
-        asgi_app = AsgiFunctionApp(app=object())
-        asgi_app.function_name("test")
-        self._test_http_external_app(asgi_app, True)
-
-    def test_add_wsgi_app(self):
-        self._test_http_external_app(WsgiFunctionApp(app=object()), False)
-
     def test_register_function_app_error(self):
         with self.assertRaises(TypeError) as err:
             FunctionApp().register_functions(FunctionApp())
@@ -677,7 +648,7 @@ class TestFunctionApp(unittest.TestCase):
         bp = Blueprint()
 
         @bp.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_register_blueprint(name: str):
             return "hello"
 
         app = FunctionApp()
@@ -691,7 +662,7 @@ class TestFunctionApp(unittest.TestCase):
         bp = Blueprint()
 
         @bp.route("name")
-        def hello(name: str):
+        def test_register_app_auth_level(name: str):
             return "hello"
 
         app = FunctionApp(http_auth_level=AuthLevel.ANONYMOUS)
@@ -719,12 +690,12 @@ class TestFunctionApp(unittest.TestCase):
 
         @app.route("name1")
         @app.http_type("dummy1")
-        def hello(name: str):
+        def test_set_http_type(name: str):
             return "hello"
 
         @app.route("name2")
         @app.http_type("dummy2")
-        def hello2(name: str):
+        def test_set_http_type2(name: str):
             return "hello"
 
         funcs = app.get_functions()
@@ -797,7 +768,7 @@ class TestFunctionApp(unittest.TestCase):
         blueprint = Blueprint()
 
         @blueprint.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_function_register_non_http_function_app(name: str):
             return name
 
         app.register_blueprint(blueprint)
@@ -837,7 +808,7 @@ class TestFunctionApp(unittest.TestCase):
         app = DummyFunctionApp(auth_level=AuthLevel.ANONYMOUS)
         blueprint = LegacyBluePrint()
 
-        @blueprint.function_name("timer_function")
+        @blueprint.function_name("test_legacy_blueprints_with_function_name")
         @blueprint.schedule(arg_name="name", schedule="10****")
         def hello(name: str):
             return name
@@ -850,7 +821,7 @@ class TestFunctionApp(unittest.TestCase):
         setting = functions[0].get_setting("function_name")
 
         self.assertEqual(setting.get_settings_value("function_name"),
-                         "timer_function")
+                         "test_legacy_blueprints_with_function_name")
 
     def test_function_register_register_function_register_error(self):
         class DummyFunctionApp(FunctionRegister):
@@ -871,7 +842,8 @@ class TestFunctionApp(unittest.TestCase):
         blueprint = Blueprint()
 
         @blueprint.schedule(arg_name="name", schedule="10****")
-        def hello(name: str):
+        def test_function_register_register_functions_from_blueprint(
+                name: str):
             return name
 
         app.register_blueprint(blueprint)
@@ -884,7 +856,9 @@ class TestFunctionApp(unittest.TestCase):
         self.assertEqual(trigger.type, TIMER_TRIGGER)
         self.assertEqual(trigger.schedule, "10****")
         self.assertEqual(trigger.name, "name")
-        self.assertEqual(functions[0].get_function_name(), "hello")
+        self.assertEqual(
+            functions[0].get_function_name(),
+            "test_function_register_register_functions_from_blueprint")
         self.assertEqual(functions[0].get_user_function()("timer"), "timer")
 
     def test_asgi_function_app_default(self):
@@ -985,3 +959,36 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
+
+class TestAddAsgi(unittest.TestCase):
+    @mock.patch('azure.functions.decorators.function_app.AsgiFunctionApp'
+                '._add_http_app')
+    def test_add_asgi(self, add_http_app_mock):
+        mock_asgi_app = object()
+        AsgiFunctionApp(app=mock_asgi_app)
+
+        add_http_app_mock.assert_called_once()
+
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+                              AsgiMiddleware)
+
+class TestAddWsgi(unittest.TestCase):
+    @mock.patch('azure.functions.decorators.function_app.WsgiFunctionApp'
+                '._add_http_app')
+    def test_add_wsgi(self, add_http_app_mock):
+        mock_wsgi_app = object()
+        app = WsgiFunctionApp(app=mock_wsgi_app)
+
+        add_http_app_mock.assert_called_once()
+        self.assertIsInstance(add_http_app_mock.call_args[0][0],
+                              WsgiMiddleware)
+
+class TestAddAsgiApp(unittest.TestCase):
+    def test_add_asgi_app(self):
+        asgi_app = AsgiFunctionApp(app=object())
+        asgi_app.function_name("test")
+        self._test_http_external_app(asgi_app, True)
+
+class TestAddWsgiApp(unittest.TestCase):
+    def test_add_wsgi_app(self):
+        self._test_http_external_app(WsgiFunctionApp(app=object()), False)
