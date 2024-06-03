@@ -333,7 +333,7 @@ class DecoratorApi(ABC):
         return self._app_script_file
 
     def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
+                      setting_extra_fields: Dict[str, Any] = None,
                       ) -> Callable[..., Any]:
         """Optional: Sets name of the :class:`Function` object. If not set,
         it will default to the name of the method name.
@@ -343,6 +343,8 @@ class DecoratorApi(ABC):
         additional setting fields
         :return: Decorator function.
         """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -437,8 +439,8 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict[str, Any] = {},
-              binding_extra_fields: Dict[str, Any] = {}
+              trigger_extra_fields: Dict[str, Any] = None,
+              binding_extra_fields: Dict[str, Any] = None
               ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
@@ -469,6 +471,10 @@ class TriggerApi(DecoratorApi, ABC):
         json. For example,
         >>> data_type='STRING' # 'dataType': 'STRING' in binding json
         """
+        if trigger_extra_fields is None:
+            trigger_extra_fields = {}
+        if binding_extra_fields is None:
+            binding_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -3193,7 +3199,7 @@ class SettingsApi(DecoratorApi, ABC):
               delay_interval: Optional[str] = None,
               minimum_interval: Optional[str] = None,
               maximum_interval: Optional[str] = None,
-              setting_extra_fields: Dict[str, Any] = {},
+              setting_extra_fields: Dict[str, Any] = None,
               ) -> Callable[..., Any]:
         """The retry decorator adds :class:`RetryPolicy` to the function
         settings object for building :class:`Function` object used in worker
@@ -3215,6 +3221,8 @@ class SettingsApi(DecoratorApi, ABC):
         additional setting fields.
         :return: Decorator function.
         """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):

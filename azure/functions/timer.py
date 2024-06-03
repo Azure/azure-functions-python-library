@@ -10,11 +10,11 @@ from . import meta
 
 class TimerRequest(azf_abc.TimerRequest):
 
-    def __init__(self, *, past_due: bool = False, schedule_status: dict = {},
-                 schedule: dict = {}) -> None:
+    def __init__(self, *, past_due: bool = False, schedule_status: dict = None,
+                 schedule: dict = None) -> None:
         self.__past_due = past_due
-        self.__schedule_status = schedule_status
-        self.__schedule = schedule
+        self.__schedule_status = schedule_status if schedule_status else {}
+        self.__schedule = schedule if schedule else {}
 
     @property
     def past_due(self) -> bool:

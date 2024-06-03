@@ -89,7 +89,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
     def pre_invocation(self,
                        logger: Logger,
                        context: Context,
-                       func_args: typing.Dict[str, object] = {},
+                       func_args: typing.Dict[str, object] = None,
                        *args,
                        **kwargs) -> None:
         """This hook will be called right before customer's function
@@ -116,7 +116,7 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
     def post_invocation(self,
                         logger: Logger,
                         context: Context,
-                        func_args: typing.Dict[str, object] = {},
+                        func_args: typing.Dict[str, object] = None,
                         func_ret: typing.Optional[object] = None,
                         *args,
                         **kwargs) -> None:
