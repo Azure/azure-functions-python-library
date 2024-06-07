@@ -1,6 +1,6 @@
 from typing import Optional
 
-from azure.functions.decorators.constants import (ASSISTANT_SKILLS_TRIGGER,
+from azure.functions.decorators.constants import (ASSISTANT_SKILL_TRIGGER,
                                                   TEXT_COMPLETION,
                                                   ASSISTANT_QUERY,
                                                   EMBEDDINGS, EMBEDDINGS_STORE,
@@ -27,7 +27,7 @@ class AssistantSkillTrigger(Trigger):
 
     @staticmethod
     def get_binding_name() -> str:
-        return ASSISTANT_SKILLS_TRIGGER
+        return ASSISTANT_SKILL_TRIGGER
 
     def __init__(self,
                  name: str,
