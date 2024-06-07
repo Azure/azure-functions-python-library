@@ -65,7 +65,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     def pre_invocation_app_level(cls,
                                  logger: Logger,
                                  context: Context,
-                                 func_args: typing.Dict[str, object] = None,
+                                 func_args: typing.Dict[str, object] = {},
                                  *args,
                                  **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
@@ -93,7 +93,7 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     def post_invocation_app_level(cls,
                                   logger: Logger,
                                   context: Context,
-                                  func_args: typing.Dict[str, object] = None,
+                                  func_args: typing.Dict[str, object] = {},
                                   func_ret: typing.Optional[object] = None,
                                   *args,
                                   **kwargs) -> None:
