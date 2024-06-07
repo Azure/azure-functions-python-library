@@ -13,6 +13,8 @@ class TimerRequest(azf_abc.TimerRequest):
     def __init__(self, *, past_due: bool = False, schedule_status: dict = {},
                  schedule: dict = {}) -> None:
         self.__past_due = past_due
+        self.__schedule_status = schedule_status
+        self.__schedule = schedule
 
     @property
     def past_due(self) -> bool:
