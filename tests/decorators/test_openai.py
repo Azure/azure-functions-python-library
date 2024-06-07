@@ -10,7 +10,7 @@ from azure.functions.decorators.openai import AssistantSkillTrigger, \
 
 class TestOpenAI(unittest.TestCase):
 
-    def test_assistant_skills_trigger_valid_creation(self):
+    def test_assistant_skill_trigger_valid_creation(self):
         trigger = AssistantSkillTrigger(name="test",
                                         function_description="description",
                                         function_name="test_function_name",
@@ -19,7 +19,7 @@ class TestOpenAI(unittest.TestCase):
                                         data_type=DataType.UNDEFINED,
                                         dummy_field="dummy")
         self.assertEqual(trigger.get_binding_name(),
-                         "assistantSkillsTrigger")
+                         "assistantSkillTrigger")
         self.assertEqual(
             trigger.get_dict_repr(), {"name": "test",
                                       "functionDescription": "description",
@@ -27,7 +27,7 @@ class TestOpenAI(unittest.TestCase):
                                       "parameterDescriptionJson": "test_json",
                                       "model": OpenAIModels.DefaultChatModel,
                                       "dataType": DataType.UNDEFINED,
-                                      'type': 'assistantSkillsTrigger',
+                                      'type': 'assistantSkillTrigger',
                                       'dummyField': 'dummy',
                                       "direction": BindingDirection.IN,
                                       })
