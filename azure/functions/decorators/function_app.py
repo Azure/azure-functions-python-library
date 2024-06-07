@@ -343,8 +343,6 @@ class DecoratorApi(ABC):
         additional setting fields
         :return: Decorator function.
         """
-        if setting_extra_fields is None:
-            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -471,10 +469,6 @@ class TriggerApi(DecoratorApi, ABC):
         json. For example,
         >>> data_type='STRING' # 'dataType': 'STRING' in binding json
         """
-        if trigger_extra_fields is None:
-            trigger_extra_fields = {}
-        if binding_extra_fields is None:
-            binding_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -3221,8 +3215,6 @@ class SettingsApi(DecoratorApi, ABC):
         additional setting fields.
         :return: Decorator function.
         """
-        if setting_extra_fields is None:
-            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
