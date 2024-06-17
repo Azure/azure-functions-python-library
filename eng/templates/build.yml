@@ -1,0 +1,21 @@
+jobs:
+  - job: "Build"
+    displayName: 'Build Python SDK'
+
+    pool:
+      name: 1es-pool-azfunc-public
+      image: 1es-windows-2022
+      os: windows
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.11"
+      - bash: |
+          python --version
+        displayName: 'Check python version'
+      - bash: |
+          python -m pip install -U pip
+          pip install twine wheel
+          python setup.py sdist bdist_wheel
+        displayName: 'Build Python SDK'
