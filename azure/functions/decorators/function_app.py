@@ -1114,8 +1114,8 @@ class TriggerApi(DecoratorApi, ABC):
                      arg_name: str,
                      path: str,
                      connection: str,
-                     source: BlobSource =
-                     BlobSource.LOGS_AND_CONTAINER_SCAN,
+                     source: Optional[BlobSource] =
+                     None,
                      data_type: Optional[DataType] = None,
                      **kwargs) -> Callable[..., Any]:
         """

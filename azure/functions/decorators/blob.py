@@ -12,7 +12,7 @@ class BlobTrigger(Trigger):
                  name: str,
                  path: str,
                  connection: str,
-                 source: BlobSource,
+                 source: Optional[BlobSource] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.path = path
