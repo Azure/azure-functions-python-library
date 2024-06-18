@@ -1,0 +1,32 @@
+jobs:
+  - job: "TestPython"
+    displayName: "Run Python SDK Unit Tests"
+
+    pool:
+      name: 1es-pool-azfunc
+      image: 1es-ubuntu-22.04
+      os: linux
+
+    strategy:
+      matrix:
+        python-37:
+          PYTHON_VERSION: '3.7'
+        python-38:
+          PYTHON_VERSION: '3.8'
+        python-39:
+          PYTHON_VERSION: '3.9'
+        python-310:
+          PYTHON_VERSION: '3.10'
+        python-311:
+          PYTHON_VERSION: '3.11'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: $(PYTHON_VERSION)
+      - bash: |
+          python -m pip install --upgrade pip
+          python -m pip install -U -e .[dev]
+        displayName: 'Install dependencies'
+      - bash: |
+          python -m pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
+        displayName: 'Test with pytest'
