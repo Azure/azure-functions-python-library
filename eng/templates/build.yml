@@ -2,11 +2,6 @@ jobs:
   - job: "Build"
     displayName: 'Build Python SDK'
 
-    pool:
-      name: 1es-pool-azfunc-public
-      image: 1es-windows-2022
-      os: windows
-
     steps:
       - task: UsePythonVersion@0
         inputs:
