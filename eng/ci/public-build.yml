@@ -31,13 +31,18 @@ extends:
       name: 1es-pool-azfunc-public
       image: 1es-windows-2022
       os: windows
+    sdl:
+      codeql:
+         compiled:
+           enabled: true # still only runs for default branch
+         runSourceLanguagesInSourceAnalysis: true
 
     stages:
       - stage: Build
         jobs:
-          - template: /eng/templates/build.yml@self
+          - template: /eng/templates/jobs/build.yml@self
 
       - stage: RunTests
         dependsOn: Build
         jobs:
-          - template: /eng/templates/ci-tests.yml@self
+          - template: /eng/templates/jobs/ci-tests.yml@self
