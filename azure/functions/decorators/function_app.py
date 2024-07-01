@@ -2144,8 +2144,9 @@ class BindingApi(DecoratorApi, ABC):
 
     def event_grid_output(self,
                           arg_name: str,
-                          topic_endpoint_uri: str,
-                          topic_key_setting: str,
+                          topic_endpoint_uri: Optional[str] = None,
+                          topic_key_setting: Optional[str] = None,
+                          connection: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) -> Callable[..., Any]:
@@ -2170,6 +2171,8 @@ class BindingApi(DecoratorApi, ABC):
         contains the URI for the custom topic.
         :param topic_key_setting: The name of an app setting that
         contains an access key for the custom topic.
+        :param connection: The value of the common prefix for the setting that
+        contains the topic endpoint URI.
         :return: Decorator function.
         """
 
@@ -2181,6 +2184,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         topic_endpoint_uri=topic_endpoint_uri,
                         topic_key_setting=topic_key_setting,
+                        connection=connection,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
