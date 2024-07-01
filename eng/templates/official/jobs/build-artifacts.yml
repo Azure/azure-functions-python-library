@@ -1,0 +1,23 @@
+jobs:
+  - job: "Build"
+    displayName: 'Build Python SDK'
+
+    templateContext:
+      outputParentDirectory: $(Build.ArtifactStagingDirectory)
+      outputs:
+        - output: pipelineArtifact
+          targetPath: $(Build.SourcesDirectory)
+          artifactName: "azure-functions"
+
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: "3.11"
+      - bash: |
+          python --version
+        displayName: 'Check python version'
+      - bash: |
+          python -m pip install -U pip
+          pip install twine wheel
+          python setup.py sdist bdist_wheel
+        displayName: 'Build Python SDK'
