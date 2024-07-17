@@ -8,7 +8,7 @@ from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER, \
     SQL, SQL_TRIGGER, ORCHESTRATION_TRIGGER, ACTIVITY_TRIGGER, \
     ENTITY_TRIGGER, DURABLE_CLIENT
-from azure.functions.decorators.core import DataType, AuthLevel, \
+from azure.functions.decorators.core import BlobSource, DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
@@ -1601,6 +1601,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
+                          source=BlobSource.EVENT_GRID,
                           connection="dummy_conn")
         @app.blob_input(arg_name="file", path="dummy_in_path",
                         connection="dummy_in_conn",
@@ -1622,6 +1623,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
+            "source": BlobSource.EVENT_GRID,
             "connection": "dummy_conn"
         })
 
