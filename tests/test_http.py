@@ -181,9 +181,10 @@ class TestHTTP(unittest.TestCase):
 
     def test_http_response_accepts_http_enums(self):
         response = func.HttpResponse(status_code=404)
-        self.assertEquals(response.status_code, 404)
+        self.assertEqual(response.status_code, 404)
+
         response = func.HttpResponse(status_code=HTTPStatus.ACCEPTED)
-        self.assertEquals(response.status_code, 202)
+        self.assertEqual(response.status_code, HTTPStatus.ACCEPTED.value)
 
     def test_http_request_converter_decode(self):
         data = {

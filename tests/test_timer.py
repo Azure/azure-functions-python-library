@@ -44,6 +44,18 @@ class TestTimer(unittest.TestCase):
         self.assertEqual(schedule_status, test_timer.schedule_status)
         self.assertEqual(schedule, test_timer.schedule)
 
+    def test_timer_initialize_empty_dicts(self):
+        # given
+        past_due = False
+
+        # when
+        test_timer = timer.TimerRequest()
+
+        # then
+        self.assertEqual(past_due, test_timer.past_due)
+        self.assertEqual({}, test_timer.schedule_status)
+        self.assertEqual({}, test_timer.schedule)
+
     def test_timer_no_implementation_exception(self):
         # given
         datum: Datum = Datum(value="test", type='string')

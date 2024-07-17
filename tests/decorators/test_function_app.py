@@ -1,5 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
+from abc import ABC
 import inspect
 import json
 import unittest
@@ -11,10 +12,12 @@ from azure.functions.decorators.constants import HTTP_OUTPUT, HTTP_TRIGGER, \
     TIMER_TRIGGER
 from azure.functions.decorators.core import DataType, AuthLevel, \
     BindingDirection, SCRIPT_FILE_NAME
-from azure.functions.decorators.function_app import BindingApi, \
-    FunctionBuilder, FunctionApp, Function, Blueprint, DecoratorApi, \
-    AsgiFunctionApp, WsgiFunctionApp, HttpFunctionsAuthLevelMixin, \
-    FunctionRegister, TriggerApi, ExternalHttpFunctionApp
+from azure.functions.decorators.function_app import (
+    BindingApi, FunctionBuilder, FunctionApp, Function, Blueprint,
+    DecoratorApi, AsgiFunctionApp, SettingsApi, WsgiFunctionApp,
+    HttpFunctionsAuthLevelMixin, FunctionRegister, TriggerApi,
+    ExternalHttpFunctionApp
+)
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
@@ -657,6 +660,15 @@ class TestFunctionApp(unittest.TestCase):
         add_http_app_mock.assert_called_once()
         self.assertIsInstance(add_http_app_mock.call_args[0][0],
                               WsgiMiddleware)
+
+    def test_extends_required_classes(self):
+        self.assertTrue(issubclass(ExternalHttpFunctionApp, FunctionRegister))
+        self.assertTrue(issubclass(ExternalHttpFunctionApp, TriggerApi))
+        self.assertTrue(issubclass(ExternalHttpFunctionApp, SettingsApi))
+        self.assertTrue(issubclass(ExternalHttpFunctionApp, BindingApi))
+        self.assertTrue(issubclass(ExternalHttpFunctionApp, ABC))
+        self.assertTrue(issubclass(AsgiFunctionApp, ExternalHttpFunctionApp))
+        self.assertTrue(issubclass(WsgiFunctionApp, ExternalHttpFunctionApp))
 
     def test_add_asgi_app(self):
         self._test_http_external_app(AsgiFunctionApp(
