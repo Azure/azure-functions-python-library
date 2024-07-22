@@ -24,6 +24,8 @@ from azure.functions.decorators.eventgrid import EventGridTrigger, \
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
+    BrokerAuthenticationMode, BrokerProtocol
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -1229,6 +1231,120 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    def kafka_trigger(self,
+                      arg_name: str,
+                      topic: str,
+                      broker_list: str,
+                      event_hub_connection_string: Optional[str],
+                      consumer_group: Optional[str],
+                      avro_schema: Optional[str],
+                      username: Optional[str],
+                      password: Optional[str],
+                      ssl_key_location: Optional[str],
+                      ssl_ca_location: Optional[str],
+                      ssl_certificate_location: Optional[str],
+                      ssl_key_password: Optional[str],
+                      schema_registry_url: Optional[str],
+                      schema_registry_username: Optional[str],
+                      schema_registry_password: Optional[str],
+                      authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NotSet,  # noqa: E501
+                      protocol: BrokerProtocol = BrokerProtocol.NotSet,
+                      lag_threshold: int = 1000,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs) -> Callable[..., Any]:
+        """
+        The kafka_trigger decorator adds
+        :class:`KafkaTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining kafka trigger
+        in the function.json which enables function to be triggered to
+        respond to an event sent to a kafka topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/kafkatrigger TODO
+
+        :param arg_name: the variable name used in function code for the
+            parameter that receives the kafka event data.
+        :param topic: The topic monitored by the trigger.
+        :param broker_list: The list of Kafka brokers monitored by the trigger.
+        :param event_hub_connection_string: The name of an app setting that
+        contains the connection string for the eventhub when using Kafka
+        protocol header feature of Azure EventHubs.
+        :param consumer_group: Kafka consumer group used by the trigger.
+        :param avro_schema: This should be used only if a generic record
+        should be generated.
+        :param username: SASL username for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.username' in librdkafka.
+        :param password: SASL password for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.password' in librdkafka.
+        :param ssl_key_location: Path to client's private key (PEM) used for
+          authentication. Default is empty string. This is equivalent to
+        'ssl.key.location' in librdkafka.
+        :param ssl_ca_location: Path to CA certificate file for verifying the
+        broker's certificate. This is equivalent to 'ssl.ca.location' in
+        librdkafka.
+        :param ssl_certificate_location: Path to client's certificate. This is
+        equivalent to 'ssl.certificate.location' in librdkafka.
+        :param ssl_key_password: Password for client's certificate. This is
+        equivalent to 'ssl.key.password' in librdkafka.
+        :param schema_registry_url: URL for the Avro Schema Registry.
+        :param schema_registry_username: Username for the Avro Schema Registry.
+        :param schema_registry_password: Password for the Avro Schema Registry.
+        :param authentication_mode: SASL mechanism to use for authentication.
+        Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
+        Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
+        :param protocol: Gets or sets the security protocol used to communicate
+          with brokers. Default is plain text. This is equivalent to
+        'security.protocol' in librdkafka. TODO
+        :param lag_threshold: Maximum number of unprocessed messages a worker
+        is expected to have at an instance. When target-based scaling is not
+        disabled, this is used to divide total unprocessed event count to
+        determine the number of worker instances, which will then be rounded
+        up to a worker instance count that creates a balanced partition
+        distribution. Default is 1000.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=KafkaTrigger(
+                        name=arg_name,
+                        topic=topic,
+                        broker_list=broker_list,
+                        event_hub_connection_string=event_hub_connection_string,  # noqa: E501
+                        consumer_group=consumer_group,
+                        avro_schema=avro_schema,
+                        username=username,
+                        password=password,
+                        ssl_key_location=ssl_key_location,
+                        ssl_ca_location=ssl_ca_location,
+                        ssl_certificate_location=ssl_certificate_location,
+                        ssl_key_password=ssl_key_password,
+                        schema_registry_url=schema_registry_url,
+                        schema_registry_username=schema_registry_username,
+                        schema_registry_password=schema_registry_password,
+                        authentication_mode=authentication_mode,
+                        protocol=protocol,
+                        lag_threshold=lag_threshold,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def sql_trigger(self,
                     arg_name: str,
                     table_name: str,
@@ -2203,6 +2319,139 @@ class BindingApi(DecoratorApi, ABC):
                         topic_endpoint_uri=topic_endpoint_uri,
                         topic_key_setting=topic_key_setting,
                         connection=connection,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def kafka_output(self,
+                     arg_name: str,
+                     topic: str,
+                     broker_list: str,
+                     avro_schema: Optional[str],
+                     username: Optional[str],
+                     password: Optional[str],
+                     ssl_key_location: Optional[str],
+                     ssl_ca_location: Optional[str],
+                     ssl_certificate_location: Optional[str],
+                     ssl_key_password: Optional[str],
+                     schema_registry_url: Optional[str],
+                     schema_registry_username: Optional[str],
+                     schema_registry_password: Optional[str],
+                     max_message_bytes: int = 1_000_000,
+                     batch_size: int = 10_000,
+                     enable_idempotence: bool = False,
+                     message_timeout_ms: int = 300_000,
+                     request_timeout_ms: int = 5_000,
+                     max_retries: int = 2_147_483_647,
+                     authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NotSet,  # noqa: E501
+                     protocol: BrokerProtocol = BrokerProtocol.NotSet,
+                     linger_ms: int = 5,
+                     data_type: Optional[Union[DataType, str]] = None,
+                     **kwargs) -> Callable[..., Any]:
+        """
+        The kafka_output decorator adds
+        :class:`KafkaOutput`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining output binding
+        in the function.json which enables function to
+        write events to a kafka topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/kafkaoutput
+
+        :param arg_name: The variable name used in function code that
+        represents the event.
+        :param topic: The topic monitored by the trigger.
+        :param broker_list: The list of Kafka brokers monitored by the trigger.
+        :param avro_schema: This should be used only if a generic record
+        should be generated.
+        :param username: SASL username for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.username' in librdkafka.
+        :param password: SASL password for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.password' in librdkafka.
+        :param ssl_key_location: Path to client's private key (PEM) used for
+          authentication. Default is empty string. This is equivalent to
+        'ssl.key.location' in librdkafka.
+        :param ssl_ca_location: Path to CA certificate file for verifying the
+        broker's certificate. This is equivalent to 'ssl.ca.location' in
+        librdkafka.
+        :param ssl_certificate_location: Path to client's certificate. This is
+        equivalent to 'ssl.certificate.location' in librdkafka.
+        :param ssl_key_password: Password for client's certificate. This is
+        equivalent to 'ssl.key.password' in librdkafka.
+        :param schema_registry_url: URL for the Avro Schema Registry.
+        :param schema_registry_username: Username for the Avro Schema Registry.
+        :param schema_registry_password: Password for the Avro Schema Registry.
+        :param max_message_bytes: Maximum transmit message size. Default is 1MB
+        :param batch_size: Maximum number of messages batched in one MessageSet
+        Default is 10000.
+        :param enable_idempotence: When set to `true`, the producer will ensure
+         that messages are successfully produced exactly once and in the
+         original produce order. Default is false.
+        :param message_timeout_ms: Local message timeout. This value is only
+        enforced locally and limits the time a produced message waits for
+        successful delivery. A time of 0 is infinite. This is the maximum time
+         used to deliver a message (including retries). Delivery error occurs
+        when either the retry count or the message timeout are exceeded.
+        Default is 300000.
+        :param request_timeout_ms: The ack timeout of the producer request in
+        milliseconds. Default is 5000.
+        :param max_retries: How many times to retry sending a failing Message.
+        Default is 2147483647. Retrying may cause reordering unless
+        'EnableIdempotence' is set to 'True'.
+        :param authentication_mode: SASL mechanism to use for authentication.
+        Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
+        Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
+        :param protocol: Gets or sets the security protocol used to communicate
+          with brokers. Default is plain text. This is equivalent to
+        'security.protocol' in librdkafka. TODO
+        :param linger_ms: Linger.MS property provides the time between batches
+        of messages being sent to cluster. Larger value allows more batching
+        results in high throughput.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=KafkaOutput(
+                        name=arg_name,
+                        topic=topic,
+                        broker_list=broker_list,
+                        avro_schema=avro_schema,
+                        username=username,
+                        password=password,
+                        ssl_key_location=ssl_key_location,
+                        ssl_ca_location=ssl_ca_location,
+                        ssl_certificate_location=ssl_certificate_location,
+                        ssl_key_password=ssl_key_password,
+                        schema_registry_url=schema_registry_url,
+                        schema_registry_username=schema_registry_username,
+                        schema_registry_password=schema_registry_password,
+                        max_message_bytes=max_message_bytes,
+                        batch_size=batch_size,
+                        enable_idempotence=enable_idempotence,
+                        message_timeout_ms=message_timeout_ms,
+                        request_timeout_ms=request_timeout_ms,
+                        max_retries=max_retries,
+                        authentication_mode=authentication_mode,
+                        protocol=protocol,
+                        linger_ms=linger_ms,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
