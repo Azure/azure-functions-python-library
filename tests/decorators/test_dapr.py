@@ -24,7 +24,7 @@ class TestDapr(unittest.TestCase):
 
         @app.dapr_service_invocation_trigger(arg_name="req",
                                              method_name="dummy_method_name")
-        def dummy():
+        def test_dapr_service_invocation_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -50,7 +50,7 @@ class TestDapr(unittest.TestCase):
 
         @app.dapr_binding_trigger(arg_name="req",
                                   binding_name="dummy_binding_name")
-        def dummy():
+        def test_dapr_binding_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -73,7 +73,7 @@ class TestDapr(unittest.TestCase):
                                 pub_sub_name="dummy_pub_sub_name",
                                 topic="dummy_topic",
                                 route="/dummy_route")
-        def dummy():
+        def test_dapr_topic_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -99,7 +99,7 @@ class TestDapr(unittest.TestCase):
         @app.dapr_state_input(arg_name="in",
                               state_store="dummy_state_store",
                               key="dummy_key")
-        def dummy():
+        def test_dapr_state_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -125,7 +125,7 @@ class TestDapr(unittest.TestCase):
                                secret_store_name="dummy_secret_store_name",
                                key="dummy_key",
                                metadata="dummy_metadata")
-        def dummy():
+        def test_dapr_secret_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -151,7 +151,7 @@ class TestDapr(unittest.TestCase):
         @app.dapr_state_output(arg_name="out",
                                state_store="dummy_state_store",
                                key="dummy_key")
-        def dummy():
+        def test_dapr_state_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -177,7 +177,7 @@ class TestDapr(unittest.TestCase):
                                 app_id="dummy_app_id",
                                 method_name="dummy_method_name",
                                 http_verb="dummy_http_verb")
-        def dummy():
+        def test_dapr_invoke_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -203,7 +203,7 @@ class TestDapr(unittest.TestCase):
         @app.dapr_publish_output(arg_name="out",
                                  pub_sub_name="dummy_pub_sub_name",
                                  topic="dummy_topic")
-        def dummy():
+        def test_dapr_publish_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -228,7 +228,7 @@ class TestDapr(unittest.TestCase):
         @app.dapr_binding_output(arg_name="out",
                                  binding_name="dummy_binding_name",
                                  operation="dummy_operation")
-        def dummy():
+        def test_dapr_binding_output_binding():
             pass
 
         func = self._get_user_function(app)

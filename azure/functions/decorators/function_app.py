@@ -204,6 +204,8 @@ class Function(object):
 
 
 class FunctionBuilder(object):
+    function_bindings: dict = {}
+
     def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)
 
@@ -231,6 +233,12 @@ class FunctionBuilder(object):
                            auth_level: Optional[AuthLevel] = None) -> None:
         """
         Validates the function information before building the function.
+
+        Functions with the same function name are not supported and should
+        fail indexing. If a function name is not defined, the default is the
+        method name. This also means that two functions with the same
+        method name will also fail indexing.
+        https://github.com/Azure/azure-functions-python-worker/issues/1489
 
         :param auth_level: Http auth level that will be set if http
         trigger function auth level is None.
@@ -261,6 +269,16 @@ class FunctionBuilder(object):
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
             self._function._is_http_function = True
+
+        # This dict contains the function name and its bindings for all
+        # functions in an app. If a previous function has the same name,
+        # indexing will fail here.
+        if self.function_bindings.get(function_name, None):
+            raise ValueError(
+                f"Function {function_name} does not have a unique"
+                f" function name. Please change @app.function_name() or"
+                f" the function method name to be unique.")
+        self.function_bindings[function_name] = bindings
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
@@ -3333,11 +3351,13 @@ class ExternalHttpFunctionApp(
     @abc.abstractmethod
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
+        :param function_name: name for the function
 
         :return: None
         """
@@ -3346,17 +3366,18 @@ class ExternalHttpFunctionApp(
 
 class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
-                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 function_name: str = 'http_app_func'):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
         :param http_auth_level: Determines what keys, if any, need to be
-        present
-        on the request in order to invoke the function.
+        present on the request in order to invoke the function.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
-        self._add_http_app(self.middleware)
+        self._add_http_app(self.middleware, function_name)
         self.startup_task_done = False
 
     def __del__(self):
@@ -3365,7 +3386,8 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add an Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
@@ -3379,6 +3401,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
         asgi_middleware: AsgiMiddleware = http_middleware
 
+        @self.function_name(name=function_name)
         @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
@@ -3395,21 +3418,25 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
 class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
-                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 function_name: str = 'http_app_func'):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app))
+        self._add_http_app(WsgiMiddleware(app), function_name)
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
+        :param function_name: name for the function
 
         :return: None
         """
@@ -3419,6 +3446,7 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
 
         wsgi_middleware: WsgiMiddleware = http_middleware
 
+        @self.function_name(function_name)
         @self.http_type(http_type='wsgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
