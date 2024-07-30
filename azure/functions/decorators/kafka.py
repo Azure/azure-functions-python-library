@@ -6,22 +6,23 @@ from enum import Enum
 from azure.functions.decorators.constants import KAFKA, KAFKA_TRIGGER
 from azure.functions.decorators.core import DataType, \
     OutputBinding, Trigger
+from .utils import StringifyEnum
 
 
-class BrokerAuthenticationMode(Enum):
-    NotSet = -1
-    Gssapi = 0
-    Plain = 1
-    ScramSha256 = 2
-    ScramSha512 = 3
+class BrokerAuthenticationMode(StringifyEnum):
+    NOTSET = -1
+    GSSAPI = 0
+    PLAIN = 1
+    SCRAMSHA256 = 2
+    SCRAMSHA512 = 3
 
 
-class BrokerProtocol(Enum):
-    NotSet = -1
-    Plaintext = 0
-    Ssl = 1
-    SaslPlaintext = 2
-    SaslSsl = 3
+class BrokerProtocol(StringifyEnum):
+    NOTSET = -1
+    PLAINTEXT = 0
+    SSL = 1
+    SASLPLAINTEXT = 2
+    SASLSSL = 3
 
 
 class KafkaOutput(OutputBinding):
@@ -49,8 +50,8 @@ class KafkaOutput(OutputBinding):
                  message_timeout_ms: int = 300_000,
                  request_timeout_ms: int = 5_000,
                  max_retries: int = 2_147_483_647,
-                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NotSet,  # noqa: E501
-                 protocol: BrokerProtocol = BrokerProtocol.NotSet,
+                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NOTSET,  # noqa: E501
+                 protocol: BrokerProtocol = BrokerProtocol.NOTSET,
                  linger_ms: int = 5,
                  data_type: Optional[DataType] = None,
                  **kwargs):
@@ -99,8 +100,8 @@ class KafkaTrigger(Trigger):
                  schema_registry_url: Optional[str],
                  schema_registry_username: Optional[str],
                  schema_registry_password: Optional[str],
-                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NotSet,  # noqa: E501
-                 protocol: BrokerProtocol = BrokerProtocol.NotSet,
+                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NOTSET,  # noqa: E501
+                 protocol: BrokerProtocol = BrokerProtocol.NOTSET,
                  lag_threshold: int = 1000,
                  data_type: Optional[DataType] = None,
                  **kwargs):
