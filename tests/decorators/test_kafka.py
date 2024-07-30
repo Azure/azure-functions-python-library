@@ -26,13 +26,13 @@ class TestKafka(unittest.TestCase):
                                schema_registry_url="srurl",
                                schema_registry_username="sruser",
                                schema_registry_password="srp",
-                               authentication_mode=BrokerAuthenticationMode.Plain,  # noqa: E501
+                               authentication_mode=BrokerAuthenticationMode.PLAIN,  # noqa: E501
                                data_type=DataType.UNDEFINED,
                                dummy_field="dummy")
 
         self.assertEqual(trigger.get_binding_name(), "kafkaTrigger")
         self.assertEqual(trigger.get_dict_repr(),
-                         {"authenticationMode": BrokerAuthenticationMode.Plain,
+                         {"authenticationMode": BrokerAuthenticationMode.PLAIN,
                           "avroSchema": "avro_schema",
                           "brokerList": "broker_list",
                           "consumerGroup": "consumer_group",
@@ -43,7 +43,7 @@ class TestKafka(unittest.TestCase):
                           "lagThreshold": 1000,
                           "name": "arg_name",
                           "password": "password",
-                          "protocol": BrokerProtocol.NotSet,
+                          "protocol": BrokerProtocol.NOTSET,
                           "schemaRegistryPassword": "srp",
                           "schemaRegistryUrl": "srurl",
                           "schemaRegistryUsername": "sruser",
@@ -75,7 +75,7 @@ class TestKafka(unittest.TestCase):
 
         self.assertEqual(output.get_binding_name(), "kafka")
         self.assertEqual(output.get_dict_repr(),
-                         {'authenticationMode': BrokerAuthenticationMode.NotSet,  # noqa: E501
+                         {'authenticationMode': BrokerAuthenticationMode.NOTSET,  # noqa: E501
                           'avroSchema': 'avro_schema',
                           'batchSize': 10000,
                           'brokerList': 'broker_list',
@@ -89,7 +89,7 @@ class TestKafka(unittest.TestCase):
                           'messageTimeoutMs': 300000,
                           'name': 'arg_name',
                           'password': 'password',
-                          'protocol': BrokerProtocol.NotSet,
+                          'protocol': BrokerProtocol.NOTSET,
                           'requestTimeoutMs': 5000,
                           'schemaRegistryPassword': 'srp',
                           'schemaRegistryUrl': 'schema_registry_url',
