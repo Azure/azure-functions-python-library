@@ -3,7 +3,7 @@
 import unittest
 
 from azure.functions.decorators.constants import KAFKA_TRIGGER, KAFKA
-from azure.functions.decorators.core import BindingDirection, \
+from azure.functions.decorators.core import BindingDirection, Cardinality, \
     DataType
 from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
     BrokerAuthenticationMode, BrokerProtocol
@@ -52,6 +52,7 @@ class TestKafka(unittest.TestCase):
                           "sslKeyLocation": "ssl_key_location",
                           "sslKeyPassword": "ssl_key_password",
                           "topic": "topic",
+                          "cardinality": Cardinality.ONE,
                           "type": KAFKA_TRIGGER,
                           "username": "username"})
 

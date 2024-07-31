@@ -1,7 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 from typing import Optional
-from enum import Enum
 
 from azure.functions.decorators.constants import KAFKA, KAFKA_TRIGGER
 from azure.functions.decorators.core import Cardinality, DataType, \
@@ -25,6 +24,11 @@ class BrokerProtocol(StringifyEnum):
     SASLSSL = 3
 
 
+class OAuthBearerMethod(StringifyEnum):
+    DEFAULT = 0,
+    OIDC = 1
+
+
 class KafkaOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -44,14 +48,20 @@ class KafkaOutput(OutputBinding):
                  schema_registry_url: Optional[str],
                  schema_registry_username: Optional[str],
                  schema_registry_password: Optional[str],
+                 o_auth_bearer_method: Optional[OAuthBearerMethod] = None,
+                 o_auth_bearer_client_id: Optional[str] = None,
+                 o_auth_bearer_client_secret: Optional[str] = None,
+                 o_auth_bearer_scope: Optional[str] = None,
+                 o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                 o_auth_bearer_extensions: Optional[str] = None,
                  max_message_bytes: int = 1_000_000,
                  batch_size: int = 10_000,
                  enable_idempotence: bool = False,
                  message_timeout_ms: int = 300_000,
                  request_timeout_ms: int = 5_000,
                  max_retries: int = 2_147_483_647,
-                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NOTSET,  # noqa: E501
-                 protocol: BrokerProtocol = BrokerProtocol.NOTSET,
+                 authentication_mode: Optional[BrokerAuthenticationMode] = BrokerAuthenticationMode.NOTSET,  # noqa: E501
+                 protocol: Optional[BrokerProtocol] = BrokerProtocol.NOTSET,
                  linger_ms: int = 5,
                  data_type: Optional[DataType] = None,
                  **kwargs):
@@ -67,6 +77,12 @@ class KafkaOutput(OutputBinding):
         self.schema_registry_url = schema_registry_url
         self.schema_registry_username = schema_registry_username
         self.schema_registry_password = schema_registry_password
+        self.o_auth_bearer_method = o_auth_bearer_method
+        self.o_auth_bearer_client_id = o_auth_bearer_client_id
+        self.o_auth_bearer_client_secret = o_auth_bearer_client_secret
+        self.o_auth_bearer_scope = o_auth_bearer_scope
+        self.o_auth_bearer_token_endpoint_url = o_auth_bearer_token_endpoint_url  # noqa: E501
+        self.o_auth_bearer_extensions = o_auth_bearer_extensions
         self.max_message_bytes = max_message_bytes
         self.batch_size = batch_size
         self.enable_idempotence = enable_idempotence
@@ -100,9 +116,15 @@ class KafkaTrigger(Trigger):
                  schema_registry_url: Optional[str],
                  schema_registry_username: Optional[str],
                  schema_registry_password: Optional[str],
-                 authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NOTSET,  # noqa: E501
-                 protocol: BrokerProtocol = BrokerProtocol.NOTSET,
-                 cardinality : Cardinality = Cardinality.ONE,
+                 o_auth_bearer_method: Optional[OAuthBearerMethod] = None,
+                 o_auth_bearer_client_id: Optional[str] = None,
+                 o_auth_bearer_client_secret: Optional[str] = None,
+                 o_auth_bearer_scope: Optional[str] = None,
+                 o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                 o_auth_bearer_extensions: Optional[str] = None,
+                 authentication_mode: Optional[BrokerAuthenticationMode] = BrokerAuthenticationMode.NOTSET,  # noqa: E501
+                 protocol: Optional[BrokerProtocol] = BrokerProtocol.NOTSET,
+                 cardinality: Optional[Cardinality] = Cardinality.ONE,
                  lag_threshold: int = 1000,
                  data_type: Optional[DataType] = None,
                  **kwargs):
@@ -120,6 +142,12 @@ class KafkaTrigger(Trigger):
         self.schema_registry_url = schema_registry_url
         self.schema_registry_username = schema_registry_username
         self.schema_registry_password = schema_registry_password
+        self.o_auth_bearer_method = o_auth_bearer_method
+        self.o_auth_bearer_client_id = o_auth_bearer_client_id
+        self.o_auth_bearer_client_secret = o_auth_bearer_client_secret
+        self.o_auth_bearer_scope = o_auth_bearer_scope
+        self.o_auth_bearer_token_endpoint_url = o_auth_bearer_token_endpoint_url  # noqa: E501
+        self.o_auth_bearer_extensions = o_auth_bearer_extensions
         self.authentication_mode = authentication_mode
         self.protocol = protocol
         self.cardinality = cardinality

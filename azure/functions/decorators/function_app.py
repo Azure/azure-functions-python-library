@@ -25,7 +25,7 @@ from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
-    BrokerAuthenticationMode, BrokerProtocol
+    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -1247,9 +1247,15 @@ class TriggerApi(DecoratorApi, ABC):
                       schema_registry_url: Optional[str] = None,
                       schema_registry_username: Optional[str] = None,
                       schema_registry_password: Optional[str] = None,
-                      authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NotSet",
-                      protocol: Optional[Union[BrokerProtocol, str]] = "NotSet",
-                      cardinality : Optional[Union[Cardinality, str]] = "One",
+                      o_auth_bearer_method: Optional[Union[OAuthBearerMethod, str]] = None,  # noqa E501
+                      o_auth_bearer_client_id: Optional[str] = None,
+                      o_auth_bearer_client_secret: Optional[str] = None,
+                      o_auth_bearer_scope: Optional[str] = None,
+                      o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                      o_auth_bearer_extensions: Optional[str] = None,
+                      authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NotSet", # noqa E501
+                      protocol: Optional[Union[BrokerProtocol, str]] = "NotSet", # noqa E501
+                      cardinality: Optional[Union[Cardinality, str]] = "One",
                       lag_threshold: int = 1000,
                       data_type: Optional[Union[DataType, str]] = None,
                       **kwargs) -> Callable[..., Any]:
@@ -1295,6 +1301,23 @@ class TriggerApi(DecoratorApi, ABC):
         :param schema_registry_url: URL for the Avro Schema Registry.
         :param schema_registry_username: Username for the Avro Schema Registry.
         :param schema_registry_password: Password for the Avro Schema Registry.
+        :param o_auth_bearer_method: Either 'default' or 'oidc'.
+        sasl.oauthbearer in librdkafka.
+        :param o_auth_bearer_client_id: Specify only when o_auth_bearer_method
+        is 'oidc'. sasl.oauthbearer.client.id in librdkafka.
+        :param o_auth_bearer_client_secret: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.client.secret in
+        librdkafka.
+        :param o_auth_bearer_scope: Specify only when o_auth_bearer_method
+        is 'oidc'. Client use this to specify the scope of the access request
+        to the broker. sasl.oauthbearer.scope in librdkafka.
+        :param o_auth_bearer_token_endpoint_url: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.token.endpoint.url
+        in librdkafka.
+        :param o_auth_bearer_extensions: Allow additional information to be
+        provided to the broker. Comma-separated list of key=value pairs. E.g.,
+        "supportFeatureX=true,organizationId=sales-emea".
+        sasl.oauthbearer.extensions in librdkafka
         :param authentication_mode: SASL mechanism to use for authentication.
         Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
         Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
@@ -1334,6 +1357,13 @@ class TriggerApi(DecoratorApi, ABC):
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
+                        o_auth_bearer_method=parse_singular_param_to_enum(
+                            o_auth_bearer_method, OAuthBearerMethod),
+                        o_auth_bearer_client_id=o_auth_bearer_client_id,
+                        o_auth_bearer_client_secret=o_auth_bearer_client_secret,  # noqa: E501
+                        o_auth_bearer_scope=o_auth_bearer_scope,
+                        o_auth_bearer_token_endpoint_url=o_auth_bearer_token_endpoint_url,  # noqa: E501
+                        o_auth_bearer_extensions=o_auth_bearer_extensions,
                         authentication_mode=parse_singular_param_to_enum(
                             authentication_mode, BrokerAuthenticationMode),
                         protocol=parse_singular_param_to_enum(protocol,
@@ -2347,13 +2377,19 @@ class BindingApi(DecoratorApi, ABC):
                      schema_registry_url: Optional[str] = None,
                      schema_registry_username: Optional[str] = None,
                      schema_registry_password: Optional[str] = None,
+                     o_auth_bearer_method: Optional[Union[OAuthBearerMethod, str]] = None,  # noqa E501
+                     o_auth_bearer_client_id: Optional[str] = None,
+                     o_auth_bearer_client_secret: Optional[str] = None,
+                     o_auth_bearer_scope: Optional[str] = None,
+                     o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                     o_auth_bearer_extensions: Optional[str] = None,
                      max_message_bytes: int = 1_000_000,
                      batch_size: int = 10_000,
                      enable_idempotence: bool = False,
                      message_timeout_ms: int = 300_000,
                      request_timeout_ms: int = 5_000,
                      max_retries: int = 2_147_483_647,
-                     authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NOTSET",
+                     authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NOTSET",  # noqa E501
                      protocol: Optional[Union[BrokerProtocol, str]] = "NOTSET",
                      linger_ms: int = 5,
                      data_type: Optional[Union[DataType, str]] = None,
@@ -2396,6 +2432,23 @@ class BindingApi(DecoratorApi, ABC):
         :param schema_registry_url: URL for the Avro Schema Registry.
         :param schema_registry_username: Username for the Avro Schema Registry.
         :param schema_registry_password: Password for the Avro Schema Registry.
+        :param o_auth_bearer_method: Either 'default' or 'oidc'.
+        sasl.oauthbearer in librdkafka.
+        :param o_auth_bearer_client_id: Specify only when o_auth_bearer_method
+        is 'oidc'. sasl.oauthbearer.client.id in librdkafka.
+        :param o_auth_bearer_client_secret: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.client.secret in
+        librdkafka.
+        :param o_auth_bearer_scope: Specify only when o_auth_bearer_method
+        is 'oidc'. Client use this to specify the scope of the access request
+        to the broker. sasl.oauthbearer.scope in librdkafka.
+        :param o_auth_bearer_token_endpoint_url: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.token.endpoint.url
+        in librdkafka.
+        :param o_auth_bearer_extensions: Allow additional information to be
+        provided to the broker. Comma-separated list of key=value pairs. E.g.,
+        "supportFeatureX=true,organizationId=sales-emea".
+        sasl.oauthbearer.extensions in librdkafka
         :param max_message_bytes: Maximum transmit message size. Default is 1MB
         :param batch_size: Maximum number of messages batched in one MessageSet
         Default is 10000.
@@ -2448,6 +2501,13 @@ class BindingApi(DecoratorApi, ABC):
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
+                        o_auth_bearer_method=parse_singular_param_to_enum(
+                            o_auth_bearer_method, OAuthBearerMethod),
+                        o_auth_bearer_client_id=o_auth_bearer_client_id,
+                        o_auth_bearer_client_secret=o_auth_bearer_client_secret,  # noqa: E501
+                        o_auth_bearer_scope=o_auth_bearer_scope,
+                        o_auth_bearer_token_endpoint_url=o_auth_bearer_token_endpoint_url,  # noqa: E501
+                        o_auth_bearer_extensions=o_auth_bearer_extensions,
                         max_message_bytes=max_message_bytes,
                         batch_size=batch_size,
                         enable_idempotence=enable_idempotence,
