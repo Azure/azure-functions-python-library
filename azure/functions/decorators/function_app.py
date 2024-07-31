@@ -1247,8 +1247,9 @@ class TriggerApi(DecoratorApi, ABC):
                       schema_registry_url: Optional[str] = None,
                       schema_registry_username: Optional[str] = None,
                       schema_registry_password: Optional[str] = None,
-                      authentication_mode: str = "NotSet",
-                      protocol: str = "NotSet",
+                      authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NotSet",
+                      protocol: Optional[Union[BrokerProtocol, str]] = "NotSet",
+                      cardinality : Optional[Union[Cardinality, str]] = "One",
                       lag_threshold: int = 1000,
                       data_type: Optional[Union[DataType, str]] = None,
                       **kwargs) -> Callable[..., Any]:
@@ -1263,10 +1264,10 @@ class TriggerApi(DecoratorApi, ABC):
         All optional fields will be given default value by function host when
         they are parsed by function host.
 
-        Ref: https://aka.ms/kafkatrigger TODO
+        Ref: https://aka.ms/kafkatrigger
 
         :param arg_name: the variable name used in function code for the
-            parameter that receives the kafka event data.
+            parameter that has the kafka event data.
         :param topic: The topic monitored by the trigger.
         :param broker_list: The list of Kafka brokers monitored by the trigger.
         :param event_hub_connection_string: The name of an app setting that
@@ -1337,6 +1338,8 @@ class TriggerApi(DecoratorApi, ABC):
                             authentication_mode, BrokerAuthenticationMode),
                         protocol=parse_singular_param_to_enum(protocol,
                                                               BrokerProtocol),
+                        cardinality=parse_singular_param_to_enum(cardinality,
+                                                                 Cardinality),
                         lag_threshold=lag_threshold,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -2350,8 +2353,8 @@ class BindingApi(DecoratorApi, ABC):
                      message_timeout_ms: int = 300_000,
                      request_timeout_ms: int = 5_000,
                      max_retries: int = 2_147_483_647,
-                     authentication_mode: str = "NOTSET",
-                     protocol: str = "NOTSET",
+                     authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NOTSET",
+                     protocol: Optional[Union[BrokerProtocol, str]] = "NOTSET",
                      linger_ms: int = 5,
                      data_type: Optional[Union[DataType, str]] = None,
                      **kwargs) -> Callable[..., Any]:
@@ -2415,7 +2418,7 @@ class BindingApi(DecoratorApi, ABC):
         Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
         :param protocol: Gets or sets the security protocol used to communicate
           with brokers. Default is plain text. This is equivalent to
-        'security.protocol' in librdkafka. TODO
+        'security.protocol' in librdkafka.
         :param linger_ms: Linger.MS property provides the time between batches
         of messages being sent to cluster. Larger value allows more batching
         results in high throughput.

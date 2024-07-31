@@ -4,7 +4,7 @@ from typing import Optional
 from enum import Enum
 
 from azure.functions.decorators.constants import KAFKA, KAFKA_TRIGGER
-from azure.functions.decorators.core import DataType, \
+from azure.functions.decorators.core import Cardinality, DataType, \
     OutputBinding, Trigger
 from .utils import StringifyEnum
 
@@ -102,6 +102,7 @@ class KafkaTrigger(Trigger):
                  schema_registry_password: Optional[str],
                  authentication_mode: BrokerAuthenticationMode = BrokerAuthenticationMode.NOTSET,  # noqa: E501
                  protocol: BrokerProtocol = BrokerProtocol.NOTSET,
+                 cardinality : Cardinality = Cardinality.ONE,
                  lag_threshold: int = 1000,
                  data_type: Optional[DataType] = None,
                  **kwargs):
@@ -121,5 +122,6 @@ class KafkaTrigger(Trigger):
         self.schema_registry_password = schema_registry_password
         self.authentication_mode = authentication_mode
         self.protocol = protocol
+        self.cardinality = cardinality
         self.lag_threshold = lag_threshold
         super().__init__(name=name, data_type=data_type)
