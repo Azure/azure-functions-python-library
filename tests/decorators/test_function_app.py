@@ -631,6 +631,23 @@ class TestFunctionApp(unittest.TestCase):
         fb = self.func_app._validate_type(self.dummy_func)
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
+    
+    def test_function_builder_initialization(self):
+        fb = FunctionBuilder(self.dummy_func, "dummy.py")
+        self.assertEqual(fb.function_bindings, {})
+
+        self.func_app._function_builders.append(fb)
+        fb = self.func_app._validate_type(fb)
+
+        self.assertNotEqual(fb.function_bindings, {})
+
+        fb2 = FunctionBuilder(self.dummy_func, "dummy2.py")
+        self.assertEqual(fb2.function_bindings, {})
+
+        self.func_app._function_builders.append(fb2)
+        fb2 = self.func_app._validate_type(fb2)
+
+        self.assertNotEqual(fb2.function_bindings, {})
 
     def test_function_builder_decorated_type(self):
         fb = FunctionBuilder(self.dummy_func, "dummy.py")

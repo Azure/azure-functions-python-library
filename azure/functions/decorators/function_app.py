@@ -204,9 +204,11 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    function_bindings: dict = {}
+    function_bindings: Optional[Dict[Any, Any]] = None
 
     def __init__(self, func, function_script_file):
+        if self.function_bindings is None:
+            self.function_bindings = {}
         self._function = Function(func, function_script_file)
 
     def __call__(self, *args, **kwargs):
@@ -273,6 +275,8 @@ class FunctionBuilder(object):
         # This dict contains the function name and its bindings for all
         # functions in an app. If a previous function has the same name,
         # indexing will fail here.
+        if self.function_bindings is None:
+            self.function_bindings = {}
         if self.function_bindings.get(function_name, None):
             raise ValueError(
                 f"Function {function_name} does not have a unique"
