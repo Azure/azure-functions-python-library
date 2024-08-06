@@ -204,11 +204,11 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    function_bindings: Optional[Dict[Any, Any]] = None
+    # function_bindings: Optional[Dict[Any, Any]] = None
+    # if function_bindings is None:
+    #     function_bindings = {}
 
     def __init__(self, func, function_script_file):
-        if self.function_bindings is None:
-            self.function_bindings = {}
         self._function = Function(func, function_script_file)
 
     def __call__(self, *args, **kwargs):
@@ -275,14 +275,14 @@ class FunctionBuilder(object):
         # This dict contains the function name and its bindings for all
         # functions in an app. If a previous function has the same name,
         # indexing will fail here.
-        if self.function_bindings is None:
-            self.function_bindings = {}
-        if self.function_bindings.get(function_name, None):
-            raise ValueError(
-                f"Function {function_name} does not have a unique"
-                f" function name. Please change @app.function_name() or"
-                f" the function method name to be unique.")
-        self.function_bindings[function_name] = bindings
+        # if self.function_bindings is None:
+        #     self.function_bindings = {}
+        # if self.function_bindings.get(function_name, None):
+        #     raise ValueError(
+        #         f"Function {function_name} does not have a unique"
+        #         f" function name. Please change @app.function_name() or"
+        #         f" the function method name to be unique.")
+        # self.function_bindings[function_name] = bindings
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
@@ -3280,6 +3280,7 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
         self._require_auth_level: Optional[bool] = None
+        self.functions_bindings: Optional[Dict[Any, Any]] = None
 
     def get_functions(self) -> List[Function]:
         """Get the function objects in the function app.
@@ -3301,7 +3302,22 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
                 '-bindings-http-webhook-trigger?tabs=in-process'
                 '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
 
+        FunctionRegister.validate_functions(self, functions=functions)
+
         return functions
+
+    def validate_functions(self, functions: List[Function]) -> bool:
+        if not self.functions_bindings:
+            self.functions_bindings = {}
+        for function in functions:
+            function_name = function.get_function_name()
+            if self.functions_bindings.get(function_name, None):
+                raise ValueError(
+                    f"Function {function_name} does not have a unique"
+                    f" function name. Please change @app.function_name() or"
+                    f" the function method name to be unique.")
+            self.functions_bindings[function_name] = function.get_bindings()
+        return True
 
     def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.

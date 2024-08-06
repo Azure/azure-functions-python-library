@@ -20,7 +20,6 @@ from azure.functions.decorators.function_app import (
 )
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
-from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.retry_policy import RetryPolicy
 from test_core import DummyTrigger
 from tests.utils.testutils import assert_json
@@ -291,10 +290,6 @@ class TestFunctionBuilder(unittest.TestCase):
                          "test_unique_method_names")
         self.assertEqual(functions[1].get_function_name(),
                          "test_unique_method_names2")
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_unique_method_names")[0], TimerTrigger)
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_unique_method_names2")[0], TimerTrigger)
 
     def test_unique_function_names(self):
         app = FunctionApp()
@@ -316,10 +311,6 @@ class TestFunctionBuilder(unittest.TestCase):
                          "test_unique_function_names")
         self.assertEqual(functions[1].get_function_name(),
                          "test_unique_function_names2")
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_unique_function_names")[0], TimerTrigger)
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_unique_function_names2")[0], TimerTrigger)
 
     def test_same_method_names(self):
         app = FunctionApp()
@@ -425,10 +416,6 @@ class TestFunctionBuilder(unittest.TestCase):
                          "test_blueprint_unique_method_names")
         self.assertEqual(functions[1].get_function_name(),
                          "test_blueprint_unique_method_names2")
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_blueprint_unique_method_names")[0], TimerTrigger)
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_blueprint_unique_method_names2")[0], TimerTrigger)
 
     def test_blueprint_unique_function_names(self):
         app = FunctionApp()
@@ -454,10 +441,6 @@ class TestFunctionBuilder(unittest.TestCase):
                          "test_blueprint_unique_function_names")
         self.assertEqual(functions[1].get_function_name(),
                          "test_blueprint_unique_function_names2")
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_blueprint_unique_function_names")[0], TimerTrigger)
-        self.assertIsInstance(app._function_builders[0].function_bindings.get(
-            "test_blueprint_unique_function_names2")[0], TimerTrigger)
 
     def test_blueprint_same_method_names(self):
         app = FunctionApp()
@@ -631,23 +614,6 @@ class TestFunctionApp(unittest.TestCase):
         fb = self.func_app._validate_type(self.dummy_func)
         self.assertTrue(isinstance(fb, FunctionBuilder))
         self.assertEqual(fb._function.get_user_function(), self.dummy_func)
-    
-    def test_function_builder_initialization(self):
-        fb = FunctionBuilder(self.dummy_func, "dummy.py")
-        self.assertEqual(fb.function_bindings, {})
-
-        self.func_app._function_builders.append(fb)
-        fb = self.func_app._validate_type(fb)
-
-        self.assertNotEqual(fb.function_bindings, {})
-
-        fb2 = FunctionBuilder(self.dummy_func, "dummy2.py")
-        self.assertEqual(fb2.function_bindings, {})
-
-        self.func_app._function_builders.append(fb2)
-        fb2 = self.func_app._validate_type(fb2)
-
-        self.assertNotEqual(fb2.function_bindings, {})
 
     def test_function_builder_decorated_type(self):
         fb = FunctionBuilder(self.dummy_func, "dummy.py")
@@ -1026,3 +992,53 @@ class TestFunctionApp(unittest.TestCase):
                     "type": HTTP_OUTPUT
                 }
             ]})
+
+
+class TestFunctionRegister(unittest.TestCase):
+    def test_validate_empty_dict(self):
+        def dummy():
+            return "dummy"
+
+        test_func = Function(dummy, "dummy.py")
+        test_func.__name__ = "test_func"
+
+        fr = FunctionRegister(auth_level="ANONYMOUS")
+
+        with self.assertRaises(AttributeError) as err:
+            FunctionRegister.validate_functions(fr, functions=[test_func])
+            self.assertEqual(err.exception.args[0],
+                             '"NoneType" object has no attribute "get"')
+
+    def test_validate_unique_names(self):
+        def dummy():
+            return "dummy"
+
+        test_func = Function(dummy, "dummy.py")
+        test_func.__name__ = "test_func"
+        test_func2 = Function(dummy, "dummy.py")
+        test_func2.__name__ = "test_func2"
+
+        fr = FunctionRegister(auth_level="ANONYMOUS")
+        FunctionRegister.get_functions(fr)
+        unique_names = FunctionRegister.validate_functions(
+            fr, functions=[test_func, test_func2])
+        self.assertTrue(unique_names)
+
+    def test_validate_non_unique_names(self):
+        def dummy():
+            return "dummy"
+
+        test_func = Function(dummy, "dummy.py")
+        test_func.__name__ = "test_func"
+        test_func2 = Function(dummy, "dummy.py")
+        test_func2.__name__ = "test_func"
+
+        fr = FunctionRegister(auth_level="ANONYMOUS")
+        FunctionRegister.get_functions(fr)
+        with self.assertRaises(AttributeError) as err:
+            FunctionRegister.validate_functions(fr, functions=[test_func])
+            self.assertEqual(err.exception.args[0],
+                             "Function test_same_method_names does not have"
+                             " a unique function name."
+                             " Please change @app.function_name()"
+                             " or the function method name to be unique.")
