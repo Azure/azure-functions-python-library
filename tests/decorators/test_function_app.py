@@ -1005,7 +1005,7 @@ class TestFunctionRegister(unittest.TestCase):
         fr = FunctionRegister(auth_level="ANONYMOUS")
 
         with self.assertRaises(AttributeError) as err:
-            FunctionRegister.validate_functions(fr, functions=[test_func])
+            FunctionRegister.validate_function_names(fr, functions=[test_func])
             self.assertEqual(err.exception.args[0],
                              '"NoneType" object has no attribute "get"')
 
@@ -1020,7 +1020,7 @@ class TestFunctionRegister(unittest.TestCase):
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
         FunctionRegister.get_functions(fr)
-        unique_names = FunctionRegister.validate_functions(
+        unique_names = FunctionRegister.validate_function_names(
             fr, functions=[test_func, test_func2])
         self.assertTrue(unique_names)
 
@@ -1036,7 +1036,7 @@ class TestFunctionRegister(unittest.TestCase):
         fr = FunctionRegister(auth_level="ANONYMOUS")
         FunctionRegister.get_functions(fr)
         with self.assertRaises(AttributeError) as err:
-            FunctionRegister.validate_functions(fr, functions=[test_func])
+            FunctionRegister.validate_function_names(fr, functions=[test_func])
             self.assertEqual(err.exception.args[0],
                              "Function test_same_method_names does not have"
                              " a unique function name."

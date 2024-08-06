@@ -3287,11 +3287,11 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
                 '-bindings-http-webhook-trigger?tabs=in-process'
                 '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
 
-        FunctionRegister.validate_functions(self, functions=functions)
+        FunctionRegister.validate_function_names(self, functions=functions)
 
         return functions
 
-    def validate_functions(self, functions: List[Function]) -> bool:
+    def validate_function_names(self, functions: List[Function]) -> bool:
         """The functions_bindings dict contains the function name and
         its bindings for all functions in an app. If a previous function
         has the same name, indexing will fail here.
