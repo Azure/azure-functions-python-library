@@ -204,9 +204,6 @@ class Function(object):
 
 
 class FunctionBuilder(object):
-    # function_bindings: Optional[Dict[Any, Any]] = None
-    # if function_bindings is None:
-    #     function_bindings = {}
 
     def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)
@@ -271,18 +268,6 @@ class FunctionBuilder(object):
                 setattr(trigger, 'auth_level',
                         parse_singular_param_to_enum(auth_level, AuthLevel))
             self._function._is_http_function = True
-
-        # This dict contains the function name and its bindings for all
-        # functions in an app. If a previous function has the same name,
-        # indexing will fail here.
-        # if self.function_bindings is None:
-        #     self.function_bindings = {}
-        # if self.function_bindings.get(function_name, None):
-        #     raise ValueError(
-        #         f"Function {function_name} does not have a unique"
-        #         f" function name. Please change @app.function_name() or"
-        #         f" the function method name to be unique.")
-        # self.function_bindings[function_name] = bindings
 
     def build(self, auth_level: Optional[AuthLevel] = None) -> Function:
         """
@@ -3307,6 +3292,10 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         return functions
 
     def validate_functions(self, functions: List[Function]) -> bool:
+        """The functions_bindings dict contains the function name and
+        its bindings for all functions in an app. If a previous function
+        has the same name, indexing will fail here.
+        """
         if not self.functions_bindings:
             self.functions_bindings = {}
         for function in functions:
