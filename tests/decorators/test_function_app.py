@@ -1028,16 +1028,14 @@ class TestFunctionRegister(unittest.TestCase):
             return "dummy"
 
         test_func = Function(dummy, "dummy.py")
-        test_func.__name__ = "test_func"
         test_func2 = Function(dummy, "dummy.py")
-        test_func2.__name__ = "test_func"
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
         FunctionRegister.get_functions(fr)
-        with self.assertRaises(AttributeError) as err:
-            FunctionRegister.validate_function_names(fr, functions=[test_func])
+        with self.assertRaises(ValueError) as err:
+            FunctionRegister.validate_function_names(fr, functions=[test_func, test_func2])
             self.assertEqual(err.exception.args[0],
-                             "Function test_same_method_names does not have"
+                             "Function dummy does not have"
                              " a unique function name."
                              " Please change @app.function_name()"
                              " or the function method name to be unique.")
