@@ -3287,11 +3287,11 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
                 '-bindings-http-webhook-trigger?tabs=in-process'
                 '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
 
-        FunctionRegister.validate_function_names(self, functions=functions)
+        self.validate_function_names(functions=functions)
 
         return functions
 
-    def validate_function_names(self, functions: List[Function]) -> bool:
+    def validate_function_names(self, functions: List[Function]):
         """The functions_bindings dict contains the function name and
         its bindings for all functions in an app. If a previous function
         has the same name, indexing will fail here.
@@ -3300,13 +3300,14 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
             self.functions_bindings = {}
         for function in functions:
             function_name = function.get_function_name()
-            if self.functions_bindings.get(function_name, None):
+            if function_name in self.functions_bindings:
                 raise ValueError(
                     f"Function {function_name} does not have a unique"
                     f" function name. Please change @app.function_name() or"
                     f" the function method name to be unique.")
-            self.functions_bindings[function_name] = function.get_bindings()
-        return True
+            # The value of the key doesn't matter. We're using a dict for
+            # faster lookup times.
+            self.functions_bindings[function_name] = True
 
     def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.

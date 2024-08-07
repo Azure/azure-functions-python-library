@@ -1020,9 +1020,8 @@ class TestFunctionRegister(unittest.TestCase):
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
         FunctionRegister.get_functions(fr)
-        unique_names = FunctionRegister.validate_function_names(
+        FunctionRegister.validate_function_names(
             fr, functions=[test_func, test_func2])
-        self.assertTrue(unique_names)
 
     def test_validate_non_unique_names(self):
         def dummy():
