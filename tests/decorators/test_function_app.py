@@ -1000,13 +1000,8 @@ class TestFunctionRegister(unittest.TestCase):
             return "dummy"
 
         test_func = Function(dummy, "dummy.py")
-
         fr = FunctionRegister(auth_level="ANONYMOUS")
-
-        with self.assertRaises(AttributeError) as err:
-            FunctionRegister.validate_function_names(fr, functions=[test_func])
-            self.assertEqual(err.exception.args[0],
-                             '"NoneType" object has no attribute "get"')
+        fr.validate_function_names(functions=[test_func])
 
     def test_validate_unique_names(self):
         def dummy():
@@ -1019,9 +1014,8 @@ class TestFunctionRegister(unittest.TestCase):
         test_func2 = Function(dummy2, "dummy.py")
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
-        FunctionRegister.get_functions(fr)
-        FunctionRegister.validate_function_names(
-            fr, functions=[test_func, test_func2])
+        fr.validate_function_names(
+            functions=[test_func, test_func2])
 
     def test_validate_non_unique_names(self):
         def dummy():
@@ -1031,10 +1025,8 @@ class TestFunctionRegister(unittest.TestCase):
         test_func2 = Function(dummy, "dummy.py")
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
-        FunctionRegister.get_functions(fr)
         with self.assertRaises(ValueError) as err:
-            FunctionRegister.validate_function_names(
-                fr, functions=[test_func, test_func2])
+            fr.validate_function_names(functions=[test_func, test_func2])
             self.assertEqual(err.exception.args[0],
                              "Function dummy does not have"
                              " a unique function name."
