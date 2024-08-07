@@ -1012,11 +1012,11 @@ class TestFunctionRegister(unittest.TestCase):
     def test_validate_unique_names(self):
         def dummy():
             return "dummy"
+        def dummy2():
+            return "dummy"
 
         test_func = Function(dummy, "dummy.py")
-        test_func.__name__ = "test_func"
-        test_func2 = Function(dummy, "dummy.py")
-        test_func2.__name__ = "test_func2"
+        test_func2 = Function(dummy2, "dummy.py")
 
         fr = FunctionRegister(auth_level="ANONYMOUS")
         FunctionRegister.get_functions(fr)
