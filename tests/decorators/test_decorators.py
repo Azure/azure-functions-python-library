@@ -6,13 +6,14 @@ from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     HTTP_OUTPUT, QUEUE, QUEUE_TRIGGER, SERVICE_BUS, SERVICE_BUS_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
     BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER, \
-    SQL, SQL_TRIGGER
-from azure.functions.decorators.core import DataType, AuthLevel, \
+    SQL, SQL_TRIGGER, ORCHESTRATION_TRIGGER, ACTIVITY_TRIGGER, \
+    ENTITY_TRIGGER, DURABLE_CLIENT
+from azure.functions.decorators.core import BlobSource, DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
 from azure.functions.decorators.http import HttpTrigger, HttpMethod
 from azure.functions.decorators.timer import TimerTrigger
-from tests.decorators.testutils import assert_json
+from tests.utils.testutils import assert_json
 
 
 class TestFunctionsApp(unittest.TestCase):
@@ -26,11 +27,11 @@ class TestFunctionsApp(unittest.TestCase):
 
     def test_route_is_function_name(self):
         app = self.func_app
-        test_func_name = "dummy_function"
+        test_func_name = "test_route_is_function_name"
 
         @app.function_name(test_func_name)
         @app.route()
-        def dummy_func():
+        def test_route_is_function_name():
             pass
 
         func = self._get_user_function(app)
@@ -43,26 +44,28 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.route()
-        def dummy_func():
+        def test_route_is_python_function_name():
             pass
 
         func = self._get_user_function(app)
 
-        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_function_name(),
+                         "test_route_is_python_function_name")
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
-        self.assertTrue(func.get_trigger().route, "dummy_func")
+        self.assertTrue(func.get_trigger().route,
+                        "test_route_is_python_function_name")
 
     def test_route_is_custom(self):
         app = self.func_app
 
-        @app.function_name("dummy_function")
+        @app.function_name("test_route_is_custom")
         @app.route("dummy")
         def dummy_func():
             pass
 
         func = self._get_user_function(app)
 
-        self.assertEqual("dummy_function", func.get_function_name())
+        self.assertEqual("test_route_is_custom", func.get_function_name())
         self.assertTrue(isinstance(func.get_trigger(), HttpTrigger))
         self.assertTrue(func.get_trigger().route, "dummy")
 
@@ -70,11 +73,12 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.schedule(arg_name="req", schedule="dummy_schedule")
-        def dummy_func():
+        def test_schedule_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_function_name(),
+                         "test_schedule_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -93,7 +97,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.schedule(arg_name="req", schedule="dummy_schedule",
                       run_on_startup=False, use_monitor=False,
                       data_type=DataType.STRING, dummy_field='dummy')
-        def dummy():
+        def test_schedule_trigger_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -117,11 +121,12 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.timer_trigger(arg_name="req", schedule="dummy_schedule")
-        def dummy_func():
+        def test_timer_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_function_name(),
+                         "test_timer_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -140,7 +145,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.timer_trigger(arg_name="req", schedule="dummy_schedule",
                            run_on_startup=False, use_monitor=False,
                            data_type=DataType.STRING, dummy_field='dummy')
-        def dummy():
+        def test_timer_trigger_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -160,11 +165,89 @@ class TestFunctionsApp(unittest.TestCase):
             ]
         })
 
+    def test_orchestration_trigger(self):
+        app = self.func_app
+
+        @app.orchestration_trigger("context")
+        def test_orchestration_trigger(context):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": ORCHESTRATION_TRIGGER,
+                    "direction": BindingDirection.IN
+                }
+            ]
+        })
+
+    def test_activity_trigger(self):
+        app = self.func_app
+
+        @app.activity_trigger("arg")
+        def test_activity_trigger(arg):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "arg",
+                    "type": ACTIVITY_TRIGGER,
+                    "direction": BindingDirection.IN
+                }
+            ]
+        })
+
+    def test_entity_trigger(self):
+        app = self.func_app
+
+        @app.entity_trigger("context")
+        def test_entity_trigger(context):
+            pass
+
+        func = self._get_user_function(app)
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": ENTITY_TRIGGER,
+                    "direction": BindingDirection.IN,
+                }
+            ]
+        })
+
+    def test_durable_client(self):
+        app = self.func_app
+
+        @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
+        @app.durable_client_input(client_name="client")
+        def test_durable_client(client):
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+        self.assertTrue(func.is_http_function())
+
+        output = func.get_bindings()[0]
+
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": DURABLE_CLIENT,
+            "name": "client"
+        })
+
     def test_route_default_args(self):
         app = self.func_app
 
         @app.route()
-        def dummy():
+        def test_route_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -176,7 +259,7 @@ class TestFunctionsApp(unittest.TestCase):
                     "direction": BindingDirection.IN,
                     "type": HTTP_TRIGGER,
                     "name": "req",
-                    "route": "dummy"
+                    "route": "test_route_default_args"
                 },
                 {
                     "direction": BindingDirection.OUT,
@@ -194,7 +277,7 @@ class TestFunctionsApp(unittest.TestCase):
                    auth_level=AuthLevel.FUNCTION, route='dummy_route',
                    trigger_extra_fields={"dummy_field": "dummy"},
                    binding_extra_fields={"dummy_field": "dummy"})
-        def dummy():
+        def test_route_with_all_args():
             pass
 
         func = self._get_user_function(app)
@@ -225,11 +308,12 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.warm_up_trigger(arg_name="req")
-        def dummy_func():
+        def test_warmup_trigger_default_args():
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_function_name(),
+                         "test_warmup_trigger_default_args")
         assert_json(self, func, {
             "scriptFile": "function_app.py",
             "bindings": [
@@ -246,7 +330,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.warm_up_trigger(arg_name="req", data_type=DataType.STRING,
                              dummy_field='dummy')
-        def dummy():
+        def test_warmup_trigger_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -270,7 +354,7 @@ class TestFunctionsApp(unittest.TestCase):
                            connection="dummy_conn")
         @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
                           connection="dummy_out_conn")
-        def dummy():
+        def test_queue_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -297,7 +381,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.queue_trigger(arg_name="req", queue_name="dummy_queue",
                            connection="dummy_conn")
-        def dummy():
+        def test_queue_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -320,7 +404,7 @@ class TestFunctionsApp(unittest.TestCase):
                            connection="dummy_conn")
         @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
                           connection="dummy_out_conn")
-        def dummy():
+        def test_queue_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -345,7 +429,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
                           connection="dummy_out_conn",
                           data_type=DataType.STRING, dummy_field="dummy")
-        def dummy():
+        def test_queue_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -380,7 +464,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_queue_output(arg_name='res',
                                       connection='dummy_out_conn',
                                       queue_name='dummy_out_queue')
-        def dummy():
+        def test_service_bus_queue_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -410,7 +494,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_queue_trigger(arg_name="req",
                                        connection="dummy_conn",
                                        queue_name="dummy_queue")
-        def dummy():
+        def test_service_bus_queue_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -435,7 +519,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_queue_output(arg_name='res',
                                       connection='dummy_out_conn',
                                       queue_name='dummy_out_queue')
-        def dummy():
+        def test_service_bus_queue_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -468,7 +552,7 @@ class TestFunctionsApp(unittest.TestCase):
                                       data_type=DataType.STREAM,
                                       access_rights=AccessRights.MANAGE,
                                       dummy_field="dummy")
-        def dummy():
+        def test_service_bus_queue_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -510,7 +594,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_topic_output(arg_name='res', connection='dummy_conn',
                                       topic_name='dummy_topic',
                                       subscription_name='dummy_sub')
-        def dummy():
+        def test_service_bus_topic_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -543,7 +627,7 @@ class TestFunctionsApp(unittest.TestCase):
                                        connection='dummy_conn',
                                        topic_name='dummy_topic',
                                        subscription_name='dummy_sub')
-        def dummy():
+        def test_service_bus_topic_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -570,7 +654,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.service_bus_topic_output(arg_name='res', connection='dummy_conn',
                                       topic_name='dummy_topic',
                                       subscription_name='dummy_sub')
-        def dummy():
+        def test_service_bus_topic_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -605,7 +689,7 @@ class TestFunctionsApp(unittest.TestCase):
                                       data_type=DataType.STRING,
                                       access_rights=AccessRights.LISTEN,
                                       dummy_field="dummy")
-        def dummy():
+        def test_service_bus_topic_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -648,7 +732,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_hub_output(arg_name="res",
                               event_hub_name="dummy_event_hub",
                               connection="dummy_connection")
-        def dummy():
+        def test_event_hub_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -678,7 +762,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_hub_message_trigger(arg_name="req",
                                        connection="dummy_connection",
                                        event_hub_name="dummy_event_hub")
-        def dummy():
+        def test_event_hub_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -703,7 +787,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.event_hub_output(arg_name="res",
                               event_hub_name="dummy_event_hub",
                               connection="dummy_connection")
-        def dummy():
+        def test_event_hub_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -734,7 +818,7 @@ class TestFunctionsApp(unittest.TestCase):
                               connection="dummy_connection",
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
-        def dummy():
+        def test_event_hub_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -810,7 +894,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  preferred_locations="dummy_location",
                                  data_type=DataType.STRING,
                                  dummy_field="dummy")
-        def dummy():
+        def test_cosmosdb_v3_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -927,7 +1011,7 @@ class TestFunctionsApp(unittest.TestCase):
                               preferred_locations="dummy_location",
                               data_type=DataType.STRING,
                               dummy_field="dummy")
-        def dummy():
+        def test_cosmosdb_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -1011,7 +1095,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  database_name="dummy_out_db",
                                  collection_name="dummy_out_collection",
                                  connection_string_setting="dummy_str")
-        def dummy():
+        def test_cosmosdb_v3_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -1061,7 +1145,7 @@ class TestFunctionsApp(unittest.TestCase):
                               database_name="dummy_out_db",
                               container_name="dummy_out_container",
                               connection="dummy_str")
-        def dummy():
+        def test_cosmosdb_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -1104,7 +1188,7 @@ class TestFunctionsApp(unittest.TestCase):
                                   database_name="dummy_db",
                                   collection_name="dummy_collection",
                                   connection_string_setting="dummy_str")
-        def dummy():
+        def test_cosmosdb_v3_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1128,7 +1212,7 @@ class TestFunctionsApp(unittest.TestCase):
                                database_name="dummy_db",
                                container_name="dummy_container",
                                connection="dummy_str")
-        def dummy():
+        def test_cosmosdb_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1152,7 +1236,7 @@ class TestFunctionsApp(unittest.TestCase):
                                database_name="dummy_db",
                                container_name="dummy_container",
                                connection="dummy_str")
-        def dummy():
+        def test_not_http_function():
             pass
 
         funcs = app.get_functions()
@@ -1171,7 +1255,7 @@ class TestFunctionsApp(unittest.TestCase):
                                 database_name="dummy_in_db",
                                 collection_name="dummy_in_collection",
                                 connection_string_setting="dummy_str")
-        def dummy():
+        def test_cosmosdb_v3_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1200,7 +1284,7 @@ class TestFunctionsApp(unittest.TestCase):
                              database_name="dummy_in_db",
                              container_name="dummy_in_container",
                              connection="dummy_str")
-        def dummy():
+        def test_cosmosdb_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1229,7 +1313,7 @@ class TestFunctionsApp(unittest.TestCase):
                                  database_name="dummy_out_db",
                                  collection_name="dummy_out_collection",
                                  connection_string_setting="dummy_str")
-        def dummy():
+        def test_cosmosdb_v3_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1258,7 +1342,7 @@ class TestFunctionsApp(unittest.TestCase):
                               database_name="dummy_out_db",
                               container_name="dummy_out_container",
                               connection="dummy_str")
-        def dummy():
+        def test_cosmosdb_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1284,7 +1368,7 @@ class TestFunctionsApp(unittest.TestCase):
 
             @app.schedule(arg_name="req1", schedule="dummy_schedule")
             @app.schedule(arg_name="req2", schedule="dummy_schedule")
-            def dummy():
+            def test_multiple_triggers():
                 pass
         self.assertEqual(err.exception.args[0],
                          "A trigger was already registered to this "
@@ -1299,15 +1383,15 @@ class TestFunctionsApp(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             @app.queue_output(arg_name="out", queue_name="dummy_out_queue",
                               connection="dummy_out_conn")
-            def dummy():
+            def test_no_trigger():
                 pass
 
             app.get_functions()
 
         self.assertEqual(err.exception.args[0],
-                         "Function dummy does not have a trigger. A valid "
-                         "function must have one and only one trigger "
-                         "registered.")
+                         "Function test_no_trigger does not have a trigger."
+                         " A valid function must have one and only one"
+                         " trigger registered.")
 
     def test_multiple_input_bindings(self):
         app = self.func_app
@@ -1337,7 +1421,7 @@ class TestFunctionsApp(unittest.TestCase):
             arg_name="res",
             event_hub_name="dummy_event_hub",
             connection="dummy_connection")
-        def dummy():
+        def test_multiple_input_bindings():
             pass
 
         func = self._get_user_function(app)
@@ -1464,7 +1548,7 @@ class TestFunctionsApp(unittest.TestCase):
                         connection="dummy_conn")
         @app.blob_output(arg_name="out", path="dummy_out_path",
                          connection="dummy_out_conn")
-        def dummy():
+        def test_blob_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -1499,7 +1583,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
                           connection="dummy_conn")
-        def dummy():
+        def test_blob_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1522,11 +1606,12 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.blob_trigger(arg_name="req", path="dummy_path",
                           data_type=DataType.STRING,
+                          source=BlobSource.EVENT_GRID,
                           connection="dummy_conn")
         @app.blob_input(arg_name="file", path="dummy_in_path",
                         connection="dummy_in_conn",
                         data_type=DataType.STRING)
-        def dummy():
+        def test_blob_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1543,6 +1628,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
+            "source": BlobSource.EVENT_GRID,
             "connection": "dummy_conn"
         })
 
@@ -1564,7 +1650,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.blob_output(arg_name="out", path="dummy_out_path",
                          connection="dummy_out_conn",
                          data_type=DataType.STRING)
-        def dummy():
+        def test_blob_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1600,7 +1686,7 @@ class TestFunctionsApp(unittest.TestCase):
                              data_type=DataType.BINARY,
                              connection="dummy_conn",
                              path="dummy_path")
-        def dummy():
+        def test_custom_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1629,7 +1715,7 @@ class TestFunctionsApp(unittest.TestCase):
                                    path="dummy_in_path",
                                    connection="dummy_in_conn",
                                    data_type=DataType.STRING)
-        def dummy():
+        def test_custom_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1667,7 +1753,7 @@ class TestFunctionsApp(unittest.TestCase):
                                     path="dummy_out_path",
                                     connection="dummy_out_conn",
                                     data_type=DataType.STRING)
-        def dummy():
+        def test_custom_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1696,7 +1782,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
-        def dummy():
+        def test_custom_http_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1710,7 +1796,7 @@ class TestFunctionsApp(unittest.TestCase):
             "direction": BindingDirection.IN,
             "type": HTTP_TRIGGER,
             "name": "req",
-            "route": "dummy",
+            "route": "test_custom_http_trigger",
             "authLevel": AuthLevel.FUNCTION
         })
 
@@ -1719,7 +1805,7 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.generic_trigger(arg_name="req", type=QUEUE_TRIGGER,
                              direction=BindingDirection.INOUT)
-        def dummy():
+        def test_custom_binding_with_excluded_params():
             pass
 
         func = self._get_user_function(app)
@@ -1741,7 +1827,7 @@ class TestFunctionsApp(unittest.TestCase):
                                     path="dummy_out_path",
                                     connection="dummy_out_conn",
                                     data_type=DataType.STRING)
-        def dummy():
+        def test_mixed_custom_and_supported_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1774,7 +1860,7 @@ class TestFunctionsApp(unittest.TestCase):
             arg_name="res",
             topic_endpoint_uri="dummy_topic_endpoint_uri",
             topic_key_setting="dummy_topic_key_setting")
-        def dummy():
+        def test_event_grid_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -1810,7 +1896,7 @@ class TestFunctionsApp(unittest.TestCase):
             data_type=DataType.UNDEFINED,
             dummy_field="dummy"
         )
-        def dummy():
+        def test_event_grid_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -1841,7 +1927,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.event_grid_trigger(arg_name="req")
-        def dummy():
+        def test_event_grid_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -1863,7 +1949,7 @@ class TestFunctionsApp(unittest.TestCase):
             arg_name="res",
             topic_endpoint_uri="dummy_topic_endpoint_uri",
             topic_key_setting="dummy_topic_key_setting")
-        def dummy():
+        def test_event_grid_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -1889,7 +1975,7 @@ class TestFunctionsApp(unittest.TestCase):
                           connection="dummy_out_conn",
                           row_key="dummy_key",
                           partition_key="dummy_partition_key")
-        def dummy():
+        def test_table_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -1918,7 +2004,7 @@ class TestFunctionsApp(unittest.TestCase):
                              "type": HTTP_TRIGGER,
                              "name": "req",
                              "authLevel": AuthLevel.FUNCTION,
-                             "route": "dummy"
+                             "route": "test_table_default_args"
                          },
                          {
                              "direction": BindingDirection.OUT,
@@ -1946,7 +2032,7 @@ class TestFunctionsApp(unittest.TestCase):
                           connection="dummy_out_conn",
                           row_key="dummy_key",
                           partition_key="dummy_partition_key")
-        def dummy():
+        def test_table_with_all_args():
             pass
 
         func = self._get_user_function(app)
@@ -2004,7 +2090,7 @@ class TestFunctionsApp(unittest.TestCase):
                          take=1,
                          filter="dummy_filter",
                          data_type=DataType.STRING)
-        def dummy():
+        def test_table_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -2035,7 +2121,7 @@ class TestFunctionsApp(unittest.TestCase):
                           row_key="dummy_key",
                           partition_key="dummy_partition_key",
                           data_type=DataType.STRING)
-        def dummy():
+        def test_table_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -2067,7 +2153,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.sql_output(arg_name="out",
                         command_text="dummy_table",
                         connection_string_setting="dummy_setting")
-        def dummy():
+        def test_sql_default_args():
             pass
 
         func = self._get_user_function(app)
@@ -2120,7 +2206,7 @@ class TestFunctionsApp(unittest.TestCase):
                         connection_string_setting="dummy_setting",
                         data_type=DataType.STRING,
                         dummy_field="dummy")
-        def dummy():
+        def test_sql_full_args():
             pass
 
         func = self._get_user_function(app)
@@ -2166,7 +2252,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.sql_trigger(arg_name="trigger",
                          table_name="dummy_table",
                          connection_string_setting="dummy_setting")
-        def dummy():
+        def test_sql_trigger():
             pass
 
         func = self._get_user_function(app)
@@ -2191,7 +2277,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.sql_input(arg_name="in",
                        command_text="dummy_query",
                        connection_string_setting="dummy_setting")
-        def dummy():
+        def test_sql_input_binding():
             pass
 
         func = self._get_user_function(app)
@@ -2217,7 +2303,7 @@ class TestFunctionsApp(unittest.TestCase):
         @app.sql_output(arg_name="out",
                         command_text="dummy_table",
                         connection_string_setting="dummy_setting")
-        def dummy():
+        def test_sql_output_binding():
             pass
 
         func = self._get_user_function(app)
@@ -2251,7 +2337,7 @@ class TestFunctionsApp(unittest.TestCase):
                           connection="dummy_out_conn",
                           row_key="dummy_key",
                           partition_key="dummy_partition_key")
-        def dummy():
+        def test_function_app_full_bindings_metadata_key_order():
             pass
 
         self._test_function_metadata_order(app)
@@ -2260,7 +2346,7 @@ class TestFunctionsApp(unittest.TestCase):
         app = self.func_app
 
         @app.generic_trigger(arg_name="req", type=HTTP_TRIGGER)
-        def dummy():
+        def test_function_app_generic_http_trigger_metadata_key_order():
             pass
 
         self._test_function_metadata_order(app)
@@ -2278,11 +2364,12 @@ class TestFunctionsApp(unittest.TestCase):
 
         @app.schedule(arg_name="req", schedule="dummy_schedule")
         @app.retry(strategy="fixed", max_retry_count="2", delay_interval="4")
-        def dummy_func():
+        def test_function_app_retry_default_args():
             pass
 
         func = self._get_user_function(app)
-        self.assertEqual(func.get_function_name(), "dummy_func")
+        self.assertEqual(func.get_function_name(),
+                         "test_function_app_retry_default_args")
         self.assertEqual(func.get_setting("retry_policy").get_dict_repr(), {
             'setting_name': 'retry_policy',
             'strategy': 'fixed',

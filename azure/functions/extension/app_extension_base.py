@@ -62,12 +62,13 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     # DO NOT decorate this with @abc.abstractstatismethod
     # since implementation by subclass is not mandatory
     @classmethod
-    def pre_invocation_app_level(cls,
-                                 logger: Logger,
-                                 context: Context,
-                                 func_args: typing.Dict[str, object] = {},
-                                 *args,
-                                 **kwargs) -> None:
+    def pre_invocation_app_level(
+            cls,
+            logger: Logger,
+            context: Context,
+            func_args: typing.Optional[typing.Dict[str, object]] = None,
+            *args,
+            **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
         before a customer's function is being executed.
 
@@ -90,13 +91,14 @@ class AppExtensionBase(metaclass=ExtensionMeta):
     # DO NOT decorate this with @abc.abstractstatismethod
     # since implementation by subclass is not mandatory
     @classmethod
-    def post_invocation_app_level(cls,
-                                  logger: Logger,
-                                  context: Context,
-                                  func_args: typing.Dict[str, object] = {},
-                                  func_ret: typing.Optional[object] = None,
-                                  *args,
-                                  **kwargs) -> None:
+    def post_invocation_app_level(
+            cls,
+            logger: Logger,
+            context: Context,
+            func_args: typing.Optional[typing.Dict[str, object]] = None,
+            func_ret: typing.Optional[object] = None,
+            *args,
+            **kwargs) -> None:
         """This must be implemented as a @staticmethod. It will be called right
         after a customer's function is being executed.
 
