@@ -549,12 +549,6 @@ class TestFunctionBuilder(unittest.TestCase):
 
         self.dummy = test_validate_function_working_no_args
         self.fb = FunctionBuilder(self.dummy, "dummy.py")
-
-        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
-                              data_type=DataType.UNDEFINED,
-                              auth_level=AuthLevel.ANONYMOUS,
-                              route='test_validate_function_working')
-        self.fb.add_trigger(trigger)
         self.assertEqual(self.fb(), "dummy")
 
     def test_user_function_is_directly_callable_args(self):
@@ -563,12 +557,6 @@ class TestFunctionBuilder(unittest.TestCase):
 
         self.dummy = test_validate_function_working_sum_args
         self.fb = FunctionBuilder(self.dummy, "dummy.py")
-
-        trigger = HttpTrigger(name='req', methods=(HttpMethod.GET,),
-                              data_type=DataType.UNDEFINED,
-                              auth_level=AuthLevel.ANONYMOUS,
-                              route='test_validate_function_working')
-        self.fb.add_trigger(trigger)
         self.assertEqual(self.fb(1, 2), 3)
 
 
