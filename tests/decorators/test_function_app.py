@@ -543,6 +543,22 @@ class TestFunctionBuilder(unittest.TestCase):
             " Please change @app.function_name() or the function"
             " method name to be unique.")
 
+    def test_user_function_is_directly_callable_no_args(self):
+        def test_validate_function_working_no_args():
+            return "dummy"
+
+        self.dummy = test_validate_function_working_no_args
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+        self.assertEqual(self.fb(), "dummy")
+
+    def test_user_function_is_directly_callable_args(self):
+        def test_validate_function_working_sum_args(arg1: int, arg2: int):
+            return arg1 + arg2
+
+        self.dummy = test_validate_function_working_sum_args
+        self.fb = FunctionBuilder(self.dummy, "dummy.py")
+        self.assertEqual(self.fb(1, 2), 3)
+
 
 class TestScaffold(unittest.TestCase):
     def setUp(self):
