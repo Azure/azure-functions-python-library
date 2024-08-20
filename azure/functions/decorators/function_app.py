@@ -75,6 +75,26 @@ class Function(object):
         self.http_type = 'function'
         self._is_http_function = False
 
+    def __str__(self):
+        """Return the function.json representation of the function"""
+        return self.get_function_json()
+
+    def __call__(self, *args, **kwargs):
+        """This would allow the Function object to be directly callable and runnable
+        directly using the interpreter locally.
+
+        Example:
+        @app.route(route="http_trigger")
+        def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
+            return "Hello, World!"
+
+        print(http_trigger(None))
+
+        ➜ python function_app.py
+        Hello, World!
+        """
+        return self._func(*args, **kwargs)
+
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
 
@@ -201,9 +221,6 @@ class Function(object):
         """
         return json.dumps(self.get_dict_repr(), cls=StringifyEnumJsonEncoder)
 
-    def __str__(self):
-        return self.get_function_json()
-
 
 class FunctionBuilder(object):
 
@@ -211,7 +228,8 @@ class FunctionBuilder(object):
         self._function = Function(func, function_script_file)
 
     def __call__(self, *args, **kwargs):
-        pass
+        """Call the Function object directly"""
+        return self._function(*args, **kwargs)
 
     def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
         self._function.set_http_type(http_type)
