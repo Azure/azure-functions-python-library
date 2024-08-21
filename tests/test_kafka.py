@@ -48,7 +48,8 @@ class Kafka(unittest.TestCase):
             azf_ka.KafkaConverter.check_input_type_annotation
         )
 
-        self.assertTrue(check_input_type(func.KafkaEvent | List[func.KafkaEvent]))
+        self.assertTrue(check_input_type(
+            func.KafkaEvent | List[func.KafkaEvent]))
         self.assertFalse(check_input_type(func.KafkaEvent | List[str]))
         self.assertFalse(check_input_type(str | List[func.KafkaEvent]))
         self.assertFalse(check_input_type(str | List[str]))

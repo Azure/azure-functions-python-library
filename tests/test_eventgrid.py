@@ -36,13 +36,16 @@ class MyTestCase(unittest.TestCase):
 
         self.assertTrue(check_output_type(
             func.EventGridOutputEvent | List[func.EventGridOutputEvent]))
-        self.assertTrue(check_output_type(func.EventGridOutputEvent | List[str]))
-        self.assertTrue(check_output_type(str | List[func.EventGridOutputEvent]))
+        self.assertTrue(check_output_type(
+            func.EventGridOutputEvent | List[str]))
+        self.assertTrue(check_output_type(
+            str | List[func.EventGridOutputEvent]))
         self.assertTrue(check_output_type(str | List[str]))
-        self.assertTrue(check_output_type(func.EventGridOutputEvent | List[bytes]))
-        self.assertTrue(check_output_type(bytes | List[func.EventGridOutputEvent]))
+        self.assertTrue(check_output_type(
+            func.EventGridOutputEvent | List[bytes]))
+        self.assertTrue(check_output_type(
+            bytes | List[func.EventGridOutputEvent]))
         self.assertTrue(check_output_type(bytes | List[bytes]))
-
 
     def test_eventgrid_decode(self):
         eventGridEvent = azf_event_grid.EventGridEventInConverter.decode(
