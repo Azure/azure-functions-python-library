@@ -3,6 +3,7 @@
 
 from typing import Dict, List
 import json
+import sys
 import unittest
 from datetime import datetime, timedelta, date
 
@@ -219,7 +220,6 @@ class TestServiceBus(unittest.TestCase):
 
         # Should accept a multiple service bus message as trigger input type
         self.assertTrue(check_input_type(List[func.ServiceBusMessage]))
-        self.assertTrue(check_input_type(func.ServiceBusMessage | List[func.ServiceBusMessage]))
 
         # Should accept a message class derived from service bus
         class ServiceBusMessageChild(func.ServiceBusMessage):
@@ -231,6 +231,16 @@ class TestServiceBus(unittest.TestCase):
         self.assertFalse(check_input_type(func.EventHubEvent))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(type(None)))
+
+    @unittest.skipIf(sys.version_info < (3, 10),
+                     reason="requires Python 3.10 or above")
+    def test_servicebus_input_type_above_310(self):
+        check_input_type = (
+            azf_sb.ServiceBusMessageInConverter.check_input_type_annotation
+        )
+
+        self.assertTrue(check_input_type(
+            func.ServiceBusMessage | List[func.ServiceBusMessage]))
         self.assertFalse(check_input_type(func.ServiceBusMessage | List[str]))
         self.assertFalse(check_input_type(str | List[func.ServiceBusMessage]))
         self.assertFalse(check_input_type(str | List[str]))

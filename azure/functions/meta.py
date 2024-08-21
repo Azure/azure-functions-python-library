@@ -50,7 +50,8 @@ def is_supported_union_annotation(annotation: object, pytype: object) -> bool:
     args = get_args(annotation)
     for arg in args:
         supported = (is_iterable_type_annotation(arg, pytype)
-                     or (isinstance(arg, type) and issubclass(arg, pytype)))
+                     or (isinstance(arg, type) and issubclass(arg,
+                                                              pytype)))  # noqa
         if not supported:
             return False
     return True

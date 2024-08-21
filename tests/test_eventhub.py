@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+import sys
 from typing import List, Mapping
 import unittest
 import json
@@ -23,10 +23,18 @@ class TestEventHub(unittest.TestCase):
         )
         self.assertTrue(check_input_type(func.EventHubEvent))
         self.assertTrue(check_input_type(List[func.EventHubEvent]))
-        self.assertTrue(check_input_type(func.EventHubEvent | List[func.EventHubEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
         self.assertFalse(check_input_type(List[str]))
+
+    @unittest.skipIf(sys.version_info < (3, 10),
+                     reason="requires Python 3.10 or above")
+    def test_eventhub_input_type_above_310(self):
+        check_input_type = (
+            azf_eh.EventHubConverter.check_input_type_annotation
+        )
+        self.assertTrue(check_input_type(
+            func.EventHubEvent | List[func.EventHubEvent]))
         self.assertFalse(check_input_type(func.EventHubEvent | List[str]))
         self.assertFalse(check_input_type(str | List[func.EventHubEvent]))
         self.assertFalse(check_input_type(str | List[str]))
