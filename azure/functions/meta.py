@@ -9,7 +9,7 @@ import re
 import sys
 
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
-if sys.version_info >= (3, 8):
+if sys.version_info >= (3, 9):
     from typing import get_origin, get_args
 else:
     from ._thirdparty.typing_inspect import get_origin, get_args
@@ -22,10 +22,14 @@ from ._utils import (
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
+    """Since python 3.9, standard collection types are supported in type hint.
+    origin is the unsubscripted version of a type (eg. list, union, etc.).
+
+    If origin is not None, then the type annotation is a builtin or part of
+    the collections class.
+    """
     origin = get_origin(annotation)
     if sys.version_info >= (3, 9):
-        # Since python 3.9, standard collection types
-        # are supported in type hint
         is_iterable_anno = (origin is not None
                             and issubclass(origin, collections.abc.Iterable))
     else:
