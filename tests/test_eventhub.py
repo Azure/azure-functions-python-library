@@ -23,9 +23,13 @@ class TestEventHub(unittest.TestCase):
         )
         self.assertTrue(check_input_type(func.EventHubEvent))
         self.assertTrue(check_input_type(List[func.EventHubEvent]))
+        self.assertTrue(check_input_type(func.EventHubEvent | List[func.EventHubEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
         self.assertFalse(check_input_type(List[str]))
+        self.assertFalse(check_input_type(func.EventHubEvent | List[str]))
+        self.assertFalse(check_input_type(str | List[func.EventHubEvent]))
+        self.assertFalse(check_input_type(str | List[str]))
 
     def test_eventhub_output_type(self):
         check_output_type = (
