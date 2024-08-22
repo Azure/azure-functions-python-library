@@ -20,7 +20,6 @@ from ._utils import (
 )
 
 
-
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     is_iterable_anno = (
         typing_inspect.is_generic_type(annotation)
@@ -46,7 +45,7 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
 def is_supported_union_annotation(annotation: object, pytype) -> bool:
     """Allows for Union annotation in function apps to be used as a type
     hint, as long as the types in the Union are supported. This is
-    supported for bindings that allow for cardinality=many.
+    supported for bindings that allow for multiple types.
     """
     origin = get_origin(annotation)
     if origin is not Union:

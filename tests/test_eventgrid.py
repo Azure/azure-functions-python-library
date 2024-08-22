@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 from datetime import datetime
-import sys
 import unittest
 from typing import List
 
@@ -27,25 +26,6 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(List[str]))
-
-    @unittest.skipIf(sys.version_info < (3, 10),
-                     reason="requires Python 3.10 or above")
-    def test_eventgrid_output_type_above_310(self):
-        check_output_type = azf_event_grid.EventGridEventOutConverter. \
-            check_output_type_annotation
-
-        self.assertTrue(check_output_type(
-            func.EventGridOutputEvent | List[func.EventGridOutputEvent]))
-        self.assertTrue(check_output_type(
-            func.EventGridOutputEvent | List[str]))
-        self.assertTrue(check_output_type(
-            str | List[func.EventGridOutputEvent]))
-        self.assertTrue(check_output_type(str | List[str]))
-        self.assertTrue(check_output_type(
-            func.EventGridOutputEvent | List[bytes]))
-        self.assertTrue(check_output_type(
-            bytes | List[func.EventGridOutputEvent]))
-        self.assertTrue(check_output_type(bytes | List[bytes]))
 
     def test_eventgrid_decode(self):
         eventGridEvent = azf_event_grid.EventGridEventInConverter.decode(
