@@ -6,14 +6,19 @@ import collections.abc
 import datetime
 import json
 import re
-from typing import (Dict, Optional, Union,
-                    Tuple, Mapping, Any, get_origin, get_args)
+import sys
+from typing import Dict, Optional, Union, Tuple, Mapping, Any
+if sys.version_info >= (3, 9):
+    from typing import get_origin, get_args
+else:
+    from ._thirdparty.typing_inspect import get_origin, get_args
 
 from ._thirdparty import typing_inspect
 from ._utils import (
     try_parse_datetime_with_formats,
     try_parse_timedelta_with_formats
 )
+
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
@@ -38,7 +43,7 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
                    for arg in args)
 
 
-def is_supported_union_annotation(annotation: object, pytype: object) -> bool:
+def is_supported_union_annotation(annotation: object, pytype) -> bool:
     """Allows for Union annotation in function apps to be used as a type
     hint, as long as the types in the Union are supported. This is
     supported for bindings that allow for cardinality=many.
@@ -51,7 +56,7 @@ def is_supported_union_annotation(annotation: object, pytype: object) -> bool:
     for arg in args:
         supported = (is_iterable_type_annotation(arg, pytype)
                      or (isinstance(arg, type) and issubclass(arg,
-                                                              pytype)))  # noqa
+                                                              pytype)))
         if not supported:
             return False
     return True
