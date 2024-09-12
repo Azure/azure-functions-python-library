@@ -36,6 +36,7 @@ class TestFunction(unittest.TestCase):
 
     def test_function_creation(self):
         self.assertEqual(self.func.get_user_function(), self.dummy)
+        self.assertEqual(self.func._get_function(), self.dummy)
         self.assertEqual(self.func.function_script_file, "dummy.py")
 
     def test_add_trigger(self):
