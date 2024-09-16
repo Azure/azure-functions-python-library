@@ -52,11 +52,12 @@ class EventGridEventOutConverter(meta.OutConverter, binding="eventGrid"):
     def check_output_type_annotation(cls, pytype: type) -> bool:
         valid_types = (str, bytes, azf_eventgrid.EventGridOutputEvent,
                        List[azf_eventgrid.EventGridOutputEvent])
-        return (meta.is_iterable_type_annotation(pytype, str) or meta.
-                is_iterable_type_annotation(pytype,
-                                            azf_eventgrid.EventGridOutputEvent)
+        return (meta.is_iterable_type_annotation(pytype, str)
+                or meta.is_iterable_type_annotation(
+                    pytype,
+                    azf_eventgrid.EventGridOutputEvent)
                 or (isinstance(pytype, type)
-                and issubclass(pytype, valid_types)))
+                    and issubclass(pytype, valid_types)))
 
     @classmethod
     def encode(cls, obj: Any, *, expected_type:

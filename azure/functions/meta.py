@@ -6,7 +6,12 @@ import collections.abc
 import datetime
 import json
 import re
+import sys
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
+if sys.version_info >= (3, 9):
+    from typing import get_origin, get_args
+else:
+    from ._thirdparty.typing_inspect import get_origin, get_args
 
 from ._thirdparty import typing_inspect
 from ._utils import (
@@ -35,6 +40,25 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     else:
         return any(isinstance(pytype, type) and issubclass(pytype, arg)
                    for arg in args)
+
+
+def is_supported_union_annotation(annotation: object, pytype) -> bool:
+    """Allows for Union annotation in function apps to be used as a type
+    hint, as long as the types in the Union are supported. This is
+    supported for bindings that allow for multiple types.
+    """
+    origin = get_origin(annotation)
+    if origin is not Union:
+        return False
+
+    args = get_args(annotation)
+    for arg in args:
+        supported = (is_iterable_type_annotation(arg, pytype)
+                     or (isinstance(arg, type) and issubclass(arg,
+                                                              pytype)))
+        if not supported:
+            return False
+    return True
 
 
 class Datum:

@@ -228,7 +228,8 @@ class ServiceBusMessageInConverter(meta.InConverter,
     def check_input_type_annotation(cls, pytype: type) -> bool:
         valid_types = (azf_sbus.ServiceBusMessage)
         return (
-            meta.is_iterable_type_annotation(pytype, valid_types)
+            meta.is_supported_union_annotation(pytype, valid_types)
+            or meta.is_iterable_type_annotation(pytype, valid_types)
             or (isinstance(pytype, type) and issubclass(pytype, valid_types))
         )
 
