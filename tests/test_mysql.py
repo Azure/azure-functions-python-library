@@ -170,7 +170,8 @@ class TestMySql(unittest.TestCase):
         """, "json")
         mysqlRowList: func.MySqlRowList = mysql.MySqlConverter.decode(
             data=datum, trigger_metadata=None)
-        datum = mysql.MySqlConverter.encode(obj=mysqlRowList, expected_type=None)
+        datum = mysql.MySqlConverter.encode(
+            obj=mysqlRowList, expected_type=None)
         self.assertEqual(datum.type,
                          'json',
                          'Datum type should be JSON')
