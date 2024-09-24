@@ -11,7 +11,7 @@ from . import meta
 
 
 class MySqlConverter(meta.InConverter, meta.OutConverter,
-                   binding='mysql'):
+                     binding='mysql'):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
