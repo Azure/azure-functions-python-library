@@ -77,7 +77,7 @@ class AssistantQueryInput(InputBinding):
                  name: str,
                  id: str,
                  timestamp_utc: str,
-                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",
+                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",        # noqa: E501
                  collection_name: Optional[str] = "SampleChatState",
                  data_type: Optional[DataType] = None,
                  **kwargs):
@@ -169,7 +169,7 @@ class AssistantPostInput(InputBinding):
                  id: str,
                  user_message: str,
                  model: Optional[str] = None,
-                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",
+                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                  collection_name: Optional[str] = "SampleChatState",
                  data_type: Optional[DataType] = None,
                  **kwargs):

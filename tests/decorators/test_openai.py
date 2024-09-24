@@ -57,7 +57,7 @@ class TestOpenAI(unittest.TestCase):
     def test_assistant_query_input_valid_creation(self):
         input = AssistantQueryInput(name="test",
                                     timestamp_utc="timestamp_utc",
-                                    chat_storage_connection_setting="AzureWebJobsStorage",
+                                    chat_storage_connection_setting="AzureWebJobsStorage",       # noqa: E501
                                     collection_name="SampleChatState",
                                     data_type=DataType.UNDEFINED,
                                     id="test_id",
@@ -68,7 +68,7 @@ class TestOpenAI(unittest.TestCase):
         self.assertEqual(input.get_dict_repr(),
                          {"name": "test",
                           "timestampUtc": "timestamp_utc",
-                          "chatStorageConnectionSetting": "AzureWebJobsStorage",
+                          "chatStorageConnectionSetting": "AzureWebJobsStorage",       # noqa: E501
                           "collectionName": "SampleChatState",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,
@@ -115,7 +115,7 @@ class TestOpenAI(unittest.TestCase):
         input = AssistantPostInput(name="test",
                                    id="test_id",
                                    model="test_model",
-                                   chat_storage_connection_setting="AzureWebJobsStorage",
+                                   chat_storage_connection_setting="AzureWebJobsStorage",       # noqa: E501
                                    collection_name="SampleChatState",
                                    user_message="test_message",
                                    data_type=DataType.UNDEFINED,
@@ -126,7 +126,7 @@ class TestOpenAI(unittest.TestCase):
                          {"name": "test",
                           "id": "test_id",
                           "model": "test_model",
-                          "chatStorageConnectionSetting": "AzureWebJobsStorage",
+                          "chatStorageConnectionSetting": "AzureWebJobsStorage",       # noqa: E501
                           "collectionName": "SampleChatState",
                           "userMessage": "test_message",
                           "dataType": DataType.UNDEFINED,
