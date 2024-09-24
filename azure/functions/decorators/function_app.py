@@ -80,8 +80,8 @@ class Function(object):
         return self.get_function_json()
 
     def __call__(self, *args, **kwargs):
-        """This would allow the Function object to be directly callable and runnable
-        directly using the interpreter locally.
+        """This would allow the Function object to be directly callable
+        and runnable directly using the interpreter locally.
 
         Example:
         @app.route(route="http_trigger")
@@ -332,8 +332,8 @@ class DecoratorApi(ABC):
         return wrap
 
     def _get_durable_blueprint(self):
-        """Attempt to import the Durable Functions SDK from which DF decorators are
-        implemented.
+        """Attempt to import the Durable Functions SDK from which DF
+        decorators are implemented.
         """
 
         try:
@@ -3266,8 +3266,8 @@ class BindingApi(DecoratorApi, ABC):
                               arg_name: str,
                               id: str,
                               timestamp_utc: str,
-                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",
-                              collection_name: Optional[str] = "SampleChatState",
+                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
+                              collection_name: Optional[str] = "SampleChatState",       # noqa: E501
                               data_type: Optional[
                                   Union[DataType, str]] = None,
                               **kwargs) \
@@ -3280,10 +3280,10 @@ class BindingApi(DecoratorApi, ABC):
         :param timestamp_utc: the timestamp of the earliest message in the chat
         history to fetch. The timestamp should be in ISO 8601 format - for
         example, 2023-08-01T00:00:00Z.
-        :param chat_storage_connection_setting:  The configuration section name 
-        for the table settings for assistant chat storage. The default value is 
+        :param chat_storage_connection_setting:  The configuration section name
+        for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
-        :param collection_name:  The table collection name for assistant chat 
+        :param collection_name:  The table collection name for assistant chat
         storage. The default value is "SampleChatState".
         :param id: The ID of the Assistant to query.
         :param data_type: Defines how Functions runtime should treat the
@@ -3302,7 +3302,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         id=id,
                         timestamp_utc=timestamp_utc,
-                        chat_storage_connection_setting=chat_storage_connection_setting,
+                        chat_storage_connection_setting=chat_storage_connection_setting,       # noqa: E501
                         collection_name=collection_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -3317,8 +3317,8 @@ class BindingApi(DecoratorApi, ABC):
                              id: str,
                              user_message: str,
                              model: Optional[str] = None,
-                             chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",
-                             collection_name: Optional[str] = "SampleChatState",
+                             chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
+                             collection_name: Optional[str] = "SampleChatState",       # noqa: E501
                              data_type: Optional[
                                  Union[DataType, str]] = None,
                              **kwargs) \
@@ -3332,10 +3332,10 @@ class BindingApi(DecoratorApi, ABC):
         :param user_message: The user message that user has entered for
         assistant to respond to.
         :param model: The OpenAI chat model to use.
-        :param chat_storage_connection_setting:  The configuration section name 
-        for the table settings for assistant chat storage. The default value is 
+        :param chat_storage_connection_setting:  The configuration section name
+        for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
-        :param collection_name:  The table collection name for assistant chat 
+        :param collection_name:  The table collection name for assistant chat
         storage. The default value is "SampleChatState".
         :param data_type: Defines how Functions runtime should treat the
         parameter value
@@ -3354,7 +3354,7 @@ class BindingApi(DecoratorApi, ABC):
                         id=id,
                         user_message=user_message,
                         model=model,
-                        chat_storage_connection_setting=chat_storage_connection_setting,
+                        chat_storage_connection_setting=chat_storage_connection_setting,       # noqa: E501
                         collection_name=collection_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
