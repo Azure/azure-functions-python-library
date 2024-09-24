@@ -38,7 +38,7 @@ from . import timer  # NoQA
 from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
-from . import mysql #NoQA
+from . import mysql  # NoQA
 
 
 __all__ = (
