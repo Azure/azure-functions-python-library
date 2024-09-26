@@ -1628,7 +1628,7 @@ class TestFunctionsApp(unittest.TestCase):
             "type": BLOB_TRIGGER,
             "name": "req",
             "path": "dummy_path",
-            "source": BlobSource.EVENT_GRID,
+            "source": "EventGrid",
             "connection": "dummy_conn"
         })
 
