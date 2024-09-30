@@ -86,12 +86,13 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def pre_invocation(self,
-                       logger: Logger,
-                       context: Context,
-                       func_args: typing.Dict[str, object] = {},
-                       *args,
-                       **kwargs) -> None:
+    def pre_invocation(
+            self,
+            logger: Logger,
+            context: Context,
+            func_args: typing.Optional[typing.Dict[str, object]] = None,
+            *args,
+            **kwargs) -> None:
         """This hook will be called right before customer's function
         is being executed.
 
@@ -113,13 +114,14 @@ class FuncExtensionBase(metaclass=ExtensionMeta):
 
     # DO NOT decorate this with @abc.abstractmethod
     # since implementation by subclass is not mandatory
-    def post_invocation(self,
-                        logger: Logger,
-                        context: Context,
-                        func_args: typing.Dict[str, object] = {},
-                        func_ret: typing.Optional[object] = None,
-                        *args,
-                        **kwargs) -> None:
+    def post_invocation(
+            self,
+            logger: Logger,
+            context: Context,
+            func_args: typing.Optional[typing.Dict[str, object]] = None,
+            func_ret: typing.Optional[object] = None,
+            *args,
+            **kwargs) -> None:
         """This hook will be called right after a customer's function
         is executed.
 
