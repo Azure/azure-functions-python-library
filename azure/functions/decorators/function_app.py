@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -24,6 +24,8 @@ from azure.functions.decorators.eventgrid import EventGridTrigger, \
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
+from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
+    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -35,6 +37,11 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
+    AssistantCreateOutput, \
+    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
+    semantic_search_system_prompt, \
+    SemanticSearchInput, EmbeddingsStoreOutput
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -67,6 +74,26 @@ class Function(object):
         self.function_script_file = script_file
         self.http_type = 'function'
         self._is_http_function = False
+
+    def __str__(self):
+        """Return the function.json representation of the function"""
+        return self.get_function_json()
+
+    def __call__(self, *args, **kwargs):
+        """This would allow the Function object to be directly callable and runnable
+        directly using the interpreter locally.
+
+        Example:
+        @app.route(route="http_trigger")
+        def http_trigger(req: func.HttpRequest) -> func.HttpResponse:
+            return "Hello, World!"
+
+        print(http_trigger(None))
+
+        ➜ python function_app.py
+        Hello, World!
+        """
+        return self._func(*args, **kwargs)
 
     def add_binding(self, binding: Binding) -> None:
         """Add a binding instance to the function.
@@ -194,16 +221,15 @@ class Function(object):
         """
         return json.dumps(self.get_dict_repr(), cls=StringifyEnumJsonEncoder)
 
-    def __str__(self):
-        return self.get_function_json()
-
 
 class FunctionBuilder(object):
+
     def __init__(self, func, function_script_file):
         self._function = Function(func, function_script_file)
 
     def __call__(self, *args, **kwargs):
-        pass
+        """Call the Function object directly"""
+        return self._function(*args, **kwargs)
 
     def configure_http_type(self, http_type: str) -> 'FunctionBuilder':
         self._function.set_http_type(http_type)
@@ -226,6 +252,12 @@ class FunctionBuilder(object):
                            auth_level: Optional[AuthLevel] = None) -> None:
         """
         Validates the function information before building the function.
+
+        Functions with the same function name are not supported and should
+        fail indexing. If a function name is not defined, the default is the
+        method name. This also means that two functions with the same
+        method name will also fail indexing.
+        https://github.com/Azure/azure-functions-python-worker/issues/1489
 
         :param auth_level: Http auth level that will be set if http
         trigger function auth level is None.
@@ -294,7 +326,9 @@ class DecoratorApi(ABC):
                 self._function_builders.pop()
                 self._function_builders.append(function_builder)
                 return function_builder
+
             return decorator()
+
         return wrap
 
     def _get_durable_blueprint(self):
@@ -307,9 +341,10 @@ class DecoratorApi(ABC):
             df_bp = df.Blueprint()
             return df_bp
         except ImportError:
-            error_message = "Attempted to use a Durable Functions decorator, "\
-                "but the `azure-functions-durable` SDK package could not be "\
-                "found. Please install `azure-functions-durable` to use "\
+            error_message = \
+                "Attempted to use a Durable Functions decorator, " \
+                "but the `azure-functions-durable` SDK package could not be " \
+                "found. Please install `azure-functions-durable` to use " \
                 "Durable Functions."
             raise Exception(error_message)
 
@@ -325,7 +360,7 @@ class DecoratorApi(ABC):
         return self._app_script_file
 
     def function_name(self, name: str,
-                      setting_extra_fields: Dict[str, Any] = {},
+                      setting_extra_fields: Optional[Dict[str, Any]] = None,
                       ) -> Callable[..., Any]:
         """Optional: Sets name of the :class:`Function` object. If not set,
         it will default to the name of the method name.
@@ -335,6 +370,8 @@ class DecoratorApi(ABC):
         additional setting fields
         :return: Decorator function.
         """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -429,8 +466,8 @@ class TriggerApi(DecoratorApi, ABC):
               methods: Optional[
                   Union[Iterable[str], Iterable[HttpMethod]]] = None,
               auth_level: Optional[Union[AuthLevel, str]] = None,
-              trigger_extra_fields: Dict[str, Any] = {},
-              binding_extra_fields: Dict[str, Any] = {}
+              trigger_extra_fields: Optional[Dict[str, Any]] = None,
+              binding_extra_fields: Optional[Dict[str, Any]] = None
               ) -> Callable[..., Any]:
         """The route decorator adds :class:`HttpTrigger` and
         :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
@@ -461,6 +498,10 @@ class TriggerApi(DecoratorApi, ABC):
         json. For example,
         >>> data_type='STRING' # 'dataType': 'STRING' in binding json
         """
+        if trigger_extra_fields is None:
+            trigger_extra_fields = {}
+        if binding_extra_fields is None:
+            binding_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -1106,6 +1147,8 @@ class TriggerApi(DecoratorApi, ABC):
                      arg_name: str,
                      path: str,
                      connection: str,
+                     source: Optional[BlobSource] =
+                     None,
                      data_type: Optional[DataType] = None,
                      **kwargs) -> Callable[..., Any]:
         """
@@ -1123,6 +1166,12 @@ class TriggerApi(DecoratorApi, ABC):
         :param path: The path to the blob.
         :param connection: The name of an app setting or setting collection
         that specifies how to connect to Azure Blobs.
+        :param source: Sets the source of the triggering event.
+        Use EventGrid for an Event Grid-based blob trigger,
+        which provides much lower latency.
+        The default is LogsAndContainerScan,
+        which uses the standard polling mechanism to detect changes
+        in the container.
         :param data_type: Defines how Functions runtime should treat the
         parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
@@ -1139,6 +1188,7 @@ class TriggerApi(DecoratorApi, ABC):
                         name=arg_name,
                         path=path,
                         connection=connection,
+                        source=source,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -1179,6 +1229,155 @@ class TriggerApi(DecoratorApi, ABC):
                 fb.add_trigger(
                     trigger=EventGridTrigger(
                         name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def kafka_trigger(self,
+                      arg_name: str,
+                      topic: str,
+                      broker_list: str,
+                      event_hub_connection_string: Optional[str] = None,
+                      consumer_group: Optional[str] = None,
+                      avro_schema: Optional[str] = None,
+                      username: Optional[str] = None,
+                      password: Optional[str] = None,
+                      ssl_key_location: Optional[str] = None,
+                      ssl_ca_location: Optional[str] = None,
+                      ssl_certificate_location: Optional[str] = None,
+                      ssl_key_password: Optional[str] = None,
+                      schema_registry_url: Optional[str] = None,
+                      schema_registry_username: Optional[str] = None,
+                      schema_registry_password: Optional[str] = None,
+                      o_auth_bearer_method: Optional[Union[OAuthBearerMethod, str]] = None,  # noqa E501
+                      o_auth_bearer_client_id: Optional[str] = None,
+                      o_auth_bearer_client_secret: Optional[str] = None,
+                      o_auth_bearer_scope: Optional[str] = None,
+                      o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                      o_auth_bearer_extensions: Optional[str] = None,
+                      authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NotSet", # noqa E501
+                      protocol: Optional[Union[BrokerProtocol, str]] = "NotSet", # noqa E501
+                      cardinality: Optional[Union[Cardinality, str]] = "One",
+                      lag_threshold: int = 1000,
+                      data_type: Optional[Union[DataType, str]] = None,
+                      **kwargs) -> Callable[..., Any]:
+        """
+        The kafka_trigger decorator adds
+        :class:`KafkaTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining kafka trigger
+        in the function.json which enables function to be triggered to
+        respond to an event sent to a kafka topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/kafkatrigger
+
+        :param arg_name: the variable name used in function code for the
+            parameter that has the kafka event data.
+        :param topic: The topic monitored by the trigger.
+        :param broker_list: The list of Kafka brokers monitored by the trigger.
+        :param event_hub_connection_string: The name of an app setting that
+        contains the connection string for the eventhub when using Kafka
+        protocol header feature of Azure EventHubs.
+        :param consumer_group: Kafka consumer group used by the trigger.
+        :param avro_schema: This should be used only if a generic record
+        should be generated.
+        :param username: SASL username for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.username' in librdkafka.
+        :param password: SASL password for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.password' in librdkafka.
+        :param ssl_key_location: Path to client's private key (PEM) used for
+          authentication. Default is empty string. This is equivalent to
+        'ssl.key.location' in librdkafka.
+        :param ssl_ca_location: Path to CA certificate file for verifying the
+        broker's certificate. This is equivalent to 'ssl.ca.location' in
+        librdkafka.
+        :param ssl_certificate_location: Path to client's certificate. This is
+        equivalent to 'ssl.certificate.location' in librdkafka.
+        :param ssl_key_password: Password for client's certificate. This is
+        equivalent to 'ssl.key.password' in librdkafka.
+        :param schema_registry_url: URL for the Avro Schema Registry.
+        :param schema_registry_username: Username for the Avro Schema Registry.
+        :param schema_registry_password: Password for the Avro Schema Registry.
+        :param o_auth_bearer_method: Either 'default' or 'oidc'.
+        sasl.oauthbearer in librdkafka.
+        :param o_auth_bearer_client_id: Specify only when o_auth_bearer_method
+        is 'oidc'. sasl.oauthbearer.client.id in librdkafka.
+        :param o_auth_bearer_client_secret: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.client.secret in
+        librdkafka.
+        :param o_auth_bearer_scope: Specify only when o_auth_bearer_method
+        is 'oidc'. Client use this to specify the scope of the access request
+        to the broker. sasl.oauthbearer.scope in librdkafka.
+        :param o_auth_bearer_token_endpoint_url: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.token.endpoint.url
+        in librdkafka.
+        :param o_auth_bearer_extensions: Allow additional information to be
+        provided to the broker. Comma-separated list of key=value pairs. E.g.,
+        "supportFeatureX=true,organizationId=sales-emea".
+        sasl.oauthbearer.extensions in librdkafka
+        :param authentication_mode: SASL mechanism to use for authentication.
+        Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
+        Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
+        :param protocol: Gets or sets the security protocol used to communicate
+          with brokers. Default is plain text. This is equivalent to
+        'security.protocol' in librdkafka. TODO
+        :param lag_threshold: Maximum number of unprocessed messages a worker
+        is expected to have at an instance. When target-based scaling is not
+        disabled, this is used to divide total unprocessed event count to
+        determine the number of worker instances, which will then be rounded
+        up to a worker instance count that creates a balanced partition
+        distribution. Default is 1000.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=KafkaTrigger(
+                        name=arg_name,
+                        topic=topic,
+                        broker_list=broker_list,
+                        event_hub_connection_string=event_hub_connection_string,  # noqa: E501
+                        consumer_group=consumer_group,
+                        avro_schema=avro_schema,
+                        username=username,
+                        password=password,
+                        ssl_key_location=ssl_key_location,
+                        ssl_ca_location=ssl_ca_location,
+                        ssl_certificate_location=ssl_certificate_location,
+                        ssl_key_password=ssl_key_password,
+                        schema_registry_url=schema_registry_url,
+                        schema_registry_username=schema_registry_username,
+                        schema_registry_password=schema_registry_password,
+                        o_auth_bearer_method=parse_singular_param_to_enum(
+                            o_auth_bearer_method, OAuthBearerMethod),
+                        o_auth_bearer_client_id=o_auth_bearer_client_id,
+                        o_auth_bearer_client_secret=o_auth_bearer_client_secret,  # noqa: E501
+                        o_auth_bearer_scope=o_auth_bearer_scope,
+                        o_auth_bearer_token_endpoint_url=o_auth_bearer_token_endpoint_url,  # noqa: E501
+                        o_auth_bearer_extensions=o_auth_bearer_extensions,
+                        authentication_mode=parse_singular_param_to_enum(
+                            authentication_mode, BrokerAuthenticationMode),
+                        protocol=parse_singular_param_to_enum(protocol,
+                                                              BrokerProtocol),
+                        cardinality=parse_singular_param_to_enum(cardinality,
+                                                                 Cardinality),
+                        lag_threshold=lag_threshold,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -1426,6 +1625,68 @@ class TriggerApi(DecoratorApi, ABC):
                         pub_sub_name=pub_sub_name,
                         topic=topic,
                         route=route,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_skill_trigger(self,
+                                arg_name: str,
+                                function_description: str,
+                                function_name: Optional[str] = None,
+                                parameter_description_json: Optional[str] = None,  # NoQA
+                                model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs: Any) -> Callable[..., Any]:
+        """
+        Assistants build on top of the chat functionality to provide assistants
+        with custom skills defined as functions. This internally uses the
+        function calling feature OpenAIs GPT models to select which functions
+        to invoke and when.
+        Ref: https://platform.openai.com/docs/guides/function-calling
+
+        You can define functions that can be triggered by assistants by using
+
+        the `assistantSkillTrigger` trigger binding. These functions are
+        invoked by the extension when an assistant signals that it would like
+        to invoke a function in response to a user prompt.
+
+        The name of the function, the description provided by the trigger,
+        and the parameter name are all hints that the underlying language model
+        use to determine when and how to invoke an assistant function.
+
+        :param arg_name: The name of trigger parameter in the function code.
+        :param function_description: The description of the assistant function,
+         which is provided to the model.
+        :param function_name: The assistant function, which is provided to the
+        LLM.
+        :param parameter_description_json: A JSON description of the function
+        parameter, which is provided to the LLM.
+        If no description is provided, the description will be autogenerated.
+        :param model: The OpenAI chat model to use.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json.
+
+        :return: Decorator function.
+
+        """
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=AssistantSkillTrigger(
+                        name=arg_name,
+                        function_description=function_description,
+                        function_name=function_name,
+                        parameter_description_json=parameter_description_json,
+                        model=model,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -2059,8 +2320,9 @@ class BindingApi(DecoratorApi, ABC):
 
     def event_grid_output(self,
                           arg_name: str,
-                          topic_endpoint_uri: str,
-                          topic_key_setting: str,
+                          topic_endpoint_uri: Optional[str] = None,
+                          topic_key_setting: Optional[str] = None,
+                          connection: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs) -> Callable[..., Any]:
@@ -2085,6 +2347,8 @@ class BindingApi(DecoratorApi, ABC):
         contains the URI for the custom topic.
         :param topic_key_setting: The name of an app setting that
         contains an access key for the custom topic.
+        :param connection: The value of the common prefix for the setting that
+        contains the topic endpoint URI.
         :return: Decorator function.
         """
 
@@ -2096,6 +2360,172 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         topic_endpoint_uri=topic_endpoint_uri,
                         topic_key_setting=topic_key_setting,
+                        connection=connection,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def kafka_output(self,
+                     arg_name: str,
+                     topic: str,
+                     broker_list: str,
+                     avro_schema: Optional[str] = None,
+                     username: Optional[str] = None,
+                     password: Optional[str] = None,
+                     ssl_key_location: Optional[str] = None,
+                     ssl_ca_location: Optional[str] = None,
+                     ssl_certificate_location: Optional[str] = None,
+                     ssl_key_password: Optional[str] = None,
+                     schema_registry_url: Optional[str] = None,
+                     schema_registry_username: Optional[str] = None,
+                     schema_registry_password: Optional[str] = None,
+                     o_auth_bearer_method: Optional[Union[OAuthBearerMethod, str]] = None,  # noqa E501
+                     o_auth_bearer_client_id: Optional[str] = None,
+                     o_auth_bearer_client_secret: Optional[str] = None,
+                     o_auth_bearer_scope: Optional[str] = None,
+                     o_auth_bearer_token_endpoint_url: Optional[str] = None,
+                     o_auth_bearer_extensions: Optional[str] = None,
+                     max_message_bytes: int = 1_000_000,
+                     batch_size: int = 10_000,
+                     enable_idempotence: bool = False,
+                     message_timeout_ms: int = 300_000,
+                     request_timeout_ms: int = 5_000,
+                     max_retries: int = 2_147_483_647,
+                     authentication_mode: Optional[Union[BrokerAuthenticationMode, str]] = "NOTSET",  # noqa E501
+                     protocol: Optional[Union[BrokerProtocol, str]] = "NOTSET",
+                     linger_ms: int = 5,
+                     data_type: Optional[Union[DataType, str]] = None,
+                     **kwargs) -> Callable[..., Any]:
+        """
+        The kafka_output decorator adds
+        :class:`KafkaOutput`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This is equivalent to defining output binding
+        in the function.json which enables function to
+        write events to a kafka topic.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/kafkaoutput
+
+        :param arg_name: The variable name used in function code that
+        represents the event.
+        :param topic: The topic monitored by the trigger.
+        :param broker_list: The list of Kafka brokers monitored by the trigger.
+        :param avro_schema: This should be used only if a generic record
+        should be generated.
+        :param username: SASL username for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.username' in librdkafka.
+        :param password: SASL password for use with the PLAIN and SASL-SCRAM-..
+         mechanisms. Default is empty string. This is equivalent to
+        'sasl.password' in librdkafka.
+        :param ssl_key_location: Path to client's private key (PEM) used for
+          authentication. Default is empty string. This is equivalent to
+        'ssl.key.location' in librdkafka.
+        :param ssl_ca_location: Path to CA certificate file for verifying the
+        broker's certificate. This is equivalent to 'ssl.ca.location' in
+        librdkafka.
+        :param ssl_certificate_location: Path to client's certificate. This is
+        equivalent to 'ssl.certificate.location' in librdkafka.
+        :param ssl_key_password: Password for client's certificate. This is
+        equivalent to 'ssl.key.password' in librdkafka.
+        :param schema_registry_url: URL for the Avro Schema Registry.
+        :param schema_registry_username: Username for the Avro Schema Registry.
+        :param schema_registry_password: Password for the Avro Schema Registry.
+        :param o_auth_bearer_method: Either 'default' or 'oidc'.
+        sasl.oauthbearer in librdkafka.
+        :param o_auth_bearer_client_id: Specify only when o_auth_bearer_method
+        is 'oidc'. sasl.oauthbearer.client.id in librdkafka.
+        :param o_auth_bearer_client_secret: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.client.secret in
+        librdkafka.
+        :param o_auth_bearer_scope: Specify only when o_auth_bearer_method
+        is 'oidc'. Client use this to specify the scope of the access request
+        to the broker. sasl.oauthbearer.scope in librdkafka.
+        :param o_auth_bearer_token_endpoint_url: Specify only when
+        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.token.endpoint.url
+        in librdkafka.
+        :param o_auth_bearer_extensions: Allow additional information to be
+        provided to the broker. Comma-separated list of key=value pairs. E.g.,
+        "supportFeatureX=true,organizationId=sales-emea".
+        sasl.oauthbearer.extensions in librdkafka
+        :param max_message_bytes: Maximum transmit message size. Default is 1MB
+        :param batch_size: Maximum number of messages batched in one MessageSet
+        Default is 10000.
+        :param enable_idempotence: When set to `true`, the producer will ensure
+         that messages are successfully produced exactly once and in the
+         original produce order. Default is false.
+        :param message_timeout_ms: Local message timeout. This value is only
+        enforced locally and limits the time a produced message waits for
+        successful delivery. A time of 0 is infinite. This is the maximum time
+         used to deliver a message (including retries). Delivery error occurs
+        when either the retry count or the message timeout are exceeded.
+        Default is 300000.
+        :param request_timeout_ms: The ack timeout of the producer request in
+        milliseconds. Default is 5000.
+        :param max_retries: How many times to retry sending a failing Message.
+        Default is 2147483647. Retrying may cause reordering unless
+        'EnableIdempotence' is set to 'True'.
+        :param authentication_mode: SASL mechanism to use for authentication.
+        Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
+        Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
+        :param protocol: Gets or sets the security protocol used to communicate
+          with brokers. Default is plain text. This is equivalent to
+        'security.protocol' in librdkafka.
+        :param linger_ms: Linger.MS property provides the time between batches
+        of messages being sent to cluster. Larger value allows more batching
+        results in high throughput.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=KafkaOutput(
+                        name=arg_name,
+                        topic=topic,
+                        broker_list=broker_list,
+                        avro_schema=avro_schema,
+                        username=username,
+                        password=password,
+                        ssl_key_location=ssl_key_location,
+                        ssl_ca_location=ssl_ca_location,
+                        ssl_certificate_location=ssl_certificate_location,
+                        ssl_key_password=ssl_key_password,
+                        schema_registry_url=schema_registry_url,
+                        schema_registry_username=schema_registry_username,
+                        schema_registry_password=schema_registry_password,
+                        o_auth_bearer_method=parse_singular_param_to_enum(
+                            o_auth_bearer_method, OAuthBearerMethod),
+                        o_auth_bearer_client_id=o_auth_bearer_client_id,
+                        o_auth_bearer_client_secret=o_auth_bearer_client_secret,  # noqa: E501
+                        o_auth_bearer_scope=o_auth_bearer_scope,
+                        o_auth_bearer_token_endpoint_url=o_auth_bearer_token_endpoint_url,  # noqa: E501
+                        o_auth_bearer_extensions=o_auth_bearer_extensions,
+                        max_message_bytes=max_message_bytes,
+                        batch_size=batch_size,
+                        enable_idempotence=enable_idempotence,
+                        message_timeout_ms=message_timeout_ms,
+                        request_timeout_ms=request_timeout_ms,
+                        max_retries=max_retries,
+                        authentication_mode=parse_singular_param_to_enum(
+                            authentication_mode, BrokerAuthenticationMode),
+                        protocol=parse_singular_param_to_enum(protocol,
+                                                              BrokerProtocol),
+                        linger_ms=linger_ms,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
@@ -2542,8 +2972,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param state_store: State store containing the state for keys.
         :param key: The name of the key.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2597,8 +3025,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param app_id: The dapr app name to invoke.
         :param method_name: The method name of the app to invoke.
         :param http_verb: The http verb of the app to invoke.
@@ -2653,8 +3079,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param pub_sub_name: The pub/sub name to publish to.
         :param topic:  The name of the topic to publish to.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2708,8 +3132,6 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The name of the variable that represents DaprState
         output object in function code.
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
         :param binding_name: The configured name of the binding.
         :param operation:  The configured operation.
         :param dapr_address: Dapr address, it is optional field, by default
@@ -2740,6 +3162,377 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
+    def text_completion_input(self,
+                              arg_name: str,
+                              prompt: str,
+                              model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              temperature: Optional[str] = "0.5",
+                              top_p: Optional[str] = None,
+                              max_tokens: Optional[str] = "100",
+                              data_type: Optional[Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The textCompletion input binding can be used to invoke the
+        OpenAI Chat Completions API and return the results to the function.
+
+        Ref: https://platform.openai.com/docs/guides/text-generation/chat-completions-vs-completions  # NoQA
+
+        The examples below define "who is" HTTP-triggered functions with a
+        hardcoded `"who is {name}?"` prompt, where `{name}` is the substituted
+        with the value in the HTTP request path. The OpenAI input binding
+        invokes the OpenAI GPT endpoint to surface the answer to the prompt to
+        the function, which then returns the result text as the response
+        content.
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param prompt: The prompt to generate completions for, encoded as a
+        string.
+        :param model: the ID of the model to use.
+        :param temperature: The sampling temperature to use, between 0 and 2.
+        Higher values like 0.8 will make the output more random, while lower
+        values like 0.2 will make it more focused and deterministic.
+        :param top_p: An alternative to sampling with temperature, called
+        nucleus sampling, where the model considers the results of the tokens
+        with top_p probability mass. So 0.1 means only the tokens comprising
+        the top 10% probability mass are considered. It's generally recommend
+        to use this or temperature
+        :param max_tokens: The maximum number of tokens to generate in the
+        completion. The token count of your prompt plus max_tokens cannot
+        exceed the model's context length. Most models have a context length of
+        2048 tokens (except for the newest models, which support 4096).
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=TextCompletionInput(
+                        name=arg_name,
+                        prompt=prompt,
+                        model=model,
+                        temperature=temperature,
+                        top_p=top_p,
+                        max_tokens=max_tokens,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_create_output(self, arg_name: str,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The assistantCreate output binding creates a new assistant with a
+        specified system prompt.
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantCreateOutput(
+                        name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_query_input(self,
+                              arg_name: str,
+                              id: str,
+                              timestamp_utc: str,
+                              data_type: Optional[
+                                  Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The assistantQuery input binding fetches the assistant history and
+        passes it to the function.
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param timestamp_utc: the timestamp of the earliest message in the chat
+        history to fetch. The timestamp should be in ISO 8601 format - for
+        example, 2023-08-01T00:00:00Z.
+        :param id: The ID of the Assistant to query.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantQueryInput(
+                        name=arg_name,
+                        id=id,
+                        timestamp_utc=timestamp_utc,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def assistant_post_input(self, arg_name: str,
+                             id: str,
+                             user_message: str,
+                             model: Optional[str] = None,
+                             data_type: Optional[
+                                 Union[DataType, str]] = None,
+                             **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The assistantPost output binding sends a message to the assistant and
+        saves the response in its internal state.
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param id: The ID of the assistant to update.
+        :param user_message: The user message that user has entered for
+        assistant to respond to.
+        :param model: The OpenAI chat model to use.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=AssistantPostInput(
+                        name=arg_name,
+                        id=id,
+                        user_message=user_message,
+                        model=model,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def embeddings_input(self,
+                         arg_name: str,
+                         input: str,
+                         input_type: InputType,
+                         model: Optional[str] = None,
+                         max_chunk_length: Optional[int] = 8 * 1024,
+                         max_overlap: Optional[int] = 128,
+                         data_type: Optional[
+                             Union[DataType, str]] = None,
+                         **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The embeddings input decorator creates embeddings which will be used to
+        measure the relatedness of text strings.
+
+        Ref: https://platform.openai.com/docs/guides/embeddings
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param input: The input source containing the data to generate
+        embeddings for.
+        :param input_type: The type of the input.
+        :param model: The ID of the model to use.
+        :param max_chunk_length: The maximum number of characters to chunk the
+        input into. Default value: 8 * 1024
+        :param max_overlap: The maximum number of characters to overlap
+        between chunks. Default value: 128
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=EmbeddingsInput(
+                        name=arg_name,
+                        input=input,
+                        input_type=input_type,
+                        model=model,
+                        max_chunk_length=max_chunk_length,
+                        max_overlap=max_overlap,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def semantic_search_input(self,
+                              arg_name: str,
+                              connection_name: str,
+                              collection: str,
+                              query: Optional[str] = None,
+                              embeddings_model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                              chat_model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              system_prompt: Optional[str] = semantic_search_system_prompt,  # NoQA
+                              max_knowledge_count: Optional[int] = 1,
+                              data_type: Optional[
+                                  Union[DataType, str]] = None,
+                              **kwargs) \
+            -> Callable[..., Any]:
+        """
+        The semantic search feature allows you to import documents into a
+        vector database using an output binding and query the documents in that
+        database using an input binding. For example, you can have a function
+        that imports documents into a vector database and another function that
+        issues queries to OpenAI using content stored in the vector database as
+         context (also known as the Retrieval Augmented Generation, or RAG
+         technique).
+
+        Ref: https://platform.openai.com/docs/guides/embeddings
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param connection_name: app setting or environment variable which
+        contains a connection string value.
+        :param collection: The name of the collection or table to search or
+        store.
+        :param query: The semantic query text to use for searching.
+        :param embeddings_model: The ID of the model to use for embeddings.
+        The default value is "text-embedding-ada-002".
+        :param chat_model: The name of the Large Language Model to invoke for
+        chat responses. The default value is "gpt-3.5-turbo".
+        :param system_prompt: Optional. The system prompt to use for prompting
+        the large language model.
+        :param max_knowledge_count: Optional. The number of knowledge items to
+        inject into the SystemPrompt. Default value: 1
+        :param data_type: Optional. Defines how Functions runtime should treat
+        the parameter value. Default value: None
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=SemanticSearchInput(
+                        name=arg_name,
+                        connection_name=connection_name,
+                        collection=collection,
+                        query=query,
+                        embeddings_model=embeddings_model,
+                        chat_model=chat_model,
+                        system_prompt=system_prompt,
+                        max_knowledge_count=max_knowledge_count,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def embeddings_store_output(self,
+                                arg_name: str,
+                                input: str,
+                                input_type: InputType,
+                                connection_name: str,
+                                collection: str,
+                                model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                                max_chunk_length: Optional[int] = 8 * 1024,
+                                max_overlap: Optional[int] = 128,
+                                data_type: Optional[
+                                    Union[DataType, str]] = None,
+                                **kwargs) \
+            -> Callable[..., Any]:
+        """
+        Supported list of embeddings store is extensible, and more can be
+        added by authoring a specially crafted NuGet package. Visit the
+        currently supported vector specific folder for specific usage
+        information:
+
+        - Azure AI Search
+        - Azure Data Explorer
+        - Azure Cosmos DB using MongoDB
+
+        :param arg_name: The name of binding parameter in the function code.
+        :param input: The input to generate embeddings for.
+        :param input_type: The type of the input.
+        :param connection_name: The name of an app setting or environment
+        variable which contains a connection string value
+        :param collection: The collection or table to search.
+        :param model: The ID of the model to use.
+        :param max_chunk_length: The maximum number of characters to chunk the
+        input into.
+        :param max_overlap: The maximum number of characters to overlap between
+        chunks.
+        :param data_type: Optional. Defines how Functions runtime should treat
+        the parameter value. Default value: None
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_binding(
+                    binding=EmbeddingsStoreOutput(
+                        name=arg_name,
+                        input=input,
+                        input_type=input_type,
+                        connection_name=connection_name,
+                        collection=collection,
+                        model=model,
+                        max_chunk_length=max_chunk_length,
+                        max_overlap=max_overlap,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
 
 class SettingsApi(DecoratorApi, ABC):
     """Interface to extend for using existing settings decorator in
@@ -2751,7 +3544,7 @@ class SettingsApi(DecoratorApi, ABC):
               delay_interval: Optional[str] = None,
               minimum_interval: Optional[str] = None,
               maximum_interval: Optional[str] = None,
-              setting_extra_fields: Dict[str, Any] = {},
+              setting_extra_fields: Optional[Dict[str, Any]] = None,
               ) -> Callable[..., Any]:
         """The retry decorator adds :class:`RetryPolicy` to the function
         settings object for building :class:`Function` object used in worker
@@ -2773,6 +3566,8 @@ class SettingsApi(DecoratorApi, ABC):
         additional setting fields.
         :return: Decorator function.
         """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
 
         @self._configure_function_builder
         def wrap(fb):
@@ -2804,6 +3599,7 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         DecoratorApi.__init__(self, *args, **kwargs)
         HttpFunctionsAuthLevelMixin.__init__(self, auth_level, *args, **kwargs)
         self._require_auth_level: Optional[bool] = None
+        self.functions_bindings: Optional[Dict[Any, Any]] = None
 
     def get_functions(self) -> List[Function]:
         """Get the function objects in the function app.
@@ -2825,7 +3621,27 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
                 '-bindings-http-webhook-trigger?tabs=in-process'
                 '%2Cfunctionsv2&pivots=programming-language-python#http-auth')
 
+        self.validate_function_names(functions=functions)
+
         return functions
+
+    def validate_function_names(self, functions: List[Function]):
+        """The functions_bindings dict contains the function name and
+        its bindings for all functions in an app. If a previous function
+        has the same name, indexing will fail here.
+        """
+        if not self.functions_bindings:
+            self.functions_bindings = {}
+        for function in functions:
+            function_name = function.get_function_name()
+            if function_name in self.functions_bindings:
+                raise ValueError(
+                    f"Function {function_name} does not have a unique"
+                    f" function name. Please change @app.function_name() or"
+                    f" the function method name to be unique.")
+            # The value of the key doesn't matter. We're using a dict for
+            # faster lookup times.
+            self.functions_bindings[function_name] = True
 
     def register_functions(self, function_container: DecoratorApi) -> None:
         """Register a list of functions in the function app.
@@ -2867,17 +3683,25 @@ class Blueprint(TriggerApi, BindingApi, SettingsApi):
     pass
 
 
-class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
+class ExternalHttpFunctionApp(
+    FunctionRegister,
+    TriggerApi,
+    SettingsApi,
+    BindingApi,
+    ABC
+):
     """Interface to extend for building third party http function apps."""
 
     @abc.abstractmethod
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi or Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
+        :param function_name: name for the function
 
         :return: None
         """
@@ -2887,17 +3711,18 @@ class ExternalHttpFunctionApp(FunctionRegister, TriggerApi, ABC):
 class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 prefix: str = ""):
+                 function_name: str = 'http_app_func',
+                 prefix: str = ''):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
         :param http_auth_level: Determines what keys, if any, need to be
-        present
-        on the request in order to invoke the function.
+        present on the request in order to invoke the function.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
-        self._add_http_app(self.middleware)
+        self._add_http_app(self.middleware, function_name)
         self.startup_task_done = False
         self.prefix = prefix
 
@@ -2907,7 +3732,8 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add an Asgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
@@ -2921,6 +3747,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 
         asgi_middleware: AsgiMiddleware = http_middleware
 
+        @self.function_name(name=function_name)
         @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
@@ -2938,22 +3765,27 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 prefix = ""):
+                 function_name: str = 'http_app_func',
+                 prefix = ''):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
+        :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
-        self._add_http_app(WsgiMiddleware(app))
+
+        self._add_http_app(WsgiMiddleware(app), function_name)
         self.prefix = prefix
 
     def _add_http_app(self,
                       http_middleware: Union[
-                          AsgiMiddleware, WsgiMiddleware]) -> None:
+                          AsgiMiddleware, WsgiMiddleware],
+                      function_name: str = 'http_app_func') -> None:
         """Add a Wsgi app integrated http function.
 
         :param http_middleware: :class:`WsgiMiddleware`
                                 or class:`AsgiMiddleware` instance.
+        :param function_name: name for the function
 
         :return: None
         """
@@ -2963,6 +3795,7 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
 
         wsgi_middleware: WsgiMiddleware = http_middleware
 
+        @self.function_name(function_name)
         @self.http_type(http_type='wsgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,

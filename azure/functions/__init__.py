@@ -10,7 +10,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
-                         ExternalHttpFunctionApp)
+                         ExternalHttpFunctionApp, BlobSource)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
@@ -23,6 +23,7 @@ from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
+from ._mysql import MySqlRow, MySqlRowList
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -37,6 +38,7 @@ from . import timer  # NoQA
 from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
+from . import mysql  # NoQA
 
 
 __all__ = (
@@ -67,6 +69,8 @@ __all__ = (
     'SqlRowList',
     'TimerRequest',
     'WarmUpContext',
+    'MySqlRow',
+    'MySqlRowList',
 
     # Middlewares
     'WsgiMiddleware',
@@ -94,7 +98,8 @@ __all__ = (
     'AuthLevel',
     'Cardinality',
     'AccessRights',
-    'HttpMethod'
+    'HttpMethod',
+    'BlobSource'
 )
 
-__version__ = '1.20.0b1'
+__version__ = '1.21.1'
