@@ -58,7 +58,7 @@ class TestOpenAI(unittest.TestCase):
         input = AssistantQueryInput(name="test",
                                     timestamp_utc="timestamp_utc",
                                     chat_storage_connection_setting="AzureWebJobsStorage",       # noqa: E501
-                                    collection_name="SampleChatState",
+                                    collection_name="ChatState",
                                     data_type=DataType.UNDEFINED,
                                     id="test_id",
                                     type="assistantQueryInput",
@@ -69,7 +69,7 @@ class TestOpenAI(unittest.TestCase):
                          {"name": "test",
                           "timestampUtc": "timestamp_utc",
                           "chatStorageConnectionSetting": "AzureWebJobsStorage",       # noqa: E501
-                          "collectionName": "SampleChatState",
+                          "collectionName": "ChatState",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,
                           "type": "assistantQuery",
@@ -116,7 +116,7 @@ class TestOpenAI(unittest.TestCase):
                                    id="test_id",
                                    model="test_model",
                                    chat_storage_connection_setting="AzureWebJobsStorage",       # noqa: E501
-                                   collection_name="SampleChatState",
+                                   collection_name="ChatState",
                                    user_message="test_message",
                                    data_type=DataType.UNDEFINED,
                                    dummy_field="dummy")
@@ -127,7 +127,7 @@ class TestOpenAI(unittest.TestCase):
                           "id": "test_id",
                           "model": "test_model",
                           "chatStorageConnectionSetting": "AzureWebJobsStorage",       # noqa: E501
-                          "collectionName": "SampleChatState",
+                          "collectionName": "ChatState",
                           "userMessage": "test_message",
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,

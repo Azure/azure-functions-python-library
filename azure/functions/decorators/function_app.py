@@ -3267,7 +3267,7 @@ class BindingApi(DecoratorApi, ABC):
                               id: str,
                               timestamp_utc: str,
                               chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
-                              collection_name: Optional[str] = "SampleChatState",       # noqa: E501
+                              collection_name: Optional[str] = "ChatState",       # noqa: E501
                               data_type: Optional[
                                   Union[DataType, str]] = None,
                               **kwargs) \
@@ -3284,7 +3284,7 @@ class BindingApi(DecoratorApi, ABC):
         for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
         :param collection_name:  The table collection name for assistant chat
-        storage. The default value is "SampleChatState".
+        storage. The default value is "ChatState".
         :param id: The ID of the Assistant to query.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
@@ -3318,7 +3318,7 @@ class BindingApi(DecoratorApi, ABC):
                              user_message: str,
                              model: Optional[str] = None,
                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
-                             collection_name: Optional[str] = "SampleChatState",       # noqa: E501
+                             collection_name: Optional[str] = "ChatState",       # noqa: E501
                              data_type: Optional[
                                  Union[DataType, str]] = None,
                              **kwargs) \
@@ -3336,7 +3336,7 @@ class BindingApi(DecoratorApi, ABC):
         for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
         :param collection_name:  The table collection name for assistant chat
-        storage. The default value is "SampleChatState".
+        storage. The default value is "ChatState".
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
