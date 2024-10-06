@@ -113,7 +113,7 @@ class BlobConverter(meta.InConverter,
                 trigger_metadata, 'Properties', python_type=dict)
             if properties:
                 blob_properties = properties
-                length = properties.get('Length')
+                length = properties.get('ContentLength')
                 length = int(length) if length else None
             else:
                 blob_properties = None
