@@ -84,7 +84,7 @@ class TestBlob(unittest.TestCase):
         self.assertEqual(result.metadata, None)
 
     def test_blob_input_with_metadata_no_trigger_metadata(self):
-        sample_blob_properties = '{"Length": "12"}'
+        sample_blob_properties = '{"ContentLength": "12"}'
         datum: Datum = Datum(value=b'blob_content', type='bytes')
         trigger_metadata: Dict[str, Any] = {
             'Properties': Datum(sample_blob_properties, 'json'),
@@ -115,7 +115,7 @@ class TestBlob(unittest.TestCase):
   "LeaseStatus": 2,
   "LeaseState": 1,
   "LeaseDuration": 0,
-  "Length": "12"
+  "ContentLength": "12"
 }'''
         datum: Datum = Datum(value=b'blob_content', type='bytes')
         trigger_metadata: Dict[str, Any] = {
@@ -139,7 +139,7 @@ class TestBlob(unittest.TestCase):
 
     def test_blob_input_with_metadata_with_incorrect_trigger_metadata(self):
         sample_metadata = 'Hello World'
-        sample_blob_properties = '''{"Length": "12"}'''
+        sample_blob_properties = '''{"ContentLength": "12"}'''
         datum: Datum = Datum(value=b'blob_content', type='bytes')
         trigger_metadata: Dict[str, Any] = {
             'Metadata': Datum(sample_metadata, 'string'),
