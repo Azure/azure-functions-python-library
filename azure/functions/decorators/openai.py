@@ -77,10 +77,14 @@ class AssistantQueryInput(InputBinding):
                  name: str,
                  id: str,
                  timestamp_utc: str,
+                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",        # noqa: E501
+                 collection_name: Optional[str] = "ChatState",
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.id = id
         self.timestamp_utc = timestamp_utc
+        self.chat_storage_connection_setting = chat_storage_connection_setting
+        self.collection_name = collection_name
         super().__init__(name=name, data_type=data_type)
 
 
@@ -165,12 +169,16 @@ class AssistantPostInput(InputBinding):
                  id: str,
                  user_message: str,
                  model: Optional[str] = None,
+                 chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
+                 collection_name: Optional[str] = "ChatState",
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
         self.id = id
         self.user_message = user_message
         self.model = model
+        self.chat_storage_connection_setting = chat_storage_connection_setting
+        self.collection_name = collection_name
         super().__init__(name=name, data_type=data_type)
 
 
