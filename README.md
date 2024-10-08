@@ -17,6 +17,7 @@ _What are the supported Python versions?_
 |-------------------------|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-------------|-------------|-------------|
 | Azure Functions 3.0     | [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4) | [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4) | -           | -           | -           |
 | Azure Functions 4.0     | &#x2713;                                                                             | &#x2713;                                                                             | &#x2713;    | &#x2713;    | &#x2713;    |
+
 _What's available?_
 - Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
 - Triggers / Bindings : Blob, Cosmos DB, Event Grid, Event Hub, HTTP, Kafka, MySQL, Queue, ServiceBus, SQL, Timer, and Warmup
