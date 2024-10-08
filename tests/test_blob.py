@@ -228,3 +228,32 @@ class TestBlob(unittest.TestCase):
 
         check_output_type = afb.BlobConverter.check_output_type_annotation
         self.assertTrue(check_output_type(CustomOutput))
+
+    def test_blob_input_with_metadata_with_length(self):
+        sample_blob_properties = '{"Length": "12"}'
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Properties': Datum(sample_blob_properties, 'json')
+        }
+        result: InputStream = afb. \
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.length, len(b'blob_content'))
+
+    def test_blob_input_with_metadata_with_both_length(self):
+        sample_blob_properties = '''{
+            "ContentLength": "12",
+            "Length": "10"
+        }'''
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Properties': Datum(sample_blob_properties, 'json')
+        }
+        result: InputStream = afb. \
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.length, len(b'blob_content'))
