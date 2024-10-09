@@ -6,7 +6,13 @@ import collections.abc
 import datetime
 import json
 import re
+import sys
+
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
+if sys.version_info >= (3, 9):
+    from typing import get_origin, get_args
+else:
+    from ._thirdparty.typing_inspect import get_origin, get_args
 
 from ._thirdparty import typing_inspect
 from ._utils import (
@@ -16,16 +22,28 @@ from ._utils import (
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
-    is_iterable_anno = (
-        typing_inspect.is_generic_type(annotation)
-        and issubclass(typing_inspect.get_origin(annotation),
-                       collections.abc.Iterable)
-    )
+    """Since python 3.9, standard collection types are supported in type hint.
+    origin is the unsubscripted version of a type (eg. list, union, etc.).
+
+    If origin is not None, then the type annotation is a builtin or part of
+    the collections class.
+    """
+    origin = get_origin(annotation)
+    if sys.version_info >= (3, 9):
+        is_iterable_anno = (origin is not None
+                            and issubclass(origin, collections.abc.Iterable))
+    else:
+        is_iterable_anno = (
+            typing_inspect.is_generic_type(annotation)
+            and origin is not None
+            and issubclass(origin, collections.abc.Iterable)
+        )
 
     if not is_iterable_anno:
         return False
 
-    args = typing_inspect.get_args(annotation)
+    args = get_args(annotation)
+
     if not args:
         return False
 
