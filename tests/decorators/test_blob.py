@@ -50,7 +50,7 @@ class TestBlob(unittest.TestCase):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
-                              source=BlobSource.EVENT_GRID,
+                              source="EventGrid",
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
 
