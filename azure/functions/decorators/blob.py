@@ -20,7 +20,7 @@ class BlobTrigger(Trigger):
         if isinstance(source, BlobSource):
             self.source = source.value
         else:
-            self.source = source
+            self.source = source  # type: ignore
         super().__init__(name=name, data_type=data_type)
 
     @staticmethod
