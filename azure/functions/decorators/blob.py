@@ -17,7 +17,10 @@ class BlobTrigger(Trigger):
                  **kwargs):
         self.path = path
         self.connection = connection
-        self.source = source
+        if isinstance(source, BlobSource):
+            self.source = source.value
+        else:
+            self.source = source  # type: ignore
         super().__init__(name=name, data_type=data_type)
 
     @staticmethod

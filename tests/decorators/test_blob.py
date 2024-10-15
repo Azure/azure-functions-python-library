@@ -42,7 +42,7 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
-            'source': BlobSource.LOGS_AND_CONTAINER_SCAN,
+            'source': 'LogsAndContainerScan',
             "connection": "dummy_connection"
         })
 
@@ -50,7 +50,7 @@ class TestBlob(unittest.TestCase):
         trigger = BlobTrigger(name="req",
                               path="dummy_path",
                               connection="dummy_connection",
-                              source=BlobSource.EVENT_GRID,
+                              source="EventGrid",
                               data_type=DataType.UNDEFINED,
                               dummy_field="dummy")
 
@@ -62,7 +62,7 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
-            'source': BlobSource.EVENT_GRID,
+            'source': 'EventGrid',
             "connection": "dummy_connection"
         })
 
@@ -82,7 +82,7 @@ class TestBlob(unittest.TestCase):
             "name": "req",
             "dataType": DataType.UNDEFINED,
             "path": "dummy_path",
-            'source': BlobSource.EVENT_GRID,
+            'source': 'EventGrid',
             "connection": "dummy_connection"
         })
 
