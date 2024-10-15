@@ -209,6 +209,16 @@ class Function(object):
 
     def get_user_function(self) -> Callable[..., Any]:
         """Get the python function customer defined.
+        This is used externally by customers for unit testing.
+
+        :return: The python function customer defined.
+        """
+        return self._func
+
+    def _get_function(self) -> Callable[..., Any]:
+        """Get the python function customer defined.
+        This is used internally by the worker when indexing
+        the function.
 
         :return: The python function customer defined.
         """
