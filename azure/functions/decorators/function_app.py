@@ -3729,7 +3729,8 @@ class ExternalHttpFunctionApp(
 class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 function_name: str = 'http_app_func'):
+                 function_name: str = 'http_app_func',
+                 prefix: str = ''):
         """Constructor of :class:`AsgiFunctionApp` object.
 
         :param app: asgi app object.
@@ -3741,6 +3742,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         self.middleware = AsgiMiddleware(app)
         self._add_http_app(self.middleware, function_name)
         self.startup_task_done = False
+        self.prefix = prefix
 
     def __del__(self):
         if self.startup_task_done:
@@ -3767,7 +3769,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         @self.http_type(http_type='asgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
-                    route="/{*route}")
+                    route=self.prefix + "/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
             if not self.startup_task_done:
                 success = await asgi_middleware.notify_startup()
@@ -3781,14 +3783,17 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
 class WsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
-                 function_name: str = 'http_app_func'):
+                 function_name: str = 'http_app_func',
+                 prefix = ''):
         """Constructor of :class:`WsgiFunctionApp` object.
 
         :param app: wsgi app object.
         :param function_name: function name
         """
         super().__init__(auth_level=http_auth_level)
+
         self._add_http_app(WsgiMiddleware(app), function_name)
+        self.prefix = prefix
 
     def _add_http_app(self,
                       http_middleware: Union[
@@ -3812,6 +3817,6 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         @self.http_type(http_type='wsgi')
         @self.route(methods=(method for method in HttpMethod),
                     auth_level=self.auth_level,
-                    route="/{*route}")
+                    route=self.prefix + "/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
