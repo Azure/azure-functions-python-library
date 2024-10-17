@@ -97,7 +97,7 @@ class TestBlob(unittest.TestCase):
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
-        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
                          json.loads(sample_blob_properties))
@@ -130,7 +130,7 @@ class TestBlob(unittest.TestCase):
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
-        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
                          json.loads(sample_blob_properties))
@@ -153,7 +153,7 @@ class TestBlob(unittest.TestCase):
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
-        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
         self.assertEqual(result.blob_properties,
                          json.loads(sample_blob_properties))
@@ -240,7 +240,7 @@ class TestBlob(unittest.TestCase):
 
         # Verify result metadata
         self.assertIsInstance(result, InputStream)
-        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.length, 12)
 
     def test_blob_input_with_metadata_with_both_length(self):
         sample_blob_properties = '''{
@@ -254,6 +254,20 @@ class TestBlob(unittest.TestCase):
         result: InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
-        # Verify result metadata
+        # Verify result metadata.
+        # This should be 12, since we check for ContentLength first
         self.assertIsInstance(result, InputStream)
-        self.assertEqual(result.length, len(b'blob_content'))
+        self.assertEqual(result.length, 12)
+
+    def test_blob_input_with_metadata_with_no_length(self):
+        sample_blob_properties = '''{}'''
+        datum: Datum = Datum(value=b'blob_content', type='bytes')
+        trigger_metadata: Dict[str, Any] = {
+            'Properties': Datum(sample_blob_properties, 'json')
+        }
+        result: InputStream = afb. \
+            BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
+
+        # Verify result metadata.
+        self.assertIsInstance(result, InputStream)
+        self.assertEqual(result.length, None)
