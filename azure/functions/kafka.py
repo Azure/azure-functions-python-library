@@ -95,7 +95,8 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
         valid_types = (KafkaEvent)
 
         return (
-            meta.is_iterable_type_annotation(pytype, valid_types)
+            meta.is_supported_union_annotation(pytype, valid_types)
+            or meta.is_iterable_type_annotation(pytype, valid_types)
             or (isinstance(pytype, type) and issubclass(pytype, valid_types))
         )
 

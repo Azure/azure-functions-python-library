@@ -4,6 +4,7 @@
 from typing import List
 import unittest
 import json
+import sys
 
 from unittest.mock import patch
 import azure.functions as func
@@ -39,6 +40,19 @@ class Kafka(unittest.TestCase):
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
         self.assertFalse(check_input_type(List[str]))
+
+    @unittest.skipIf(sys.version_info < (3, 10),
+                     reason="requires Python 3.10 or above")
+    def test_kafka_input_type_above_310(self):
+        check_input_type = (
+            azf_ka.KafkaConverter.check_input_type_annotation
+        )
+
+        self.assertTrue(check_input_type(
+            func.KafkaEvent | List[func.KafkaEvent]))
+        self.assertFalse(check_input_type(func.KafkaEvent | List[str]))
+        self.assertFalse(check_input_type(str | List[func.KafkaEvent]))
+        self.assertFalse(check_input_type(str | List[str]))
 
     def test_kafka_output_type(self):
         check_output_type = (
