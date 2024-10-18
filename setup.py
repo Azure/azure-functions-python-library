@@ -19,12 +19,12 @@ EXTRA_REQUIRES = {
 }
 
 if sys.version_info[:2] <= (3, 11):
-    EXTRA_REQUIRES.get('dev').extend(
-        ("flake8~=4.0.1")
+    EXTRA_REQUIRES.get('dev').append(
+        "flake8~=4.0.1"
     )
 else:
-    EXTRA_REQUIRES.get('dev').extend(
-        ("flake8~=7.1.1")
+    EXTRA_REQUIRES.get('dev').append(
+        "flake8~=7.1.1"
     )
 
 with open("README.md") as readme:
