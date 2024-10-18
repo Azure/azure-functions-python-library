@@ -648,11 +648,12 @@ class TestServiceBus(unittest.TestCase):
                 "ServerBusyExceptionMessage": null
             }
         }''')
-        mocked_metadata['ApplicationProperties'] = meta.Datum(type='json', value='''
+        mocked_metadata['ApplicationProperties'] = (
+            meta.Datum(type='json', value='''
         {
             "application": "value"
         }
-        ''')
+        '''))
         mocked_metadata['UserProperties'] = meta.Datum(type='json', value='''
         {
             "$AzureWebJobsParentId": "6ceef68b-0794-45dd-bb2e-630748515552",

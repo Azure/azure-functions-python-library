@@ -75,7 +75,8 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
 
     @property
     def dead_letter_error_description(self) -> Optional[str]:
-        """Optionally describes the dead letter error description for the message.
+        """Optionally describes the dead letter error description
+        for the message.
 
         Returns:
         --------
@@ -87,7 +88,8 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
 
     @property
     def dead_letter_reason(self) -> Optional[str]:
-        """Optionally describes the dead letter reason description for the message.
+        """Optionally describes the dead letter reason description
+        for the message.
 
         Returns:
         --------
@@ -404,11 +406,12 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
 
     @property
     def transaction_partition_key(self) -> Optional[str]:
-        """If a message is sent via a transfer queue in the scope of a transaction,
-        this value selects the transfer queue partition: This is functionally
-        equivalent to PartitionKey and ensures that messages are kept together
-        and in order as they are transferred. Optionally describes the
-        partition key. Maximum length is 128 characters.
+        """If a message is sent via a transfer queue in the scope of a
+        transaction, this value selects the transfer queue partition:
+        This is functionally equivalent to PartitionKey and ensures
+        that messages are kept together and in order as they are
+        transferred. Optionally describes the partition key. Maximum
+        length is 128 characters.
 
         Returns:
         --------
