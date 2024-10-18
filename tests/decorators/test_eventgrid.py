@@ -5,8 +5,9 @@ import unittest
 from azure.functions.decorators.constants import EVENT_GRID_TRIGGER, EVENT_GRID
 from azure.functions.decorators.core import BindingDirection, \
     DataType
-from azure.functions.decorators.eventgrid import EventGridTrigger,\
-    EventGridOutput
+from azure.functions.decorators.eventgrid import (
+    EventGridTrigger,
+    EventGridOutput)
 
 
 class TestEventGrid(unittest.TestCase):

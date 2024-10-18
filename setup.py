@@ -1,12 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import sys
+
 from setuptools import find_packages, setup
 from azure.functions import __version__
 
 EXTRA_REQUIRES = {
     'dev': [
-        'flake8~=4.0.1',
         'flake8-logging-format',
         'mypy',
         'pytest',
@@ -16,6 +17,15 @@ EXTRA_REQUIRES = {
         'azure-functions-durable'
     ]
 }
+
+if sys.version_info[:2] <= (3, 11):
+    EXTRA_REQUIRES.get('dev').append(
+        "flake8~=4.0.1"
+    )
+else:
+    EXTRA_REQUIRES.get('dev').append(
+        "flake8~=7.1.1"
+    )
 
 with open("README.md") as readme:
     long_description = readme.read()

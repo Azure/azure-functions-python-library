@@ -80,8 +80,9 @@ class Function(object):
         return self.get_function_json()
 
     def __call__(self, *args, **kwargs):
-        """This would allow the Function object to be directly callable
-        and runnable directly using the interpreter locally.
+        """This would allow the Function object to be directly
+        callable and runnable directly using the interpreter
+        locally.
 
         Example:
         @app.route(route="http_trigger")
