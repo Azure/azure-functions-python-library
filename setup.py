@@ -6,6 +6,8 @@ import sys
 from setuptools import find_packages, setup
 from azure.functions import __version__
 
+INSTALL_REQUIRES = ["werkzeug"]
+
 EXTRA_REQUIRES = {
     'dev': [
         'flake8-logging-format',
@@ -59,6 +61,7 @@ setup(
     package_data={
         'azure.functions': ['py.typed']
     },
+    install_requires=INSTALL_REQUIRES,
     extras_require=EXTRA_REQUIRES,
     include_package_data=True,
     test_suite='tests'

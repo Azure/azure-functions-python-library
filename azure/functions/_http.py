@@ -8,11 +8,12 @@ import json
 import types
 import typing
 
+from multidict._multidict import MultiDict
+from werkzeug import formparser as _wk_parser
+from werkzeug import http as _wk_http
+from werkzeug.datastructures import Headers, FileStorage
+
 from . import _abc
-from ._thirdparty.werkzeug import datastructures as _wk_datastructures
-from ._thirdparty.werkzeug import formparser as _wk_parser
-from ._thirdparty.werkzeug import http as _wk_http
-from ._thirdparty.werkzeug.datastructures import Headers
 
 
 class BaseHeaders(collections.abc.Mapping):
@@ -174,8 +175,8 @@ class HttpRequest(_abc.HttpRequest):
         self.__route_params = types.MappingProxyType(route_params or {})
         self.__body_bytes = body
         self.__form_parsed = False
-        self.__form = None
-        self.__files = None
+        self.__form: MultiDict[str, str] = None
+        self.__files:MultiDict[str, FileStorage] = None
 
     @property
     def url(self):
@@ -216,18 +217,21 @@ class HttpRequest(_abc.HttpRequest):
     def _parse_form_data(self):
         if self.__form_parsed:
             return
-
+        """
+          stream_factory: TStreamFactory | None = None,
+        max_form_memory_size: int | None = None,
+        max_content_length: int | None = None,
+        cls: type[MultiDict[str, t.Any]] | None = None,
+        silent: bool = True,
+        *,
+        max_form_parts: int | None = None,
+        """
         body = self.get_body()
         content_type = self.headers.get('Content-Type', '')
         content_length = len(body)
         mimetype, options = _wk_http.parse_options_header(content_type)
         parser = _wk_parser.FormDataParser(
-            _wk_parser.default_stream_factory,
-            options.get('charset') or 'utf-8',
-            'replace',
-            None,
-            None,
-            _wk_datastructures.ImmutableMultiDict,
+            _wk_parser.default_stream_factory
         )
 
         body_stream = io.BytesIO(body)

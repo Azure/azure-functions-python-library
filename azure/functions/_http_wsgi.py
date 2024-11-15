@@ -9,7 +9,12 @@ from wsgiref.headers import Headers
 
 from ._abc import Context
 from ._http import HttpRequest, HttpResponse
-from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
+
+
+def wsgi_encoding_dance(value):
+    if isinstance(value, str):
+        return value.encode("latin-1")
+    return value
 
 
 class WsgiRequest:
@@ -98,7 +103,7 @@ class WsgiRequest:
 
         # Ensure WSGI string fits in IOS-8859-1 code points
         for k, v in environ.items():
-            if isinstance(v, string_types):
+            if isinstance(v, (str,)):
                 environ[k] = wsgi_encoding_dance(v)
 
         # Remove None values
