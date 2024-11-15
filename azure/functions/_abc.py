@@ -8,7 +8,7 @@ import threading
 import typing
 
 from azure.functions._thirdparty.werkzeug.datastructures import Headers
-from werkzeug.wrappers import Request, Response
+# from werkzeug.wrappers import Request, Response
 
 T = typing.TypeVar('T')
 
