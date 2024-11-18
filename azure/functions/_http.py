@@ -8,10 +8,10 @@ import json
 import types
 import typing
 
-from multidict._multidict import MultiDict
+import werkzeug.datastructures
 from werkzeug import formparser as _wk_parser
 from werkzeug import http as _wk_http
-from werkzeug.datastructures import Headers, FileStorage
+from werkzeug.datastructures import Headers, FileStorage, MultiDict
 
 from . import _abc
 
@@ -175,8 +175,8 @@ class HttpRequest(_abc.HttpRequest):
         self.__route_params = types.MappingProxyType(route_params or {})
         self.__body_bytes = body
         self.__form_parsed = False
-        self.__form: MultiDict[str, str] = None
-        self.__files:MultiDict[str, FileStorage] = None
+        self.__form: MultiDict[str, str]
+        self.__files: MultiDict[str, FileStorage]
 
     @property
     def url(self):
@@ -231,7 +231,8 @@ class HttpRequest(_abc.HttpRequest):
         content_length = len(body)
         mimetype, options = _wk_http.parse_options_header(content_type)
         parser = _wk_parser.FormDataParser(
-            _wk_parser.default_stream_factory
+            _wk_parser.default_stream_factory, None, None,
+            werkzeug.datastructures.ImmutableMultiDict
         )
 
         body_stream = io.BytesIO(body)

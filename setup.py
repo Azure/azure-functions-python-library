@@ -6,7 +6,12 @@ import sys
 from setuptools import find_packages, setup
 from azure.functions import __version__
 
-INSTALL_REQUIRES = ["werkzeug"]
+if sys.version_info[:2] >= (3, 9):
+    INSTALL_REQUIRES = ["werkzeug~=3.1.3"]
+elif sys.version_info[:2] == (3, 8):
+    INSTALL_REQUIRES = ["werkzeug~=3.0.6"]
+else:
+    INSTALL_REQUIRES = ["werkzeug"]
 
 EXTRA_REQUIRES = {
     'dev': [
