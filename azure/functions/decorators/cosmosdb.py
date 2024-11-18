@@ -1,6 +1,5 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from datetime import time
 from typing import Optional, Union
 
 from azure.functions.decorators.constants import COSMOS_DB, COSMOS_DB_TRIGGER
@@ -189,8 +188,8 @@ class CosmosDBTrigger(Trigger):
                  lease_expiration_interval: Optional[int] = None,
                  lease_renew_interval: Optional[int] = None,
                  max_items_per_invocation: Optional[int] = None,
-                 start_from_beginning: Optional[time] = None,
-                 start_from_time: Optional[time] = None,
+                 start_from_beginning: Optional[bool] = None,
+                 start_from_time: Optional[str] = None,
                  preferred_locations: Optional[str] = None,
                  data_type: Optional[Union[DataType]] = None,
                  **kwargs):

@@ -5,7 +5,6 @@ import asyncio
 import json
 import logging
 from abc import ABC
-from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
     Iterable
 
@@ -1031,8 +1030,8 @@ class TriggerApi(DecoratorApi, ABC):
                           lease_expiration_interval: Optional[int] = None,
                           lease_renew_interval: Optional[int] = None,
                           max_items_per_invocation: Optional[int] = None,
-                          start_from_beginning: Optional[time] = None,
-                          start_from_time: Optional[time] = None,
+                          start_from_beginning: Optional[bool] = None,
+                          start_from_time: Optional[str] = None,
                           preferred_locations: Optional[str] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
