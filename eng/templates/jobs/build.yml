@@ -2,10 +2,25 @@ jobs:
   - job: "Build"
     displayName: 'Build Python SDK'
 
+    strategy:
+      matrix:
+        Python37:
+          PYTHON_VERSION: '3.7'
+        Python38:
+          PYTHON_VERSION: '3.8'
+        Python39:
+          PYTHON_VERSION: '3.9'
+        Python310:
+          PYTHON_VERSION: '3.10'
+        Python311:
+          PYTHON_VERSION: '3.11'
+        Python312:
+          PYTHON_VERSION: '3.12'
+
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.11"
+          versionSpec: $(PYTHON_VERSION)
       - bash: |
           python --version
         displayName: 'Check python version'
@@ -13,7 +28,8 @@ jobs:
           python -m pip install -U pip
           pip install twine wheel pip-audit
           python setup.py sdist bdist_wheel
-        displayName: 'Build Python SDK'
+        displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
+          pip uninstall setuptools # This is not packaged with the SDK
           pip-audit
         displayName: 'Run vulnerability scan'
