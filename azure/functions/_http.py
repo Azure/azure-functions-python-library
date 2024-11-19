@@ -231,8 +231,9 @@ class HttpRequest(_abc.HttpRequest):
         content_length = len(body)
         mimetype, options = _wk_http.parse_options_header(content_type)
         parser = _wk_parser.FormDataParser(
-            _wk_parser.default_stream_factory, None, None,
-            werkzeug.datastructures.ImmutableMultiDict
+            _wk_parser.default_stream_factory, max_form_memory_size=None,
+            max_content_length=None,
+            cls=werkzeug.datastructures.ImmutableMultiDict
         )
 
         body_stream = io.BytesIO(body)
