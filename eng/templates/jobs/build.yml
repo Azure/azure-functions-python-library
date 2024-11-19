@@ -13,6 +13,6 @@ jobs:
           python -m venv .env
           .env\Scripts\Activate.ps1
           python -m pip install -U pip
-          python -m pip install werkzeug twine wheel
-          python setup.py sdist bdist_wheel
+          python -m pip install build
+          python -m build
         displayName: 'Build Python SDK'
