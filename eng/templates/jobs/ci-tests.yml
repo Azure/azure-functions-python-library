@@ -22,8 +22,8 @@ jobs:
           versionSpec: $(PYTHON_VERSION)
       - bash: |
           python -m pip install --upgrade pip
-          python -m pip install -U -e .[dev]
           python -m pip install werkzeug
+          python -m pip install -U -e .[dev]
         displayName: 'Install dependencies'
       - bash: |
           python -m pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
