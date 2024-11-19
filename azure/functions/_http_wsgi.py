@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Dict, List, Optional, Any
 import logging
 from io import BytesIO, StringIO
 from os import linesep
+from typing import Dict, List, Optional, Any
 from urllib.parse import ParseResult, urlparse, unquote_to_bytes
 from wsgiref.headers import Headers
 
@@ -12,9 +12,7 @@ from ._http import HttpRequest, HttpResponse
 
 
 def wsgi_encoding_dance(value):
-    if isinstance(value, str):
-        return value.encode("latin-1")
-    return value
+    return value.encode().decode("latin1")
 
 
 class WsgiRequest:
