@@ -45,3 +45,6 @@ dev = [
 exclude = [
     'azure', 'eng', 'docs', 'tests'
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "azure.functions.__version__"}
