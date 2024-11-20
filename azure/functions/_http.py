@@ -8,10 +8,9 @@ import json
 import types
 import typing
 
-import werkzeug.datastructures
 from werkzeug import formparser as _wk_parser
 from werkzeug import http as _wk_http
-from werkzeug.datastructures import Headers, FileStorage, MultiDict
+from werkzeug.datastructures import Headers, FileStorage, MultiDict, ImmutableMultiDict
 
 from . import _abc
 
@@ -217,15 +216,7 @@ class HttpRequest(_abc.HttpRequest):
     def _parse_form_data(self):
         if self.__form_parsed:
             return
-        """
-          stream_factory: TStreamFactory | None = None,
-        max_form_memory_size: int | None = None,
-        max_content_length: int | None = None,
-        cls: type[MultiDict[str, t.Any]] | None = None,
-        silent: bool = True,
-        *,
-        max_form_parts: int | None = None,
-        """
+
         body = self.get_body()
         content_type = self.headers.get('Content-Type', '')
         content_length = len(body)
@@ -233,7 +224,7 @@ class HttpRequest(_abc.HttpRequest):
         parser = _wk_parser.FormDataParser(
             _wk_parser.default_stream_factory, max_form_memory_size=None,
             max_content_length=None,
-            cls=werkzeug.datastructures.ImmutableMultiDict
+            cls=ImmutableMultiDict
         )
 
         body_stream = io.BytesIO(body)
