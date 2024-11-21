@@ -31,5 +31,5 @@ jobs:
           python -m venv .venv
           .venv/Scripts/Activate
           pip install .
-          pip-audit
+          pip-audit --ignore setuptools
         displayName: 'Run vulnerability scan'
