@@ -8,11 +8,12 @@ import json
 import types
 import typing
 
+from werkzeug import formparser as _wk_parser
+from werkzeug import http as _wk_http
+from werkzeug.datastructures import (Headers, FileStorage, MultiDict,
+                                     ImmutableMultiDict)
+
 from . import _abc
-from ._thirdparty.werkzeug import datastructures as _wk_datastructures
-from ._thirdparty.werkzeug import formparser as _wk_parser
-from ._thirdparty.werkzeug import http as _wk_http
-from ._thirdparty.werkzeug.datastructures import Headers
 
 
 class BaseHeaders(collections.abc.Mapping):
@@ -174,8 +175,8 @@ class HttpRequest(_abc.HttpRequest):
         self.__route_params = types.MappingProxyType(route_params or {})
         self.__body_bytes = body
         self.__form_parsed = False
-        self.__form = None
-        self.__files = None
+        self.__form: MultiDict[str, str]
+        self.__files: MultiDict[str, FileStorage]
 
     @property
     def url(self):
@@ -222,12 +223,9 @@ class HttpRequest(_abc.HttpRequest):
         content_length = len(body)
         mimetype, options = _wk_http.parse_options_header(content_type)
         parser = _wk_parser.FormDataParser(
-            _wk_parser.default_stream_factory,
-            options.get('charset') or 'utf-8',
-            'replace',
-            None,
-            None,
-            _wk_datastructures.ImmutableMultiDict,
+            _wk_parser.default_stream_factory, max_form_memory_size=None,
+            max_content_length=None,
+            cls=ImmutableMultiDict
         )
 
         body_stream = io.BytesIO(body)

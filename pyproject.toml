@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools >= 61.0", "wheel", "build"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "azure-functions"
+dynamic = ["version"]
+requires-python = ">=3.7"
+authors = [{ name = "Azure Functions team at Microsoft Corp.", email = "azurefunctions@microsoft.com" }]
+description = "Python library for Azure Functions."
+readme = "README.md"
+license = { text = "MIT License" }
+classifiers = [
+    'License :: OSI Approved :: MIT License',
+    'Intended Audience :: Developers',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: POSIX',
+    'Operating System :: MacOS :: MacOS X',
+    'Environment :: Web Environment',
+    'Development Status :: 5 - Production/Stable',
+]
+dependencies = [
+    'werkzeug~=3.1.3; python_version >= "3.9"',
+    'werkzeug~=3.0.6; python_version == "3.8"',
+    'werkzeug; python_version < "3.8"'
+]
+[project.optional-dependencies]
+dev = [
+    'pytest',
+    'pytest-cov',
+    'coverage',
+    'pytest-instafail',
+    'pre-commit',
+    'azure-functions-durable',
+    'flake8~=4.0.1; python_version < "3.11"',
+    'flake8~=7.1.1; python_version >= "3.11"'
+]
+
+[tool.setuptools.packages.find]
+exclude = [
+    'azure', 'eng', 'docs', 'tests'
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "azure.functions.__version__"}
