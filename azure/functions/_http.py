@@ -10,7 +10,8 @@ import typing
 
 from werkzeug import formparser as _wk_parser
 from werkzeug import http as _wk_http
-from werkzeug.datastructures import Headers, FileStorage, MultiDict, ImmutableMultiDict
+from werkzeug.datastructures import (Headers, FileStorage, MultiDict,
+                                     ImmutableMultiDict)
 
 from . import _abc
 
