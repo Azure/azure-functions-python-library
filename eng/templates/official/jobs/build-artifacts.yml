@@ -28,6 +28,6 @@ jobs:
         displayName: 'Build Python SDK'
       - bash: |
           pip install pip-audit
-          # These are not part of the SDK package. setuptools is present in 2 different places
-          pip-audit --ignore requests --ignore setuptools --ignore setuptools --ignore urllib3
+          # Only audit dependencies of SDK
+          pip-audit --only-reqs
         displayName: 'Run vulnerability scan'
