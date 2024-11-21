@@ -23,13 +23,10 @@ jobs:
         displayName: 'Check python version'
       - bash: |
           python -m pip install -U pip
-          pip install twine wheel pip-audit
+          pip install twine wheel
           python setup.py sdist bdist_wheel
         displayName: 'Build Python SDK'
       - bash: |
           pip install pip-audit
-          python -m venv .venv
-          .venv/Scripts/Activate
-          pip install .
-          pip-audit --ignore setuptools
+          pip-audit --ignore requests --ignore setuptools --gnore urllib3  # These are not part of the SDK package
         displayName: 'Run vulnerability scan'

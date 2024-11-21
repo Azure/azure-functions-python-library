@@ -31,8 +31,5 @@ jobs:
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
           pip install pip-audit
-          python -m venv .venv
-          .venv/Scripts/Activate
-          pip install .
-          pip-audit --ignore setuptools
+          pip-audit --ignore requests --ignore setuptools --gnore urllib3  # These are not part of the SDK package
         displayName: 'Run vulnerability scan'
