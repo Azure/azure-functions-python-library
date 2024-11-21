@@ -36,4 +36,4 @@ jobs:
           pip install pip-audit
           pip-audit -r requirements.txt
         displayName: 'Run vulnerability scan'
-        condition: ne(variables[PYTHON_VERSION], '3.7')
+        condition: ne(variables['PYTHON_VERSION'], '3.7')
