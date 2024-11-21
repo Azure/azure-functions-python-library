@@ -30,8 +30,9 @@ jobs:
           python setup.py sdist bdist_wheel
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
+          pip install pip-audit
           python -m venv .venv
-          .venv/Scripts/Activate.ps1
-          pip install pip-audit .
+          .venv/Scripts/Activate
+          pip install .
           pip-audit
         displayName: 'Run vulnerability scan'
