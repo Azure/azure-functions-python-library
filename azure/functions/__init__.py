@@ -102,4 +102,4 @@ __all__ = (
     'BlobSource'
 )
 
-__version__ = '1.22.0b4'
+__version__ = '1.23.0b1'
