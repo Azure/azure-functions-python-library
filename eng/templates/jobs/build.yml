@@ -34,6 +34,6 @@ jobs:
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
           pip install pip-audit
-          pip-audit -r requirements.txt
+          pip-audit .
         displayName: 'Run vulnerability scan'
         condition: ne(variables['PYTHON_VERSION'], '3.7')

@@ -28,5 +28,5 @@ jobs:
         displayName: 'Build Python SDK'
       - bash: |
           pip install pip-audit
-          pip-audit -r requirements.txt
+          pip-audit .
         displayName: 'Run vulnerability scan'
