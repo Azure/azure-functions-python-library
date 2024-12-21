@@ -74,6 +74,8 @@ class Function(object):
         self.function_script_file = script_file
         self.http_type = 'function'
         self._is_http_function = False
+        self._pre_action: Optional[List[Callable]] = None
+        self._post_action: Optional[List[Callable]] = None
 
     def __str__(self):
         """Return the function.json representation of the function"""
@@ -222,6 +224,23 @@ class Function(object):
         """
         return json.dumps(self.get_dict_repr(), cls=StringifyEnumJsonEncoder)
 
+    def add_pre_action(self, pre_action: Callable) -> None:
+        """Add a pre-action to the function.
+
+        :param pre_action: The pre-action to add.
+        """
+        if self._pre_action is None:
+            self._pre_action = []
+        self._pre_action.append(pre_action)
+
+    def add_post_action(self, post_action: Callable) -> None:
+        """Add a post-action to the function.
+
+        :param post_action: The post-action to add.
+        """
+        if self._post_action is None:
+            self._post_action = []
+        self._post_action.append(post_action)
 
 class FunctionBuilder(object):
 
@@ -247,6 +266,14 @@ class FunctionBuilder(object):
 
     def add_setting(self, setting: Setting) -> 'FunctionBuilder':
         self._function.add_setting(setting=setting)
+        return self
+    
+    def add_pre_action(self, pre_action: Callable) -> 'FunctionBuilder':
+        self._function.add_pre_action(pre_action)
+        return self
+    
+    def add_post_action(self, post_action: Callable) -> 'FunctionBuilder':
+        self._function.add_post_action(post_action)
         return self
 
     def _validate_function(self,
@@ -384,6 +411,50 @@ class DecoratorApi(ABC):
 
             return decorator()
 
+        return wrap
+
+    def pre_function_action(self, func: Callable,
+                      setting_extra_fields: Optional[Dict[str, Any]] = None,
+                      ) -> Callable[..., Any]:
+        """Optional: Sets pre action for :class:`Function` object. 
+        If not set, it would not run any pre action.
+
+        :param name: Function to be called as pre action.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_pre_action(func, **setting_extra_fields)
+                return fb
+            return decorator()
+        return wrap
+
+    def post_function_action(self, func: Callable, 
+                             setting_extra_fields: Optional[Dict[str, Any]] = None,
+                      ) -> Callable[..., Any]:
+        """Optional: Sets post action for :class:`Function` object. 
+        If not set, it would not run any pre action.
+
+        :param name: Function to be called as pre action.
+        :param setting_extra_fields: Keyword arguments for specifying
+        additional setting fields
+        :return: Decorator function.
+        """
+        if setting_extra_fields is None:
+            setting_extra_fields = {}
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_post_action(func, **setting_extra_fields)
+                return fb
+            return decorator()
         return wrap
 
     def _validate_type(self,
