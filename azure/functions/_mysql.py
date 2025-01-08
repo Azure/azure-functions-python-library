@@ -1,37 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import abc
 import collections
 import json
 
-
-class BaseMySqlRow(abc.ABC):
-
-    @classmethod
-    @abc.abstractmethod
-    def from_json(cls, json_data: str) -> 'BaseMySqlRow':
-        raise NotImplementedError
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, dct: dict) -> 'BaseMySqlRow':
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def __getitem__(self, key):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def __setitem__(self, key, value):
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def to_json(self) -> str:
-        raise NotImplementedError
-
-
-class BaseMySqlRowList(abc.ABC):
-    pass
+from ._abc import BaseMySqlRow, BaseMySqlRowList
 
 
 class MySqlRow(BaseMySqlRow, collections.UserDict):

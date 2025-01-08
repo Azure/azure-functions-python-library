@@ -24,10 +24,18 @@ class QueueMessage(_abc.QueueMessage):
     def __init__(self, *,
                  id: typing.Optional[str] = None,
                  body: typing.Optional[typing.Union[str, bytes]] = None,
-                 pop_receipt: typing.Optional[str] = None) -> None:
+                 pop_receipt: typing.Optional[str] = None,
+                 dequeue_count: typing.Optional[str] = None,
+                 expiration_time: typing.Optional[str] = None,
+                 insertion_time: typing.Optional[str] = None,
+                 time_next_visible: typing.Optional[str] = None) -> None:
         self.__id = id
         self.__body = b''
         self.__pop_receipt = pop_receipt
+        self.__dequeue_count = dequeue_count
+        self.__expiration_time = expiration_time
+        self.__insertion_time = insertion_time
+        self.__time_next_visible = time_next_visible
 
         if body is not None:
             self.__set_body(body)
@@ -40,22 +48,22 @@ class QueueMessage(_abc.QueueMessage):
     @property
     def dequeue_count(self) -> typing.Optional[int]:
         """The number of times this message has been dequeued."""
-        return None
+        return self.__dequeue_count
 
     @property
     def expiration_time(self) -> typing.Optional[datetime.datetime]:
         """A datetime object with the message expiry time."""
-        return None
+        return self.__expiration_time
 
     @property
     def insertion_time(self) -> typing.Optional[datetime.datetime]:
         """A datetime object with the message queue insertion time."""
-        return None
+        return self.__insertion_time
 
     @property
     def time_next_visible(self) -> typing.Optional[datetime.datetime]:
         """A datetime object with the time the message will be visible next."""
-        return None
+        return self.__time_next_visible
 
     @property
     def pop_receipt(self) -> typing.Optional[str]:

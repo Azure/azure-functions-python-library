@@ -35,7 +35,7 @@ from azure.functions.decorators.table import TableInput, TableOutput
 from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
-from azure.functions.http import HttpRequest
+from azure.functions._http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
 from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantCreateOutput, \

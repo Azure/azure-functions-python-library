@@ -6,7 +6,6 @@ from typing import Any, Dict
 
 import azure.functions as func
 import azure.functions.blob as afb
-from azure.functions.blob import InputStream
 from azure.functions.meta import Datum
 
 
@@ -15,7 +14,7 @@ class TestBlob(unittest.TestCase):
         check_input_type = afb.BlobConverter.check_input_type_annotation
         self.assertTrue(check_input_type(str))
         self.assertTrue(check_input_type(bytes))
-        self.assertTrue(check_input_type(InputStream))
+        self.assertTrue(check_input_type(func.InputStream))
         self.assertFalse(check_input_type(bytearray))
 
     def test_blob_input_none(self):
@@ -30,12 +29,12 @@ class TestBlob(unittest.TestCase):
 
     def test_blob_input_string_no_metadata(self):
         datum: Datum = Datum(value='string_content', type='string')
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertIsNone(result.name)
         self.assertIsNone(result.length)
         self.assertIsNone(result.uri)
@@ -49,12 +48,12 @@ class TestBlob(unittest.TestCase):
 
     def test_blob_input_bytes_no_metadata(self):
         datum: Datum = Datum(value=b'bytes_content', type='bytes')
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=None)
         self.assertIsNotNone(result)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertIsNone(result.name)
         self.assertIsNone(result.length)
         self.assertIsNone(result.uri)
@@ -72,11 +71,11 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
         self.assertEqual(result.length, None)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
@@ -91,11 +90,11 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
         self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
@@ -124,11 +123,11 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
         self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
@@ -147,11 +146,11 @@ class TestBlob(unittest.TestCase):
             'BlobTrigger': Datum('blob_trigger_name', 'string'),
             'Uri': Datum('https://test.io/blob_trigger', 'string')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.name, 'blob_trigger_name')
         self.assertEqual(result.length, 12)
         self.assertEqual(result.uri, 'https://test.io/blob_trigger')
@@ -161,21 +160,21 @@ class TestBlob(unittest.TestCase):
 
     def test_blob_incomplete_read(self):
         datum: Datum = Datum(value=b'blob_content', type='bytes')
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=None)
 
         self.assertEqual(result.read(size=3), b'blo')
 
     def test_blob_incomplete_read1(self):
         datum: Datum = Datum(value=b'blob_content', type='bytes')
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=None)
 
         self.assertEqual(result.read1(size=3), b'blo')
 
     def test_blob_complete_read1(self):
         datum: Datum = Datum(value=b'blob_content', type='bytes')
-        result: InputStream = afb.BlobConverter.decode(
+        result: func.InputStream = afb.BlobConverter.decode(
             data=datum, trigger_metadata=None)
 
         self.assertEqual(result.read1(), b'blob_content')
@@ -219,7 +218,7 @@ class TestBlob(unittest.TestCase):
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(bytearray))
-        self.assertTrue(check_output_type(InputStream))
+        self.assertTrue(check_output_type(func.InputStream))
 
     def test_blob_output_custom_type(self):
         class CustomOutput:
@@ -235,11 +234,11 @@ class TestBlob(unittest.TestCase):
         trigger_metadata: Dict[str, Any] = {
             'Properties': Datum(sample_blob_properties, 'json')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.length, 12)
 
     def test_blob_input_with_metadata_with_both_length(self):
@@ -251,12 +250,12 @@ class TestBlob(unittest.TestCase):
         trigger_metadata: Dict[str, Any] = {
             'Properties': Datum(sample_blob_properties, 'json')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata.
         # This should be 12, since we check for ContentLength first
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.length, 12)
 
     def test_blob_input_with_metadata_with_no_length(self):
@@ -265,9 +264,9 @@ class TestBlob(unittest.TestCase):
         trigger_metadata: Dict[str, Any] = {
             'Properties': Datum(sample_blob_properties, 'json')
         }
-        result: InputStream = afb. \
+        result: func.InputStream = afb. \
             BlobConverter.decode(data=datum, trigger_metadata=trigger_metadata)
 
         # Verify result metadata.
-        self.assertIsInstance(result, InputStream)
+        self.assertIsInstance(result, func.InputStream)
         self.assertEqual(result.length, None)

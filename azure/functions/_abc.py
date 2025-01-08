@@ -593,3 +593,64 @@ class ServiceBusMessage(abc.ABC):
     @abc.abstractmethod
     def metadata(self) -> typing.Optional[typing.Dict[str, typing.Any]]:
         pass
+
+
+class KafkaEvent(abc.ABC):
+
+    @abc.abstractmethod
+    def get_body(self) -> bytes:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def key(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def offset(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def partition(self) -> typing.Optional[int]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def topic(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def timestamp(self) -> typing.Optional[str]:
+        pass
+
+
+class BaseMySqlRow(abc.ABC):
+
+    @classmethod
+    @abc.abstractmethod
+    def from_json(cls, json_data: str) -> 'BaseMySqlRow':
+        raise NotImplementedError
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, dct: dict) -> 'BaseMySqlRow':
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def __setitem__(self, key, value):
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def to_json(self) -> str:
+        raise NotImplementedError
+
+
+class BaseMySqlRowList(abc.ABC):
+    pass

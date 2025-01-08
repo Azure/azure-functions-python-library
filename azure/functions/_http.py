@@ -159,6 +159,8 @@ class HttpRequest(_abc.HttpRequest):
     :param bytes body:
         HTTP request body.
     """
+    __body_bytes: typing.Optional[bytes]
+    __body_str: typing.Optional[str]
 
     def __init__(self,
                  method: str,
@@ -167,7 +169,18 @@ class HttpRequest(_abc.HttpRequest):
                  params: typing.Optional[typing.Mapping[str, str]] = None,
                  route_params: typing.Optional[
                      typing.Mapping[str, str]] = None,
-                 body: bytes) -> None:
+                 body_type: str,
+                 body: typing.Union[str, bytes]) -> None:
+        body_str: typing.Optional[str] = None
+        body_bytes: typing.Optional[bytes] = None
+        if isinstance(body, str):
+            body_str = body
+            body_bytes = body_str.encode('utf-8')
+        elif isinstance(body, bytes):
+            body_bytes = body
+        else:
+            raise TypeError(
+                f'unexpected HTTP request body type: {type(body).__name__}')
         self.__method = method
         self.__url = url
         self.__headers = HttpRequestHeaders(headers or {})
@@ -175,8 +188,11 @@ class HttpRequest(_abc.HttpRequest):
         self.__route_params = types.MappingProxyType(route_params or {})
         self.__body_bytes = body
         self.__form_parsed = False
-        self.__form: MultiDict[str, str]
-        self.__files: MultiDict[str, FileStorage]
+        self.__form: typing.Optional[MultiDict[str, str]] = None
+        self.__files: typing.Optional[MultiDict[str, FileStorage]] = None
+        self.__body_type = body_type
+        self.__body_str = body_str
+        self.__body_bytes = body_bytes
 
     @property
     def url(self):
@@ -235,3 +251,23 @@ class HttpRequest(_abc.HttpRequest):
         )
 
         self.__form_parsed = True
+
+    def get_body(self) -> bytes:
+        if self.__body_bytes is None:
+            assert self.__body_str is not None
+            self.__body_bytes = self.__body_str.encode('utf-8')
+        return self.__body_bytes
+
+    def get_json(self) -> typing.Any:
+        if self.__body_type in ('json', 'string'):
+            assert self.__body_str is not None
+            return json.loads(self.__body_str)
+        elif self.__body_bytes is not None:
+            try:
+                return json.loads(self.__body_bytes.decode('utf-8'))
+            except ValueError as e:
+                raise ValueError(
+                    'HTTP request does not contain valid JSON data') from e
+        else:
+            raise ValueError(
+                'Request body cannot be empty in JSON deserialization')

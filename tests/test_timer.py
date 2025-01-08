@@ -4,6 +4,7 @@
 import json
 import unittest
 
+import azure.functions as func
 import azure.functions.timer as timer
 from azure.functions.meta import Datum
 
@@ -21,7 +22,7 @@ class TestTimer(unittest.TestCase):
         data_dict = json.loads(data)
 
         # when
-        timer_request: timer.TimerRequest = \
+        timer_request: func.TimerRequest = \
             timer.TimerRequestConverter.decode(datum, trigger_metadata={})
 
         # then
@@ -37,7 +38,7 @@ class TestTimer(unittest.TestCase):
         schedule = {}
 
         # when
-        test_timer = timer.TimerRequest()
+        test_timer = func.TimerRequest()
 
         # then
         self.assertEqual(past_due, test_timer.past_due)
@@ -49,7 +50,7 @@ class TestTimer(unittest.TestCase):
         past_due = False
 
         # when
-        test_timer = timer.TimerRequest()
+        test_timer = func.TimerRequest()
 
         # then
         self.assertEqual(past_due, test_timer.past_due)
@@ -74,5 +75,5 @@ class TestTimer(unittest.TestCase):
         check_input_type = (
             timer.TimerRequestConverter.check_input_type_annotation
         )
-        self.assertTrue(check_input_type(timer.TimerRequest))
+        self.assertTrue(check_input_type(func.TimerRequest))
         self.assertFalse(check_input_type(str))

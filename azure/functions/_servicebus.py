@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import datetime
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Mapping
 
 from . import _abc
 
@@ -22,16 +22,71 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
 
     """
 
-    def __init__(self, *,
-                 body: Optional[Union[str, bytes]] = None,
-                 content_type: Optional[str] = None,
-                 correlation_id: Optional[str] = None) -> None:
+    def __init__(
+            self, *,
+            body: bytes,
+            trigger_metadata: Optional[Mapping[str, Any]] = None,
+            application_properties: Dict[str, Any],
+            content_type: Optional[str] = None,
+            correlation_id: Optional[str] = None,
+            dead_letter_error_description: Optional[str] = None,
+            dead_letter_reason: Optional[str] = None,
+            dead_letter_source: Optional[str] = None,
+            delivery_count: Optional[int] = None,
+            enqueued_sequence_number: Optional[int] = None,
+            enqueued_time_utc: Optional[datetime.datetime] = None,
+            expires_at_utc: Optional[datetime.datetime] = None,
+            label: Optional[str] = None,
+            locked_until: Optional[datetime.datetime] = None,
+            lock_token: Optional[str] = None,
+            message_id: str,
+            partition_key: Optional[str] = None,
+            reply_to: Optional[str] = None,
+            reply_to_session_id: Optional[str] = None,
+            scheduled_enqueue_time_utc: Optional[datetime.datetime] = None,
+            sequence_number: Optional[int] = None,
+            session_id: Optional[str] = None,
+            state: Optional[int] = None,
+            subject: Optional[str] = None,
+            time_to_live: Optional[datetime.timedelta] = None,
+            to: Optional[str] = None,
+            transaction_partition_key: Optional[str] = None,
+            user_properties: Dict[str, object]) -> None:
         self.__body = b''
         self.__content_type = content_type
         self.__correlation_id = correlation_id
 
         if body is not None:
             self.__set_body(body)
+
+        self.__trigger_metadata = trigger_metadata
+        self.__application_properties = application_properties if application_properties else {}
+        self.__dead_letter_error_description = dead_letter_error_description
+        self.__dead_letter_reason = dead_letter_reason
+        self.__dead_letter_source = dead_letter_source
+        self.__delivery_count = delivery_count
+        self.__enqueued_sequence_number = enqueued_sequence_number
+        self.__enqueued_time_utc = enqueued_time_utc
+        self.__expires_at_utc = expires_at_utc
+        self.__label = label
+        self.__locked_until = locked_until
+        self.__lock_token = lock_token
+        self.__message_id = message_id
+        self.__partition_key = partition_key
+        self.__reply_to = reply_to
+        self.__reply_to_session_id = reply_to_session_id
+        self.__scheduled_enqueue_time_utc = scheduled_enqueue_time_utc
+        self.__sequence_number = sequence_number
+        self.__session_id = session_id
+        self.__state = state
+        self.__subject = subject
+        self.__time_to_live = time_to_live
+        self.__to = to
+        self.__transaction_partition_key = transaction_partition_key
+        self.__user_properties = user_properties if user_properties else {}
+
+        # Cache for trigger metadata after Python object conversion
+        self._trigger_metadata_pyobj: Optional[Dict[str, Any]] = None
 
     @property
     def application_properties(self) -> Dict[str, Any]:
@@ -45,7 +100,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             returns a dictionary.
             If nothing is set, returns an empty dictionary.
         """
-        return {}
+        return self.__application_properties
 
     @property
     def content_type(self) -> Optional[str]:
@@ -84,7 +139,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If dead letter error description is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__dead_letter_error_description
 
     @property
     def dead_letter_reason(self) -> Optional[str]:
@@ -97,7 +152,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If dead letter reason description is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__dead_letter_reason
 
     @property
     def dead_letter_source(self) -> Optional[str]:
@@ -112,7 +167,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If dead letter source is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__dead_letter_source
 
     @property
     def delivery_count(self) -> Optional[int]:
@@ -127,7 +182,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If delivery count is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__delivery_count
 
     @property
     def enqueued_sequence_number(self) -> Optional[int]:
@@ -142,7 +197,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If enqueued sequence number is set, returns an integer.
             Otherwise, returns None.
         """
-        return None
+        return self.__enqueued_sequence_number
 
     @property
     def enqueued_time_utc(self) -> Optional[datetime.datetime]:
@@ -157,7 +212,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If enqueued time utc is set, returns a datetime.
             Otherwise, returns None.
         """
-        return None
+        return self.__enqueued_time_utc
 
     @property
     def expires_at_utc(self) -> Optional[datetime.datetime]:
@@ -172,12 +227,12 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If expires at utc is set, returns a datetime.
             Otherwise, returns None.
         """
-        return None
+        return self.__expires_at_utc
 
     @property
     def expiration_time(self) -> Optional[datetime.datetime]:
         """(Deprecated, use expires_at_utc instead)"""
-        return None
+        return self.__expires_at_utc
 
     @property
     def label(self) -> Optional[str]:
@@ -191,7 +246,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If label is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__label
 
     @property
     def locked_until(self) -> Optional[datetime.datetime]:
@@ -209,7 +264,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If locked until is set, returns a datetime.
             Otherwise, returns None.
         """
-        return None
+        return self.__locked_until
 
     @property
     def lock_token(self) -> Optional[str]:
@@ -225,7 +280,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If local token is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__lock_token
 
     @property
     def message_id(self) -> str:
@@ -241,7 +296,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         str
             The message identifier
         """
-        return ""
+        return self.__message_id
 
     @property
     def partition_key(self) -> Optional[str]:
@@ -257,7 +312,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If partition key is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__partition_key
 
     @property
     def reply_to(self) -> Optional[str]:
@@ -272,7 +327,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If reply to is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__reply_to
 
     @property
     def reply_to_session_id(self) -> Optional[str]:
@@ -285,12 +340,12 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If reply to session id is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__reply_to_session_id
 
     @property
     def scheduled_enqueue_time(self) -> Optional[datetime.datetime]:
         """(Deprecated, use scheduled_enqueue_time_utc instead)"""
-        return None
+        return self.__scheduled_enqueue_time_utc
 
     @property
     def scheduled_enqueue_time_utc(self) -> Optional[datetime.datetime]:
@@ -305,7 +360,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If scheduled enqueue time utc is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__scheduled_enqueue_time_utc
 
     @property
     def sequence_number(self) -> Optional[int]:
@@ -322,7 +377,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If sequence number is set, returns an integer.
             Otherwise, returns None.
         """
-        return None
+        return self.__sequence_number
 
     @property
     def session_id(self) -> Optional[str]:
@@ -338,7 +393,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If session id is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__session_id
 
     @property
     def state(self) -> Optional[int]:
@@ -354,7 +409,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If state is set, returns an integer.
             Otherwise, returns None.
         """
-        return None
+        return self.__state
 
     @property
     def subject(self) -> Optional[str]:
@@ -369,7 +424,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If subject is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__subject
 
     @property
     def time_to_live(self) -> Optional[datetime.timedelta]:
@@ -387,7 +442,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If time to live is set, returns a timedelta.
             Otherwise, returns None.
         """
-        return None
+        return self.__time_to_live
 
     @property
     def to(self) -> Optional[str]:
@@ -402,7 +457,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If the recipient is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__to
 
     @property
     def transaction_partition_key(self) -> Optional[str]:
@@ -419,7 +474,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If transaction partition key is set, returns a string.
             Otherwise, returns None.
         """
-        return None
+        return self.__transaction_partition_key
 
     @property
     def user_properties(self) -> Dict[str, Any]:
@@ -431,7 +486,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             If user has set properties for the message, returns a dictionary.
             If nothing is set, returns an empty dictionary.
         """
-        return {}
+        return self.__user_properties
 
     @property
     def metadata(self) -> Optional[Dict[str, Any]]:
@@ -448,7 +503,16 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         Dict[str, object]
             Return the Python dictionary of trigger metadata
         """
-        return None
+        if self.__trigger_metadata is None:
+            return None
+
+        if self._trigger_metadata_pyobj is None:
+            # No need to do deepcopy since datum.python_value will construct
+            # new object
+            self._trigger_metadata_pyobj = {
+                k: v.python_value for (k, v) in self.__trigger_metadata.items()
+            }
+        return self._trigger_metadata_pyobj
 
     def __set_body(self, body):
         if isinstance(body, str):
@@ -464,3 +528,10 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
     def get_body(self) -> bytes:
         """Return message content as bytes."""
         return self.__body
+
+    def __repr__(self) -> str:
+        return (
+            f'<azure.functions.ServiceBusMessage '
+            f'message_id={self.message_id} '
+            f'at 0x{id(self):0x}>'
+        )
