@@ -595,6 +595,45 @@ class TriggerApi(DecoratorApi, ABC):
 
         pass
 
+    def mysql_trigger(self,
+                    arg_name: str,
+                    table_name: str,
+                    connection_string_setting: str,
+                    leases_table_name: Optional[str] = None,
+                    data_type: Optional[DataType] = None,
+                    **kwargs) -> Callable[..., Any]:
+        """The mysql_trigger decorator adds :class:`MySqlTrigger`
+        to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above.
+        This is equivalent to defining MySqlTrigger in the function.json which
+        enables function to be triggered when there are changes in the MySql
+        table.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+
+        Ref: https://aka.ms/mysqlbindings
+
+        :param arg_name: The name of the variable that represents a
+        :class:`MySqlRowList` object in the function code
+        :param table_name: The name of the table monitored by the trigger
+        :param connection_string_setting: The name of an app setting that
+        contains the connection string for the database against which the
+        query or stored procedure is being executed
+        :param leases_table_name: The name of the table used to store
+        leases. If not specified, the leases table name will be
+        Leases_{FunctionId}_{TableId}.
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+
+        :return: Decorator function.
+        """
+
+        pass
+		
     def generic_trigger(self,
                         arg_name: str,
                         type: str,
@@ -1112,6 +1151,77 @@ class BindingApi(DecoratorApi, ABC):
 
         pass
 
+ def mysql_input(self,
+                  arg_name: str,
+                  command_text: str,
+                  connection_string_setting: str,
+                  command_type: Optional[str] = 'Text',
+                  parameters: Optional[str] = None,
+                  data_type: Optional[DataType] = None,
+                  **kwargs) -> Callable[..., Any]:
+        """The mysql_input decorator adds
+        :class:`MySqlInput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above.
+        This is equivalent to defining MySqlInput in the function.json which
+        enables the function to read from a MySql database.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+        Ref: https://aka.ms/mysqlbindings
+        :param arg_name: The name of the variable that represents a
+        :class:`MySqlRowList` input object in function code
+        :param command_text: The Transact-SQL query command or name of the
+        stored procedure executed by the binding
+        :param connection_string_setting: The name of an app setting that
+        contains the connection string for the database against which the
+        query or stored procedure is being executed
+        :param command_type: A CommandType value, which is Text for a query
+        and StoredProcedure for a stored procedure
+        :param parameters: Zero or more parameter values passed to the
+        command during execution as a single string. Must follow the format
+        @param1=param1,@param2=param2
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+        :return: Decorator function.
+        """
+
+        pass
+
+    def mysql_output(self,
+                   arg_name: str,
+                   command_text: str,
+                   connection_string_setting: str,
+                   data_type: Optional[DataType] = None,
+                   **kwargs) -> Callable[..., Any]:
+        """The mysql_output decorator adds
+        :class:`MySqlOutput` to the :class:`FunctionBuilder` object
+        for building :class:`Function` object used in worker function
+        indexing model. This decorator will work only with extension bundle 4.x
+        and above.
+        This is equivalent to defining MySqlOutput in the function.json which
+        enables the function to write to a MySql database.
+        All optional fields will be given default value by function host when
+        they are parsed by function host.
+        Ref: https://aka.ms/mysqlbindings
+        :param arg_name: The name of the variable that represents
+        MySql output object in function code
+        :param command_text: The Transact-SQL query command or name of the
+        stored procedure executed by the binding
+        :param connection_string_setting: The name of an app setting that
+        contains the connection string for the database against which the
+        query or stored procedure is being executed
+        :param data_type: Defines how Functions runtime should treat the
+        parameter value
+        :param kwargs: Keyword arguments for specifying additional binding
+        fields to include in the binding json
+        :return: Decorator function.
+        """
+
+        pass
+		
     def generic_input_binding(self,
                               arg_name: str,
                               type: str,
