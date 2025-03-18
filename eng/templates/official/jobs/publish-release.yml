@@ -115,60 +115,60 @@ jobs:
       notifyUsers: ''
       instructions: 'Please head to https://github.com/Azure/azure-functions-python-library/releases to finish the release note'
 
-- job: "TestWithWorker"
-  dependsOn: ['CheckGitHubRelease']
-  displayName: 'Test with Worker'
-  steps:
-  - powershell: |
-      $githubUser = "$(GithubUser)"
-      $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(NewLibraryVersion)"
-      $newBranch = "sdk/$newLibraryVersion"
+# - job: "TestWithWorker"
+#   dependsOn: ['CheckGitHubRelease']
+#   displayName: 'Test with Worker'
+#   steps:
+  # - powershell: |
+  #     $githubUser = "$(GithubUser)"
+  #     $githubToken = "$(GithubPat)"
+  #     $newLibraryVersion = "$(NewLibraryVersion)"
+  #     $newBranch = "sdk/$newLibraryVersion"
       
-      if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
-          # Create GitHub credential
-          git config --global user.name "AzureFunctionsPython"
-          git config --global user.email "funcdisc@microsoft.com"
+  #     if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
+  #         # Create GitHub credential
+  #         git config --global user.name "AzureFunctionsPython"
+  #         git config --global user.email "funcdisc@microsoft.com"
       
-          # Create GitHub credential
-          $credential = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("${githubUser}:${githubToken}"))
+  #         # Create GitHub credential
+  #         $credential = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("${githubUser}:${githubToken}"))
       
-          # Clone Repository
-          git clone https://$githubToken@github.com/Azure/azure-functions-python-worker
-          Write-Host "Cloned azure-functions-python-worker into local and checkout $newBranch branch"
-          Set-Location "azure-functions-python-worker"
-          git checkout -b $newBranch "origin/dev"
+  #         # Clone Repository
+  #         git clone https://$githubToken@github.com/Azure/azure-functions-python-worker
+  #         Write-Host "Cloned azure-functions-python-worker into local and checkout $newBranch branch"
+  #         Set-Location "azure-functions-python-worker"
+  #         git checkout -b $newBranch "origin/dev"
       
-          # Modify SDK Version in pyproject.toml
-          Write-Host "Replacing SDK version in worker's pyproject.toml"
-          ((Get-Content pyproject.toml) -replace '"azure-functions==(\d)+.(\d)+.*"','"azure-functions==$(NewLibraryVersion)"' -join "`n") + "`n" | Set-Content -NoNewline pyproject.toml
+  #         # Modify SDK Version in pyproject.toml
+  #         Write-Host "Replacing SDK version in worker's pyproject.toml"
+  #         ((Get-Content pyproject.toml) -replace '"azure-functions==(\d)+.(\d)+.*"','"azure-functions==$(NewLibraryVersion)"' -join "`n") + "`n" | Set-Content -NoNewline pyproject.toml
       
-          # Commit Python Version
-          Write-Host "Pushing $newBranch to azure-functions-python-worker repo"
-          git add pyproject.toml
-          git commit -m "Update Python SDK Version to $newLibraryVersion"
-          git push origin $newBranch
+  #         # Commit Python Version
+  #         Write-Host "Pushing $newBranch to azure-functions-python-worker repo"
+  #         git add pyproject.toml
+  #         git commit -m "Update Python SDK Version to $newLibraryVersion"
+  #         git push origin $newBranch
       
-          # Create PR
-          Write-Host "Creating PR draft in GitHub"
-          $body = (@{head="$newBranch";base="dev";body="Python SDK Version [$newLibraryVersion](https://github.com/Azure/azure-functions-python-library/releases/tag/$newLibraryVersion)";draft=$true;maintainer_can_modify=$true;title="build: update Python SDK Version to $newLibraryVersion"} | ConvertTo-Json -Compress)
-          $response = Invoke-WebRequest -Headers @{"Cache-Control"="no-cache";"Content-Type"="application/json";"Authorization"="Basic $credential";"Accept"="application/vnd.github.v3+json"} -Method Post -Body "$body" -Uri "https://api.github.com/repos/Azure/azure-functions-python-worker/pulls"
+  #         # Create PR
+  #         Write-Host "Creating PR draft in GitHub"
+  #         $body = (@{head="$newBranch";base="dev";body="Python SDK Version [$newLibraryVersion](https://github.com/Azure/azure-functions-python-library/releases/tag/$newLibraryVersion)";draft=$true;maintainer_can_modify=$true;title="build: update Python SDK Version to $newLibraryVersion"} | ConvertTo-Json -Compress)
+  #         $response = Invoke-WebRequest -Headers @{"Cache-Control"="no-cache";"Content-Type"="application/json";"Authorization"="Basic $credential";"Accept"="application/vnd.github.v3+json"} -Method Post -Body "$body" -Uri "https://api.github.com/repos/Azure/azure-functions-python-worker/pulls"
       
-          # Return Value
-          if ($response.StatusCode -ne 201) {
-              Write-Host "Failed to create PR in Azure Functions Python Worker"
-              exit -1
-          }
+  #         # Return Value
+  #         if ($response.StatusCode -ne 201) {
+  #             Write-Host "Failed to create PR in Azure Functions Python Worker"
+  #             exit -1
+  #         }
       
-          $draftUrl = $response | ConvertFrom-Json | Select -expand url
-          Write-Host "PR draft created in $draftUrl"
-      } else {
-          Write-Host "NewLibraryVersion $newLibraryVersion is malformed (example: 1.1.8)"
-          exit -1
-      }
-    displayName: 'Create PR in Worker Repo'
+  #         $draftUrl = $response | ConvertFrom-Json | Select -expand url
+  #         Write-Host "PR draft created in $draftUrl"
+  #     } else {
+  #         Write-Host "NewLibraryVersion $newLibraryVersion is malformed (example: 1.1.8)"
+  #         exit -1
+  #     }
+  #   displayName: 'Create PR in Worker Repo'
 - job: "WaitForPythonWorkerPR"
-  dependsOn: ['TestWithWorker']
+  # dependsOn: ['TestWithWorker']
   displayName: '(Manual) Check Python Worker PR'
   pool: server
   steps:
