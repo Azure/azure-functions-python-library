@@ -221,7 +221,7 @@ jobs:
           }
     displayName: 'Publish package to pypi.org'
   
-- job: "Merge Back"
+- job: "MergeBack"
   dependsOn: ['PyPIPackage']
   displayName: 'Merge Back'
   steps:
