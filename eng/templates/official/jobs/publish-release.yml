@@ -60,7 +60,7 @@ jobs:
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
           git config --global user.name "AzureFunctionsPython"
-          git config --global user.email "funcdisc@microsoft.com"
+          git config --global user.email "azfunc@microsoft.com"
       
           # Clone Repository
           git clone https://$githubToken@github.com/Azure/azure-functions-python-library
@@ -131,7 +131,7 @@ jobs:
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
           git config --global user.name "AzureFunctionsPython"
-          git config --global user.email "funcdisc@microsoft.com"
+          git config --global user.email "azfunc@microsoft.com"
       
           # Create GitHub credential
           $credential = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("${githubUser}:${githubToken}"))
@@ -237,7 +237,7 @@ jobs:
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
           git config --global user.name "AzureFunctionsPython"
-          git config --global user.email "funcdisc@microsoft.com"
+          git config --global user.email "azfunc@microsoft.com"
       
           # Clone Repository
           git clone https://$githubToken@github.com/Azure/azure-functions-python-library
