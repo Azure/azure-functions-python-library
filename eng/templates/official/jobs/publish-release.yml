@@ -10,6 +10,7 @@ jobs:
   - powershell: |
       $githubToken = "$(GithubPat)"
       $newLibraryVersion = "$(NewLibraryVersion)"
+      $commitId = "$(CommitId)"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
@@ -18,6 +19,10 @@ jobs:
       
           # Heading to Artifact Repository
           Write-Host "Operating based on $stagingDirectory/azure-functions-python-library"
+          if($commitId -ne '') {
+            Write-Host "Checking out commit $commitId branch"
+            git checkout "$commitId"
+          }
           git checkout -b "release/$newLibraryVersion"
       
           # Change __init__.py version
@@ -196,7 +201,7 @@ jobs:
       definition: 679
       specificBuildWithTriggering: true
       buildVersionToDownload: latestFromBranch
-      branchName: refs/heads/dev
+      branchName: refs/heads/release/$(NewLibraryVersion)
       targetPath: PythonSdkArtifact
   - task: UsePythonVersion@0
     displayName: 'Use Python 3.11'
@@ -225,38 +230,3 @@ jobs:
               exit -1
           }
     displayName: 'Publish package to pypi.org'
-  
-- job: "MergeBack"
-  dependsOn: ['PyPIPackage']
-  displayName: 'Merge Back'
-  steps:
-  - powershell: |
-      $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(newLibraryVersion)"
-      
-      if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
-          # Create GitHub credential
-          git config --global user.name "AzureFunctionsPython"
-          git config --global user.email "azfunc@microsoft.com"
-      
-          # Clone Repository
-          git clone https://$githubToken@github.com/Azure/azure-functions-python-library
-          Write-Host "Cloned azure-functions-python-library into local"
-          Set-Location "azure-functions-python-library"
-      
-          # Merge back to master
-          Write-Host "Merging release/$newLibraryVersion back to master"
-          git checkout master 
-          git merge "origin/release/$newLibraryVersion"
-          git push origin master
-      
-          # Merge back to dev
-          Write-Host "Merging release/$newLibraryVersion back to dev"
-          git checkout dev
-          git merge "origin/release/$newLibraryVersion"
-          git push origin dev
-      } else {
-          Write-Host "newLibraryVersion $newLibraryVersion is malformed (example: 1.1.8)"
-          exit -1
-      }
-    displayName: 'Merge release/x.y.z back to master & dev'
