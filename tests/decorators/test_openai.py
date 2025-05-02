@@ -15,7 +15,6 @@ class TestOpenAI(unittest.TestCase):
                                         function_description="description",
                                         function_name="test_function_name",
                                         parameter_description_json="test_json",
-                                        model=OpenAIModels.DefaultChatModel,
                                         data_type=DataType.UNDEFINED,
                                         dummy_field="dummy")
         self.assertEqual(trigger.get_binding_name(),
@@ -24,8 +23,7 @@ class TestOpenAI(unittest.TestCase):
             trigger.get_dict_repr(), {"name": "test",
                                       "functionDescription": "description",
                                       "functionName": "test_function_name",
-                                      "parameterDescriptionJson": "test_json",
-                                      "model": OpenAIModels.DefaultChatModel,
+                                      "parameterDescriptionJson": "test_json"
                                       "dataType": DataType.UNDEFINED,
                                       'type': 'assistantSkillTrigger',
                                       'dummyField': 'dummy',
@@ -37,8 +35,9 @@ class TestOpenAI(unittest.TestCase):
                                     prompt="test_prompt",
                                     temperature="1",
                                     max_tokens="1",
+                                    is_reasoning_model=False,
                                     data_type=DataType.UNDEFINED,
-                                    model=OpenAIModels.DefaultChatModel,
+                                    chat_model=OpenAIModels.DefaultChatModel,
                                     dummy_field="dummy")
         self.assertEqual(input.get_binding_name(),
                          "textCompletion")
@@ -51,7 +50,8 @@ class TestOpenAI(unittest.TestCase):
                           "dummyField": "dummy",
                           "prompt": "test_prompt",
                           "direction": BindingDirection.IN,
-                          "model": OpenAIModels.DefaultChatModel
+                          "chatModel": OpenAIModels.DefaultChatModel,
+                          "isReasoningModel": False,
                           })
 
     def test_assistant_query_input_valid_creation(self):
@@ -82,7 +82,7 @@ class TestOpenAI(unittest.TestCase):
                                 data_type=DataType.UNDEFINED,
                                 input="test_input",
                                 input_type="test_input_type",
-                                model="test_model",
+                                embeddings_model="test_model",
                                 max_overlap=1,
                                 max_chunk_length=1,
                                 dummy_field="dummy")
@@ -94,7 +94,7 @@ class TestOpenAI(unittest.TestCase):
                           "dataType": DataType.UNDEFINED,
                           "input": "test_input",
                           "inputType": "test_input_type",
-                          "model": "test_model",
+                          "embeddingsModel": "test_model",
                           "maxOverlap": 1,
                           "maxChunkLength": 1,
                           "direction": BindingDirection.IN,
@@ -114,10 +114,13 @@ class TestOpenAI(unittest.TestCase):
     def test_assistant_post_input_valid_creation(self):
         input = AssistantPostInput(name="test",
                                    id="test_id",
-                                   model="test_model",
+                                   chat_model="test_model",
                                    chat_storage_connection_setting="AzureWebJobsStorage",       # noqa: E501
                                    collection_name="ChatState",
                                    user_message="test_message",
+                                   temperature="1",
+                                   max_tokens="1",
+                                   is_reasoning_model=False
                                    data_type=DataType.UNDEFINED,
                                    dummy_field="dummy")
         self.assertEqual(input.get_binding_name(),
@@ -125,10 +128,13 @@ class TestOpenAI(unittest.TestCase):
         self.assertEqual(input.get_dict_repr(),
                          {"name": "test",
                           "id": "test_id",
-                          "model": "test_model",
+                          "chatModel": "test_model",
                           "chatStorageConnectionSetting": "AzureWebJobsStorage",       # noqa: E501
                           "collectionName": "ChatState",
                           "userMessage": "test_message",
+                          "temperature": "1",
+                          "maxTokens": "1",
+                          "isReasoningModel": False,
                           "dataType": DataType.UNDEFINED,
                           "direction": BindingDirection.IN,
                           "dummyField": "dummy",
@@ -140,10 +146,13 @@ class TestOpenAI(unittest.TestCase):
                                     chat_model=OpenAIModels.DefaultChatModel,
                                     embeddings_model=OpenAIModels.DefaultEmbeddingsModel,  # NoQA
                                     collection="test_collection",
-                                    connection_name="test_connection",
+                                    search_connection_name="test_connection",
                                     system_prompt="test_prompt",
                                     query="test_query",
                                     max_knowledge_count=1,
+                                    temperature="1",
+                                    max_tokens="1",
+                                    is_reasoning_model=False
                                     dummy_field="dummy_field")
         self.assertEqual(input.get_binding_name(),
                          "semanticSearch")
@@ -156,9 +165,12 @@ class TestOpenAI(unittest.TestCase):
                           "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,  # NoQA
                           "type": "semanticSearch",
                           "collection": "test_collection",
-                          "connectionName": "test_connection",
+                          "searchconnectionName": "test_connection",
                           "systemPrompt": "test_prompt",
                           "maxKnowledgeCount": 1,
+                          "temperature": "1",
+                          "maxTokens": "1",
+                          "isReasoningModel": False,
                           "query": "test_query"})
 
     def test_embeddings_store_output_valid_creation(self):
@@ -166,11 +178,11 @@ class TestOpenAI(unittest.TestCase):
                                        data_type=DataType.UNDEFINED,
                                        input="test_input",
                                        input_type="test_input_type",
-                                       connection_name="test_connection",
+                                       store_connection_name="test_connection",
                                        max_overlap=1,
                                        max_chunk_length=1,
                                        collection="test_collection",
-                                       model=OpenAIModels.DefaultChatModel,
+                                       embeddings_model=OpenAIModels.DefaultEmbeddingsModel,
                                        dummy_field="dummy_field")
         self.assertEqual(output.get_binding_name(),
                          "embeddingsStore")
@@ -182,8 +194,8 @@ class TestOpenAI(unittest.TestCase):
                           "input": "test_input",
                           "inputType": "test_input_type",
                           "collection": "test_collection",
-                          "model": OpenAIModels.DefaultChatModel,
-                          "connectionName": "test_connection",
+                          "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,
+                          "storeconnectionName": "test_connection",
                           "maxOverlap": 1,
                           "maxChunkLength": 1,
                           "type": "embeddingsStore"})
