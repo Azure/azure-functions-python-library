@@ -182,7 +182,7 @@ class TestOpenAI(unittest.TestCase):
                                        max_overlap=1,
                                        max_chunk_length=1,
                                        collection="test_collection",
-                                       embeddings_model=OpenAIModels.DefaultEmbeddingsModel,
+                                       embeddings_model=OpenAIModels.DefaultEmbeddingsModel,    # noqa: E501
                                        dummy_field="dummy_field")
         self.assertEqual(output.get_binding_name(),
                          "embeddingsStore")
@@ -194,7 +194,7 @@ class TestOpenAI(unittest.TestCase):
                           "input": "test_input",
                           "inputType": "test_input_type",
                           "collection": "test_collection",
-                          "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,
+                          "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,   # noqa: E501
                           "storeConnectionName": "test_connection",
                           "maxOverlap": 1,
                           "maxChunkLength": 1,

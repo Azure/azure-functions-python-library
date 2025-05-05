@@ -3217,7 +3217,8 @@ class BindingApi(DecoratorApi, ABC):
     def text_completion_input(self,
                               arg_name: str,
                               prompt: str,
-                              chat_model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              chat_model: Optional[
+                                OpenAIModels] = OpenAIModels.DefaultChatModel,
                               temperature: Optional[str] = "0.5",
                               top_p: Optional[str] = None,
                               max_tokens: Optional[str] = "100",
@@ -3373,7 +3374,8 @@ class BindingApi(DecoratorApi, ABC):
     def assistant_post_input(self, arg_name: str,
                              id: str,
                              user_message: str,
-                             chat_model: Optional[str] = OpenAIModels.DefaultChatModel,
+                             chat_model: Optional[
+                                OpenAIModels] = OpenAIModels.DefaultChatModel,
                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                              collection_name: Optional[str] = "ChatState",      # noqa: E501
                              temperature: Optional[str] = "0.5",
@@ -3409,7 +3411,7 @@ class BindingApi(DecoratorApi, ABC):
         :param max_tokens: The maximum number of tokens to generate in the
         completion. The token count of your prompt plus max_tokens cannot
         exceed the model's context length. Most models have a context length of
-        2048 tokens (except for the newest models, which support 4096)        
+        2048 tokens (except for the newest models, which support 4096)
         :param is_reasoning_model: Whether the configured chat completion model
         is a reasoning model or not. Properties max_tokens and temperature are not
         supported for reasoning models.
@@ -3449,7 +3451,8 @@ class BindingApi(DecoratorApi, ABC):
                          arg_name: str,
                          input: str,
                          input_type: InputType,
-                         embeddings_model: Optional[str] = OpenAIModels.DefaultEmbeddingsModel,
+                         embeddings_model: Optional[
+                                OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
                          max_chunk_length: Optional[int] = 8 * 1024,
                          max_overlap: Optional[int] = 128,
                          data_type: Optional[
@@ -3504,8 +3507,10 @@ class BindingApi(DecoratorApi, ABC):
                               search_connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
-                              embeddings_model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
-                              chat_model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,  # NoQA
+                              embeddings_model: Optional[
+                                OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                              chat_model: Optional[
+                                OpenAIModels] = OpenAIModels.DefaultChatModel,
                               system_prompt: Optional[str] = semantic_search_system_prompt,  # NoQA
                               max_knowledge_count: Optional[int] = 1,
                               temperature: Optional[str] = "0.5",
@@ -3595,7 +3600,8 @@ class BindingApi(DecoratorApi, ABC):
                                 input_type: InputType,
                                 store_connection_name: str,
                                 collection: str,
-                                embeddings_model: Optional[OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,  # NoQA
+                                embeddings_model: Optional[
+                                    OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
                                 max_chunk_length: Optional[int] = 8 * 1024,
                                 max_overlap: Optional[int] = 128,
                                 data_type: Optional[
