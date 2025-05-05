@@ -23,7 +23,7 @@ class TestOpenAI(unittest.TestCase):
             trigger.get_dict_repr(), {"name": "test",
                                       "functionDescription": "description",
                                       "functionName": "test_function_name",
-                                      "parameterDescriptionJson": "test_json"
+                                      "parameterDescriptionJson": "test_json",
                                       "dataType": DataType.UNDEFINED,
                                       'type': 'assistantSkillTrigger',
                                       'dummyField': 'dummy',
@@ -120,7 +120,7 @@ class TestOpenAI(unittest.TestCase):
                                    user_message="test_message",
                                    temperature="1",
                                    max_tokens="1",
-                                   is_reasoning_model=False
+                                   is_reasoning_model=False,
                                    data_type=DataType.UNDEFINED,
                                    dummy_field="dummy")
         self.assertEqual(input.get_binding_name(),
@@ -152,7 +152,7 @@ class TestOpenAI(unittest.TestCase):
                                     max_knowledge_count=1,
                                     temperature="1",
                                     max_tokens="1",
-                                    is_reasoning_model=False
+                                    is_reasoning_model=False,
                                     dummy_field="dummy_field")
         self.assertEqual(input.get_binding_name(),
                          "semanticSearch")
