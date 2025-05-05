@@ -165,7 +165,7 @@ class TestOpenAI(unittest.TestCase):
                           "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,  # NoQA
                           "type": "semanticSearch",
                           "collection": "test_collection",
-                          "searchconnectionName": "test_connection",
+                          "searchConnectionName": "test_connection",
                           "systemPrompt": "test_prompt",
                           "maxKnowledgeCount": 1,
                           "temperature": "1",
@@ -195,7 +195,7 @@ class TestOpenAI(unittest.TestCase):
                           "inputType": "test_input_type",
                           "collection": "test_collection",
                           "embeddingsModel": OpenAIModels.DefaultEmbeddingsModel,
-                          "storeconnectionName": "test_connection",
+                          "storeConnectionName": "test_connection",
                           "maxOverlap": 1,
                           "maxChunkLength": 1,
                           "type": "embeddingsStore"})
