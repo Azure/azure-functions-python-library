@@ -51,8 +51,9 @@ class TextCompletionInput(InputBinding):
     def __init__(self,
                  name: str,
                  prompt: str,
-                 chat_model: Optional[
-                    OpenAIModels] = OpenAIModels.DefaultChatModel,
+                 chat_model: Optional
+                 [OpenAIModels]
+                 = OpenAIModels.DefaultChatModel,
                  temperature: Optional[str] = "0.5",
                  top_p: Optional[str] = None,
                  max_tokens: Optional[str] = "100",

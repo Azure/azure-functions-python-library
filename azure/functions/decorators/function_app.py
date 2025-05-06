@@ -3217,8 +3217,9 @@ class BindingApi(DecoratorApi, ABC):
     def text_completion_input(self,
                               arg_name: str,
                               prompt: str,
-                              chat_model: Optional[
-                                OpenAIModels] = OpenAIModels.DefaultChatModel,
+                              chat_model: Optional
+                              [OpenAIModels]
+                              = OpenAIModels.DefaultChatModel,
                               temperature: Optional[str] = "0.5",
                               top_p: Optional[str] = None,
                               max_tokens: Optional[str] = "100",
@@ -3374,8 +3375,9 @@ class BindingApi(DecoratorApi, ABC):
     def assistant_post_input(self, arg_name: str,
                              id: str,
                              user_message: str,
-                             chat_model: Optional[
-                                OpenAIModels] = OpenAIModels.DefaultChatModel,
+                             chat_model: Optional
+                             [OpenAIModels]
+                             = OpenAIModels.DefaultChatModel,
                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                              collection_name: Optional[str] = "ChatState",      # noqa: E501
                              temperature: Optional[str] = "0.5",
@@ -3394,7 +3396,8 @@ class BindingApi(DecoratorApi, ABC):
         :param id: The ID of the assistant to update.
         :param user_message: The user message that user has entered for
         assistant to respond to.
-        :param chat_model: The deployment name or model name of OpenAI Chat Completion API.
+        :param chat_model: The deployment name or model name of OpenAI Chat
+        Completion API.
         :param chat_storage_connection_setting:  The configuration section name
         for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
@@ -3413,8 +3416,8 @@ class BindingApi(DecoratorApi, ABC):
         exceed the model's context length. Most models have a context length of
         2048 tokens (except for the newest models, which support 4096)
         :param is_reasoning_model: Whether the configured chat completion model
-        is a reasoning model or not. Properties max_tokens and temperature are not
-        supported for reasoning models.
+        is a reasoning model or not. Properties max_tokens and temperature are
+        not supported for reasoning models.
         :param data_type: Defines how Functions runtime should treat the
         parameter value
         :param kwargs: Keyword arguments for specifying additional binding
@@ -3451,8 +3454,9 @@ class BindingApi(DecoratorApi, ABC):
                          arg_name: str,
                          input: str,
                          input_type: InputType,
-                         embeddings_model: Optional[
-                                OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                         embeddings_model: Optional
+                         [OpenAIModels]
+                         = OpenAIModels.DefaultEmbeddingsModel,
                          max_chunk_length: Optional[int] = 8 * 1024,
                          max_overlap: Optional[int] = 128,
                          data_type: Optional[
@@ -3469,7 +3473,8 @@ class BindingApi(DecoratorApi, ABC):
         :param input: The input source containing the data to generate
         embeddings for.
         :param input_type: The type of the input.
-        :param embeddings_model: The deployment name or model name for OpenAI Embeddings.
+        :param embeddings_model: The deployment name or model name for OpenAI
+        Embeddings.
         :param max_chunk_length: The maximum number of characters to chunk the
         input into. Default value: 8 * 1024
         :param max_overlap: The maximum number of characters to overlap
@@ -3507,10 +3512,12 @@ class BindingApi(DecoratorApi, ABC):
                               search_connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
-                              embeddings_model: Optional[
-                                OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
-                              chat_model: Optional[
-                                OpenAIModels] = OpenAIModels.DefaultChatModel,
+                              embeddings_model: Optional
+                              [OpenAIModels]
+                              = OpenAIModels.DefaultEmbeddingsModel,
+                              chat_model: Optional
+                              [OpenAIModels]
+                              = OpenAIModels.DefaultChatModel,
                               system_prompt: Optional[str] = semantic_search_system_prompt,  # NoQA
                               max_knowledge_count: Optional[int] = 1,
                               temperature: Optional[str] = "0.5",
@@ -3533,14 +3540,15 @@ class BindingApi(DecoratorApi, ABC):
         Ref: https://platform.openai.com/docs/guides/embeddings
 
         :param arg_name: The name of binding parameter in the function code.
-        :param search_connection_name: app setting or environment variable which
-        contains a vector search connection setting value.
+        :param search_connection_name: app setting or environment variable
+        which contains a vector search connection setting value.
         :param collection: The name of the collection or table to search or
         store.
         :param query: The semantic query text to use for searching.
-        :param embeddings_model: The deployment name or model name for OpenAI Embeddings.
-        The default value is "text-embedding-ada-002".
-        :param chat_model: The deployment name or model name of OpenAI Chat Completion API.
+        :param embeddings_model: The deployment name or model name for OpenAI
+        Embeddings. The default value is "text-embedding-ada-002".
+        :param chat_model: The deployment name or model name of OpenAI Chat
+        Completion API.
         :param system_prompt: Optional. The system prompt to use for prompting
         the large language model.
         :param max_knowledge_count: Optional. The number of knowledge items to
@@ -3556,10 +3564,10 @@ class BindingApi(DecoratorApi, ABC):
         :param max_tokens: The maximum number of tokens to generate in the
         completion. The token count of your prompt plus max_tokens cannot
         exceed the model's context length. Most models have a context length of
-        2048 tokens (except for the newest models, which support 4096)        
+        2048 tokens (except for the newest models, which support 4096)
         :param is_reasoning_model: Whether the configured chat completion model
-        is a reasoning model or not. Properties max_tokens and temperature are not
-        supported for reasoning models.
+        is a reasoning model or not. Properties max_tokens and temperature are
+        not supported for reasoning models.
         :param data_type: Optional. Defines how Functions runtime should treat
         the parameter value. Default value: None
         :param kwargs: Keyword arguments for specifying additional binding
@@ -3600,8 +3608,9 @@ class BindingApi(DecoratorApi, ABC):
                                 input_type: InputType,
                                 store_connection_name: str,
                                 collection: str,
-                                embeddings_model: Optional[
-                                    OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                                embeddings_model: Optional
+                                [OpenAIModels]
+                                = OpenAIModels.DefaultEmbeddingsModel,
                                 max_chunk_length: Optional[int] = 8 * 1024,
                                 max_overlap: Optional[int] = 128,
                                 data_type: Optional[
@@ -3624,7 +3633,8 @@ class BindingApi(DecoratorApi, ABC):
         :param store_connection_name: The name of an app setting or environment
         variable which contains a vectore store connection setting value
         :param collection: The collection or table to search.
-        :param embeddings_model: The deployment name or model name for OpenAI Embeddings.
+        :param embeddings_model: The deployment name or model name for OpenAI
+         Embeddings.
         :param max_chunk_length: The maximum number of characters to chunk the
         input into.
         :param max_overlap: The maximum number of characters to overlap between
