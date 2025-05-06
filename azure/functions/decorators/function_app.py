@@ -3243,7 +3243,8 @@ class BindingApi(DecoratorApi, ABC):
         :param arg_name: The name of binding parameter in the function code.
         :param prompt: The prompt to generate completions for, encoded as a
         string.
-        :param model: the ID of the model to use.
+        :param chat_model: The deployment name or model name of OpenAI Chat
+        Completion API. The default value is "gpt-3.5-turbo".
         :param temperature: The sampling temperature to use, between 0 and 2.
         Higher values like 0.8 will make the output more random, while lower
         values like 0.2 will make it more focused and deterministic.
@@ -3397,7 +3398,7 @@ class BindingApi(DecoratorApi, ABC):
         :param user_message: The user message that user has entered for
         assistant to respond to.
         :param chat_model: The deployment name or model name of OpenAI Chat
-        Completion API.
+        Completion API. The default value is "gpt-3.5-turbo".
         :param chat_storage_connection_setting:  The configuration section name
         for the table settings for assistant chat storage. The default value is
         "AzureWebJobsStorage".
@@ -3474,7 +3475,7 @@ class BindingApi(DecoratorApi, ABC):
         embeddings for.
         :param input_type: The type of the input.
         :param embeddings_model: The deployment name or model name for OpenAI
-        Embeddings.
+        Embeddings. The default value is "text-embedding-ada-002".
         :param max_chunk_length: The maximum number of characters to chunk the
         input into. Default value: 8 * 1024
         :param max_overlap: The maximum number of characters to overlap
@@ -3548,7 +3549,7 @@ class BindingApi(DecoratorApi, ABC):
         :param embeddings_model: The deployment name or model name for OpenAI
         Embeddings. The default value is "text-embedding-ada-002".
         :param chat_model: The deployment name or model name of OpenAI Chat
-        Completion API.
+        Completion API. The default value is "gpt-3.5-turbo".
         :param system_prompt: Optional. The system prompt to use for prompting
         the large language model.
         :param max_knowledge_count: Optional. The number of knowledge items to
@@ -3634,7 +3635,7 @@ class BindingApi(DecoratorApi, ABC):
         variable which contains a vectore store connection setting value
         :param collection: The collection or table to search.
         :param embeddings_model: The deployment name or model name for OpenAI
-         Embeddings.
+         Embeddings. The default value is "text-embedding-ada-002".
         :param max_chunk_length: The maximum number of characters to chunk the
         input into.
         :param max_overlap: The maximum number of characters to overlap between

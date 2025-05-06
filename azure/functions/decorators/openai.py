@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from azure.functions.decorators.constants import (ASSISTANT_SKILL_TRIGGER,
                                                   TEXT_COMPLETION,
@@ -61,7 +61,7 @@ class TextCompletionInput(InputBinding):
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.prompt = prompt
-        self.model = chat_model
+        self.chat_model = chat_model
         self.temperature = temperature
         self.top_p = top_p
         self.max_tokens = max_tokens
@@ -100,8 +100,9 @@ class EmbeddingsInput(InputBinding):
                  name: str,
                  input: str,
                  input_type: InputType,
-                 embeddings_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
                  max_chunk_length: Optional[int] = 8 * 1024,
                  max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,
@@ -143,10 +144,12 @@ class SemanticSearchInput(InputBinding):
                  search_connection_name: str,
                  collection: str,
                  query: Optional[str] = None,
-                 embeddings_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
-                 chat_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultChatModel,
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
+                 chat_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultChatModel,
                  system_prompt: Optional[str] = semantic_search_system_prompt,
                  max_knowledge_count: Optional[int] = 1,
                  temperature: Optional[str] = "0.5",
@@ -179,8 +182,9 @@ class AssistantPostInput(InputBinding):
     def __init__(self, name: str,
                  id: str,
                  user_message: str,
-                 chat_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultChatModel,
+                 chat_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultChatModel,
                  chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                  collection_name: Optional[str] = "ChatState",
                  temperature: Optional[str] = "0.5",
@@ -192,7 +196,7 @@ class AssistantPostInput(InputBinding):
         self.name = name
         self.id = id
         self.user_message = user_message
-        self.model = chat_model
+        self.chat_model = chat_model
         self.chat_storage_connection_setting = chat_storage_connection_setting
         self.collection_name = collection_name
         self.temperature = temperature
@@ -214,8 +218,9 @@ class EmbeddingsStoreOutput(OutputBinding):
                  input_type: InputType,
                  store_connection_name: str,
                  collection: str,
-                 embeddings_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
                  max_chunk_length: Optional[int] = 8 * 1024,
                  max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,
