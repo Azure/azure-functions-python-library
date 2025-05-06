@@ -52,7 +52,7 @@ class TextCompletionInput(InputBinding):
                  name: str,
                  prompt: str,
                  chat_model: Optional
-                 [OpenAIModels]
+                 [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultChatModel,
                  temperature: Optional[str] = "0.5",
                  top_p: Optional[str] = None,

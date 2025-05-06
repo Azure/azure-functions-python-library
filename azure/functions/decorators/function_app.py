@@ -3218,7 +3218,7 @@ class BindingApi(DecoratorApi, ABC):
                               arg_name: str,
                               prompt: str,
                               chat_model: Optional
-                              [OpenAIModels]
+                              [Union[str, OpenAIModels]]
                               = OpenAIModels.DefaultChatModel,
                               temperature: Optional[str] = "0.5",
                               top_p: Optional[str] = None,
@@ -3376,7 +3376,7 @@ class BindingApi(DecoratorApi, ABC):
                              id: str,
                              user_message: str,
                              chat_model: Optional
-                             [OpenAIModels]
+                             [Union[str, OpenAIModels]]
                              = OpenAIModels.DefaultChatModel,
                              chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                              collection_name: Optional[str] = "ChatState",      # noqa: E501
@@ -3455,7 +3455,7 @@ class BindingApi(DecoratorApi, ABC):
                          input: str,
                          input_type: InputType,
                          embeddings_model: Optional
-                         [OpenAIModels]
+                         [Union[str, OpenAIModels]]
                          = OpenAIModels.DefaultEmbeddingsModel,
                          max_chunk_length: Optional[int] = 8 * 1024,
                          max_overlap: Optional[int] = 128,
@@ -3513,10 +3513,10 @@ class BindingApi(DecoratorApi, ABC):
                               collection: str,
                               query: Optional[str] = None,
                               embeddings_model: Optional
-                              [OpenAIModels]
+                              [Union[str, OpenAIModels]]
                               = OpenAIModels.DefaultEmbeddingsModel,
                               chat_model: Optional
-                              [OpenAIModels]
+                              [Union[str, OpenAIModels]]
                               = OpenAIModels.DefaultChatModel,
                               system_prompt: Optional[str] = semantic_search_system_prompt,  # NoQA
                               max_knowledge_count: Optional[int] = 1,
@@ -3609,7 +3609,7 @@ class BindingApi(DecoratorApi, ABC):
                                 store_connection_name: str,
                                 collection: str,
                                 embeddings_model: Optional
-                                [OpenAIModels]
+                                [Union[str, OpenAIModels]]
                                 = OpenAIModels.DefaultEmbeddingsModel,
                                 max_chunk_length: Optional[int] = 8 * 1024,
                                 max_overlap: Optional[int] = 128,
