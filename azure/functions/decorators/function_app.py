@@ -3243,6 +3243,8 @@ class BindingApi(DecoratorApi, ABC):
         :param arg_name: The name of binding parameter in the function code.
         :param prompt: The prompt to generate completions for, encoded as a
         string.
+        :param model: @deprecated. Use chat_model instead. The model parameter
+        is unused and will be removed in future versions.
         :param chat_model: The deployment name or model name of OpenAI Chat
         Completion API. The default value is "gpt-3.5-turbo".
         :param temperature: The sampling temperature to use, between 0 and 2.
@@ -3397,6 +3399,8 @@ class BindingApi(DecoratorApi, ABC):
         :param id: The ID of the assistant to update.
         :param user_message: The user message that user has entered for
         assistant to respond to.
+        :param model: @deprecated. Use chat_model instead. The model parameter
+        is unused and will be removed in future versions.
         :param chat_model: The deployment name or model name of OpenAI Chat
         Completion API. The default value is "gpt-3.5-turbo".
         :param chat_storage_connection_setting:  The configuration section name
@@ -3474,6 +3478,8 @@ class BindingApi(DecoratorApi, ABC):
         :param input: The input source containing the data to generate
         embeddings for.
         :param input_type: The type of the input.
+        :param model: @deprecated. Use embeddings_model instead. The model
+        parameter is unused and will be removed in future versions.
         :param embeddings_model: The deployment name or model name for OpenAI
         Embeddings. The default value is "text-embedding-ada-002".
         :param max_chunk_length: The maximum number of characters to chunk the
@@ -3634,6 +3640,8 @@ class BindingApi(DecoratorApi, ABC):
         :param store_connection_name: The name of an app setting or environment
         variable which contains a vectore store connection setting value
         :param collection: The collection or table to search.
+        :param model: @deprecated. Use embeddings_model instead. The model
+        parameter is unused and will be removed in future versions.
         :param embeddings_model: The deployment name or model name for OpenAI
          Embeddings. The default value is "text-embedding-ada-002".
         :param max_chunk_length: The maximum number of characters to chunk the
