@@ -3217,6 +3217,7 @@ class BindingApi(DecoratorApi, ABC):
     def text_completion_input(self,
                               arg_name: str,
                               prompt: str,
+                              ai_connection_name: Optional[str] = "",
                               chat_model: Optional
                               [Union[str, OpenAIModels]]
                               = OpenAIModels.DefaultChatModel,
@@ -3243,6 +3244,14 @@ class BindingApi(DecoratorApi, ABC):
         :param arg_name: The name of binding parameter in the function code.
         :param prompt: The prompt to generate completions for, encoded as a
         string.
+        :param ai_connection_name: The name of the configuration section for
+        AI service connectivity settings. For Azure OpenAI: If specified, looks
+        for "Endpoint" and/or "Key" values in this configuration section. If
+        not specified or the section doesn't exist, falls back to environment
+        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
+        user-assigned managed identity authentication, this property is
+        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
+        environment variable.
         :param model: @deprecated. Use chat_model instead. The model parameter
         is unused and will be removed in future versions.
         :param chat_model: The deployment name or model name of OpenAI Chat
@@ -3277,6 +3286,7 @@ class BindingApi(DecoratorApi, ABC):
                     binding=TextCompletionInput(
                         name=arg_name,
                         prompt=prompt,
+                        ai_connection_name=ai_connection_name,
                         chat_model=chat_model,
                         temperature=temperature,
                         top_p=top_p,
@@ -3378,6 +3388,7 @@ class BindingApi(DecoratorApi, ABC):
     def assistant_post_input(self, arg_name: str,
                              id: str,
                              user_message: str,
+                             ai_connection_name: Optional[str] = "",
                              chat_model: Optional
                              [Union[str, OpenAIModels]]
                              = OpenAIModels.DefaultChatModel,
@@ -3399,6 +3410,14 @@ class BindingApi(DecoratorApi, ABC):
         :param id: The ID of the assistant to update.
         :param user_message: The user message that user has entered for
         assistant to respond to.
+        :param ai_connection_name: The name of the configuration section for
+        AI service connectivity settings. For Azure OpenAI: If specified, looks
+        for "Endpoint" and/or "Key" values in this configuration section. If
+        not specified or the section doesn't exist, falls back to environment
+        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
+        user-assigned managed identity authentication, this property is
+        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
+        environment variable.
         :param model: @deprecated. Use chat_model instead. The model parameter
         is unused and will be removed in future versions.
         :param chat_model: The deployment name or model name of OpenAI Chat
@@ -3439,6 +3458,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         id=id,
                         user_message=user_message,
+                        ai_connection_name=ai_connection_name,
                         chat_model=chat_model,
                         chat_storage_connection_setting=chat_storage_connection_setting,       # noqa: E501
                         collection_name=collection_name,
@@ -3459,6 +3479,7 @@ class BindingApi(DecoratorApi, ABC):
                          arg_name: str,
                          input: str,
                          input_type: InputType,
+                         ai_connection_name: Optional[str] = "",
                          embeddings_model: Optional
                          [Union[str, OpenAIModels]]
                          = OpenAIModels.DefaultEmbeddingsModel,
@@ -3478,6 +3499,14 @@ class BindingApi(DecoratorApi, ABC):
         :param input: The input source containing the data to generate
         embeddings for.
         :param input_type: The type of the input.
+        :param ai_connection_name: The name of the configuration section for
+        AI service connectivity settings. For Azure OpenAI: If specified, looks
+        for "Endpoint" and/or "Key" values in this configuration section. If
+        not specified or the section doesn't exist, falls back to environment
+        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
+        user-assigned managed identity authentication, this property is
+        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
+        environment variable.
         :param model: @deprecated. Use embeddings_model instead. The model
         parameter is unused and will be removed in future versions.
         :param embeddings_model: The deployment name or model name for OpenAI
@@ -3502,6 +3531,7 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         input=input,
                         input_type=input_type,
+                        ai_connection_name=ai_connection_name,
                         embeddings_model=embeddings_model,
                         max_chunk_length=max_chunk_length,
                         max_overlap=max_overlap,
@@ -3519,6 +3549,7 @@ class BindingApi(DecoratorApi, ABC):
                               search_connection_name: str,
                               collection: str,
                               query: Optional[str] = None,
+                              ai_connection_name: Optional[str] = "",
                               embeddings_model: Optional
                               [Union[str, OpenAIModels]]
                               = OpenAIModels.DefaultEmbeddingsModel,
@@ -3552,6 +3583,14 @@ class BindingApi(DecoratorApi, ABC):
         :param collection: The name of the collection or table to search or
         store.
         :param query: The semantic query text to use for searching.
+        :param ai_connection_name: The name of the configuration section for
+        AI service connectivity settings. For Azure OpenAI: If specified, looks
+        for "Endpoint" and/or "Key" values in this configuration section. If
+        not specified or the section doesn't exist, falls back to environment
+        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
+        user-assigned managed identity authentication, this property is
+        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
+        environment variable.
         :param embeddings_model: The deployment name or model name for OpenAI
         Embeddings. The default value is "text-embedding-ada-002".
         :param chat_model: The deployment name or model name of OpenAI Chat
@@ -3592,6 +3631,7 @@ class BindingApi(DecoratorApi, ABC):
                         search_connection_name=search_connection_name,
                         collection=collection,
                         query=query,
+                        ai_connection_name=ai_connection_name,
                         embeddings_model=embeddings_model,
                         chat_model=chat_model,
                         system_prompt=system_prompt,
@@ -3615,6 +3655,7 @@ class BindingApi(DecoratorApi, ABC):
                                 input_type: InputType,
                                 store_connection_name: str,
                                 collection: str,
+                                ai_connection_name: Optional[str] = "",
                                 embeddings_model: Optional
                                 [Union[str, OpenAIModels]]
                                 = OpenAIModels.DefaultEmbeddingsModel,
@@ -3640,6 +3681,14 @@ class BindingApi(DecoratorApi, ABC):
         :param store_connection_name: The name of an app setting or environment
         variable which contains a vectore store connection setting value
         :param collection: The collection or table to search.
+        :param ai_connection_name: The name of the configuration section for
+        AI service connectivity settings. For Azure OpenAI: If specified, looks
+        for "Endpoint" and/or "Key" values in this configuration section. If
+        not specified or the section doesn't exist, falls back to environment
+        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
+        user-assigned managed identity authentication, this property is
+        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
+        environment variable.
         :param model: @deprecated. Use embeddings_model instead. The model
         parameter is unused and will be removed in future versions.
         :param embeddings_model: The deployment name or model name for OpenAI
@@ -3666,6 +3715,7 @@ class BindingApi(DecoratorApi, ABC):
                         input_type=input_type,
                         store_connection_name=store_connection_name,
                         collection=collection,
+                        ai_connection_name=ai_connection_name,
                         embeddings_model=embeddings_model,
                         max_chunk_length=max_chunk_length,
                         max_overlap=max_overlap,
