@@ -51,6 +51,7 @@ class TextCompletionInput(InputBinding):
     def __init__(self,
                  name: str,
                  prompt: str,
+                 ai_connection_name: Optional[str] = "",
                  chat_model: Optional
                  [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultChatModel,
@@ -61,6 +62,7 @@ class TextCompletionInput(InputBinding):
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.prompt = prompt
+        self.ai_connection_name = ai_connection_name
         self.chat_model = chat_model
         self.temperature = temperature
         self.top_p = top_p
@@ -100,6 +102,7 @@ class EmbeddingsInput(InputBinding):
                  name: str,
                  input: str,
                  input_type: InputType,
+                 ai_connection_name: Optional[str] = "",
                  embeddings_model: Optional
                  [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultEmbeddingsModel,
@@ -110,6 +113,7 @@ class EmbeddingsInput(InputBinding):
         self.name = name
         self.input = input
         self.input_type = input_type
+        self.ai_connection_name = ai_connection_name
         self.embeddings_model = embeddings_model
         self.max_chunk_length = max_chunk_length
         self.max_overlap = max_overlap
@@ -144,6 +148,7 @@ class SemanticSearchInput(InputBinding):
                  search_connection_name: str,
                  collection: str,
                  query: Optional[str] = None,
+                 ai_connection_name: Optional[str] = "",
                  embeddings_model: Optional
                  [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultEmbeddingsModel,
@@ -162,6 +167,7 @@ class SemanticSearchInput(InputBinding):
         self.search_connection_name = search_connection_name
         self.collection = collection
         self.query = query
+        self.ai_connection_name = ai_connection_name
         self.embeddings_model = embeddings_model
         self.chat_model = chat_model
         self.system_prompt = system_prompt
@@ -182,6 +188,7 @@ class AssistantPostInput(InputBinding):
     def __init__(self, name: str,
                  id: str,
                  user_message: str,
+                 ai_connection_name: Optional[str] = "",
                  chat_model: Optional
                  [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultChatModel,
@@ -196,6 +203,7 @@ class AssistantPostInput(InputBinding):
         self.name = name
         self.id = id
         self.user_message = user_message
+        self.ai_connection_name = ai_connection_name
         self.chat_model = chat_model
         self.chat_storage_connection_setting = chat_storage_connection_setting
         self.collection_name = collection_name
@@ -218,6 +226,7 @@ class EmbeddingsStoreOutput(OutputBinding):
                  input_type: InputType,
                  store_connection_name: str,
                  collection: str,
+                 ai_connection_name: Optional[str] = "",
                  embeddings_model: Optional
                  [Union[str, OpenAIModels]]
                  = OpenAIModels.DefaultEmbeddingsModel,
@@ -230,6 +239,7 @@ class EmbeddingsStoreOutput(OutputBinding):
         self.input_type = input_type
         self.store_connection_name = store_connection_name
         self.collection = collection
+        self.ai_connection_name = ai_connection_name
         self.embeddings_model = embeddings_model
         self.max_chunk_length = max_chunk_length
         self.max_overlap = max_overlap

@@ -50,6 +50,7 @@ class TestOpenAI(unittest.TestCase):
             is_reasoning_model=False,
             data_type=DataType.UNDEFINED,
             chat_model=OpenAIModels.DefaultChatModel,
+            ai_connection_name="test_connection",
             dummy_field="dummy",
         )
         self.assertEqual(input.get_binding_name(), "textCompletion")
@@ -66,6 +67,7 @@ class TestOpenAI(unittest.TestCase):
                 "direction": BindingDirection.IN,
                 "chatModel": OpenAIModels.DefaultChatModel,
                 "isReasoningModel": False,
+                "aiConnectionName": "test_connection",
             },
         )
 
@@ -78,6 +80,7 @@ class TestOpenAI(unittest.TestCase):
             is_reasoning_model=True,
             data_type=DataType.UNDEFINED,
             chat_model="gpt-4o",
+            ai_connection_name="test_connection",
             dummy_field="dummy",
         )
         self.assertEqual(input.get_binding_name(), "textCompletion")
@@ -94,6 +97,7 @@ class TestOpenAI(unittest.TestCase):
                 "direction": BindingDirection.IN,
                 "chatModel": "gpt-4o",
                 "isReasoningModel": True,
+                "aiConnectionName": "test_connection",
             },
         )
 
@@ -133,6 +137,7 @@ class TestOpenAI(unittest.TestCase):
             embeddings_model="test_model",
             max_overlap=1,
             max_chunk_length=1,
+            ai_connection_name="test_connection",
             dummy_field="dummy",
         )
         self.assertEqual(input.get_binding_name(), "embeddings")
@@ -148,6 +153,7 @@ class TestOpenAI(unittest.TestCase):
                 "maxOverlap": 1,
                 "maxChunkLength": 1,
                 "direction": BindingDirection.IN,
+                "aiConnectionName": "test_connection",
                 "dummyField": "dummy",
             },
         )
@@ -161,6 +167,7 @@ class TestOpenAI(unittest.TestCase):
             embeddings_model=OpenAIModels.DefaultEmbeddingsModel,
             max_overlap=1,
             max_chunk_length=1,
+            ai_connection_name="test_connection",
             dummy_field="dummy",
         )
         self.assertEqual(input.get_binding_name(), "embeddings")
@@ -176,6 +183,7 @@ class TestOpenAI(unittest.TestCase):
                 "maxOverlap": 1,
                 "maxChunkLength": 1,
                 "direction": BindingDirection.IN,
+                "aiConnectionName": "test_connection",
                 "dummyField": "dummy",
             },
         )
@@ -206,6 +214,7 @@ class TestOpenAI(unittest.TestCase):
             temperature="1",
             max_tokens="1",
             is_reasoning_model=False,
+            ai_connection_name="test_connection",
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
@@ -222,6 +231,7 @@ class TestOpenAI(unittest.TestCase):
                 "temperature": "1",
                 "maxTokens": "1",
                 "isReasoningModel": False,
+                "aiConnectionName": "test_connection",
                 "dataType": DataType.UNDEFINED,
                 "direction": BindingDirection.IN,
                 "dummyField": "dummy",
@@ -240,6 +250,7 @@ class TestOpenAI(unittest.TestCase):
             temperature="1",
             max_tokens="1",
             is_reasoning_model=False,
+            ai_connection_name="test_connection",
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
@@ -256,6 +267,7 @@ class TestOpenAI(unittest.TestCase):
                 "temperature": "1",
                 "maxTokens": "1",
                 "isReasoningModel": False,
+                "aiConnectionName": "test_connection",
                 "dataType": DataType.UNDEFINED,
                 "direction": BindingDirection.IN,
                 "dummyField": "dummy",
@@ -277,6 +289,7 @@ class TestOpenAI(unittest.TestCase):
             temperature="1",
             max_tokens="1",
             is_reasoning_model=False,
+            ai_connection_name="test_connection",
             dummy_field="dummy_field",
         )
         self.assertEqual(input.get_binding_name(), "semanticSearch")
@@ -297,6 +310,7 @@ class TestOpenAI(unittest.TestCase):
                 "temperature": "1",
                 "maxTokens": "1",
                 "isReasoningModel": False,
+                "aiConnectionName": "test_connection",
                 "query": "test_query",
             },
         )
@@ -315,6 +329,7 @@ class TestOpenAI(unittest.TestCase):
             temperature="1",
             max_tokens="1",
             is_reasoning_model=True,
+            ai_connection_name="test_connection",
             dummy_field="dummy_field",
         )
         self.assertEqual(input.get_binding_name(), "semanticSearch")
@@ -335,6 +350,7 @@ class TestOpenAI(unittest.TestCase):
                 "temperature": "1",
                 "maxTokens": "1",
                 "isReasoningModel": True,
+                "aiConnectionName": "test_connection",
                 "query": "test_query",
             },
         )
@@ -350,6 +366,7 @@ class TestOpenAI(unittest.TestCase):
             max_chunk_length=1,
             collection="test_collection",
             embeddings_model=OpenAIModels.DefaultEmbeddingsModel,  # noqa: E501
+            ai_connection_name="test_connection",
             dummy_field="dummy_field",
         )
         self.assertEqual(output.get_binding_name(), "embeddingsStore")
@@ -368,6 +385,7 @@ class TestOpenAI(unittest.TestCase):
                 "maxOverlap": 1,
                 "maxChunkLength": 1,
                 "type": "embeddingsStore",
+                "aiConnectionName": "test_connection",
             },
         )
 
@@ -382,6 +400,7 @@ class TestOpenAI(unittest.TestCase):
             max_chunk_length=1,
             collection="test_collection",
             embeddings_model="text-embedding-3-small",
+            ai_connection_name="test_connection",
             dummy_field="dummy_field",
         )
         self.assertEqual(output.get_binding_name(), "embeddingsStore")
@@ -400,5 +419,6 @@ class TestOpenAI(unittest.TestCase):
                 "maxOverlap": 1,
                 "maxChunkLength": 1,
                 "type": "embeddingsStore",
+                "aiConnectionName": "test_connection",
             },
         )
