@@ -36,6 +36,18 @@ class UJsonAdapter(JsonInterface):
         return self.ujson.loads(s)
 
 
+class SimpleJsonAdapter(JsonInterface):
+    def __init__(self):
+        import simplejson
+        self.simplejson = simplejson
+
+    def dumps(self, obj) -> str:
+        return self.simplejson.dumps(obj)
+
+    def loads(self, s: str):
+        return self.simplejson.loads(s)
+
+
 class StdJsonAdapter(JsonInterface):
     def __init__(self):
         import json
@@ -49,7 +61,7 @@ class StdJsonAdapter(JsonInterface):
 
 
 json_impl = None
-for adapter_cls in (OrJsonAdapter, UJsonAdapter, StdJsonAdapter):
+for adapter_cls in (OrJsonAdapter, UJsonAdapter, SimpleJsonAdapter, StdJsonAdapter):
     try:
         json_impl = adapter_cls()
         break
