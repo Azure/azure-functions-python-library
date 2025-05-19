@@ -11,10 +11,11 @@ class JsonInterface(ABC):
     def loads(self, s: str):
         pass
 
+
 class OrJsonAdapter(JsonInterface):
     def __init__(self):
-      import orjson
-      self.orjson = orjson
+        import orjson
+        self.orjson = orjson
 
     def dumps(self, obj) -> str:
         return self.orjson.dumps(obj).decode("utf-8")
@@ -55,15 +56,18 @@ for adapter_cls in (OrJsonAdapter, UJsonAdapter, StdJsonAdapter):
     except ImportError:
         continue
 
+
 def dumps(obj, **kwargs) -> str:
     if json_impl is None:
         raise ImportError("No JSON adapter found")
     return json_impl.dumps(obj, **kwargs)
 
+
 def loads(s: str):
     if json_impl is None:
         raise ImportError("No JSON adapter found")
     return json_impl.loads(s)
+
 
 json = types.SimpleNamespace(
     dumps=dumps,
