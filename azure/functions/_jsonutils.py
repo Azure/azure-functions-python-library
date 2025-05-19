@@ -61,7 +61,8 @@ class StdJsonAdapter(JsonInterface):
 
 
 json_impl = None
-for adapter_cls in (OrJsonAdapter, UJsonAdapter, SimpleJsonAdapter, StdJsonAdapter):
+for adapter_cls in (OrJsonAdapter, UJsonAdapter, SimpleJsonAdapter,
+                    StdJsonAdapter):
     try:
         json_impl = adapter_cls()
         break
