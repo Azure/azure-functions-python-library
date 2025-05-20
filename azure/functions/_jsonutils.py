@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
-import types
+from typing import Any, Union
+from types import SimpleNamespace
 
 
 class JsonInterface(ABC):
     @abstractmethod
-    def dumps(self, obj) -> str:
+    def dumps(self, obj: Any, **kwargs: Any) -> str:
         pass
 
     @abstractmethod
-    def loads(self, s: str):
+    def loads(self, s: Union[str, bytes, bytearray]) -> Any:
         pass
 
 
@@ -17,35 +18,12 @@ class OrJsonAdapter(JsonInterface):
         import orjson
         self.orjson = orjson
 
-    def dumps(self, obj) -> str:
+    def dumps(self, obj: Any, **kwargs: Any) -> str:
+        # orjson.dumps returns bytes, decode to str
         return self.orjson.dumps(obj).decode("utf-8")
 
-    def loads(self, s: str):
+    def loads(self, s: Union[str, bytes, bytearray]) -> Any:
         return self.orjson.loads(s)
-
-
-class UJsonAdapter(JsonInterface):
-    def __init__(self):
-        import ujson
-        self.ujson = ujson
-
-    def dumps(self, obj) -> str:
-        return self.ujson.dumps(obj)
-
-    def loads(self, s: str):
-        return self.ujson.loads(s)
-
-
-class SimpleJsonAdapter(JsonInterface):
-    def __init__(self):
-        import simplejson
-        self.simplejson = simplejson
-
-    def dumps(self, obj) -> str:
-        return self.simplejson.dumps(obj)
-
-    def loads(self, s: str):
-        return self.simplejson.loads(s)
 
 
 class StdJsonAdapter(JsonInterface):
@@ -53,36 +31,28 @@ class StdJsonAdapter(JsonInterface):
         import json
         self.json = json
 
-    def dumps(self, obj, **kwargs) -> str:
+    def dumps(self, obj: Any, **kwargs: Any) -> str:
         return self.json.dumps(obj, **kwargs)
 
-    def loads(self, s: str):
+    def loads(self, s: Union[str, bytes, bytearray]) -> Any:
         return self.json.loads(s)
 
 
-json_impl = None
-for adapter_cls in (OrJsonAdapter, UJsonAdapter, SimpleJsonAdapter,
-                    StdJsonAdapter):
-    try:
-        json_impl = adapter_cls()
-        break
-    except ImportError:
-        continue
+try:
+    json_impl: JsonInterface = OrJsonAdapter()
+except ImportError:
+    json_impl = StdJsonAdapter()
 
 
 def dumps(obj, **kwargs) -> str:
-    if json_impl is None:
-        raise ImportError("No JSON adapter found")
     return json_impl.dumps(obj, **kwargs)
 
 
-def loads(s: str):
-    if json_impl is None:
-        raise ImportError("No JSON adapter found")
+def loads(s: Union[str, bytes, bytearray]) -> Any:
     return json_impl.loads(s)
 
 
-json = types.SimpleNamespace(
+json = SimpleNamespace(
     dumps=dumps,
     loads=loads
 )
