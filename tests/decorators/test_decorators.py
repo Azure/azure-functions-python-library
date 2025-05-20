@@ -7,7 +7,7 @@ from azure.functions.decorators.constants import TIMER_TRIGGER, HTTP_TRIGGER, \
     EVENT_HUB, EVENT_HUB_TRIGGER, COSMOS_DB, COSMOS_DB_TRIGGER, BLOB, \
     BLOB_TRIGGER, EVENT_GRID_TRIGGER, EVENT_GRID, TABLE, WARMUP_TRIGGER, \
     SQL, SQL_TRIGGER, ORCHESTRATION_TRIGGER, ACTIVITY_TRIGGER, \
-    ENTITY_TRIGGER, DURABLE_CLIENT
+    ENTITY_TRIGGER, DURABLE_CLIENT, MYSQL, MYSQL_TRIGGER
 from azure.functions.decorators.core import BlobSource, DataType, AuthLevel, \
     BindingDirection, AccessRights, Cardinality
 from azure.functions.decorators.function_app import FunctionApp
@@ -2375,4 +2375,182 @@ class TestFunctionsApp(unittest.TestCase):
             'strategy': 'fixed',
             'max_retry_count': '2',
             'delay_interval': '4'
+        })
+
+    def test_mysql_default_args(self):
+        app = self.func_app
+
+        @app.mysql_trigger(arg_name="trigger",
+                           table_name="dummy_table",
+                           connection_string_setting="dummy_setting")
+        @app.mysql_input(arg_name="in",
+                         command_text="dummy_query",
+                         connection_string_setting="dummy_setting")
+        @app.mysql_output(arg_name="out",
+                          command_text="dummy_table",
+                          connection_string_setting="dummy_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    "type": MYSQL,
+                    "name": "out",
+                    "commandText": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "type": MYSQL,
+                    "name": "in",
+                    "commandText": "dummy_query",
+                    "connectionStringSetting": "dummy_setting",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    "type": MYSQL_TRIGGER,
+                    "name": "trigger",
+                    "tableName": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                }
+            ]
+        })
+
+    def test_mysql_full_args(self):
+        app = self.func_app
+
+        @app.mysql_trigger(arg_name="trigger",
+                           table_name="dummy_table",
+                           connection_string_setting="dummy_setting",
+                           data_type=DataType.STRING,
+                           dummy_field="dummy")
+        @app.mysql_input(arg_name="in",
+                         command_text="dummy_query",
+                         connection_string_setting="dummy_setting",
+                         command_type="Text",
+                         parameters="dummy_parameters",
+                         data_type=DataType.STRING,
+                         dummy_field="dummy")
+        @app.mysql_output(arg_name="out",
+                          command_text="dummy_table",
+                          connection_string_setting="dummy_setting",
+                          data_type=DataType.STRING,
+                          dummy_field="dummy")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        assert_json(self, func, {
+            "scriptFile": "function_app.py",
+            "bindings": [
+                {
+                    "direction": BindingDirection.OUT,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": MYSQL,
+                    "name": "out",
+                    "commandText": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": MYSQL,
+                    "name": "in",
+                    "commandText": "dummy_query",
+                    "connectionStringSetting": "dummy_setting",
+                    "parameters": "dummy_parameters",
+                    "commandType": "Text"
+                },
+                {
+                    "direction": BindingDirection.IN,
+                    'dummyField': 'dummy',
+                    "dataType": DataType.STRING,
+                    "type": MYSQL_TRIGGER,
+                    "name": "trigger",
+                    "tableName": "dummy_table",
+                    "connectionStringSetting": "dummy_setting"
+                }
+            ]
+        })
+
+    def test_mysql_trigger(self):
+        app = self.func_app
+
+        @app.mysql_trigger(arg_name="trigger",
+                           table_name="dummy_table",
+                           connection_string_setting="dummy_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 1)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": MYSQL_TRIGGER,
+            "name": "trigger",
+            "tableName": "dummy_table",
+            "connectionStringSetting": "dummy_setting"
+        })
+
+    def test_mysql_input_binding(self):
+        app = self.func_app
+
+        @app.mysql_trigger(arg_name="trigger",
+                           table_name="dummy_table",
+                           connection_string_setting="dummy_setting")
+        @app.mysql_input(arg_name="in",
+                         command_text="dummy_query",
+                         connection_string_setting="dummy_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.IN,
+            "type": MYSQL,
+            "name": "in",
+            "commandText": "dummy_query",
+            "connectionStringSetting": "dummy_setting",
+            "commandType": "Text"
+        })
+
+    def test_mysql_output_binding(self):
+        app = self.func_app
+
+        @app.mysql_trigger(arg_name="trigger",
+                           table_name="dummy_table",
+                           connection_string_setting="dummy_setting")
+        @app.mysql_output(arg_name="out",
+                          command_text="dummy_table",
+                          connection_string_setting="dummy_setting")
+        def dummy():
+            pass
+
+        func = self._get_user_function(app)
+
+        self.assertEqual(len(func.get_bindings()), 2)
+
+        output = func.get_bindings()[0]
+        self.assertEqual(output.get_dict_repr(), {
+            "direction": BindingDirection.OUT,
+            "type": MYSQL,
+            "name": "out",
+            "commandText": "dummy_table",
+            "connectionStringSetting": "dummy_setting",
         })
