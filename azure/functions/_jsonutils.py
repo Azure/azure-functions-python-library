@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import logging
 from typing import Any, Union
 from types import SimpleNamespace
 
@@ -40,6 +41,7 @@ class StdJsonAdapter(JsonInterface):
 
 try:
     json_impl: JsonInterface = OrJsonAdapter()
+    logging.info("Using orjson as the JSON backend")
 except ImportError:
     json_impl = StdJsonAdapter()
 
