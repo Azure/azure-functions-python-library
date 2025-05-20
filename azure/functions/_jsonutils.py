@@ -1,9 +1,15 @@
 from abc import ABC, abstractmethod
-import logging
 from typing import Any, Union
 from types import SimpleNamespace
 
 
+"""
+Azure Functions JSON utilities.
+This module provides a JSON interface that can be used to serialize and
+deserialize objects to and from JSON format. It supports both the `orjson`
+and the standard `json` libraries, falling back to the standard library
+if `orjson` is not available (installed).
+"""
 class JsonInterface(ABC):
     @abstractmethod
     def dumps(self, obj: Any, **kwargs: Any) -> str:
