@@ -10,6 +10,8 @@ deserialize objects to and from JSON format. It supports both the `orjson`
 and the standard `json` libraries, falling back to the standard library
 if `orjson` is not available (installed).
 """
+
+
 class JsonInterface(ABC):
     @abstractmethod
     def dumps(self, obj: Any, **kwargs: Any) -> str:
