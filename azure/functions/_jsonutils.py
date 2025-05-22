@@ -17,7 +17,7 @@ if `orjson` is not available (installed).
 
 class JsonInterface(ABC):
     @abstractmethod
-    def dumps(self, obj: Any, **kwargs: Any) -> str:
+    def dumps(self, obj: Any) -> str:
         pass
 
     @abstractmethod
@@ -30,12 +30,7 @@ class OrJsonAdapter(JsonInterface):
         import orjson
         self.orjson = orjson
 
-    def dumps(self, obj: Any, **kwargs: Any) -> str:
-        if kwargs:
-            # orjson doesn't support keyword arguments
-            import json
-            return json.dumps(obj, **kwargs)
-            
+    def dumps(self, obj: Any) -> str:
         # orjson.dumps returns bytes, decode to str
         return self.orjson.dumps(obj).decode("utf-8")
 
@@ -48,8 +43,8 @@ class StdJsonAdapter(JsonInterface):
         import json
         self.json = json
 
-    def dumps(self, obj: Any, **kwargs: Any) -> str:
-        return self.json.dumps(obj, **kwargs)
+    def dumps(self, obj: Any) -> str:
+        return self.json.dumps(obj)
 
     def loads(self, s: Union[str, bytes, bytearray]) -> Any:
         return self.json.loads(s)
@@ -61,8 +56,8 @@ except ImportError:
     json_impl = StdJsonAdapter()
 
 
-def dumps(obj, **kwargs) -> str:
-    return json_impl.dumps(obj, **kwargs)
+def dumps(obj: Any) -> str:
+    return json_impl.dumps(obj)
 
 
 def loads(s: Union[str, bytes, bytearray]) -> Any:
