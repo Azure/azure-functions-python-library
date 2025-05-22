@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import abc
 import collections
+
 from ._jsonutils import json
 
 
