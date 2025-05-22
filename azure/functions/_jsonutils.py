@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from abc import ABC, abstractmethod
 from typing import Any, Union
 from types import SimpleNamespace
@@ -28,6 +31,11 @@ class OrJsonAdapter(JsonInterface):
         self.orjson = orjson
 
     def dumps(self, obj: Any, **kwargs: Any) -> str:
+        if kwargs:
+            # orjson doesn't support keyword arguments
+            import json
+            return json.dumps(obj, **kwargs)
+            
         # orjson.dumps returns bytes, decode to str
         return self.orjson.dumps(obj).decode("utf-8")
 

@@ -4,10 +4,10 @@
 import abc
 import collections.abc
 import datetime
-import json
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
+from ._jsonutils import json
 from ._thirdparty import typing_inspect
 from ._utils import (
     try_parse_datetime_with_formats,

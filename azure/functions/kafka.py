@@ -2,13 +2,13 @@
 # Licensed under the MIT License.
 
 import typing
-import json
 
 from typing import Any, List
 
 from . import meta
 
 from ._kafka import AbstractKafkaEvent
+from ._jsonutils import json
 
 
 class KafkaEvent(AbstractKafkaEvent):

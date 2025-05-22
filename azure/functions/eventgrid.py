@@ -3,10 +3,10 @@
 
 import collections
 import datetime
-import json
 from typing import Optional, List, Any, Dict, Union
 
 from azure.functions import _eventgrid as azf_eventgrid
+from ._jsonutils import json
 
 from . import meta
 from .meta import Datum

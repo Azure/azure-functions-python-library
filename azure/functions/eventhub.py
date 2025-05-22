@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 from typing import Dict, Any, List, Union, Optional, Mapping
 
 from azure.functions import _eventhub
+from ._jsonutils import json
 
 from . import meta
 

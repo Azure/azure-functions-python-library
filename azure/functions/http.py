@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 import logging
 import sys
 import typing
@@ -9,6 +8,7 @@ from http.cookies import SimpleCookie
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _http as azf_http
+from ._jsonutils import json
 from . import meta
 from werkzeug.datastructures import Headers
 
