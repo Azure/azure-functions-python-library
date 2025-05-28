@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from azure.functions.decorators.constants import (ASSISTANT_SKILL_TRIGGER,
                                                   TEXT_COMPLETION,
@@ -34,13 +34,11 @@ class AssistantSkillTrigger(Trigger):
                  function_description: str,
                  function_name: Optional[str] = None,
                  parameter_description_json: Optional[str] = None,
-                 model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.function_description = function_description
         self.function_name = function_name
         self.parameter_description_json = parameter_description_json
-        self.model = model
         super().__init__(name=name, data_type=data_type)
 
 
@@ -53,17 +51,23 @@ class TextCompletionInput(InputBinding):
     def __init__(self,
                  name: str,
                  prompt: str,
-                 model: Optional[OpenAIModels] = OpenAIModels.DefaultChatModel,
+                 ai_connection_name: Optional[str] = "",
+                 chat_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultChatModel,
                  temperature: Optional[str] = "0.5",
                  top_p: Optional[str] = None,
                  max_tokens: Optional[str] = "100",
+                 is_reasoning_model: Optional[bool] = False,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.prompt = prompt
-        self.model = model
+        self.ai_connection_name = ai_connection_name
+        self.chat_model = chat_model
         self.temperature = temperature
         self.top_p = top_p
         self.max_tokens = max_tokens
+        self.is_reasoning_model = is_reasoning_model
         super().__init__(name=name, data_type=data_type)
 
 
@@ -98,7 +102,10 @@ class EmbeddingsInput(InputBinding):
                  name: str,
                  input: str,
                  input_type: InputType,
-                 model: Optional[str] = None,
+                 ai_connection_name: Optional[str] = "",
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
                  max_chunk_length: Optional[int] = 8 * 1024,
                  max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,
@@ -106,7 +113,8 @@ class EmbeddingsInput(InputBinding):
         self.name = name
         self.input = input
         self.input_type = input_type
-        self.model = model
+        self.ai_connection_name = ai_connection_name
+        self.embeddings_model = embeddings_model
         self.max_chunk_length = max_chunk_length
         self.max_overlap = max_overlap
         super().__init__(name=name, data_type=data_type)
@@ -137,25 +145,37 @@ class SemanticSearchInput(InputBinding):
 
     def __init__(self,
                  name: str,
-                 connection_name: str,
+                 search_connection_name: str,
                  collection: str,
                  query: Optional[str] = None,
-                 embeddings_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
-                 chat_model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultChatModel,
+                 ai_connection_name: Optional[str] = "",
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
+                 chat_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultChatModel,
                  system_prompt: Optional[str] = semantic_search_system_prompt,
                  max_knowledge_count: Optional[int] = 1,
+                 temperature: Optional[str] = "0.5",
+                 top_p: Optional[str] = None,
+                 max_tokens: Optional[str] = "100",
+                 is_reasoning_model: Optional[bool] = False,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
-        self.connection_name = connection_name
+        self.search_connection_name = search_connection_name
         self.collection = collection
         self.query = query
+        self.ai_connection_name = ai_connection_name
         self.embeddings_model = embeddings_model
         self.chat_model = chat_model
         self.system_prompt = system_prompt
         self.max_knowledge_count = max_knowledge_count
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.is_reasoning_model = is_reasoning_model
         super().__init__(name=name, data_type=data_type)
 
 
@@ -168,17 +188,29 @@ class AssistantPostInput(InputBinding):
     def __init__(self, name: str,
                  id: str,
                  user_message: str,
-                 model: Optional[str] = None,
+                 ai_connection_name: Optional[str] = "",
+                 chat_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultChatModel,
                  chat_storage_connection_setting: Optional[str] = "AzureWebJobsStorage",       # noqa: E501
                  collection_name: Optional[str] = "ChatState",
+                 temperature: Optional[str] = "0.5",
+                 top_p: Optional[str] = None,
+                 max_tokens: Optional[str] = "100",
+                 is_reasoning_model: Optional[bool] = False,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.name = name
         self.id = id
         self.user_message = user_message
-        self.model = model
+        self.ai_connection_name = ai_connection_name
+        self.chat_model = chat_model
         self.chat_storage_connection_setting = chat_storage_connection_setting
         self.collection_name = collection_name
+        self.temperature = temperature
+        self.top_p = top_p
+        self.max_tokens = max_tokens
+        self.is_reasoning_model = is_reasoning_model
         super().__init__(name=name, data_type=data_type)
 
 
@@ -192,10 +224,12 @@ class EmbeddingsStoreOutput(OutputBinding):
                  name: str,
                  input: str,
                  input_type: InputType,
-                 connection_name: str,
+                 store_connection_name: str,
                  collection: str,
-                 model: Optional[
-                     OpenAIModels] = OpenAIModels.DefaultEmbeddingsModel,
+                 ai_connection_name: Optional[str] = "",
+                 embeddings_model: Optional
+                 [Union[str, OpenAIModels]]
+                 = OpenAIModels.DefaultEmbeddingsModel,
                  max_chunk_length: Optional[int] = 8 * 1024,
                  max_overlap: Optional[int] = 128,
                  data_type: Optional[DataType] = None,
@@ -203,9 +237,10 @@ class EmbeddingsStoreOutput(OutputBinding):
         self.name = name
         self.input = input
         self.input_type = input_type
-        self.connection_name = connection_name
+        self.store_connection_name = store_connection_name
         self.collection = collection
-        self.model = model
+        self.ai_connection_name = ai_connection_name
+        self.embeddings_model = embeddings_model
         self.max_chunk_length = max_chunk_length
         self.max_overlap = max_overlap
         super().__init__(name=name, data_type=data_type)
