@@ -11,10 +11,10 @@ class InputStream(azf_abc.InputStream):
 
     :param str name:
         An optional str specifying the name of the blob.
-    
+
     :param str uri:
         An optional str specifying the uri of the blob.
-    
+
     :param str length:
         An optional int specifying the length of the blob.
     """
@@ -40,7 +40,6 @@ class InputStream(azf_abc.InputStream):
     def uri(self) -> Optional[str]:
         """The blob's primary location URI."""
         return self._uri
-
 
     def read(self, size=-1) -> bytes:
         """Return and read up to *size* bytes.
