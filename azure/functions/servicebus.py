@@ -2,12 +2,12 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
 from typing import Dict, Any, List, Union, Optional, Mapping, cast
 
 from azure.functions import _servicebus as azf_sbus
 
 from . import meta
+from ._jsonutils import json
 
 
 class ServiceBusMessage(azf_sbus.ServiceBusMessage):

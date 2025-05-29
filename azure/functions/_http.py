@@ -4,10 +4,10 @@
 import collections.abc
 import http
 import io
-import json
 import types
 import typing
 
+from ._jsonutils import json
 from werkzeug import formparser as _wk_parser
 from werkzeug import http as _wk_http
 from werkzeug.datastructures import (Headers, FileStorage, MultiDict,

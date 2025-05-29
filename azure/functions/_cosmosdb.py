@@ -2,9 +2,9 @@
 # Licensed under the MIT License.
 
 import collections
-import json
 
 from . import _abc
+from ._jsonutils import json
 
 
 class Document(_abc.Document, collections.UserDict):
