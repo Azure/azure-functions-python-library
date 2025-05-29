@@ -15,6 +15,15 @@ if `orjson` is not available (installed).
 """
 
 
+try:
+    import orjson as _orjson
+except ImportError:
+    _orjson = None
+
+# Standard library is always present
+import json as _std_json
+
+
 class JsonInterface(ABC):
     @abstractmethod
     def dumps(self, obj: Any) -> str:
@@ -27,8 +36,8 @@ class JsonInterface(ABC):
 
 class OrJsonAdapter(JsonInterface):
     def __init__(self):
-        import orjson
-        self.orjson = orjson
+        assert _orjson is not None
+        self.orjson = _orjson
 
     def dumps(self, obj: Any) -> str:
         # orjson.dumps returns bytes, decode to str
@@ -40,8 +49,7 @@ class OrJsonAdapter(JsonInterface):
 
 class StdJsonAdapter(JsonInterface):
     def __init__(self):
-        import json
-        self.json = json
+        self.json = _std_json
 
     def dumps(self, obj: Any) -> str:
         return self.json.dumps(obj)
@@ -50,9 +58,9 @@ class StdJsonAdapter(JsonInterface):
         return self.json.loads(s)
 
 
-try:
-    json_impl: JsonInterface = OrJsonAdapter()
-except ImportError:
+if _orjson is not None:
+    json_impl = OrJsonAdapter()
+else:
     json_impl = StdJsonAdapter()
 
 
