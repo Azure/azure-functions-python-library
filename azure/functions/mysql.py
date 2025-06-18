@@ -77,6 +77,7 @@ class MySqlConverter(meta.InConverter, meta.OutConverter,
             value=json.dumps([dict(d) for d in data])
         )
 
+
 class MySqlTriggerConverter(MySqlConverter,
-                        binding='mysqlTrigger', trigger=True):
+                            binding='mysqlTrigger', trigger=True):
     pass
