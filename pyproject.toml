@@ -40,7 +40,7 @@ dev = [
     'azure-functions-durable',
     'flake8~=4.0.1; python_version < "3.11"',
     'flake8~=7.1.1; python_version >= "3.11"',
-    'pydocstyle'
+    'flake8-docstrings'
 ]
 
 [tool.setuptools.packages.find]

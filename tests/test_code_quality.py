@@ -53,29 +53,6 @@ class TestCodeQuality(unittest.TestCase):
             raise AssertionError(
                 f'flake8 validation failed:\n{output}') from None
 
-    def test_pydocs(self):
-        try:
-            import pydocstyle  # NoQA
-        except ImportError:
-            raise unittest.SkipTest('pydocstyle module is missing')
-
-        config_path = ROOT_PATH / '.pydocstyle'
-        if not config_path.exists():
-            raise unittest.SkipTest('could not locate the .pydocstyle file')
-
-        try:
-            subprocess.run(
-                [sys.executable, '-m', 'pydocstyle', '--config', str(config_path),
-                 'azure/functions/decorators/function_app.py'],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                cwd=str(ROOT_PATH))
-        except subprocess.CalledProcessError as ex:
-            output = ex.output.decode()
-            raise AssertionError(
-                f'pydocstyle validation failed:\n{output}') from None
-
     def test_library_version(self):
         # PEP 440 Parsing version strings with regular expressions
         is_valid = re.match(
