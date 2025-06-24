@@ -501,7 +501,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         :return: Decorator function.
         """
-
         if trigger_extra_fields is None:
             trigger_extra_fields = {}
         if binding_extra_fields is None:
@@ -694,7 +693,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param queue_name: The name of the queue to monitor.
         :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param access_rights: Access rights for the connection string.
-        :param is_sessions_enabled: Set to True if connecting to a session-aware queue or subscription.
+        :param is_sessions_enabled: Set to True if connecting to a session-aware queue
+            or subscription.
         :param cardinality: Set to "many" to enable batching.
 
         :return: Decorator function.
@@ -755,7 +755,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param subscription_name: The name of the subscription to monitor.
         :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param access_rights: Access rights for the connection string.
-        :param is_sessions_enabled: Set to True if connecting to a session-aware queue or subscription.
+        :param is_sessions_enabled: Set to True if connecting to a session-aware queue
+            or subscription.
         :param cardinality: Set to "many" to enable batching.
 
         :return: Decorator function.
@@ -1639,7 +1640,6 @@ class TriggerApi(DecoratorApi, ABC):
 
         :return: Decorator function.
         """
-
         # TODO: This is a temporary check, it should be removed once route
         # issue is fixed at python worker.
         # Currently, python worker treats route as HttpTrigger attribute and
@@ -2369,9 +2369,12 @@ class BindingApi(DecoratorApi, ABC):
 
         :param arg_name: The variable name used in the function code that represents the event.
         :param data_type: Defines how the Functions runtime should treat the parameter value.
-        :param topic_endpoint_uri: The name of an app setting that contains the URI for the custom topic.
-        :param topic_key_setting: The name of an app setting that contains an access key for the custom topic.
-        :param connection: The value of the common prefix for the setting that contains the topic endpoint URI.
+        :param topic_endpoint_uri: The name of an app setting that contains the URI for the
+            custom topic.
+        :param topic_key_setting: The name of an app setting that contains an access key for the
+            custom topic.
+        :param connection: The value of the common prefix for the setting that contains the topic
+            endpoint URI.
 
         :return: Decorator function.
         """
@@ -2865,7 +2868,8 @@ class BindingApi(DecoratorApi, ABC):
             in the function code.
         :param state_store: The state store containing the state.
         :param key: The name of the key to retrieve.
-        :param dapr_address: The Dapr address. Optional; defaults to http://localhost:{daprHttpPort}.
+        :param dapr_address: The Dapr address. Optional;
+            Defaults to http://localhost:{daprHttpPort}.
         :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param kwargs: Additional keyword arguments for specifying binding fields in the
             `function.json`.
@@ -2918,7 +2922,8 @@ class BindingApi(DecoratorApi, ABC):
         :param secret_store_name: The name of the secret store from which to retrieve the secret.
         :param key: The key identifying the name of the secret to retrieve.
         :param metadata: Metadata properties in the form "key1=value1&key2=value2".
-        :param dapr_address: The Dapr address. Optional; defaults to http://localhost:{daprHttpPort}.
+        :param dapr_address: The Dapr address. Optional;
+            Defaults to http://localhost:{daprHttpPort}.
         :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param kwargs: Additional keyword arguments for specifying binding fields in the
             `function.json`.
@@ -3992,8 +3997,10 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         Add an ASGI app-integrated HTTP function.
 
         :param http_middleware: An instance of :class:`AsgiMiddleware` or :class:`WsgiMiddleware`.
-        :param function_name: The name to assign to the registered function. Defaults to 'http_app_func'.
-        :raises TypeError: If the provided `http_middleware` is not an instance of :class:`AsgiMiddleware`.
+        :param function_name: The name to assign to the registered function.
+            Defaults to 'http_app_func'.
+        :raises TypeError: If the provided `http_middleware` is not an instance
+            of :class:`AsgiMiddleware`.
         :return: None.
         """
         if not isinstance(http_middleware, AsgiMiddleware):
@@ -4027,7 +4034,8 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
         :param app: The WSGI application object to wrap.
         :param http_auth_level: The HTTP authorization level for the function.
             Can be an instance of :class:`AuthLevel` or a string. Defaults to AuthLevel.FUNCTION.
-        :param function_name: The name to assign to the registered function. Defaults to 'http_app_func'.
+        :param function_name: The name to assign to the registered function.
+            Defaults to 'http_app_func'.
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app), function_name)
