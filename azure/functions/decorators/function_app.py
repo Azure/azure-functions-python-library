@@ -472,35 +472,36 @@ class TriggerApi(DecoratorApi, ABC):
               trigger_extra_fields: Optional[Dict[str, Any]] = None,
               binding_extra_fields: Optional[Dict[str, Any]] = None
               ) -> Callable[..., Any]:
-        """The route decorator adds :class:`HttpTrigger` and
-        :class:`HttpOutput` binding to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining HttpTrigger
-        and HttpOutput binding in the function.json which enables your
-        function be triggered when http requests hit the specified route.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `route` decorator adds :class:`HttpTrigger` and :class:`HttpOutput`
+        bindings to the :class:`FunctionBuilder` object for building a :class:`Function`
+        used in the worker function indexing model.
+
+        This is equivalent to defining both `HttpTrigger` and `HttpOutput` bindings
+        in the `function.json`, which enables your function to be triggered when
+        HTTP requests hit the specified route.
+
+        All optional fields will be given default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-http
 
-        :param route: Route for the http endpoint, if None, it will be set
-        to function name if present or user defined python function name.
-        :param trigger_arg_name: Argument name for :class:`HttpRequest`,
-        defaults to 'req'.
-        :param binding_arg_name: Argument name for :class:`HttpResponse`,
-        defaults to '$return'.
-        :param methods: A tuple of the HTTP methods to which the function
-        responds.
+        :param route: Route for the HTTP endpoint. If None, it defaults to the function
+            name (if present) or the user-defined Python function name.
+        :param trigger_arg_name: Argument name for :class:`HttpRequest`. Defaults to `'req'`.
+        :param binding_arg_name: Argument name for :class:`HttpResponse`. Defaults to `'$return'`.
+        :param methods: A tuple of the HTTP methods to which the function responds.
         :param auth_level: Determines what keys, if any, need to be present
-        on the request in order to invoke the function.
+            on the request in order to invoke the function.
+        :param trigger_extra_fields: Additional fields to include in the trigger JSON.
+            For example:
+            >>> data_type='STRING'  # results in 'dataType': 'STRING' in the trigger JSON
+        :param binding_extra_fields: Additional fields to include in the binding JSON.
+            For example:
+            >>> data_type='STRING'  # results in 'dataType': 'STRING' in the binding JSON
+
         :return: Decorator function.
-        :param trigger_extra_fields: Additional fields to include in trigger
-        json. For example,
-        >>> data_type='STRING' # 'dataType': 'STRING' in trigger json
-        :param binding_extra_fields: Additional fields to include in binding
-        json. For example,
-        >>> data_type='STRING' # 'dataType': 'STRING' in binding json
         """
+
         if trigger_extra_fields is None:
             trigger_extra_fields = {}
         if binding_extra_fields is None:
@@ -581,27 +582,27 @@ class TriggerApi(DecoratorApi, ABC):
                       use_monitor: Optional[bool] = None,
                       data_type: Optional[Union[DataType, str]] = None,
                       **kwargs: Any) -> Callable[..., Any]:
-        """The schedule or timer decorator adds :class:`TimerTrigger` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining TimerTrigger
-        in the function.json which enables your function be triggered on the
-        specified schedule.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `schedule` or `timer` decorator adds :class:`TimerTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a `TimerTrigger` in the `function.json`, which
+        enables your function to be triggered on the specified schedule.
+
+        All optional fields will be given default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-timer
 
         :param arg_name: The name of the variable that represents the
-        :class:`TimerRequest` object in function code.
-        :param schedule: A string representing a CRON expression that will
-        be used to schedule a function to run.
-        :param run_on_startup: If true, the function is invoked when the
-        runtime starts.
-        :param use_monitor: Set to true or false to indicate whether the
-        schedule should be monitored.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+            :class:`TimerRequest` object in function code.
+        :param schedule: A string representing a CRON expression used to schedule
+            the function execution.
+        :param run_on_startup: If True, the function is invoked when the runtime starts.
+        :param use_monitor: Set to True or False to indicate whether the
+            schedule should be monitored.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+
         :return: Decorator function.
         """
 
@@ -629,21 +630,22 @@ class TriggerApi(DecoratorApi, ABC):
                         arg_name: str,
                         data_type: Optional[Union[DataType, str]] = None,
                         **kwargs) -> Callable:
-        """The warm up decorator adds :class:`WarmUpTrigger` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining WarmUpTrigger
-        in the function.json which enables your function be triggered on the
-        specified schedule.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `warm_up` decorator adds :class:`WarmUpTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a `WarmUpTrigger` in the `function.json`, which
+        enables your function to be triggered on the specified schedule.
+
+        All optional fields will be given default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-warmup
 
         :param arg_name: The name of the variable that represents the
-        :class:`TimerRequest` object in function code.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+            :class:`TimerRequest` object in the function code.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+
         :return: Decorator function.
         """
 
@@ -672,28 +674,29 @@ class TriggerApi(DecoratorApi, ABC):
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
             **kwargs: Any) -> Callable[..., Any]:
-        """The on_service_bus_queue_change decorator adds
-        :class:`ServiceBusQueueTrigger` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusQueueTrigger
-        in the function.json which enables your function be triggered when
-        new message(s) are sent to the service bus queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `on_service_bus_queue_change` decorator adds :class:`ServiceBusQueueTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the worker
+        function indexing model.
+
+        This is equivalent to defining a `ServiceBusQueueTrigger` in the `function.json`,
+        which enables the function to be triggered when new message(s) are sent to the
+        Service Bus queue.
+
+        All optional fields will be given default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
         :param arg_name: The name of the variable that represents the
-        :class:`ServiceBusMessage` object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param queue_name: Name of the queue to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+            :class:`ServiceBusMessage` object in the function code.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Service Bus.
+        :param queue_name: The name of the queue to monitor.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param access_rights: Access rights for the connection string.
-        :param is_sessions_enabled: True if connecting to a session-aware
-        queue or subscription.
-        :param cardinality: Set to many in order to enable batching.
+        :param is_sessions_enabled: Set to True if connecting to a session-aware queue or subscription.
+        :param cardinality: Set to "many" to enable batching.
+
         :return: Decorator function.
         """
 
@@ -731,29 +734,30 @@ class TriggerApi(DecoratorApi, ABC):
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
             **kwargs: Any) -> Callable[..., Any]:
-        """The on_service_bus_topic_change decorator adds
-        :class:`ServiceBusTopicTrigger` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusTopicTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the service bus topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `on_service_bus_topic_change` decorator adds :class:`ServiceBusTopicTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the worker
+        function indexing model.
+
+        This is equivalent to defining a `ServiceBusTopicTrigger` in the `function.json`,
+        which enables the function to be triggered when new message(s) are sent to a
+        Service Bus topic.
+
+        All optional fields will be given default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
         :param arg_name: The name of the variable that represents the
-        :class:`ServiceBusMessage` object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param topic_name: Name of the topic to monitor.
-        :param subscription_name: Name of the subscription to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+            :class:`ServiceBusMessage` object in the function code.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Service Bus.
+        :param topic_name: The name of the topic to monitor.
+        :param subscription_name: The name of the subscription to monitor.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
         :param access_rights: Access rights for the connection string.
-        :param is_sessions_enabled: True if connecting to a session-aware
-        queue or subscription.
-        :param cardinality: Set to many in order to enable batching.
+        :param is_sessions_enabled: Set to True if connecting to a session-aware queue or subscription.
+        :param cardinality: Set to "many" to enable batching.
+
         :return: Decorator function.
         """
 
@@ -787,26 +791,25 @@ class TriggerApi(DecoratorApi, ABC):
                       connection: str,
                       data_type: Optional[DataType] = None,
                       **kwargs) -> Callable[..., Any]:
-        """The queue_trigger decorator adds :class:`QueueTrigger` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining QueueTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the storage queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `queue_trigger` decorator adds :class:`QueueTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a `QueueTrigger` in the `function.json`, which
+        enables the function to be triggered when new message(s) are sent to an Azure Storage queue.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-queue
 
         :param arg_name: The name of the variable that represents the
-        :class:`QueueMessage` object in function code.
-        :param queue_name: The name of the queue to poll.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Azure Queues.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+            :class:`QueueMessage` object in the function code.
+        :param queue_name: The name of the queue to monitor.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Azure Queues.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -839,30 +842,27 @@ class TriggerApi(DecoratorApi, ABC):
                                   consumer_group: Optional[
                                       str] = None,
                                   **kwargs: Any) -> Callable[..., Any]:
-        """The event_hub_message_trigger decorator adds
-        :class:`EventHubTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining EventHubTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the event hub.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `event_hub_message_trigger` decorator adds :class:`EventHubTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining an `EventHubTrigger` in the `function.json`, which
+        enables the function to be triggered when new message(s) are sent to the Event Hub.
+
+        All optional fields will be given default values by the function host when they are parsed.
 
         Ref: https://aka.ms/azure-function-binding-event-hubs
 
-        :param arg_name: The name of the variable that represents
-        :class:`EventHubEvent` object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Event Hubs.
-        :param event_hub_name: The name of the event hub.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param cardinality: Set to many in order to enable batching.
-        :param consumer_group: An optional property that sets the consumer
-        group used to subscribe to events in the hub.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the
+            :class:`EventHubEvent` object in the function code.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Event Hubs.
+        :param event_hub_name: The name of the Event Hub.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param cardinality: Set to "many" to enable batching.
+        :param consumer_group: Optional. The consumer group used to subscribe to events in the hub.
+        :param kwargs: Additional keyword arguments to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -1188,22 +1188,21 @@ class TriggerApi(DecoratorApi, ABC):
                                Union[DataType, str]] = None,
                            **kwargs) -> Callable[..., Any]:
         """
-        The event_grid_trigger decorator adds
-        :class:`EventGridTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining event grid trigger
-        in the function.json which enables function to be triggered to
-        respond to an event sent to an event grid topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `event_grid_trigger` decorator adds :class:`EventGridTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining an Event Grid trigger in `function.json`, which
+        enables the function to be triggered in response to an event sent to an Event Grid topic.
+
+        All optional fields will be given default values by the function host when they are parsed.
 
         Ref: https://aka.ms/eventgridtrigger
 
-        :param arg_name: the variable name used in function code for the
-            parameter that receives the event data.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+        :param arg_name: The variable name used in the function code for the parameter
+            that receives the event data.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+
         :return: Decorator function.
         """
 
@@ -1251,80 +1250,64 @@ class TriggerApi(DecoratorApi, ABC):
                       data_type: Optional[Union[DataType, str]] = None,
                       **kwargs) -> Callable[..., Any]:
         """
-        The kafka_trigger decorator adds
-        :class:`KafkaTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining kafka trigger
-        in the function.json which enables function to be triggered to
-        respond to an event sent to a kafka topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `kafka_trigger` decorator adds :class:`KafkaTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a Kafka trigger in `function.json`, which enables
+        the function to be triggered in response to an event sent to a Kafka topic.
+
+        All optional fields will be given default values by the function host when
+        parsed.
 
         Ref: https://aka.ms/kafkatrigger
 
-        :param arg_name: the variable name used in function code for the
-            parameter that has the kafka event data.
+        :param arg_name: The variable name used in the function code for the parameter
+            that receives the Kafka event data.
         :param topic: The topic monitored by the trigger.
         :param broker_list: The list of Kafka brokers monitored by the trigger.
-        :param event_hub_connection_string: The name of an app setting that
-        contains the connection string for the eventhub when using Kafka
-        protocol header feature of Azure EventHubs.
+        :param event_hub_connection_string: The name of an app setting that contains the
+            connection string for Event Hub (when using Kafka protocol headers with
+            Azure Event Hubs).
         :param consumer_group: Kafka consumer group used by the trigger.
-        :param avro_schema: This should be used only if a generic record
-        should be generated.
-        :param username: SASL username for use with the PLAIN and SASL-SCRAM-..
-         mechanisms. Default is empty string. This is equivalent to
-        'sasl.username' in librdkafka.
-        :param password: SASL password for use with the PLAIN and SASL-SCRAM-..
-         mechanisms. Default is empty string. This is equivalent to
-        'sasl.password' in librdkafka.
-        :param ssl_key_location: Path to client's private key (PEM) used for
-          authentication. Default is empty string. This is equivalent to
-        'ssl.key.location' in librdkafka.
-        :param ssl_ca_location: Path to CA certificate file for verifying the
-        broker's certificate. This is equivalent to 'ssl.ca.location' in
-        librdkafka.
-        :param ssl_certificate_location: Path to client's certificate. This is
-        equivalent to 'ssl.certificate.location' in librdkafka.
-        :param ssl_key_password: Password for client's certificate. This is
-        equivalent to 'ssl.key.password' in librdkafka.
-        :param schema_registry_url: URL for the Avro Schema Registry.
-        :param schema_registry_username: Username for the Avro Schema Registry.
-        :param schema_registry_password: Password for the Avro Schema Registry.
-        :param o_auth_bearer_method: Either 'default' or 'oidc'.
-        sasl.oauthbearer in librdkafka.
-        :param o_auth_bearer_client_id: Specify only when o_auth_bearer_method
-        is 'oidc'. sasl.oauthbearer.client.id in librdkafka.
-        :param o_auth_bearer_client_secret: Specify only when
-        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.client.secret in
-        librdkafka.
-        :param o_auth_bearer_scope: Specify only when o_auth_bearer_method
-        is 'oidc'. Client use this to specify the scope of the access request
-        to the broker. sasl.oauthbearer.scope in librdkafka.
-        :param o_auth_bearer_token_endpoint_url: Specify only when
-        o_auth_bearer_method is 'oidc'. sasl.oauthbearer.token.endpoint.url
-        in librdkafka.
-        :param o_auth_bearer_extensions: Allow additional information to be
-        provided to the broker. Comma-separated list of key=value pairs. E.g.,
-        "supportFeatureX=true,organizationId=sales-emea".
-        sasl.oauthbearer.extensions in librdkafka
-        :param authentication_mode: SASL mechanism to use for authentication.
-        Allowed values: Gssapi, Plain, ScramSha256, ScramSha512. Default is
-        Plain. This is equivalent to 'sasl.mechanism' in librdkafka.
-        :param protocol: Gets or sets the security protocol used to communicate
-          with brokers. Default is plain text. This is equivalent to
-        'security.protocol' in librdkafka. TODO
-        :param lag_threshold: Maximum number of unprocessed messages a worker
-        is expected to have at an instance. When target-based scaling is not
-        disabled, this is used to divide total unprocessed event count to
-        determine the number of worker instances, which will then be rounded
-        up to a worker instance count that creates a balanced partition
-        distribution. Default is 1000.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param avro_schema: Used only if a generic Avro record should be generated.
+        :param username: SASL username for use with the PLAIN or SASL-SCRAM mechanisms.
+            Equivalent to 'sasl.username' in librdkafka. Default is empty string.
+        :param password: SASL password for use with the PLAIN or SASL-SCRAM mechanisms.
+            Equivalent to 'sasl.password' in librdkafka. Default is empty string.
+        :param ssl_key_location: Path to the client’s private key (PEM) used for
+            authentication. Equivalent to 'ssl.key.location' in librdkafka.
+        :param ssl_ca_location: Path to the CA certificate file for verifying the broker's
+            certificate. Equivalent to 'ssl.ca.location' in librdkafka.
+        :param ssl_certificate_location: Path to the client's certificate.
+            Equivalent to 'ssl.certificate.location' in librdkafka.
+        :param ssl_key_password: Password for the client’s certificate.
+            Equivalent to 'ssl.key.password' in librdkafka.
+        :param schema_registry_url: URL of the Avro Schema Registry.
+        :param schema_registry_username: Username for the Schema Registry.
+        :param schema_registry_password: Password for the Schema Registry.
+        :param o_auth_bearer_method: Either 'default' or 'oidc'. Equivalent to
+            'sasl.oauthbearer.method' in librdkafka.
+        :param o_auth_bearer_client_id: Specify only if `o_auth_bearer_method` is 'oidc'.
+            Equivalent to 'sasl.oauthbearer.client.id' in librdkafka.
+        :param o_auth_bearer_client_secret: Specify only if `o_auth_bearer_method` is 'oidc'.
+            Equivalent to 'sasl.oauthbearer.client.secret' in librdkafka.
+        :param o_auth_bearer_scope: Specify only if `o_auth_bearer_method` is 'oidc'.
+            Used to specify access scope. Equivalent to 'sasl.oauthbearer.scope'.
+        :param o_auth_bearer_token_endpoint_url: Specify only if `o_auth_bearer_method` is 'oidc'.
+            Equivalent to 'sasl.oauthbearer.token.endpoint.url' in librdkafka.
+        :param o_auth_bearer_extensions: Additional information for the broker, in the form
+            of a comma-separated list of key=value pairs (e.g., "orgId=abc,flag=true").
+            Equivalent to 'sasl.oauthbearer.extensions' in librdkafka.
+        :param authentication_mode: SASL mechanism to use. Allowed: Gssapi, Plain,
+            ScramSha256, ScramSha512. Default: Plain. Equivalent to 'sasl.mechanism'.
+        :param protocol: Security protocol used to communicate with brokers.
+            Default: plaintext. Equivalent to 'security.protocol'.
+        :param lag_threshold: Max number of unprocessed messages per worker instance.
+            Used in scaling logic to estimate needed worker instances. Default is 1000.
+        :param data_type: Defines how Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for extra binding fields in the binding JSON.
+
         :return: Decorator function.
         """
 
@@ -1488,23 +1471,25 @@ class TriggerApi(DecoratorApi, ABC):
                         **kwargs
                         ) -> Callable[..., Any]:
         """
-        The generic_trigger decorator adds :class:`GenericTrigger`
-        to the :class:`FunctionBuilder` object for building :class:`Function`
-        object used in worker function indexing model.
-        This is equivalent to defining a generic trigger in the
-        function.json which triggers function to execute when generic trigger
-        events are received by host.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `generic_trigger` decorator adds :class:`GenericTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a generic trigger in the `function.json`, which
+        triggers the function to execute when generic trigger events are received by
+        the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
 
         Ref: https://aka.ms/azure-function-binding-custom
 
-        :param arg_name: The name of trigger parameter in the function code.
-        :param type: The type of binding.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param type: The type of the binding.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+            fields to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -1531,26 +1516,28 @@ class TriggerApi(DecoratorApi, ABC):
                                         data_type: Optional[
                                             Union[DataType, str]] = None,
                                         **kwargs: Any) -> Callable[..., Any]:
-        """The dapr_service_invocation_trigger decorator adds
-        :class:`DaprServiceInvocationTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining
-        DaprServiceInvocationTrigger
-        in the function.json which enables function to be triggered when new
-        service invocation occurs through Dapr.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_service_invocation_trigger` decorator adds
+        :class:`DaprServiceInvocationTrigger` to the :class:`FunctionBuilder` object
+        for building a :class:`Function` used in the worker function indexing model.
+
+        This is equivalent to defining `DaprServiceInvocationTrigger` in the
+        `function.json`, which enables the function to be triggered when a service
+        invocation occurs through Dapr.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
 
         Ref: https://aka.ms/azure-function-dapr-trigger-service-invocation
 
-        :param arg_name: The name of the variable that represents
+        :param arg_name: The name of the variable that represents the service invocation
+            input in the function code.
         :param method_name: The name of the method on a remote Dapr App.
-        If not specified, the name of the function is used as the method name.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
+            If not specified, the name of the function is used as the method name.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
         :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+            fields to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -1577,25 +1564,27 @@ class TriggerApi(DecoratorApi, ABC):
                              data_type: Optional[
                                  Union[DataType, str]] = None,
                              **kwargs: Any) -> Callable[..., Any]:
-        """The dapr_binding_trigger decorator adds
-        :class:`DaprBindingTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining DaprBindingTrigger
-        in the function.json which enables function to be triggered
-        on Dapr input binding.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_binding_trigger` decorator adds :class:`DaprBindingTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining `DaprBindingTrigger` in the `function.json`,
+        which enables the function to be triggered by a Dapr input binding.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
 
         Ref: https://aka.ms/azure-function-dapr-trigger-binding
 
-        :param arg_name: The name of the variable that represents
-        :param binding_name: The name of the Dapr trigger.
-        If not specified, the name of the function is used as the trigger name.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the trigger input
+            in the function code.
+        :param binding_name: The name of the Dapr trigger. If not specified, the
+            function name is used as the trigger name.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding fields
+            to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -1624,30 +1613,33 @@ class TriggerApi(DecoratorApi, ABC):
                            data_type: Optional[
                                Union[DataType, str]] = None,
                            **kwargs: Any) -> Callable[..., Any]:
-        """The dapr_topic_trigger decorator adds
-        :class:`DaprTopicTrigger`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining DaprTopicTrigger
-        in the function.json which enables function to be triggered when new
-        message(s) are sent to the Dapr pubsub.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_topic_trigger` decorator adds :class:`DaprTopicTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining `DaprTopicTrigger` in the `function.json`,
+        which enables the function to be triggered when new message(s) are sent to
+        the Dapr pub/sub system.
+
+        All optional fields will be assigned default values by the function host
+        when they are parsed.
 
         Ref: https://aka.ms/azure-function-dapr-trigger-topic
 
-        :param arg_name: The name of the variable that represents
-        :param pub_sub_name: The pub/sub name.
-        :param topic: The topic. If unspecified the function name will be used.
-        :param route: The route for the trigger. If unspecified
-        the topic name will be used.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the trigger input
+            in the function code.
+        :param pub_sub_name: The name of the Dapr pub/sub component.
+        :param topic: The topic name. If unspecified, the function name is used.
+        :param route: The route for the trigger. If unspecified, the topic name is used.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Additional keyword arguments for specifying extra binding
+            fields to include in the binding JSON.
 
         :return: Decorator function.
         """
+
         # TODO: This is a temporary check, it should be removed once route
         # issue is fixed at python worker.
         # Currently, python worker treats route as HttpTrigger attribute and
@@ -1776,25 +1768,28 @@ class BindingApi(DecoratorApi, ABC):
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
             Callable[..., Any]:
-        """The service_bus_queue_output decorator adds
-        :class:`ServiceBusQueueOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusQueueOutput
-        in the function.json which enables function to write message(s) to
-        the service bus queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `service_bus_queue_output` decorator adds :class:`ServiceBusQueueOutput`
+        to the :class:`FunctionBuilder` object for building a :class:`Function` used
+        in the worker function indexing model.
+
+        This is equivalent to defining `ServiceBusQueueOutput` in the `function.json`,
+        which enables the function to write messages to a Service Bus queue.
+
+        All optional fields will be assigned default values by the function host
+        when they are parsed.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
-        :param arg_name: The name of the variable that represents service
-        bus queue output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param queue_name: Name of the queue to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param access_rights: Access rights for the connection string.
+        :param arg_name: The name of the variable that represents the Service Bus queue
+            output object in the function code.
+        :param connection: The name of an app setting or setting collection that
+            specifies how to connect to Service Bus.
+        :param queue_name: The name of the queue to which messages will be sent.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param access_rights: The access rights required for the connection string.
+
         :return: Decorator function.
         """
 
@@ -1828,26 +1823,29 @@ class BindingApi(DecoratorApi, ABC):
                                      AccessRights, str]] = None,
                                  **kwargs) -> \
             Callable[..., Any]:
-        """The service_bus_topic_output decorator adds
-        :class:`ServiceBusTopicOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining ServiceBusTopicOutput
-        in the function.json which enables function to write message(s) to
-        the service bus topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `service_bus_topic_output` decorator adds :class:`ServiceBusTopicOutput`
+        to the :class:`FunctionBuilder` object for building a :class:`Function` used
+        in the worker function indexing model.
+
+        This is equivalent to defining `ServiceBusTopicOutput` in the `function.json`,
+        which enables the function to write messages to a Service Bus topic.
+
+        All optional fields will be assigned default values by the function host
+        when they are parsed.
 
         Ref: https://aka.ms/azure-function-binding-service-bus
 
-        :param arg_name: The name of the variable that represents service
-        bus topic output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Service Bus.
-        :param topic_name: Name of the topic to monitor.
-        :param subscription_name: Name of the subscription to monitor.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value, defaults to DataType.UNDEFINED.
-        :param access_rights: Access rights for the connection string.
+        :param arg_name: The name of the variable that represents the Service Bus topic
+            output object in the function code.
+        :param connection: The name of an app setting or setting collection that
+            specifies how to connect to Service Bus.
+        :param topic_name: The name of the topic to which messages will be sent.
+        :param subscription_name: The name of the subscription (optional for output).
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value. Defaults to DataType.UNDEFINED.
+        :param access_rights: The access rights required for the connection string.
+
         :return: Decorator function.
         """
 
@@ -1878,26 +1876,28 @@ class BindingApi(DecoratorApi, ABC):
                      connection: str,
                      data_type: Optional[DataType] = None,
                      **kwargs) -> Callable[..., Any]:
-        """The queue_output decorator adds :class:`QueueOutput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining QueueOutput
-        in the function.json which enables function to write message(s) to
-        the storage queue.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `queue_output` decorator adds :class:`QueueOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in
+        the worker function indexing model.
+
+        This is equivalent to defining `QueueOutput` in the `function.json`, which
+        enables the function to write messages to an Azure Storage Queue.
+
+        All optional fields will be given default values by the function host
+        when parsed.
 
         Ref: https://aka.ms/azure-function-binding-queue
 
-        :param arg_name: The name of the variable that represents storage
-        queue output object in function code.
-        :param queue_name: The name of the queue to poll.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Azure Queues.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the storage queue
+            output object in the function code.
+        :param queue_name: The name of the queue to which messages will be written.
+        :param connection: The name of an app setting or setting collection that
+            specifies how to connect to Azure Queues.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields
+            to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -1926,26 +1926,28 @@ class BindingApi(DecoratorApi, ABC):
                              Union[DataType, str]] = None,
                          **kwargs) -> \
             Callable[..., Any]:
-        """The event_hub_output decorator adds
-        :class:`EventHubOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining EventHubOutput
-        in the function.json which enables function to write message(s) to
-        the event hub.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `event_hub_output` decorator adds :class:`EventHubOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `EventHubOutput` in the `function.json`,
+        which enables the function to write messages to an Azure Event Hub.
+
+        All optional fields will be given default values by the function host
+        when parsed.
 
         Ref: https://aka.ms/azure-function-binding-event-hubs
 
-        :param arg_name: The name of the variable that represents event hub
-        output object in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Event Hub.
-        :param event_hub_name: The name of the event hub.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable representing the Event Hub output
+            object in the function code.
+        :param connection: The name of an app setting or setting collection that
+            specifies how to connect to Event Hub.
+        :param event_hub_name: The name of the Event Hub to send messages to.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields
+            to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -2196,40 +2198,34 @@ class BindingApi(DecoratorApi, ABC):
                             Union[DataType, str]] = None,
                         **kwargs) \
             -> Callable[..., Any]:
-        """The cosmos_db_input decorator adds
-        :class:`CosmosDBInput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This decorator will work only with extension bundle 4.x
-        and above. For additional details, please refer
-        https://aka.ms/cosmosdb-v4-update.
-        This is equivalent to defining CosmosDBInput in the function.json which
-         enables function to read from CosmosDB.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `cosmos_db_input` decorator adds :class:`CosmosDBInput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This decorator works only with extension bundle version 4.x and above.
+        It is equivalent to defining `CosmosDBInput` in the `function.json`, which
+        enables the function to read from Azure Cosmos DB.
+
+        All optional fields will be assigned default values by the function host
+        when they are parsed.
 
         Ref: https://aka.ms/azure-function-binding-cosmosdb-v4
+        Additional details: https://aka.ms/cosmosdb-v4-update
 
-        :param arg_name: The name of the variable that represents
-        :class:`DocumentList` input object in function code
-        :param connection: The name of an app setting or setting container that
-         specifies how to connect to the Azure Cosmos DB account being
-         monitored containing your Azure Cosmos DB connection string
-        :param database_name: The database containing the document
-        :param container_name: The name of the container that contains the
-        document
-        :param partition_key: Specifies the partition key value for the
-        lookup
-        :param id: The ID of the document to retrieve
-        :param sql_query: An Azure Cosmos DB SQL query used for retrieving
-        multiple documents
-        :param preferred_locations: (Optional) Defines preferred locations
-        (regions) for geo-replicated database accounts in the Azure Cosmos DB
-        service. Values should be comma-separated. For example, East US,South
-        Central US,North Europe
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the variable that represents the
+            :class:`DocumentList` input object in the function code.
+        :param connection: The name of an app setting or setting container that specifies
+            how to connect to the Azure Cosmos DB account being monitored.
+        :param database_name: The name of the Cosmos DB database that contains the document.
+        :param container_name: The name of the container that holds the document.
+        :param partition_key: The partition key value for the document lookup.
+        :param id: The ID of the document to retrieve.
+        :param sql_query: An Azure Cosmos DB SQL query used to retrieve multiple documents.
+        :param preferred_locations: (Optional) Preferred geo-replicated regions. Values should be
+            comma-separated, e.g., "East US,South Central US,North Europe".
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional binding fields to include in the binding JSON.
 
         :return: Decorator function.
         """
@@ -2263,26 +2259,25 @@ class BindingApi(DecoratorApi, ABC):
                    data_type: Optional[DataType] = None,
                    **kwargs) -> Callable[..., Any]:
         """
-        The blob_input decorator adds :class:`BlobInput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining BlobInput
-        in the function.json which enables function to write message(s) to
-        the storage blobs.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `blob_input` decorator adds :class:`BlobInput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used
+        in the worker function indexing model.
+
+        This is equivalent to defining `BlobInput` in the `function.json`, which
+        enables the function to read from Azure Storage blobs.
+
+        All optional fields will be assigned default values by the function host
+        when parsed.
 
         Ref: https://aka.ms/azure-function-binding-storage-blob
 
-        :param arg_name: The name of the variable that represents the blob in
-         function code.
+        :param arg_name: The name of the variable that represents the blob in the function code.
         :param path: The path to the blob.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to Azure Blobs.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Azure Blobs.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding fields to include
+            in the binding JSON.
 
         :return: Decorator function.
         """
@@ -2311,26 +2306,26 @@ class BindingApi(DecoratorApi, ABC):
                     data_type: Optional[DataType] = None,
                     **kwargs) -> Callable[..., Any]:
         """
-        The blob_output decorator adds :class:`BlobOutput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining BlobOutput
-        in the function.json which enables function to write message(s) to
-        the storage blobs.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `blob_output` decorator adds :class:`BlobOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used
+        in the worker function indexing model.
+
+        This is equivalent to defining `BlobOutput` in the `function.json`, which
+        enables the function to write message(s) to Azure Storage blobs.
+
+        All optional fields will be assigned default values by the function host
+        when parsed.
 
         Ref: https://aka.ms/azure-function-binding-storage-blob
 
-        :param arg_name: The name of the variable that represents the blob in
-         function code.
+        :param arg_name: The name of the variable that represents the blob in the function code.
         :param path: The path to the blob.
-        :param connection: The name of an app setting or setting collection
-         that specifies how to connect to Azure Blobs.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param connection: The name of an app setting or setting collection that specifies
+            how to connect to Azure Blobs.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding fields to include
+            in the binding JSON.
+
         :return: Decorator function.
         """
 
@@ -2360,28 +2355,24 @@ class BindingApi(DecoratorApi, ABC):
                               Union[DataType, str]] = None,
                           **kwargs) -> Callable[..., Any]:
         """
-        The event_grid_output decorator adds
-        :class:`EventGridOutput`
-        to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining output binding
-        in the function.json which enables function to
-        write events to a custom topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `event_grid_output` decorator adds :class:`EventGridOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used
+        in the worker function indexing model.
+
+        This is equivalent to defining the output binding in the `function.json`,
+        which enables the function to write events to a custom topic.
+
+        All optional fields will be assigned default values by the function host
+        when parsed.
 
         Ref: https://aka.ms/eventgridtrigger
 
-        :param arg_name: The variable name used in function code that
-        represents the event.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param topic_endpoint_uri: 	The name of an app setting that
-        contains the URI for the custom topic.
-        :param topic_key_setting: The name of an app setting that
-        contains an access key for the custom topic.
-        :param connection: The value of the common prefix for the setting that
-        contains the topic endpoint URI.
+        :param arg_name: The variable name used in the function code that represents the event.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param topic_endpoint_uri: The name of an app setting that contains the URI for the custom topic.
+        :param topic_key_setting: The name of an app setting that contains an access key for the custom topic.
+        :param connection: The value of the common prefix for the setting that contains the topic endpoint URI.
+
         :return: Decorator function.
         """
 
@@ -2562,29 +2553,27 @@ class BindingApi(DecoratorApi, ABC):
                     data_type: Optional[
                         Union[DataType, str]] = None) -> Callable[..., Any]:
         """
-        The table_input decorator adds :class:`TableInput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining TableInput
-        in the function.json which enables function to read a table in
-        an Azure Storage or Cosmos DB account
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `table_input` decorator adds :class:`TableInput` to the :class:`FunctionBuilder`
+        object for building a :class:`Function` object used in the worker function indexing model.
+
+        This is equivalent to defining `TableInput` in the `function.json`, which enables the
+        function to read from a table in Azure Storage or a Cosmos DB account.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/tablesbindings
 
-        :param arg_name: The name of the variable that represents
-        the table or entity in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to the table service.
-        :param table_name: The Name of the table
+        :param arg_name: The name of the variable that represents the table or entity in the
+            function code.
+        :param connection: The name of an app setting or setting collection that specifies how
+            to connect to the table service.
+        :param table_name: The name of the table.
         :param row_key: The row key of the table entity to read.
         :param partition_key: The partition key of the table entity to read.
-        :param take: The maximum number of entities to return
-        :param filter: An OData filter expression for the entities to return
-         from the table.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
+        :param take: The maximum number of entities to return.
+        :param filter: An OData filter expression to apply when retrieving entities.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+
         :return: Decorator function.
         """
 
@@ -2617,26 +2606,25 @@ class BindingApi(DecoratorApi, ABC):
                      data_type: Optional[
                          Union[DataType, str]] = None) -> Callable[..., Any]:
         """
-        The table_output decorator adds :class:`TableOutput` to the
-        :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining TableOutput
-        in the function.json which enables function to write entities
-        to a table in an Azure Storage
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `table_output` decorator adds :class:`TableOutput` to the :class:`FunctionBuilder`
+        object for building a :class:`Function` object used in the worker function indexing model.
+
+        This is equivalent to defining `TableOutput` in the `function.json`, which enables the
+        function to write entities to a table in Azure Storage.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/tablesbindings
 
-        :param arg_name: The name of the variable that represents
-        the table or entity in function code.
-        :param connection: The name of an app setting or setting collection
-        that specifies how to connect to the table service.
-        :param table_name: The Name of the table
+        :param arg_name: The name of the variable that represents the table or entity in the
+            function code.
+        :param connection: The name of an app setting or setting collection that specifies how
+            to connect to the table service.
+        :param table_name: The name of the table.
         :param row_key: The row key of the table entity to read.
         :param partition_key: The partition key of the table entity to read.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+
         :return: Decorator function.
         """
 
@@ -2772,23 +2760,22 @@ class BindingApi(DecoratorApi, ABC):
                               **kwargs
                               ) -> Callable[..., Any]:
         """
-        The generic_input_binding decorator adds :class:`GenericInputBinding`
-        to the :class:`FunctionBuilder` object for building :class:`Function`
-        object used in worker function indexing model.
-        This is equivalent to defining a generic input binding in the
-        function.json which enables function to read data from a
-        custom defined input source.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `generic_input_binding` decorator adds :class:`GenericInputBinding` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in the
+        worker function indexing model.
+
+        This is equivalent to defining a generic input binding in the `function.json`, which
+        enables the function to read data from a custom-defined input source.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-custom
 
-        :param arg_name: The name of input parameter in the function code.
-        :param type: The type of binding.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the input parameter in the function code.
+        :param type: The type of the binding.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -2817,23 +2804,22 @@ class BindingApi(DecoratorApi, ABC):
                                **kwargs
                                ) -> Callable[..., Any]:
         """
-        The generic_output_binding decorator adds :class:`GenericOutputBinding`
-        to the :class:`FunctionBuilder` object for building :class:`Function`
-        object used in worker function indexing model.
-        This is equivalent to defining a generic output binding in the
-        function.json which enables function to write data from a
-        custom defined output source.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        The `generic_output_binding` decorator adds :class:`GenericOutputBinding` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in the
+        worker function indexing model.
+
+        This is equivalent to defining a generic output binding in the `function.json`, which
+        enables the function to write data to a custom-defined output source.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-binding-custom
 
-        :param arg_name: The name of output parameter in the function code.
-        :param type: The type of binding.
-        :param data_type: Defines how Functions runtime should treat the
-         parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the output parameter in the function code.
+        :param type: The type of the binding.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -2863,27 +2849,26 @@ class BindingApi(DecoratorApi, ABC):
                              Union[DataType, str]] = None,
                          **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_state_input decorator adds
-        :class:`DaprStateInput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining DaprStateInput
-        in the function.json which enables function to read state from
-        underlying state store component.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_state_input` decorator adds :class:`DaprStateInput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in the
+        worker function indexing model.
+
+        This is equivalent to defining `DaprStateInput` in the `function.json`, which enables
+        the function to read state from the underlying state store component.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-state-input-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
-        :param state_store: State store containing the state.
-        :param key: The name of the key.
-        :param dapr_address: Dapr address, it is optional field, by default
-        it will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the Dapr state input object
+            in the function code.
+        :param state_store: The state store containing the state.
+        :param key: The name of the key to retrieve.
+        :param dapr_address: The Dapr address. Optional; defaults to http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -2916,30 +2901,27 @@ class BindingApi(DecoratorApi, ABC):
                               Union[DataType, str]] = None,
                           **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_secret_input decorator adds
-        :class:`DaprSecretInput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model. This is equivalent to defining DaprSecretInput
-        in the function.json which enables function to read secret from
-        underlying secret store component.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_secret_input` decorator adds :class:`DaprSecretInput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in the
+        worker function indexing model.
+
+        This is equivalent to defining `DaprSecretInput` in the `function.json`, which enables
+        the function to read secrets from the underlying secret store component.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-secret-input-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        input object in function code.
-        :param secret_store_name: The name of the secret store to
-        get the secret from.
-        :param key: The key identifying the name of the secret to get.
-        :param metadata: An array of metadata properties in the form
-        "key1=value1&amp;key2=value2".
-        :param dapr_address: Dapr address, it is optional field, by default
-        it will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json.
+        :param arg_name: The name of the variable that represents the Dapr state input object
+            in the function code.
+        :param secret_store_name: The name of the secret store from which to retrieve the secret.
+        :param key: The key identifying the name of the secret to retrieve.
+        :param metadata: Metadata properties in the form "key1=value1&key2=value2".
+        :param dapr_address: The Dapr address. Optional; defaults to http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -2972,28 +2954,27 @@ class BindingApi(DecoratorApi, ABC):
                               Union[DataType, str]] = None,
                           **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_state_output decorator adds
-        :class:`DaprStateOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model.
-        This is equivalent to defining DaprStateOutput
-        in the function.json which enables function to write to the dapr
-        state store.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_state_output` decorator adds :class:`DaprStateOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in
+        the worker function indexing model.
+
+        This is equivalent to defining `DaprStateOutput` in the `function.json`, which
+        enables the function to write to the Dapr state store.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-state-output-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        output object in function code.
-        :param state_store: State store containing the state for keys.
-        :param key: The name of the key.
-        :param dapr_address: Dapr address, it is optional field, by default
-        it will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the variable that represents the Dapr state
+            output object in the function code.
+        :param state_store: The state store containing the state for the specified keys.
+        :param key: The name of the key used to store the state.
+        :param dapr_address: The Dapr address. Optional; defaults to
+            http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -3026,28 +3007,28 @@ class BindingApi(DecoratorApi, ABC):
                                Union[DataType, str]] = None,
                            **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_invoke_output decorator adds
-        :class:`DaprInvokeOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model.
-        This is equivalent to defining DaprInvokeOutput
-        in the function.json which enables function to invoke another Dapr App.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_invoke_output` decorator adds :class:`DaprInvokeOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in
+        the worker function indexing model.
+
+        This is equivalent to defining `DaprInvokeOutput` in the `function.json`, which
+        enables the function to invoke another Dapr app.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-invoke-output-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        output object in function code.
-        :param app_id: The dapr app name to invoke.
+        :param arg_name: The name of the variable that represents the Dapr state output
+            object in the function code.
+        :param app_id: The Dapr app ID to invoke.
         :param method_name: The method name of the app to invoke.
-        :param http_verb: The http verb of the app to invoke.
-        :param dapr_address: Dapr address, it is optional field, by default
-        it will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param http_verb: The HTTP verb to use for the invocation (e.g., GET, POST).
+        :param dapr_address: The Dapr address. Optional; defaults to
+            http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -3080,27 +3061,27 @@ class BindingApi(DecoratorApi, ABC):
                                 Union[DataType, str]] = None,
                             **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_publish_output decorator adds
-        :class:`DaprPublishOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model.
-        This is equivalent to defining DaprPublishOutput
-        in the function.json which enables function to publish topic.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_publish_output` decorator adds :class:`DaprPublishOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in
+        the worker function indexing model.
+
+        This is equivalent to defining `DaprPublishOutput` in the `function.json`, which
+        enables the function to publish to a topic.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-publish-output-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        output object in function code.
-        :param pub_sub_name: The pub/sub name to publish to.
-        :param topic:  The name of the topic to publish to.
-        :param dapr_address: Dapr address, it is optional field, by default
-        ßit will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the variable that represents the Dapr state output
+            object in the function code.
+        :param pub_sub_name: The pub/sub component name to publish to.
+        :param topic: The name of the topic to publish to.
+        :param dapr_address: The Dapr address. Optional; defaults to
+            http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -3132,28 +3113,27 @@ class BindingApi(DecoratorApi, ABC):
                                 Union[DataType, str]] = None,
                             **kwargs) \
             -> Callable[..., Any]:
-        """The dapr_binding_output decorator adds
-        :class:`DaprBindingOutput` to the :class:`FunctionBuilder` object
-        for building :class:`Function` object used in worker function
-        indexing model.
-        This is equivalent to defining DaprBindingOutput
-        in the function.json which enables function to send a value to
-        a Dapr output binding.
-        All optional fields will be given default value by function host when
-        they are parsed by function host.
+        """
+        The `dapr_binding_output` decorator adds :class:`DaprBindingOutput` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object used in
+        the worker function indexing model.
+
+        This is equivalent to defining `DaprBindingOutput` in the `function.json`, which
+        enables the function to send a value to a Dapr output binding.
+
+        All optional fields will be assigned default values by the function host when parsed.
 
         Ref: https://aka.ms/azure-function-dapr-binding-output-binding
 
-        :param arg_name: The name of the variable that represents DaprState
-        output object in function code.
+        :param arg_name: The name of the variable that represents the Dapr state output
+            object in the function code.
         :param binding_name: The configured name of the binding.
-        :param operation:  The configured operation.
-        :param dapr_address: Dapr address, it is optional field, by default
-        it will be set to http://localhost:{daprHttpPort}.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param operation: The configured operation.
+        :param dapr_address: The Dapr address. Optional; defaults to
+            http://localhost:{daprHttpPort}.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying binding fields in the
+            `function.json`.
 
         :return: Decorator function.
         """
@@ -3266,14 +3246,12 @@ class BindingApi(DecoratorApi, ABC):
                                 **kwargs) \
             -> Callable[..., Any]:
         """
-        The assistantCreate output binding creates a new assistant with a
-        specified system prompt.
+        The `assistantCreate` output binding creates a new assistant with a specified system prompt.
 
-        :param arg_name: The name of binding parameter in the function code.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the binding parameter in the function code.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying extra binding fields
+            to include in the `function.json`.
 
         :return: Decorator function.
         """
@@ -3366,49 +3344,43 @@ class BindingApi(DecoratorApi, ABC):
                              **kwargs) \
             -> Callable[..., Any]:
         """
-        The assistantPost output binding sends a message to the assistant and
-        saves the response in its internal state.
+        The `assistantPost` output binding sends a message to the assistant and saves
+        the response in its internal state.
 
-        :param arg_name: The name of binding parameter in the function code.
+        :param arg_name: The name of the binding parameter in the function code.
         :param id: The ID of the assistant to update.
-        :param user_message: The user message that user has entered for
-        assistant to respond to.
-        :param ai_connection_name: The name of the configuration section for
-        AI service connectivity settings. For Azure OpenAI: If specified, looks
-        for "Endpoint" and/or "Key" values in this configuration section. If
-        not specified or the section doesn't exist, falls back to environment
-        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
-        user-assigned managed identity authentication, this property is
-        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
-        environment variable.
-        :param model: @deprecated. Use chat_model instead. The model parameter
-        is unused and will be removed in future versions.
-        :param chat_model: The deployment name or model name of OpenAI Chat
-        Completion API. The default value is "gpt-3.5-turbo".
-        :param chat_storage_connection_setting:  The configuration section name
-        for the table settings for assistant chat storage. The default value is
-        "AzureWebJobsStorage".
-        :param collection_name:  The table collection name for assistant chat
-        storage. The default value is "ChatState".
-        :param temperature: The sampling temperature to use, between 0 and 2.
-        Higher values like 0.8 will make the output more random, while lower
-        values like 0.2 will make it more focused and deterministic.
-        :param top_p: An alternative to sampling with temperature, called
-        nucleus sampling, where the model considers the results of the tokens
-        with top_p probability mass. So 0.1 means only the tokens comprising
-        the top 10% probability mass are considered. It's generally recommend
-        to use this or temperature
-        :param max_tokens: The maximum number of tokens to generate in the
-        completion. The token count of your prompt plus max_tokens cannot
-        exceed the model's context length. Most models have a context length of
-        2048 tokens (except for the newest models, which support 4096)
-        :param is_reasoning_model: Whether the configured chat completion model
-        is a reasoning model or not. Properties max_tokens and temperature are
-        not supported for reasoning models.
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param user_message: The message entered by the user for the assistant to
+            respond to.
+        :param ai_connection_name: The name of the configuration section for AI service
+            connectivity.
+
+            - **Azure OpenAI**: If specified, looks for "Endpoint" and/or "Key" in the section.
+            - If not specified or missing, falls back to the `AZURE_OPENAI_ENDPOINT` and
+              `AZURE_OPENAI_KEY` environment variables.
+            - **Managed Identity**: Required for user-assigned identity auth.
+            - **OpenAI (non-Azure)**: Set the `OPENAI_API_KEY` environment variable.
+
+        :param model: *Deprecated.* Use `chat_model` instead. This parameter is unused
+            and will be removed in future versions.
+        :param chat_model: The deployment or model name of the OpenAI Chat Completion API.
+            Default is `"gpt-3.5-turbo"`.
+        :param chat_storage_connection_setting: The config section name for assistant
+            chat table storage. Default is `"AzureWebJobsStorage"`.
+        :param collection_name: The collection or table name used for assistant chat
+            storage. Default is `"ChatState"`.
+        :param temperature: Sampling temperature, between 0 and 2. Higher values
+            (e.g., 0.8) increase randomness; lower values (e.g., 0.2) make output more
+            deterministic.
+        :param top_p: Alternative to temperature sampling. Uses nucleus sampling to
+            consider only the tokens comprising the top `top_p` probability mass.
+            Recommended to use either this or `temperature`.
+        :param max_tokens: Maximum tokens to generate. Total tokens (prompt + output)
+            must not exceed the model's context length.
+        :param is_reasoning_model: Whether the chat model is a reasoning model. If
+            true, `max_tokens` and `temperature` are not supported.
+        :param data_type: Defines how the Functions runtime should treat the parameter value.
+        :param kwargs: Additional keyword arguments for specifying extra binding fields
+            in `function.json`.
 
         :return: Decorator function.
         """
@@ -3453,35 +3425,36 @@ class BindingApi(DecoratorApi, ABC):
                          **kwargs) \
             -> Callable[..., Any]:
         """
-        The embeddings input decorator creates embeddings which will be used to
-        measure the relatedness of text strings.
+        The embeddings input decorator generates embeddings used to measure the
+        relatedness of text strings.
 
         Ref: https://platform.openai.com/docs/guides/embeddings
 
-        :param arg_name: The name of binding parameter in the function code.
-        :param input: The input source containing the data to generate
-        embeddings for.
-        :param input_type: The type of the input.
-        :param ai_connection_name: The name of the configuration section for
-        AI service connectivity settings. For Azure OpenAI: If specified, looks
-        for "Endpoint" and/or "Key" values in this configuration section. If
-        not specified or the section doesn't exist, falls back to environment
-        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
-        user-assigned managed identity authentication, this property is
-        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
-        environment variable.
-        :param model: @deprecated. Use embeddings_model instead. The model
-        parameter is unused and will be removed in future versions.
-        :param embeddings_model: The deployment name or model name for OpenAI
-        Embeddings. The default value is "text-embedding-ada-002".
-        :param max_chunk_length: The maximum number of characters to chunk the
-        input into. Default value: 8 * 1024
-        :param max_overlap: The maximum number of characters to overlap
-        between chunks. Default value: 128
-        :param data_type: Defines how Functions runtime should treat the
-        parameter value
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the binding parameter in the function code.
+        :param input: The input source containing the data to generate embeddings for.
+        :param input_type: The type of the input (e.g., string, list, file reference).
+        :param ai_connection_name: The name of the configuration section for AI service
+            connectivity settings.
+
+            - **Azure OpenAI**: If specified, looks for "Endpoint" and/or "Key" in this
+              section.
+            - If not specified or not found, falls back to the environment variables
+              `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_KEY`.
+            - For user-assigned managed identity authentication, this is required.
+            - **OpenAI (non-Azure)**: Set the `OPENAI_API_KEY` environment variable.
+
+        :param model: *(Deprecated)* Use `embeddings_model` instead. This parameter is unused and
+            will be removed in future versions.
+        :param embeddings_model: The deployment or model name for OpenAI Embeddings.
+            Default is `"text-embedding-ada-002"`.
+        :param max_chunk_length: The maximum number of characters into which the input
+            should be chunked. Default is `8 * 1024`.
+        :param max_overlap: The maximum number of characters to overlap between input
+            chunks. Default is `128`.
+        :param data_type: Optional. Defines how the Functions runtime should interpret the
+            parameter value.
+        :param kwargs: Additional keyword arguments to include in the `function.json`
+            binding configuration.
 
         :return: Decorator function.
         """
@@ -3530,57 +3503,50 @@ class BindingApi(DecoratorApi, ABC):
                               **kwargs) \
             -> Callable[..., Any]:
         """
-        The semantic search feature allows you to import documents into a
-        vector database using an output binding and query the documents in that
-        database using an input binding. For example, you can have a function
-        that imports documents into a vector database and another function that
-        issues queries to OpenAI using content stored in the vector database as
-         context (also known as the Retrieval Augmented Generation, or RAG
-         technique).
+        Enable semantic search capabilities using vector databases and OpenAI models.
+
+        This feature allows you to import documents into a vector database via an output binding
+        and perform semantic queries against them via an input binding. For example, one function
+        can import documents into the database, while another function issues queries to OpenAI
+        using that data as context — a pattern known as Retrieval Augmented Generation (RAG).
 
         Ref: https://platform.openai.com/docs/guides/embeddings
 
-        :param arg_name: The name of binding parameter in the function code.
-        :param search_connection_name: app setting or environment variable
-        which contains a vector search connection setting value.
-        :param collection: The name of the collection or table to search or
-        store.
-        :param query: The semantic query text to use for searching.
-        :param ai_connection_name: The name of the configuration section for
-        AI service connectivity settings. For Azure OpenAI: If specified, looks
-        for "Endpoint" and/or "Key" values in this configuration section. If
-        not specified or the section doesn't exist, falls back to environment
-        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
-        user-assigned managed identity authentication, this property is
-        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
-        environment variable.
-        :param embeddings_model: The deployment name or model name for OpenAI
-        Embeddings. The default value is "text-embedding-ada-002".
-        :param chat_model: The deployment name or model name of OpenAI Chat
-        Completion API. The default value is "gpt-3.5-turbo".
-        :param system_prompt: Optional. The system prompt to use for prompting
-        the large language model.
-        :param max_knowledge_count: Optional. The number of knowledge items to
-        inject into the SystemPrompt. Default value: 1
-        :param temperature: The sampling temperature to use, between 0 and 2.
-        Higher values like 0.8 will make the output more random, while lower
-        values like 0.2 will make it more focused and deterministic.
-        :param top_p: An alternative to sampling with temperature, called
-        nucleus sampling, where the model considers the results of the tokens
-        with top_p probability mass. So 0.1 means only the tokens comprising
-        the top 10% probability mass are considered. It's generally recommend
-        to use this or temperature
-        :param max_tokens: The maximum number of tokens to generate in the
-        completion. The token count of your prompt plus max_tokens cannot
-        exceed the model's context length. Most models have a context length of
-        2048 tokens (except for the newest models, which support 4096)
-        :param is_reasoning_model: Whether the configured chat completion model
-        is a reasoning model or not. Properties max_tokens and temperature are
-        not supported for reasoning models.
-        :param data_type: Optional. Defines how Functions runtime should treat
-        the parameter value. Default value: None
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the binding parameter in the function code.
+        :param search_connection_name: The name of the app setting or environment variable
+            that contains the vector search connection value.
+        :param collection: The name of the collection or table to search or store.
+        :param query: The semantic query text used for searching the database.
+        :param ai_connection_name: The name of the configuration section for AI service
+            connectivity settings.
+
+            - For Azure OpenAI: If specified, looks for "Endpoint" and/or "Key" in this
+              configuration section.
+            - If not specified or the section is missing, defaults to the environment variables
+              `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_KEY`.
+            - For user-assigned managed identity authentication, this field is required.
+            - For OpenAI (non-Azure), set the `OPENAI_API_KEY` environment variable.
+
+        :param embeddings_model: The deployment or model name for OpenAI Embeddings.
+            Defaults to "text-embedding-ada-002".
+        :param chat_model: The deployment or model name for the OpenAI Chat Completion API.
+            Defaults to "gpt-3.5-turbo".
+        :param system_prompt: Optional. The system prompt provided to the large language model.
+        :param max_knowledge_count: Optional. The number of knowledge items to inject into
+            the system prompt. Default is 1.
+        :param temperature: The sampling temperature to use (range: 0 to 2). Higher values like
+            0.8 yield more random output; lower values like 0.2 make output more focused.
+        :param top_p: Alternative to temperature sampling (nucleus sampling). For example, 0.1
+            considers only the top 10% of tokens by probability mass. Use this or `temperature`.
+        :param max_tokens: The maximum number of tokens to generate in the completion.
+            The sum of prompt tokens and `max_tokens` must not exceed the model's context length
+            (usually 2048 or 4096 for newer models).
+        :param is_reasoning_model: Indicates whether the chat model is a reasoning model.
+            If True, `max_tokens` and `temperature` are not supported.
+        :param data_type: Optional. Defines how the Functions runtime should interpret the
+            parameter value. Default is None.
+        :param kwargs: Additional keyword arguments for specifying extra fields in the
+            `function.json` binding.
 
         :return: Decorator function.
         """
@@ -3629,41 +3595,41 @@ class BindingApi(DecoratorApi, ABC):
                                 **kwargs) \
             -> Callable[..., Any]:
         """
-        Supported list of embeddings store is extensible, and more can be
-        added by authoring a specially crafted NuGet package. Visit the
-        currently supported vector specific folder for specific usage
-        information:
+        Add an embeddings input binding to the function.
+
+        The supported list of embeddings stores is extensible. Additional providers can be
+        integrated by authoring a specially crafted NuGet package. Refer to the provider-specific
+        folders for detailed usage instructions:
 
         - Azure AI Search
         - Azure Data Explorer
         - Azure Cosmos DB using MongoDB
 
-        :param arg_name: The name of binding parameter in the function code.
-        :param input: The input to generate embeddings for.
-        :param input_type: The type of the input.
-        :param store_connection_name: The name of an app setting or environment
-        variable which contains a vectore store connection setting value
-        :param collection: The collection or table to search.
-        :param ai_connection_name: The name of the configuration section for
-        AI service connectivity settings. For Azure OpenAI: If specified, looks
-        for "Endpoint" and/or "Key" values in this configuration section. If
-        not specified or the section doesn't exist, falls back to environment
-        variables: AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY. For
-        user-assigned managed identity authentication, this property is
-        required. For OpenAI service (non-Azure), set the OPENAI_API_KEY
-        environment variable.
-        :param model: @deprecated. Use embeddings_model instead. The model
-        parameter is unused and will be removed in future versions.
-        :param embeddings_model: The deployment name or model name for OpenAI
-         Embeddings. The default value is "text-embedding-ada-002".
-        :param max_chunk_length: The maximum number of characters to chunk the
-        input into.
-        :param max_overlap: The maximum number of characters to overlap between
-        chunks.
-        :param data_type: Optional. Defines how Functions runtime should treat
-        the parameter value. Default value: None
-        :param kwargs: Keyword arguments for specifying additional binding
-        fields to include in the binding json
+        :param arg_name: The name of the binding parameter in the function code.
+        :param input: The input data for which embeddings should be generated.
+        :param input_type: The type of the input (e.g., string, list).
+        :param store_connection_name: The name of an app setting or environment variable
+            containing the vector store connection value.
+        :param collection: The collection or table to search within.
+        :param ai_connection_name: The name of the configuration section for AI service
+            connectivity settings.
+
+            - For Azure OpenAI: If specified, looks for "Endpoint" and/or "Key" in this
+              configuration section.
+            - If not specified, or if the section is missing, falls back to environment
+              variables: `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_KEY`.
+            - For user-assigned managed identity, this property is required.
+            - For OpenAI (non-Azure), set the `OPENAI_API_KEY` environment variable.
+
+        :param model: Deprecated. Use `embeddings_model` instead. This parameter is unused and
+            will be removed in future versions.
+        :param embeddings_model: The deployment or model name for OpenAI Embeddings. The default
+            is "text-embedding-ada-002".
+        :param max_chunk_length: The maximum number of characters to chunk the input into.
+        :param max_overlap: The maximum number of characters to overlap between chunks.
+        :param data_type: Optional. Defines how the Functions runtime should treat the parameter
+            value. Defaults to None.
+        :param kwargs: Additional keyword arguments to include in the `function.json` binding.
 
         :return: Decorator function.
         """
@@ -3854,7 +3820,7 @@ class SettingsApi(DecoratorApi, ABC):
 class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
     def __init__(self, auth_level: Union[AuthLevel, str], *args, **kwargs):
         """
-        Interface for declaring the top-level function app class.
+        Initialize the top-level function app interface.
 
         This class will be directly indexed by the Python Functions runtime.
 
@@ -3869,9 +3835,10 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
         self.functions_bindings: Optional[Dict[Any, Any]] = None
 
     def get_functions(self) -> List[Function]:
-        """Get the function objects in the function app.
+        """
+        Get the function objects in the function app.
 
-        :return: List of functions in the function app.
+        :return: A list of :class:`Function` objects defined in the app.
         """
         functions = [function_builder.build(self.auth_level)
                      for function_builder in self._function_builders]
@@ -3894,10 +3861,13 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
 
     def validate_function_names(self, functions: List[Function]):
         """
-        Dictionary of function bindings for all functions in the app.
+        Validate that all functions have unique names within the app.
 
-        The `functions_bindings` dict maps function names to their bindings.
+        The `functions_bindings` dictionary maps function names to their bindings.
         If multiple functions share the same name, indexing will fail.
+
+        :param functions: A list of :class:`Function` objects to validate.
+        :raises ValueError: If any function name is duplicated.
         """
         if not self.functions_bindings:
             self.functions_bindings = {}
@@ -3913,10 +3883,13 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
             self.functions_bindings[function_name] = True
 
     def register_functions(self, function_container: DecoratorApi) -> None:
-        """Register a list of functions in the function app.
+        """
+        Register a list of functions in the function app.
 
-        :param function_container: Instance extending :class:`DecoratorApi`
-        which contains a list of functions.
+        :param function_container: Instance extending :class:`DecoratorApi`,
+            which contains a list of functions to be registered.
+        :raises TypeError: If the provided container is an instance of
+            :class:`FunctionRegister`.
         """
         if isinstance(function_container, FunctionRegister):
             raise TypeError('functions can not be type of FunctionRegister!')
@@ -3936,11 +3909,12 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
 
     def __init__(self,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION):
-        """Constructor of :class:`FunctionApp` object.
+        """
+        Initialize a :class:`FunctionApp` object.
 
-        :param http_auth_level: Determines what keys, if any, need to be
-        present
-        on the request in order to invoke the function.
+        :param http_auth_level: Determines what keys, if any, must be present
+            on the request in order to invoke the function. Defaults to
+            `AuthLevel.FUNCTION`.
         """
         super().__init__(auth_level=http_auth_level)
 
@@ -3972,13 +3946,18 @@ class ExternalHttpFunctionApp(
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
                       function_name: str = 'http_app_func') -> None:
-        """Add a Wsgi or Asgi app integrated http function.
+        """
+        Add a WSGI or ASGI app as an integrated HTTP function.
 
-        :param http_middleware: :class:`WsgiMiddleware`
-                                or class:`AsgiMiddleware` instance.
-        :param function_name: name for the function
+        :param http_middleware: An instance of either :class:`WsgiMiddleware` or
+            :class:`AsgiMiddleware` to handle incoming HTTP requests.
+        :param function_name: The name to assign to the registered function.
+            Defaults to `'http_app_func'`.
 
         :return: None
+
+        :raises NotImplementedError: Always raised since this method must be
+            implemented by a subclass.
         """
         raise NotImplementedError()
 
@@ -3987,12 +3966,14 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
     def __init__(self, app,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
                  function_name: str = 'http_app_func'):
-        """Constructor of :class:`AsgiFunctionApp` object.
+        """
+        Initialize an :class:`AsgiFunctionApp` instance.
 
-        :param app: asgi app object.
+        :param app: The ASGI application instance.
         :param http_auth_level: Determines what keys, if any, need to be
-        present on the request in order to invoke the function.
-        :param function_name: function name
+            present on the request to invoke the function. Defaults to `AuthLevel.FUNCTION`.
+        :param function_name: The name to assign to the registered function.
+            Defaults to `'http_app_func'`.
         """
         super().__init__(auth_level=http_auth_level)
         self.middleware = AsgiMiddleware(app)
@@ -4007,12 +3988,13 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
                       function_name: str = 'http_app_func') -> None:
-        """Add an Asgi app integrated http function.
+        """
+        Add an ASGI app-integrated HTTP function.
 
-        :param http_middleware: :class:`WsgiMiddleware`
-                                or class:`AsgiMiddleware` instance.
-
-        :return: None
+        :param http_middleware: An instance of :class:`AsgiMiddleware` or :class:`WsgiMiddleware`.
+        :param function_name: The name to assign to the registered function. Defaults to 'http_app_func'.
+        :raises TypeError: If the provided `http_middleware` is not an instance of :class:`AsgiMiddleware`.
+        :return: None.
         """
         if not isinstance(http_middleware, AsgiMiddleware):
             raise TypeError("Please pass AsgiMiddleware instance"
@@ -4040,10 +4022,12 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
                  function_name: str = 'http_app_func'):
         """
-        Constructor of :class:`WsgiFunctionApp` object.
+        Initialize a :class:`WsgiFunctionApp` object.
 
-        :param app: wsgi app object.
-        :param function_name: function name
+        :param app: The WSGI application object to wrap.
+        :param http_auth_level: The HTTP authorization level for the function.
+            Can be an instance of :class:`AuthLevel` or a string. Defaults to AuthLevel.FUNCTION.
+        :param function_name: The name to assign to the registered function. Defaults to 'http_app_func'.
         """
         super().__init__(auth_level=http_auth_level)
         self._add_http_app(WsgiMiddleware(app), function_name)
@@ -4052,12 +4036,14 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                       http_middleware: Union[
                           AsgiMiddleware, WsgiMiddleware],
                       function_name: str = 'http_app_func') -> None:
-        """Add a Wsgi app integrated http function.
+        """
+        Add a WSGI app-integrated HTTP function.
 
-        :param http_middleware: :class:`WsgiMiddleware`
-                                or class:`AsgiMiddleware` instance.
-        :param function_name: name for the function
+        This registers a function that handles HTTP requests using a WSGI middleware instance.
 
+        :param http_middleware: Middleware instance to handle HTTP requests.
+        :param function_name: Name to assign to the registered function.
+        :raises TypeError: If `http_middleware` is not a WsgiMiddleware instance.
         :return: None
         """
         if not isinstance(http_middleware, WsgiMiddleware):
