@@ -45,7 +45,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 exclude = [
-    'azure', 'eng', 'docs', 'tests'
+    'azure', 'eng', 'docs', 'tests*'
 ]
 
 [tool.setuptools.dynamic]
