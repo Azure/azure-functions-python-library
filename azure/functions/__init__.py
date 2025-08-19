@@ -39,6 +39,10 @@ from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
 from . import mysql  # NoQA
+from . import mcp  # NoQA
+from .decorators.mcp import MCPToolTrigger, MCPToolInput, MCPToolOutput  # NoQA
+from .mcp import MCPToolRequest, MCPToolTriggerConverter  # NoQA
+from .mcp import MCPToolRequest, MCPToolTriggerConverter, MCPToolInputConverter, MCPToolOutputConverter  # NoQA
 
 
 __all__ = (
@@ -71,6 +75,7 @@ __all__ = (
     'WarmUpContext',
     'MySqlRow',
     'MySqlRowList',
+    'MCPToolRequest',
 
     # Middlewares
     'WsgiMiddleware',
