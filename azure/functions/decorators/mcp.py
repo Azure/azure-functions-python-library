@@ -27,7 +27,7 @@ class MCPToolTrigger(Trigger):
 
 
 class MCPToolInput(InputBinding):
-  
+
     @staticmethod
     def get_binding_name() -> str:
         return MCP_TOOL_INPUT
@@ -46,7 +46,7 @@ class MCPToolInput(InputBinding):
 
 
 class MCPToolOutput(OutputBinding):
-   
+
     @staticmethod
     def get_binding_name() -> str:
         return MCP_TOOL_OUTPUT

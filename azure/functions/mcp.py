@@ -21,7 +21,7 @@ class MCPToolRequest:
 
 
 class MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
-                               trigger=True):
+                              trigger=True):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:

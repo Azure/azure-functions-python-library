@@ -64,8 +64,8 @@ class TestMCP(unittest.TestCase):
         req = MCPToolTriggerConverter.decode(datum, trigger_metadata={})
         self.assertTrue(isinstance(req, MCPToolRequest))
         self.assertIsNotNone(req.json)
-        
-        # Test with json data 
+
+        # Test with json data
         datum_json = Datum(value={"arguments": {}}, type='json')
         req_json = MCPToolTriggerConverter.decode(datum_json, trigger_metadata={})
         self.assertTrue(isinstance(req_json, MCPToolRequest))
