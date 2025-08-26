@@ -8,7 +8,6 @@ jobs:
     os: linux
   steps:
   - powershell: |
-      $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
       $newLibraryVersion = "$(NewLibraryVersion)"
       
@@ -16,9 +15,6 @@ jobs:
           # Create GitHub credential
           git config --global user.name "AzureFunctionsPython"
           git config --global user.email "azfunc@microsoft.com"
-
-          # Create GitHub credential
-          $credential = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes("${githubUser}:${githubToken}"))
       
           # Heading to Artifact Repository
           Write-Host "Operating based on $stagingDirectory/azure-functions-python-library"
@@ -33,20 +29,6 @@ jobs:
           # Create release branch release/X.Y.Z
           Write-Host "Creating release branch release/$newLibraryVersion"
           git push --repo="https://$githubToken@github.com/Azure/azure-functions-python-library.git"
-
-          # Create PR
-          Write-Host "Creating PR draft in GitHub"
-          $body = (@{head="$newBranch";base="dev";body="Python SDK Version [$newLibraryVersion]";draft=$true;maintainer_can_modify=$true;title="build: update Python SDK Version to $newLibraryVersion"} | ConvertTo-Json -Compress)
-          $response = Invoke-WebRequest -Headers @{"Cache-Control"="no-cache";"Content-Type"="application/json";"Authorization"="Basic $credential";"Accept"="application/vnd.github.v3+json"} -Method Post -Body "$body" -Uri "https://api.github.com/repos/Azure/azure-functions-python-library/pulls"
-      
-          # Return Value
-          if ($response.StatusCode -ne 201) {
-              Write-Host "Failed to create PR in Azure Functions Python Library"
-              exit -1
-          }
-      
-          $draftUrl = $response | ConvertFrom-Json | Select -expand url
-          Write-Host "PR draft created in $draftUrl"
 
       } else {
           Write-Host "NewLibraryVersion $newLibraryVersion is malformed (example: 1.5.0)"
