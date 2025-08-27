@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 import typing
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _timer as azf_timer
 from . import meta
+from ._jsonutils import json
 
 
 class TimerRequest(azf_timer.TimerRequest):

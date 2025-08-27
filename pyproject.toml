@@ -39,12 +39,13 @@ dev = [
     'pre-commit',
     'azure-functions-durable',
     'flake8~=4.0.1; python_version < "3.11"',
-    'flake8~=7.1.1; python_version >= "3.11"'
+    'flake8~=7.1.1; python_version >= "3.11"',
+    'flake8-docstrings'
 ]
 
 [tool.setuptools.packages.find]
 exclude = [
-    'azure', 'eng', 'docs', 'tests'
+    'azure', 'eng', 'docs', 'tests*'
 ]
 
 [tool.setuptools.dynamic]

@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 import abc
 import collections
-import json
+
+from ._jsonutils import json
 
 
 class BaseMySqlRow(abc.ABC):

@@ -3,3 +3,6 @@ ignore = W503,E402,E731
 exclude =
     .git, __pycache__, build, dist, .eggs, .github, .local,
     Samples, azure/functions/_thirdparty, docs/, .venv*/, .env*/, .vscode/, venv*, pyvenv*
+max-line-length = 100
+extend-ignore = D401, D101, D105, D400, D205, D102, D100, D107, DAR401, DAR101, DAR201
+strictness = short
