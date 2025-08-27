@@ -29,6 +29,7 @@ jobs:
           # Create release branch release/X.Y.Z
           Write-Host "Creating release branch release/$newLibraryVersion"
           git push --repo="https://$githubToken@github.com/Azure/azure-functions-python-library.git"
+
       } else {
           Write-Host "NewLibraryVersion $newLibraryVersion is malformed (example: 1.5.0)"
           exit -1
@@ -144,11 +145,11 @@ jobs:
       
           # Modify SDK Version in pyproject.toml
           Write-Host "Replacing SDK version in worker's pyproject.toml"
-          ((Get-Content pyproject.toml) -replace '"azure-functions==(\d)+.(\d)+.*"','"azure-functions==$(NewLibraryVersion)"' -join "`n") + "`n" | Set-Content -NoNewline pyproject.toml
-      
+          ((Get-Content workers/pyproject.toml) -replace '"azure-functions==(\d)+.(\d)+.*"','"azure-functions==$(NewLibraryVersion)"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+
           # Commit Python Version
           Write-Host "Pushing $newBranch to azure-functions-python-worker repo"
-          git add pyproject.toml
+          git add workers/pyproject.toml
           git commit -m "Update Python SDK Version to $newLibraryVersion"
           git push origin $newBranch
       
