@@ -42,7 +42,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, MCPToolInput, MCPToolOutput
+from .mcp import MCPToolTrigger
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1531,7 +1531,7 @@ class TriggerApi(DecoratorApi, ABC):
         All optional fields will be given default values by the function host when
         they are parsed.
 
-        Ref: https://aka.ms/azure-function-binding-custom
+        Ref: https://aka.ms/remote-mcp-functions-python
 
         :param arg_name: The name of the trigger parameter in the function code.
         :param tool_name: The logical tool name exposed to the host.
@@ -3772,57 +3772,6 @@ class BindingApi(DecoratorApi, ABC):
 
         return wrap
 
-    def mcp_tool_input(self,
-                       arg_name: str,
-                       tool_name: str,
-                       description: Optional[str] = None,
-                       tool_properties: Optional[str] = None,
-                       data_type: Optional[Union[DataType, str]] = None,
-                       **kwargs) -> Callable[..., Any]:
-        """
-        The `mcp_tool_input` decorator adds :class:`MCPToolInput` to the
-        :class:`FunctionBuilder` object for building a :class:`Function` object
-        used in the worker function indexing model.
-
-        This is equivalent to defining `MCPToolInput` in the `function.json`,
-        which enables the function to read data from MCP tool sources.
-
-        All optional fields will be assigned default values by the function host
-        when they are parsed.
-
-        Ref: https://aka.ms/azure-function-binding-custom
-
-        :param arg_name: The name of the variable that represents the MCP tool input
-            object in the function code.
-        :param tool_name: The logical tool name for the MCP binding.
-        :param description: Optional human-readable description of the tool.
-        :param tool_properties: JSON-serialized tool properties/parameters list.
-        :param data_type: Defines how the Functions runtime should treat the
-            parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-            fields to include in the binding JSON.
-
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=MCPToolInput(
-                        name=arg_name,
-                        tool_name=tool_name,
-                        description=description,
-                        tool_properties=tool_properties,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
     def mysql_output(self,
                      arg_name: str,
                      command_text: str,
@@ -3865,57 +3814,6 @@ class BindingApi(DecoratorApi, ABC):
                         name=arg_name,
                         command_text=command_text,
                         connection_string_setting=connection_string_setting,
-                        data_type=parse_singular_param_to_enum(data_type,
-                                                               DataType),
-                        **kwargs))
-                return fb
-
-            return decorator()
-
-        return wrap
-
-    def mcp_tool_output(self,
-                        arg_name: str,
-                        tool_name: str,
-                        description: Optional[str] = None,
-                        tool_properties: Optional[str] = None,
-                        data_type: Optional[Union[DataType, str]] = None,
-                        **kwargs) -> Callable[..., Any]:
-        """
-        The `mcp_tool_output` decorator adds :class:`MCPToolOutput` to the
-        :class:`FunctionBuilder` object for building a :class:`Function` object
-        used in the worker function indexing model.
-
-        This is equivalent to defining `MCPToolOutput` in the `function.json`,
-        which enables the function to write data to MCP tool destinations.
-
-        All optional fields will be assigned default values by the function host
-        when they are parsed.
-
-        Ref: https://aka.ms/azure-function-binding-custom
-
-        :param arg_name: The name of the variable that represents the MCP tool output
-            object in the function code.
-        :param tool_name: The logical tool name for the MCP binding.
-        :param description: Optional human-readable description of the tool.
-        :param tool_properties: JSON-serialized tool properties/parameters list.
-        :param data_type: Defines how the Functions runtime should treat the
-            parameter value.
-        :param kwargs: Keyword arguments for specifying additional binding
-            fields to include in the binding JSON.
-
-        :return: Decorator function.
-        """
-
-        @self._configure_function_builder
-        def wrap(fb):
-            def decorator():
-                fb.add_binding(
-                    binding=MCPToolOutput(
-                        name=arg_name,
-                        tool_name=tool_name,
-                        description=description,
-                        tool_properties=tool_properties,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
