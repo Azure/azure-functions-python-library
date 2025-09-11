@@ -34,7 +34,7 @@ class TestServiceBus(unittest.TestCase):
             "isSessionsEnabled": True,
             "cardinality": Cardinality.ONE
         })
-    
+
     def test_service_bus_queue_trigger_autocomplete_valid_creation(self):
         trigger = ServiceBusQueueTrigger(name="req", connection="dummy_conn",
                                          queue_name="dummy_queue",
