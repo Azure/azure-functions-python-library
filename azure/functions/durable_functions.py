@@ -115,9 +115,9 @@ class ActivityTriggerConverter(meta.InConverter,
         try:
             callback = _durable_functions._serialize_custom_object
             result = json.dumps(obj, default=callback)
-        except TypeError:
+        except TypeError as e:
             raise ValueError(
-                f'activity trigger output must be json serializable ({obj})')
+                f'activity trigger output must be json serializable ({obj})') from e
 
         return meta.Datum(type='json', value=result)
 
