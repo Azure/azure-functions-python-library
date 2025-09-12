@@ -99,10 +99,10 @@ class ActivityTriggerConverter(meta.InConverter,
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
-            except Exception:
+            except Exception as e:
                 raise ValueError(
                     'activity trigger input must be a string or a '
-                    f'valid json serializable ({data.value})')
+                    f'valid json serializable ({data.value})') from e
         else:
             raise NotImplementedError(
                 f'unsupported activity trigger payload type: {data_type}')
