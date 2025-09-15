@@ -223,10 +223,6 @@ class TestDurableFunctions(unittest.TestCase):
             self.assertEqual(decoded, datum['expected_value'])
 
     def test_activity_trigger_decode_failure_exception_has_cause(self):
-        class NonDecodable:
-            def __init__(self):
-                self.value = 'foo'
-
         data = Datum('{"value": "bar"}', 'json')
 
         try:
