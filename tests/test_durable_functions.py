@@ -165,6 +165,19 @@ class TestDurableFunctions(unittest.TestCase):
                 expected_type=type(datum['output']))
             self.assertEqual(encoded, datum['expected_value'])
 
+    def test_activity_trigger_encode_failure_exception_has_cause(self):
+        class NonEncodable:
+            def __init__(self):
+                self.value = 'foo'
+
+        data = NonEncodable()
+
+        try:
+            ActivityTriggerConverter.encode(data, expected_type=None)
+        except ValueError as e:
+            self.assertIsNotNone(e.__cause__)
+            self.assertIsInstance(e.__cause__, TypeError)
+
     def test_activity_trigger_decode(self):
         # Activity Trigger allow inputs to be any JSON serializables
         # The input values to the trigger should be passed into arguments
@@ -208,6 +221,17 @@ class TestDurableFunctions(unittest.TestCase):
                 data=datum['input'],
                 trigger_metadata=None)
             self.assertEqual(decoded, datum['expected_value'])
+
+    def test_activity_trigger_decode_failure_exception_has_cause(self):
+        data = Datum('{"value": "bar"}', 'json')
+
+        try:
+            ActivityTriggerConverter.decode(
+                data=data,
+                trigger_metadata=None)
+        except ValueError as e:
+            self.assertIsNotNone(e.__cause__)
+            self.assertIsInstance(e.__cause__, TypeError)
 
     def test_activity_trigger_has_implicit_return(self):
         self.assertTrue(
