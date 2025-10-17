@@ -43,7 +43,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, MCPToolContext, _TYPE_MAPPING, _extract_type_and_description
+from .mcp import MCPToolTrigger, MCPToolContext, _TYPE_MAPPING, _extract_type_and_description, _get_user_function
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -473,7 +473,8 @@ class TriggerApi(DecoratorApi, ABC):
         - Extracts parameters and types for tool properties
         - Handles MCPToolContext injection
         """
-        def decorator(target_func: Callable) -> Callable:
+        def decorator(user_func: Callable) -> Callable:
+            target_func = _get_user_function(user_func)
             sig = inspect.signature(target_func)
             tool_name = target_func.__name__
             description = (target_func.__doc__ or "").strip().split("\n")[0]

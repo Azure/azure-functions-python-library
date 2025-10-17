@@ -1,10 +1,12 @@
 from typing import Optional
 from typing import Any, Dict, Tuple, get_args, get_origin, Annotated
+import logging
 
 from azure.functions.decorators.constants import (
     MCP_TOOL_TRIGGER
 )
 from azure.functions.decorators.core import Trigger, DataType
+from azure.functions.decorators.function_app import FunctionBuilder
 
 # Mapping Python types to MCP property types
 _TYPE_MAPPING = {
@@ -46,3 +48,28 @@ def _extract_type_and_description(param_name: str, type_hint: Any) -> Tuple[Any,
         param_description = next((a for a in args[1:] if isinstance(a, str)), f"The {param_name} parameter.")
         return actual_type, param_description
     return type_hint, f"The {param_name} parameter."
+
+def _get_user_function(target_func):
+    """
+    Unwraps decorated or builder-wrapped functions to find the original
+    user-defined function (the one starting with 'def' or 'async def').
+    """
+    logging.info("HELLO FROM THE SDK")
+    # Case 1: It's a FunctionBuilder object
+    if isinstance(target_func, FunctionBuilder):
+        # Access the internal user function
+        try:
+            return target_func._function.get_user_function()
+        except AttributeError:
+            pass
+
+    # Case 2: It's already the user-defined function
+    if callable(target_func) and hasattr(target_func, "__name__"):
+        return target_func
+
+    # Case 3: It might be a partially wrapped callable
+    if hasattr(target_func, "__wrapped__"):
+        return _get_user_function(target_func.__wrapped__)
+
+    # Default fallback
+    return target_func
