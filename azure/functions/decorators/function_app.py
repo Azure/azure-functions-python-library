@@ -43,7 +43,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, MCPToolContext, _TYPE_MAPPING, _extract_type_and_description, _get_user_function
+from .mcp import MCPToolTrigger, MCPToolContext, _TYPE_MAPPING, _extract_type_and_description
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -52,6 +52,7 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
+_logger = logging.getLogger('azure.functions.AsgiMiddleware')
 
 class Function(object):
     """
@@ -273,6 +274,7 @@ class FunctionBuilder(object):
         trigger = self._function.get_trigger()
         if trigger is None:
             raise ValueError(
+                f"This is the function: {self._function}"
                 f"Function {function_name} does not have a trigger. A valid "
                 f"function must have one and only one trigger registered.")
 
@@ -463,8 +465,7 @@ class HttpFunctionsAuthLevelMixin(ABC):
 
 class TriggerApi(DecoratorApi, ABC):
     """Interface to extend for using existing trigger decorator functions."""
-    def mcp_tool(self) -> Callable[[Callable], Callable]:
-        """
+    """
         Decorator to register an MCP tool function.
 
         Automatically:
@@ -473,69 +474,85 @@ class TriggerApi(DecoratorApi, ABC):
         - Extracts parameters and types for tool properties
         - Handles MCPToolContext injection
         """
-        def decorator(user_func: Callable) -> Callable:
-            target_func = _get_user_function(user_func)
+    def mcp_tool(self):
+        @self._configure_function_builder
+        def decorator(fb: FunctionBuilder) -> FunctionBuilder:
+            target_func = fb._function.get_user_function()
             sig = inspect.signature(target_func)
             tool_name = target_func.__name__
             description = (target_func.__doc__ or "").strip().split("\n")[0]
 
-            # Build tool properties metadata
+            bound_param_names = {b.name for b in getattr(fb._function, "_bindings", [])}
+            skip_param_names = bound_param_names
+            _logger.info("Bound param names for %s: %s", tool_name, skip_param_names)
+
+            # Build tool properties
             tool_properties = []
             for param_name, param in sig.parameters.items():
+                if param_name in skip_param_names:
+                    continue
                 param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str
-                actual_type, param_description = _extract_type_and_description(param_name, param_type_hint)
+                actual_type, param_desc = _extract_type_and_description(param_name, param_type_hint)
                 if actual_type is MCPToolContext:
                     continue
                 property_type = _TYPE_MAPPING.get(actual_type, "string")
                 tool_properties.append({
                     "propertyName": param_name,
                     "propertyType": property_type,
-                    "description": param_description,
+                    "description": param_desc,
                 })
 
-            tool_properties_json = json.dumps(tool_properties)
+            tool_properties_json = json.dumps(tool_properties)\
+            
+            bound_params = [
+                inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+                for name in bound_param_names
+            ]
+            wrapper_sig = inspect.Signature([
+                *bound_params,
+                inspect.Parameter("context", inspect.Parameter.POSITIONAL_OR_KEYWORD)
+            ])
 
-            # Wrapper function for MCP trigger
-            def wrapper(context: str) -> str:
-                try:
-                    content = json.loads(context)
-                    arguments = content.get("arguments", {})
-                    kwargs = {}
+            # Wrap the original function
+            import functools
+            @functools.wraps(target_func)
+            async def wrapper(context: str, *args, **kwargs):
+                _logger.info(f"Invoking MCP tool function '{tool_name}' with context: {context}")
+                content = json.loads(context)
+                arguments = content.get("arguments", {})
+                call_kwargs = {}
+                for param_name, param in sig.parameters.items():
+                    param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str
+                    actual_type, _ = _extract_type_and_description(param_name, param_type_hint)
+                    if actual_type is MCPToolContext:
+                        call_kwargs[param_name] = content
+                    elif param_name in arguments:
+                        call_kwargs[param_name] = arguments[param_name]
+                call_kwargs.update(kwargs)
+                result = target_func(**call_kwargs)
+                if asyncio.iscoroutine(result):
+                    result = await result
+                return str(result)
 
-                    for param_name, param in sig.parameters.items():
-                        param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str
-                        actual_type, _ = _extract_type_and_description(param_name, param_type_hint)
+            wrapper.__signature__ = wrapper_sig
+            fb._function._func = wrapper
+            _logger.info(f"Registered MCP tool function '{tool_name}' with description: {description} and properties: {tool_properties_json}")
 
-                        if actual_type is MCPToolContext:
-                            kwargs[param_name] = content
-                        elif param_name in arguments:
-                            kwargs[param_name] = arguments[param_name]
-                        else:
-                            return f"Error: Missing required parameter '{param_name}' for '{tool_name}'"
-
-                    result = target_func(**kwargs)
-                    return str(result)
-
-                except Exception as e:
-                    return f"Error executing function '{tool_name}': {str(e)}"
-
-            wrapper.__name__ = target_func.__name__
-            wrapper.__doc__ = target_func.__doc__
-
-            # Use the existing FunctionRegister mechanism to add the trigger
-            fb = self._configure_function_builder(lambda fb: fb)(wrapper)
+            # Add the MCP trigger
             fb.add_trigger(
                 trigger=MCPToolTrigger(
                     name="context",
                     tool_name=tool_name,
                     description=description,
-                    tool_properties=tool_properties_json
+                    tool_properties=tool_properties_json,
                 )
             )
-
             return fb
 
         return decorator
+
+
+
 
     def route(self,
               route: Optional[str] = None,
@@ -3971,6 +3988,9 @@ class FunctionRegister(DecoratorApi, HttpFunctionsAuthLevelMixin, ABC):
 
         :return: A list of :class:`Function` objects defined in the app.
         """
+        for function_builder in self._function_builders:
+            _logger.info("Function builder functions: %s",
+                         function_builder._function)
         functions = [function_builder.build(self.auth_level)
                      for function_builder in self._function_builders]
 
@@ -4193,3 +4213,27 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
+
+def _get_user_function(target_func):
+    """
+    Unwraps decorated or builder-wrapped functions to find the original
+    user-defined function (the one starting with 'def' or 'async def').
+    """
+    # Case 1: It's a FunctionBuilder object
+    if isinstance(target_func, FunctionBuilder):
+        # Access the internal user function
+        try:
+            return target_func._function.get_user_function()
+        except AttributeError:
+            pass
+
+    # Case 2: It's already the user-defined function
+    if callable(target_func) and hasattr(target_func, "__name__"):
+        return target_func
+
+    # Case 3: It might be a partially wrapped callable
+    if hasattr(target_func, "__wrapped__"):
+        return _get_user_function(target_func.__wrapped__)
+
+    # Default fallback
+    return target_func
