@@ -275,7 +275,6 @@ class FunctionBuilder(object):
         trigger = self._function.get_trigger()
         if trigger is None:
             raise ValueError(
-                f"This is the function: {self._function}"
                 f"Function {function_name} does not have a trigger. A valid "
                 f"function must have one and only one trigger registered.")
 
