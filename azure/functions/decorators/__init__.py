@@ -4,7 +4,7 @@ from .core import Cardinality, AccessRights
 from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, ExternalHttpFunctionApp, AsgiFunctionApp, \
     WsgiFunctionApp, FunctionRegister, TriggerApi, BindingApi, \
-    SettingsApi, BlobSource, MCPToolContext
+    SettingsApi, BlobSource
 from .http import HttpMethod
 
 __all__ = [
@@ -24,6 +24,5 @@ __all__ = [
     'Cardinality',
     'AccessRights',
     'HttpMethod',
-    'BlobSource',
-    'MCPToolContext'
+    'BlobSource'
 ]

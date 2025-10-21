@@ -3,12 +3,18 @@ import typing
 from . import meta
 
 
+# MCP-specific context object
+class MCPToolContext(typing.Dict[str, typing.Any]):
+    """Injected context object for MCP tool triggers."""
+    pass
+
+
 class MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
                               trigger=True):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes))
+        return issubclass(pytype, (str, dict, bytes, MCPToolContext))
 
     @classmethod
     def has_implicit_output(cls) -> bool:

@@ -43,10 +43,11 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, MCPToolContext, _TYPE_MAPPING, _extract_type_and_description
+from .mcp import MCPToolTrigger, _TYPE_MAPPING, _extract_type_and_description
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
+from ..mcp import MCPToolContext
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
@@ -502,7 +503,7 @@ class TriggerApi(DecoratorApi, ABC):
                     "description": param_desc,
                 })
 
-            tool_properties_json = json.dumps(tool_properties)\
+            tool_properties_json = json.dumps(tool_properties)
             
             bound_params = [
                 inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
