@@ -6,6 +6,7 @@ from . import meta
 # MCP-specific context object
 class MCPToolContext(typing.Dict[str, typing.Any]):
     """Injected context object for MCP tool triggers."""
+
     pass
 
 

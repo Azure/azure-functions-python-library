@@ -1,6 +1,5 @@
 from typing import Optional
-from typing import Any, Dict, Tuple, get_args, get_origin, Annotated
-import logging
+from typing import Any, Tuple, get_args, get_origin, Annotated
 
 from azure.functions.decorators.constants import (
     MCP_TOOL_TRIGGER
@@ -14,6 +13,7 @@ _TYPE_MAPPING = {
     str: "string",
     bool: "boolean",
 }
+
 
 class MCPToolTrigger(Trigger):
 
@@ -40,6 +40,6 @@ def _extract_type_and_description(param_name: str, type_hint: Any) -> Tuple[Any,
         args = get_args(type_hint)
         actual_type = args[0]
         # Use first string annotation as description if present
-        param_description = next((a for a in args[1:] if isinstance(a, str)), f"The {param_name} parameter.")
+        param_description = next((a for a in args[1:] if isinstance(a, str)), f"The {param_name} parameter.")  # noqa
         return actual_type, param_description
     return type_hint, f"The {param_name} parameter."
