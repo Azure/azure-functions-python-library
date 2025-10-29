@@ -43,7 +43,31 @@ class TestCodeQuality(unittest.TestCase):
 
         try:
             subprocess.run(
-                [sys.executable, '-m', 'flake8', '--config', str(config_path)],
+                [sys.executable, '-m', 'flake8', '--config', str(config_path),
+                 "--extend-ignore=D"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=str(ROOT_PATH))
+        except subprocess.CalledProcessError as ex:
+            output = ex.output.decode()
+            raise AssertionError(
+                f'flake8 validation failed:\n{output}') from None
+
+    def test_pydocs(self):
+        try:
+            import flake8  # NoQA
+        except ImportError:
+            raise unittest.SkipTest('flake8 module is missing')
+
+        config_path = ROOT_PATH / '.flake8'
+        if not config_path.exists():
+            raise unittest.SkipTest('could not locate the .flake8 file')
+
+        try:
+            subprocess.run(
+                [sys.executable, '-m', 'flake8', '--config', str(config_path),
+                 "azure/functions/decorators/function_app.py", "--select=D"],
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

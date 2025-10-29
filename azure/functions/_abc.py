@@ -7,7 +7,7 @@ import io
 import threading
 import typing
 
-from azure.functions._thirdparty.werkzeug.datastructures import Headers
+from werkzeug.datastructures import Headers
 
 T = typing.TypeVar('T')
 

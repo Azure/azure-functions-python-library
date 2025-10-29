@@ -2,12 +2,12 @@
 # Licensed under the MIT License.
 
 import collections.abc
-import json
 import typing
 
 from azure.functions import _sql as sql
 
 from . import meta
+from ._jsonutils import json
 
 
 class SqlConverter(meta.InConverter, meta.OutConverter,

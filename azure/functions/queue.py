@@ -3,13 +3,13 @@
 
 import collections.abc
 import datetime
-import json
 from typing import List, Dict, Any, Union, Optional
 
 from azure.functions import _abc as azf_abc
 from azure.functions import _queue as azf_queue
 
 from . import meta
+from ._jsonutils import json
 
 
 class QueueMessage(azf_queue.QueueMessage):

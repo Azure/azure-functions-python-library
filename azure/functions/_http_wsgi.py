@@ -1,15 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-from typing import Dict, List, Optional, Any
 import logging
 from io import BytesIO, StringIO
 from os import linesep
+from typing import Dict, List, Optional, Any
 from urllib.parse import ParseResult, urlparse, unquote_to_bytes
 from wsgiref.headers import Headers
 
 from ._abc import Context
 from ._http import HttpRequest, HttpResponse
-from ._thirdparty.werkzeug._compat import string_types, wsgi_encoding_dance
+
+
+def wsgi_encoding_dance(value):
+    return value.encode().decode("latin1")
 
 
 class WsgiRequest:
@@ -98,7 +101,7 @@ class WsgiRequest:
 
         # Ensure WSGI string fits in IOS-8859-1 code points
         for k, v in environ.items():
-            if isinstance(v, string_types):
+            if isinstance(v, (str,)):
                 environ[k] = wsgi_encoding_dance(v)
 
         # Remove None values

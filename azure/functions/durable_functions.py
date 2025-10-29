@@ -99,10 +99,10 @@ class ActivityTriggerConverter(meta.InConverter,
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
-            except Exception:
+            except Exception as e:
                 raise ValueError(
                     'activity trigger input must be a string or a '
-                    f'valid json serializable ({data.value})')
+                    f'valid json serializable ({data.value})') from e
         else:
             raise NotImplementedError(
                 f'unsupported activity trigger payload type: {data_type}')
@@ -115,9 +115,9 @@ class ActivityTriggerConverter(meta.InConverter,
         try:
             callback = _durable_functions._serialize_custom_object
             result = json.dumps(obj, default=callback)
-        except TypeError:
+        except TypeError as e:
             raise ValueError(
-                f'activity trigger output must be json serializable ({obj})')
+                f'activity trigger output must be json serializable ({obj})') from e
 
         return meta.Datum(type='json', value=result)
 

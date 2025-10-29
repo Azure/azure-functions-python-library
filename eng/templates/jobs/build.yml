@@ -2,15 +2,42 @@ jobs:
   - job: "Build"
     displayName: 'Build Python SDK'
 
+    strategy:
+      matrix:
+        Python37:
+          PYTHON_VERSION: '3.7'
+        Python38:
+          PYTHON_VERSION: '3.8'
+        Python39:
+          PYTHON_VERSION: '3.9'
+        Python310:
+          PYTHON_VERSION: '3.10'
+        Python311:
+          PYTHON_VERSION: '3.11'
+        Python312:
+          PYTHON_VERSION: '3.12'
+        Python313:
+          PYTHON_VERSION: '3.13'
+        Python314:
+          PYTHON_VERSION: '3.14'
+          
     steps:
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: "3.11"
+          versionSpec: $(PYTHON_VERSION)
       - bash: |
           python --version
         displayName: 'Check python version'
       - bash: |
           python -m pip install -U pip
-          pip install twine wheel
-          python setup.py sdist bdist_wheel
-        displayName: 'Build Python SDK'
+          python -m pip install build
+          if [[ $(PYTHON_VERSION) == "3.7" ]]; then
+              python -m pip install importlib_metadata
+          fi
+          python -m build
+        displayName: 'Build Python SDK for $(PYTHON_VERSION)'
+      - bash: |
+          pip install pip-audit
+          pip-audit .
+        displayName: 'Run vulnerability scan'
+        condition: ne(variables['PYTHON_VERSION'], '3.7')

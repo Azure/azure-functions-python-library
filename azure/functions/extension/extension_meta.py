@@ -3,12 +3,12 @@
 
 from typing import Optional, Union, Dict, List
 import abc
-import json
 from .app_extension_hooks import AppExtensionHooks
 from .func_extension_hooks import FuncExtensionHooks
 from .extension_hook_meta import ExtensionHookMeta
 from .extension_scope import ExtensionScope
 from .function_extension_exception import FunctionExtensionException
+from .._jsonutils import json
 
 
 class ExtensionMeta(abc.ABCMeta):

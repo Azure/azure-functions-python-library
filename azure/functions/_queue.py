@@ -2,10 +2,10 @@
 # Licensed under the MIT License.
 
 import datetime
-import json
 import typing
 
 from . import _abc
+from ._jsonutils import json
 
 
 class QueueMessage(_abc.QueueMessage):
