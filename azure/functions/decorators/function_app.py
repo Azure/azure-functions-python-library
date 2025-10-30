@@ -673,6 +673,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
+            auto_complete_messages: Optional[bool] = None,
             **kwargs: Any) -> Callable[..., Any]:
         """
         The `on_service_bus_queue_change` decorator adds :class:`ServiceBusQueueTrigger` to the
@@ -697,6 +698,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param is_sessions_enabled: Set to True if connecting to a session-aware queue
             or subscription.
         :param cardinality: Set to "many" to enable batching.
+        :param auto_complete_messages: Indicates whether the message should be automatically
+            completed.
 
         :return: Decorator function.
         """
@@ -717,6 +720,7 @@ class TriggerApi(DecoratorApi, ABC):
                         is_sessions_enabled=is_sessions_enabled,
                         cardinality=parse_singular_param_to_enum(cardinality,
                                                                  Cardinality),
+                        auto_complete_messages=auto_complete_messages,
                         **kwargs))
                 return fb
 
@@ -734,6 +738,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
+            auto_complete_messages: Optional[bool] = None,
             **kwargs: Any) -> Callable[..., Any]:
         """
         The `on_service_bus_topic_change` decorator adds :class:`ServiceBusTopicTrigger` to the
@@ -759,6 +764,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param is_sessions_enabled: Set to True if connecting to a session-aware queue
             or subscription.
         :param cardinality: Set to "many" to enable batching.
+        :param auto_complete_messages: Indicates whether the message should be automatically
+            completed.
 
         :return: Decorator function.
         """
@@ -780,6 +787,7 @@ class TriggerApi(DecoratorApi, ABC):
                         is_sessions_enabled=is_sessions_enabled,
                         cardinality=parse_singular_param_to_enum(cardinality,
                                                                  Cardinality),
+                        auto_complete_messages=auto_complete_messages,
                         **kwargs))
                 return fb
 
