@@ -286,40 +286,40 @@ class TestDurableFunctions(unittest.TestCase):
         self.assertFalse(DurableClientConverter.check_output_type_annotation(int))
 
     def test_durable_client_converter_encode(self):
-        datum = DurableClientConverter.encode("hello")
+        datum = DurableClientConverter.encode("hello", str)
         self.assertEqual(datum.type, "string")
         self.assertEqual(datum.value, "hello")
 
-        datum = DurableClientConverter.encode(b"data")
+        datum = DurableClientConverter.encode(b"data", bytes)
         self.assertEqual(datum.type, "bytes")
         self.assertEqual(datum.value, b"data")
 
-        datum = DurableClientConverter.encode(None)
+        datum = DurableClientConverter.encode(None, type=None)
         self.assertIsNone(datum.type)
         self.assertIsNone(datum.value)
 
-        datum = DurableClientConverter.encode({"a": 1})
+        datum = DurableClientConverter.encode({"a": 1}, dict)
         self.assertEqual(datum.type, "dict")
         self.assertEqual(datum.value, {"a": 1})
 
-        datum = DurableClientConverter.encode([1, 2])
+        datum = DurableClientConverter.encode([1, 2], list)
         self.assertEqual(datum.type, "list")
         self.assertEqual(datum.value, [1, 2])
 
-        datum = DurableClientConverter.encode(42)
+        datum = DurableClientConverter.encode(42, int)
         self.assertEqual(datum.type, "int")
         self.assertEqual(datum.value, 42)
 
-        datum = DurableClientConverter.encode(3.14)
+        datum = DurableClientConverter.encode(3.14, float)
         self.assertEqual(datum.type, "double")
         self.assertEqual(datum.value, 3.14)
 
-        datum = DurableClientConverter.encode(True)
+        datum = DurableClientConverter.encode(True, bool)
         self.assertEqual(datum.type, "bool")
         self.assertTrue(datum.value)
 
         with self.assertRaises(NotImplementedError):
-            DurableClientConverter.encode(set([1, 2]))
+            DurableClientConverter.encode(set([1, 2]), set)
 
     def test_durable_client_converter_decode(self):
         data = Datum(type="string", value="abc")
