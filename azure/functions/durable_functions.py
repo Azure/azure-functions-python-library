@@ -171,8 +171,6 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
-        # Enabling support for Dapr bindings
-        # https://github.com/Azure/azure-functions-python-worker/issues/1316
         if data is None:
             return None
         data_type = data.type
