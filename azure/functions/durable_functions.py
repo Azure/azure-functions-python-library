@@ -133,3 +133,62 @@ class DurableClientConverter(meta.InConverter,
     @classmethod
     def has_implicit_output(cls) -> bool:
         return False
+
+    @classmethod
+    def has_trigger_support(cls) -> bool:
+        return False
+
+    @classmethod
+    def check_input_type_annotation(cls, pytype: type) -> bool:
+        return issubclass(pytype, (str, bytes))
+
+    @classmethod
+    def check_output_type_annotation(cls, pytype: type) -> bool:
+        return issubclass(pytype, (str, bytes, bytearray))
+
+    @classmethod
+    def encode(cls, obj: typing.Any, *,
+               expected_type: typing.Optional[type]) -> meta.Datum:
+        if isinstance(obj, str):
+            return meta.Datum(type='string', value=obj)
+
+        elif isinstance(obj, (bytes, bytearray)):
+            return meta.Datum(type='bytes', value=bytes(obj))
+        elif obj is None:
+            return meta.Datum(type=None, value=obj)
+        elif isinstance(obj, dict):
+            return meta.Datum(type='dict', value=obj)
+        elif isinstance(obj, list):
+            return meta.Datum(type='list', value=obj)
+        elif isinstance(obj, int):
+            return meta.Datum(type='int', value=obj)
+        elif isinstance(obj, float):
+            return meta.Datum(type='double', value=obj)
+        elif isinstance(obj, bool):
+            return meta.Datum(type='bool', value=obj)
+        else:
+            raise NotImplementedError
+
+    @classmethod
+    def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
+        # Enabling support for Dapr bindings
+        # https://github.com/Azure/azure-functions-python-worker/issues/1316
+        if data is None:
+            return None
+        data_type = data.type
+
+        if data_type == 'string':
+            result = data.value
+        elif data_type == 'bytes':
+            result = data.value
+        elif data_type == 'json':
+            result = data.value
+        elif data_type is None:
+            result = None
+        else:
+            raise ValueError(
+                'unexpected type of data received for the "generic" binding ',
+                repr(data_type)
+            )
+
+        return result
