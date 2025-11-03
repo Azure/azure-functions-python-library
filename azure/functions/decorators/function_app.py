@@ -44,7 +44,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, _TYPE_MAPPING, _extract_type_and_description
+from .mcp import MCPToolTrigger, _TYPE_MAPPING
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1603,15 +1603,14 @@ class TriggerApi(DecoratorApi, ABC):
                     continue
                 param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
                 # Parse type and description from type hint
-                actual_type, param_desc = _extract_type_and_description(
-                    param_name, param_type_hint)
+                actual_type = param_type_hint
                 if actual_type is MCPToolContext:
                     continue
                 property_type = _TYPE_MAPPING.get(actual_type, "string")
                 tool_properties.append({
                     "propertyName": param_name,
                     "propertyType": property_type,
-                    "description": param_desc,
+                    "description": "",
                 })
 
             tool_properties_json = json.dumps(tool_properties)
@@ -1634,7 +1633,7 @@ class TriggerApi(DecoratorApi, ABC):
                 call_kwargs = {}
                 for param_name, param in sig.parameters.items():
                     param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
-                    actual_type, _ = _extract_type_and_description(param_name, param_type_hint)
+                    actual_type = param_type_hint
                     if actual_type is MCPToolContext:
                         call_kwargs[param_name] = content
                     elif param_name in arguments:
