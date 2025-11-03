@@ -35,6 +35,31 @@ class TestServiceBus(unittest.TestCase):
             "cardinality": Cardinality.ONE
         })
 
+    def test_service_bus_queue_trigger_autocomplete_valid_creation(self):
+        trigger = ServiceBusQueueTrigger(name="req", connection="dummy_conn",
+                                         queue_name="dummy_queue",
+                                         data_type=DataType.UNDEFINED,
+                                         access_rights=AccessRights.MANAGE,
+                                         is_sessions_enabled=True,
+                                         cardinality=Cardinality.ONE,
+                                         auto_complete_messages=True,
+                                         dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
+        self.assertEqual(trigger.get_dict_repr(), {
+            "type": SERVICE_BUS_TRIGGER,
+            "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
+            "name": "req",
+            "connection": "dummy_conn",
+            "queueName": "dummy_queue",
+            "dataType": DataType.UNDEFINED,
+            "accessRights": AccessRights.MANAGE,
+            "isSessionsEnabled": True,
+            "cardinality": Cardinality.ONE,
+            "autoCompleteMessages": True
+        })
+
     def test_service_bus_queue_output_valid_creation(self):
         service_bus_queue_output = ServiceBusQueueOutput(
             name="res",
@@ -80,6 +105,33 @@ class TestServiceBus(unittest.TestCase):
             "accessRights": AccessRights.MANAGE,
             "isSessionsEnabled": True,
             "cardinality": Cardinality.ONE
+        })
+
+    def test_service_bus_topic_trigger_autocomplete_valid_creation(self):
+        trigger = ServiceBusTopicTrigger(name="req", connection="dummy_conn",
+                                         topic_name="dummy_topic",
+                                         subscription_name="dummy_sub",
+                                         data_type=DataType.UNDEFINED,
+                                         access_rights=AccessRights.MANAGE,
+                                         is_sessions_enabled=True,
+                                         cardinality=Cardinality.ONE,
+                                         auto_complete_messages=True,
+                                         dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "serviceBusTrigger")
+        self.assertEqual(trigger.get_dict_repr(), {
+            "type": SERVICE_BUS_TRIGGER,
+            "direction": BindingDirection.IN,
+            'dummyField': 'dummy',
+            "name": "req",
+            "connection": "dummy_conn",
+            "topicName": "dummy_topic",
+            "subscriptionName": "dummy_sub",
+            "dataType": DataType.UNDEFINED,
+            "accessRights": AccessRights.MANAGE,
+            "isSessionsEnabled": True,
+            "cardinality": Cardinality.ONE,
+            "autoCompleteMessages": True
         })
 
     def test_service_bus_topic_output_valid_creation(self):
