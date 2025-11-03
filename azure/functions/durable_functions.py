@@ -160,12 +160,12 @@ class DurableClientConverter(meta.InConverter,
             return meta.Datum(type='dict', value=obj)
         elif isinstance(obj, list):
             return meta.Datum(type='list', value=obj)
+        elif isinstance(obj, bool):
+            return meta.Datum(type='bool', value=obj)
         elif isinstance(obj, int):
             return meta.Datum(type='int', value=obj)
         elif isinstance(obj, float):
             return meta.Datum(type='double', value=obj)
-        elif isinstance(obj, bool):
-            return meta.Datum(type='bool', value=obj)
         else:
             raise NotImplementedError
 

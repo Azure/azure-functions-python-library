@@ -323,24 +323,24 @@ class TestDurableFunctions(unittest.TestCase):
 
     def test_durable_client_converter_decode(self):
         data = Datum(type="string", value="abc")
-        result = DurableClientConverter.decode(datum=data, trigger_metadata=None)
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, "abc")
 
         data = Datum(type="bytes", value=b"123")
-        result = DurableClientConverter.decode(datum=data, trigger_metadata=None)
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, b"123")
 
         data = Datum(type="json", value={"key": "val"})
-        result = DurableClientConverter.decode(datum=data, trigger_metadata=None)
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, {"key": "val"})
 
         data = Datum(type=None, value=None)
-        result = DurableClientConverter.decode(datum=data, trigger_metadata=None)
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertIsNone(result)
 
-        result = DurableClientConverter.decode(datum=None, trigger_metadata=None)
+        result = DurableClientConverter.decode(data=None, trigger_metadata=None)
         self.assertIsNone(result)
 
         data = Datum(type="weird", value="???")
         with self.assertRaises(ValueError):
-            DurableClientConverter.decode(datum=data, trigger_metadata=None)
+            DurableClientConverter.decode(data=data, trigger_metadata=None)
