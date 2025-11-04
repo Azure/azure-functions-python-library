@@ -44,7 +44,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, _TYPE_MAPPING
+from .mcp import MCPToolTrigger, _TYPE_MAPPING, check_property_type, check_is_array, check_is_required
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -54,6 +54,8 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
+
+logger = logging.getLogger('azure.functions.WsgiMiddleware')
 
 class Function(object):
     """
@@ -1588,6 +1590,11 @@ class TriggerApi(DecoratorApi, ABC):
         def decorator(fb: FunctionBuilder) -> FunctionBuilder:
             target_func = fb._function.get_user_function()
             sig = inspect.signature(target_func)
+
+            # Pull any explicitly declared MCP tool properties
+            explicit_properties = getattr(target_func, "__mcp_tool_properties__", {})
+            logger.info(f"Explicit MCP tool properties: {explicit_properties}")
+
             # Parse tool name and description from function signature
             tool_name = target_func.__name__
             description = (target_func.__doc__ or "").strip().split("\n")[0]
@@ -1602,15 +1609,29 @@ class TriggerApi(DecoratorApi, ABC):
                 if param_name in skip_param_names:
                     continue
                 param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
-                # Parse type and description from type hint
-                actual_type = param_type_hint
-                if actual_type is MCPToolContext:
+
+                if param_type_hint is MCPToolContext:
                     continue
-                property_type = _TYPE_MAPPING.get(actual_type, "string")
+
+                # Check if explicit metadata exists for this param
+                if param_name in explicit_properties:
+                    logger.info(f"Using explicit MCP tool property for param: {param_name}")  # noqa
+                    prop = explicit_properties[param_name].copy()
+                    prop["propertyName"] = param_name
+                    tool_properties.append(prop)
+                    continue
+
+                 # Otherwise infer it
+                is_required = check_is_required(param, param_type_hint)
+                is_array = check_is_array(param_type_hint)
+                property_type = check_property_type(param_type_hint, is_array)
+
                 tool_properties.append({
                     "propertyName": param_name,
                     "propertyType": property_type,
                     "description": "",
+                    "isArray": is_array,
+                    "isRequired": is_required
                 })
 
             tool_properties_json = json.dumps(tool_properties)
@@ -1659,6 +1680,40 @@ class TriggerApi(DecoratorApi, ABC):
             return fb
 
         return decorator
+
+    def mcp_tool_property(self, arg_name: str,
+                      description: Optional[str] = "",
+                      property_type: Optional[str] = None,
+                      is_required: Optional[bool] = True,
+                      is_array: Optional[bool] = False):
+        """
+        Decorator for defining explicit MCP tool property metadata for a specific argument.
+
+        Example:
+            @app.mcp_tool_property(
+                arg_name="snippetname",
+                description="The name of the snippet.",
+                property_type="string",
+                is_required=True,
+                is_array=False
+            )
+        """
+        def decorator(func):
+        # If this function is already wrapped by FunctionBuilder or similar, unwrap it
+            target_func = getattr(func, "_function", func)
+            target_func = getattr(target_func, "_func", target_func)
+
+            existing = getattr(target_func, "__mcp_tool_properties__", {})
+            existing[arg_name] = {
+                "description": description or "",
+                "propertyType": property_type or "string",
+                "isRequired": is_required,
+                "isArray": is_array,
+            }
+            setattr(target_func, "__mcp_tool_properties__", existing)
+            return func
+        return decorator
+
 
     def dapr_service_invocation_trigger(self,
                                         arg_name: str,
