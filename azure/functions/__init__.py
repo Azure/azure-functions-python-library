@@ -10,7 +10,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
-                         ExternalHttpFunctionApp, BlobSource)
+                         ExternalHttpFunctionApp, BlobSource, McpPropertyType)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
@@ -102,7 +102,8 @@ __all__ = (
     'AccessRights',
     'HttpMethod',
     'BlobSource',
-    'MCPToolContext'
+    'MCPToolContext',
+    'McpPropertyType'
 )
 
 __version__ = '1.25.0b1'

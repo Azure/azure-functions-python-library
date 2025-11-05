@@ -8,7 +8,7 @@ from datetime import datetime
 from azure.functions.decorators.constants import (
     MCP_TOOL_TRIGGER
 )
-from azure.functions.decorators.core import Trigger, DataType
+from azure.functions.decorators.core import Trigger, DataType, McpPropertyType
 
 # Mapping Python types to MCP property types
 _TYPE_MAPPING = {
@@ -39,6 +39,7 @@ class MCPToolTrigger(Trigger):
         self.tool_properties = tool_properties
         super().__init__(name=name, data_type=data_type)
 
+
 def unwrap_optional(pytype: type):
     """If Optional[T], return T; else return pytype unchanged."""
     origin = get_origin(pytype)
@@ -58,12 +59,15 @@ def check_is_array(param_type_hint: type) -> bool:
 
 def check_property_type(pytype: type, is_array: bool) -> str:
     """Map Python type hints to MCP property types."""
+    if isinstance(pytype, McpPropertyType):
+        return pytype.value
     base_type = unwrap_optional(pytype)
     if is_array:
         args = get_args(base_type)
         inner_type = unwrap_optional(args[0]) if args else str
         return _TYPE_MAPPING.get(inner_type, "string")
     return _TYPE_MAPPING.get(base_type, "string")
+
 
 def check_is_required(param: type, param_type_hint: type) -> bool:
     """

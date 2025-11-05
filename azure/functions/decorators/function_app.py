@@ -13,7 +13,8 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource, \
+    McpPropertyType
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -44,7 +45,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, _TYPE_MAPPING, check_property_type, check_is_array, check_is_required
+from .mcp import MCPToolTrigger, check_property_type, check_is_array, check_is_required
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -54,8 +55,6 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
-
-logger = logging.getLogger('azure.functions.WsgiMiddleware')
 
 class Function(object):
     """
@@ -1593,7 +1592,6 @@ class TriggerApi(DecoratorApi, ABC):
 
             # Pull any explicitly declared MCP tool properties
             explicit_properties = getattr(target_func, "__mcp_tool_properties__", {})
-            logger.info(f"Explicit MCP tool properties: {explicit_properties}")
 
             # Parse tool name and description from function signature
             tool_name = target_func.__name__
@@ -1613,26 +1611,27 @@ class TriggerApi(DecoratorApi, ABC):
                 if param_type_hint is MCPToolContext:
                     continue
 
-                # Check if explicit metadata exists for this param
-                if param_name in explicit_properties:
-                    logger.info(f"Using explicit MCP tool property for param: {param_name}")  # noqa
-                    prop = explicit_properties[param_name].copy()
-                    prop["propertyName"] = param_name
-                    tool_properties.append(prop)
-                    continue
-
-                 # Otherwise infer it
+                # Inferred defaults
                 is_required = check_is_required(param, param_type_hint)
                 is_array = check_is_array(param_type_hint)
                 property_type = check_property_type(param_type_hint, is_array)
 
-                tool_properties.append({
+                property_data = {
                     "propertyName": param_name,
                     "propertyType": property_type,
                     "description": "",
                     "isArray": is_array,
                     "isRequired": is_required
-                })
+                }
+
+                # Merge in any explicit overrides
+                if param_name in explicit_properties:
+                    overrides = explicit_properties[param_name]
+                    for key, value in overrides.items():
+                        if value is not None:
+                            property_data[key] = value
+
+                tool_properties.append(property_data)
 
             tool_properties_json = json.dumps(tool_properties)
 
@@ -1682,38 +1681,45 @@ class TriggerApi(DecoratorApi, ABC):
         return decorator
 
     def mcp_tool_property(self, arg_name: str,
-                      description: Optional[str] = "",
-                      property_type: Optional[str] = None,
-                      is_required: Optional[bool] = True,
-                      is_array: Optional[bool] = False):
+                          description: Optional[str] = None,
+                          property_type: Optional[McpPropertyType] = None,
+                          is_required: Optional[bool] = True,
+                          is_array: Optional[bool] = False):
         """
         Decorator for defining explicit MCP tool property metadata for a specific argument.
+
+        :param arg_name: The name of the argument.
+        :param description: The description of the argument.
+        :param property_type: The type of the argument.
+        :param is_required: If the argument is required or not.
+        :param is_array: If the argument is array or not.
+
+        :return: Decorator function.
 
         Example:
             @app.mcp_tool_property(
                 arg_name="snippetname",
                 description="The name of the snippet.",
-                property_type="string",
+                property_type=func.McpPropertyType.STRING,
                 is_required=True,
                 is_array=False
             )
         """
         def decorator(func):
-        # If this function is already wrapped by FunctionBuilder or similar, unwrap it
+            # If this function is already wrapped by FunctionBuilder or similar, unwrap it
             target_func = getattr(func, "_function", func)
             target_func = getattr(target_func, "_func", target_func)
 
             existing = getattr(target_func, "__mcp_tool_properties__", {})
             existing[arg_name] = {
-                "description": description or "",
-                "propertyType": property_type or "string",
+                "description": description,
+                "propertyType": property_type.value if property_type else None,  # Get enum value
                 "isRequired": is_required,
                 "isArray": is_array,
             }
             setattr(target_func, "__mcp_tool_properties__", existing)
             return func
         return decorator
-
 
     def dapr_service_invocation_trigger(self,
                                         arg_name: str,
