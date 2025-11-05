@@ -44,8 +44,8 @@ def unwrap_optional(pytype: type):
     """If Optional[T], return T; else return pytype unchanged."""
     origin = get_origin(pytype)
     args = get_args(pytype)
-    if origin is Union and any(a is type(None) for a in args):
-        non_none_args = [a for a in args if a is not type(None)]
+    if isinstance(origin, Union) and any(isinstance(a, type(None)) for a in args):
+        non_none_args = [a for a in args if not isinstance(a, type(None))]
         return non_none_args[0] if non_none_args else str
     return pytype
 
@@ -85,7 +85,7 @@ def check_is_required(param: type, param_type_hint: type) -> bool:
     # 2) Optional[T] => not required
     origin = get_origin(param_type_hint)
     args = get_args(param_type_hint)
-    if origin is Union and any(a is type(None) for a in args):
+    if isinstance(origin, Union) and any(isinstance(a, type(None)) for a in args):
         return False
 
     # 3) It's required
