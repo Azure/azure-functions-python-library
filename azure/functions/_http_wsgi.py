@@ -113,7 +113,9 @@ class WsgiRequest:
     def _get_port(self, parsed_url, lowercased_headers: Dict[str, str]) -> int:
         port: int = 80
         if lowercased_headers.get('x-forwarded-port'):
-            return int(lowercased_headers['x-forwarded-port'])
+            # Handle comma-separated port values (e.g., "443,8080,433")
+            forwarded_port = lowercased_headers['x-forwarded-port'].split(',')[0].strip()
+            return int(forwarded_port)
         elif getattr(parsed_url, 'port', None):
             return int(parsed_url.port)
         elif parsed_url.scheme == 'https':
