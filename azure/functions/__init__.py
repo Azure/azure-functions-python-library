@@ -10,7 +10,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
-                         ExternalHttpFunctionApp, BlobSource)
+                         ExternalHttpFunctionApp, BlobSource, McpPropertyType)
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
@@ -19,6 +19,7 @@ from .extension import (ExtensionMeta, FunctionExtensionException,
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
+from .mcp import MCPToolContext
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
@@ -32,6 +33,7 @@ from . import eventgrid  # NoQA
 from . import eventhub  # NoQA
 from . import http  # NoQA
 from . import kafka # NoQA
+from . import mcp  # NoQA
 from . import queue  # NoQA
 from . import servicebus  # NoQA
 from . import timer  # NoQA
@@ -99,7 +101,9 @@ __all__ = (
     'Cardinality',
     'AccessRights',
     'HttpMethod',
-    'BlobSource'
+    'BlobSource',
+    'MCPToolContext',
+    'McpPropertyType'
 )
 
 __version__ = '1.25.0b1'
