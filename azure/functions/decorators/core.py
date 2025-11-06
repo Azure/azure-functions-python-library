@@ -73,6 +73,22 @@ class BlobSource(StringifyEnum):
     """Standard polling mechanism to detect changes in the container."""
 
 
+class McpPropertyType(StringifyEnum):
+    """MCP property types."""
+    INTEGER = "integer"
+    """Integer type."""
+    FLOAT = "float"
+    """Float type."""
+    STRING = "string"
+    """String type."""
+    BOOLEAN = "boolean"
+    """Boolean type."""
+    OBJECT = "object"
+    """Object type."""
+    DATETIME = "string"
+    """Datetime type represented as string."""
+
+
 class Binding(ABC):
     """Abstract binding class which captures common attributes and
     functions. :meth:`get_dict_repr` can auto generate the function.json for

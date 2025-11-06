@@ -2,8 +2,12 @@
 #  Licensed under the MIT License.
 import abc
 import asyncio
+import functools
+import inspect
 import json
 import logging
+import textwrap
+
 from abc import ABC
 from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
@@ -11,7 +15,8 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource, \
+    McpPropertyType
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -42,10 +47,11 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger
+from .mcp import MCPToolTrigger, build_property_metadata
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
+from ..mcp import MCPToolContext
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
@@ -1570,6 +1576,126 @@ class TriggerApi(DecoratorApi, ABC):
             return decorator()
 
         return wrap
+
+    def mcp_tool(self):
+        """
+        Decorator to register an MCP tool function.
+
+        Automatically:
+        - Infers tool name from function name
+        - Extracts first line of docstring as description
+        - Extracts parameters and types for tool properties
+        - Handles MCPToolContext injection
+        """
+        @self._configure_function_builder
+        def decorator(fb: FunctionBuilder) -> FunctionBuilder:
+            target_func = fb._function.get_user_function()
+            sig = inspect.signature(target_func)
+
+            # Pull any explicitly declared MCP tool properties
+            explicit_properties = getattr(target_func, "__mcp_tool_properties__", {})
+
+            # Parse tool name and description from function signature
+            tool_name = target_func.__name__
+            raw_doc = target_func.__doc__ or ""
+            description = textwrap.dedent(raw_doc).strip()
+
+            # Identify arguments that are already bound (bindings)
+            bound_param_names = {b.name for b in getattr(fb._function, "_bindings", [])}
+            skip_param_names = bound_param_names
+
+            # Build tool properties
+            tool_properties = build_property_metadata(sig=sig,
+                                                      skip_param_names=skip_param_names,
+                                                      explicit_properties=explicit_properties)
+
+            tool_properties_json = json.dumps(tool_properties)
+
+            bound_params = [
+                inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+                for name in bound_param_names
+            ]
+            # Build new signature for the wrapper function to pass worker indexing
+            wrapper_sig = inspect.Signature([
+                *bound_params,
+                inspect.Parameter("context", inspect.Parameter.POSITIONAL_OR_KEYWORD)
+            ])
+
+            # Wrap the original function
+            @functools.wraps(target_func)
+            async def wrapper(context: str, *args, **kwargs):
+                content = json.loads(context)
+                arguments = content.get("arguments", {})
+                call_kwargs = {}
+                for param_name, param in sig.parameters.items():
+                    param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
+                    actual_type = param_type_hint
+                    if actual_type is MCPToolContext:
+                        call_kwargs[param_name] = content
+                    elif param_name in arguments:
+                        call_kwargs[param_name] = arguments[param_name]
+                call_kwargs.update(kwargs)
+                result = target_func(**call_kwargs)
+                if asyncio.iscoroutine(result):
+                    result = await result
+                return str(result)
+
+            wrapper.__signature__ = wrapper_sig
+            fb._function._func = wrapper
+
+            # Add the MCP trigger
+            fb.add_trigger(
+                trigger=MCPToolTrigger(
+                    name="context",
+                    tool_name=tool_name,
+                    description=description,
+                    tool_properties=tool_properties_json,
+                )
+            )
+            return fb
+
+        return decorator
+
+    def mcp_tool_property(self, arg_name: str,
+                          description: Optional[str] = None,
+                          property_type: Optional[McpPropertyType] = None,
+                          is_required: Optional[bool] = True,
+                          as_array: Optional[bool] = False):
+        """
+        Decorator for defining explicit MCP tool property metadata for a specific argument.
+
+        :param arg_name: The name of the argument.
+        :param description: The description of the argument.
+        :param property_type: The type of the argument.
+        :param is_required: If the argument is required or not.
+        :param as_array: If the argument should be passed as an array or not.
+
+        :return: Decorator function.
+
+        Example:
+            @app.mcp_tool_property(
+                arg_name="snippetname",
+                description="The name of the snippet.",
+                property_type=func.McpPropertyType.STRING,
+                is_required=True,
+                as_array=False
+            )
+        """
+        def decorator(func):
+            # If this function is already wrapped by FunctionBuilder or similar, unwrap it
+            target_func = getattr(func, "_function", func)
+            target_func = getattr(target_func, "_func", target_func)
+
+            existing = getattr(target_func, "__mcp_tool_properties__", {})
+            existing[arg_name] = {
+                "description": description,
+                "propertyType": property_type.value if property_type else None,  # Get enum value
+                "isRequired": is_required,
+                "isArray": as_array,
+            }
+            setattr(target_func, "__mcp_tool_properties__", existing)
+            return func
+        return decorator
 
     def dapr_service_invocation_trigger(self,
                                         arg_name: str,
@@ -4127,3 +4253,28 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
+
+
+def _get_user_function(target_func):
+    """
+    Unwraps decorated or builder-wrapped functions to find the original
+    user-defined function (the one starting with 'def' or 'async def').
+    """
+    # Case 1: It's a FunctionBuilder object
+    if isinstance(target_func, FunctionBuilder):
+        # Access the internal user function
+        try:
+            return target_func._function.get_user_function()
+        except AttributeError:
+            pass
+
+    # Case 2: It's already the user-defined function
+    if callable(target_func) and hasattr(target_func, "__name__"):
+        return target_func
+
+    # Case 3: It might be a partially wrapped callable
+    if hasattr(target_func, "__wrapped__"):
+        return _get_user_function(target_func.__wrapped__)
+
+    # Default fallback
+    return target_func
