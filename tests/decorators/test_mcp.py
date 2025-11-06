@@ -79,6 +79,44 @@ class TestMcpToolDecorator(unittest.TestCase):
                          '"isArray": false, '
                          '"isRequired": true}]')
 
+    def test_long_pydocs(self):
+        @self.app.mcp_tool()
+        def add_numbers(a: int, b: int) -> int:
+            """
+            Add two numbers.
+
+            Args:
+                a (int): The first number to add.
+                b (int): The second number to add.
+
+            Returns:
+                int: The sum of the two numbers.
+            """
+            return a + b
+
+        trigger = add_numbers._function._bindings[0]
+        self.assertEqual(trigger.description, '''Add two numbers.
+
+Args:
+    a (int): The first number to add.
+    b (int): The second number to add.
+
+Returns:
+    int: The sum of the two numbers.''')
+        self.assertEqual(trigger.name, "context")
+        self.assertEqual(trigger.tool_name, "add_numbers")
+        self.assertEqual(trigger.tool_properties,
+                         '[{"propertyName": "a", '
+                         '"propertyType": "integer", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}, '
+                         '{"propertyName": "b", '
+                         '"propertyType": "integer", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}]')
+
     def test_simple_signature_defaults(self):
         @self.app.mcp_tool()
         def add_numbers(a, b):
@@ -187,7 +225,7 @@ class TestMcpToolDecorator(unittest.TestCase):
                          '"isArray": false, '
                          '"isRequired": false}]')
 
-    def test_is_array(self):
+    def test_as_array(self):
         @self.app.mcp_tool()
         def add_numbers(a: typing.List[int]) -> typing.List[int]:
             """Add two numbers."""
@@ -204,7 +242,7 @@ class TestMcpToolDecorator(unittest.TestCase):
                          '"isArray": true, '
                          '"isRequired": true}]')
 
-    def test_is_array_pep(self):
+    def test_as_array_pep(self):
         @self.app.mcp_tool()
         def add_numbers(a: list[int]) -> list[int]:
             """Add two numbers."""
@@ -244,7 +282,7 @@ class TestMcpToolDecorator(unittest.TestCase):
                                     description="The first number",
                                     property_type=func.McpPropertyType.INTEGER,
                                     is_required=False,
-                                    is_array=True)
+                                    as_array=True)
         def add_numbers(a, b: int) -> int:
             """Add two numbers."""
             return a + b

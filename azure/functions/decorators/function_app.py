@@ -6,6 +6,8 @@ import functools
 import inspect
 import json
 import logging
+import textwrap
+
 from abc import ABC
 from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
@@ -45,7 +47,7 @@ from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
     AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
     semantic_search_system_prompt, \
     SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, check_property_type, check_is_array, check_is_required
+from .mcp import MCPToolTrigger, build_property_metadata
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1595,43 +1597,17 @@ class TriggerApi(DecoratorApi, ABC):
 
             # Parse tool name and description from function signature
             tool_name = target_func.__name__
-            description = (target_func.__doc__ or "").strip().split("\n")[0]
+            raw_doc = target_func.__doc__ or ""
+            description = textwrap.dedent(raw_doc).strip()
 
             # Identify arguments that are already bound (bindings)
             bound_param_names = {b.name for b in getattr(fb._function, "_bindings", [])}
             skip_param_names = bound_param_names
 
             # Build tool properties
-            tool_properties = []
-            for param_name, param in sig.parameters.items():
-                if param_name in skip_param_names:
-                    continue
-                param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
-
-                if param_type_hint is MCPToolContext:
-                    continue
-
-                # Inferred defaults
-                is_required = check_is_required(param, param_type_hint)
-                is_array = check_is_array(param_type_hint)
-                property_type = check_property_type(param_type_hint, is_array)
-
-                property_data = {
-                    "propertyName": param_name,
-                    "propertyType": property_type,
-                    "description": "",
-                    "isArray": is_array,
-                    "isRequired": is_required
-                }
-
-                # Merge in any explicit overrides
-                if param_name in explicit_properties:
-                    overrides = explicit_properties[param_name]
-                    for key, value in overrides.items():
-                        if value is not None:
-                            property_data[key] = value
-
-                tool_properties.append(property_data)
+            tool_properties = build_property_metadata(sig=sig,
+                                                      skip_param_names=skip_param_names,
+                                                      explicit_properties=explicit_properties)
 
             tool_properties_json = json.dumps(tool_properties)
 
@@ -1684,7 +1660,7 @@ class TriggerApi(DecoratorApi, ABC):
                           description: Optional[str] = None,
                           property_type: Optional[McpPropertyType] = None,
                           is_required: Optional[bool] = True,
-                          is_array: Optional[bool] = False):
+                          as_array: Optional[bool] = False):
         """
         Decorator for defining explicit MCP tool property metadata for a specific argument.
 
@@ -1692,7 +1668,7 @@ class TriggerApi(DecoratorApi, ABC):
         :param description: The description of the argument.
         :param property_type: The type of the argument.
         :param is_required: If the argument is required or not.
-        :param is_array: If the argument is array or not.
+        :param as_array: If the argument should be passed as an array or not.
 
         :return: Decorator function.
 
@@ -1702,7 +1678,7 @@ class TriggerApi(DecoratorApi, ABC):
                 description="The name of the snippet.",
                 property_type=func.McpPropertyType.STRING,
                 is_required=True,
-                is_array=False
+                as_array=False
             )
         """
         def decorator(func):
@@ -1715,7 +1691,7 @@ class TriggerApi(DecoratorApi, ABC):
                 "description": description,
                 "propertyType": property_type.value if property_type else None,  # Get enum value
                 "isRequired": is_required,
-                "isArray": is_array,
+                "isArray": as_array,
             }
             setattr(target_func, "__mcp_tool_properties__", existing)
             return func
