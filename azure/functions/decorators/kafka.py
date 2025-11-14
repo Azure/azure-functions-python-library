@@ -29,6 +29,13 @@ class OAuthBearerMethod(StringifyEnum):
     OIDC = 1
 
 
+class KafkaMessageKeyType(StringifyEnum):
+    INT = 0
+    LONG = 1
+    STRING = 2
+    BINARY = 3
+
+
 class KafkaOutput(OutputBinding):
     @staticmethod
     def get_binding_name() -> str:
@@ -39,15 +46,21 @@ class KafkaOutput(OutputBinding):
                  topic: str,
                  broker_list: str,
                  avro_schema: Optional[str],
-                 username: Optional[str],
-                 password: Optional[str],
-                 ssl_key_location: Optional[str],
-                 ssl_ca_location: Optional[str],
-                 ssl_certificate_location: Optional[str],
-                 ssl_key_password: Optional[str],
-                 schema_registry_url: Optional[str],
-                 schema_registry_username: Optional[str],
-                 schema_registry_password: Optional[str],
+                 key_avro_schema: Optional[str] = None,
+                 key_data_type: Optional[KafkaMessageKeyType] = KafkaMessageKeyType.STRING,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 ssl_key_location: Optional[str] = None,
+                 ssl_ca_location: Optional[str] = None,
+                 ssl_certificate_location: Optional[str] = None,
+                 ssl_key_password: Optional[str] = None,
+                 ssl_certificate_pem: Optional[str] = None,
+                 ssl_key_pem: Optional[str] = None,
+                 ssl_ca_pem: Optional[str] = None,
+                 ssl_certificate_and_key_pem: Optional[str] = None,
+                 schema_registry_url: Optional[str] = None,
+                 schema_registry_username: Optional[str] = None,
+                 schema_registry_password: Optional[str] = None,
                  o_auth_bearer_method: Optional[OAuthBearerMethod] = None,
                  o_auth_bearer_client_id: Optional[str] = None,
                  o_auth_bearer_client_secret: Optional[str] = None,
@@ -68,12 +81,18 @@ class KafkaOutput(OutputBinding):
         self.topic = topic
         self.broker_list = broker_list
         self.avro_schema = avro_schema
+        self.key_avro_schema = key_avro_schema
+        self.key_data_type = key_data_type
         self.username = username
         self.password = password
         self.ssl_key_location = ssl_key_location
         self.ssl_ca_location = ssl_ca_location
         self.ssl_certificate_location = ssl_certificate_location
         self.ssl_key_password = ssl_key_password
+        self.ssl_certificate_pem = ssl_certificate_pem
+        self.ssl_key_pem = ssl_key_pem
+        self.ssl_ca_pem = ssl_ca_pem
+        self.ssl_certificate_and_key_pem = ssl_certificate_and_key_pem
         self.schema_registry_url = schema_registry_url
         self.schema_registry_username = schema_registry_username
         self.schema_registry_password = schema_registry_password
@@ -104,18 +123,24 @@ class KafkaTrigger(Trigger):
                  name: str,
                  topic: str,
                  broker_list: str,
-                 event_hub_connection_string: Optional[str],
-                 consumer_group: Optional[str],
-                 avro_schema: Optional[str],
-                 username: Optional[str],
-                 password: Optional[str],
-                 ssl_key_location: Optional[str],
-                 ssl_ca_location: Optional[str],
-                 ssl_certificate_location: Optional[str],
-                 ssl_key_password: Optional[str],
-                 schema_registry_url: Optional[str],
-                 schema_registry_username: Optional[str],
-                 schema_registry_password: Optional[str],
+                 event_hub_connection_string: Optional[str] = None,
+                 consumer_group: Optional[str] = None,
+                 avro_schema: Optional[str] = None,
+                 key_avro_schema: Optional[str] = None,
+                 key_data_type: Optional[KafkaMessageKeyType] = KafkaMessageKeyType.STRING,
+                 username: Optional[str] = None,
+                 password: Optional[str] = None,
+                 ssl_key_location: Optional[str] = None,
+                 ssl_ca_location: Optional[str] = None,
+                 ssl_certificate_location: Optional[str] = None,
+                 ssl_key_password: Optional[str] = None,
+                 ssl_certificate_pem: Optional[str] = None,
+                 ssl_key_pem: Optional[str] = None,
+                 ssl_ca_pem: Optional[str] = None,
+                 ssl_certificate_and_key_pem: Optional[str] = None,
+                 schema_registry_url: Optional[str] = None,
+                 schema_registry_username: Optional[str] = None,
+                 schema_registry_password: Optional[str] = None,
                  o_auth_bearer_method: Optional[OAuthBearerMethod] = None,
                  o_auth_bearer_client_id: Optional[str] = None,
                  o_auth_bearer_client_secret: Optional[str] = None,
@@ -133,12 +158,18 @@ class KafkaTrigger(Trigger):
         self.event_hub_connection_string = event_hub_connection_string
         self.consumer_group = consumer_group
         self.avro_schema = avro_schema
+        self.key_avro_schema = key_avro_schema
+        self.key_data_type = key_data_type
         self.username = username
         self.password = password
         self.ssl_key_location = ssl_key_location
         self.ssl_ca_location = ssl_ca_location
         self.ssl_certificate_location = ssl_certificate_location
         self.ssl_key_password = ssl_key_password
+        self.ssl_certificate_pem = ssl_certificate_pem
+        self.ssl_key_pem = ssl_key_pem
+        self.ssl_ca_pem = ssl_ca_pem
+        self.ssl_certificate_and_key_pem = ssl_certificate_and_key_pem
         self.schema_registry_url = schema_registry_url
         self.schema_registry_username = schema_registry_username
         self.schema_registry_password = schema_registry_password
