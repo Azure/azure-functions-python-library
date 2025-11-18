@@ -126,7 +126,8 @@ class WsgiRequest:
                     port = int(match.group(1))
                     return port
             # If no valid port found, log a warning
-            self._logger.warning("Invalid X-Forwarded-Port header value: %s", part)
+            self._logger.warning("Invalid X-Forwarded-Port header value: %s. "
+                                 "Using default port 80", part)
         elif getattr(parsed_url, 'port', None):
             return int(parsed_url.port)
         elif parsed_url.scheme == 'https':
