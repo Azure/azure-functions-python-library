@@ -6,6 +6,7 @@ import collections.abc
 import datetime
 import re
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
+import logging
 
 from ._jsonutils import json
 from ._thirdparty import typing_inspect
@@ -13,6 +14,8 @@ from ._utils import (
     try_parse_datetime_with_formats,
     try_parse_timedelta_with_formats
 )
+
+_logger = logging.getLogger('azure.functions.AsgiMiddleware')
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
@@ -90,14 +93,17 @@ class _ConverterMeta(abc.ABCMeta):
                 trigger: Optional[str] = None):
         cls = super().__new__(mcls, name, bases, dct)
         cls._trigger = trigger  # type: ignore
+        cls._binding = binding  # type: ignore
+
         if binding is None:
             return cls
 
         if binding in mcls._bindings:
-            raise RuntimeError(
-                f'cannot register a converter for {binding!r} binding: '
-                f'another converter for this binding has already been '
-                f'registered')
+            _logger.warning("Binding %r already registered. Overwriting to %s", binding, cls)
+            # raise RuntimeError(
+            #     f'cannot register a converter for {binding!r} binding: '
+            #     f'another converter for this binding has already been '
+            #     f'registered')
 
         mcls._bindings[binding] = cls
         if trigger is not None:
@@ -407,3 +413,24 @@ class OutConverter(_BaseConverter, binding=None):
 
 def get_binding_registry():
     return _ConverterMeta
+
+
+def register_converter(converter_cls):
+    """Public API for third-party packages to register new converters."""
+    if not hasattr(converter_cls, "_trigger"):
+        raise RuntimeError("Converter class missing required metadata")
+
+    # Use the metaclass registry
+    binding = getattr(converter_cls, "_binding", None)
+    trigger = getattr(converter_cls, "_trigger", None)
+
+    if binding is None:
+        raise RuntimeError("Converter has no binding name")
+
+    # Reuse the metaclass-level registry
+    if binding in _ConverterMeta._bindings:
+        _logger.warning("Binding %r already registered. Overwriting to %s", binding, converter_cls)
+
+    _ConverterMeta._bindings[binding] = converter_cls
+    if trigger:
+        _ConverterMeta._bindings[trigger] = converter_cls
