@@ -12,6 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp, BlobSource, McpPropertyType)
 from ._durable_functions import OrchestrationContext, EntityContext
+from .durable_functions import register_durable_converters
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -41,6 +42,9 @@ from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
 from . import mysql  # NoQA
+
+
+register_durable_converters()
 
 
 __all__ = (
