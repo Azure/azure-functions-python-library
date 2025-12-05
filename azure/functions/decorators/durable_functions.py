@@ -17,7 +17,7 @@ def get_durable_package():
     If both the legacy and current packages are installed,
     we log a warning and prefer the current package.
 
-    If neither package is installed, we raise an exception.    
+    If neither package is installed, we return None.    
     """
     _logger.info("Attempting to import Durable Functions package.")
     using_legacy = False
@@ -50,12 +50,7 @@ def get_durable_package():
         "The `durabletask-azurefunctions` package will be used.")
     
     if not using_durable_task and not using_legacy:
-        error_message = \
-                "Attempted to use a Durable Functions decorator, " \
-                "but the `durabletask-azurefunctions` SDK package could not be " \
-                "found. Please install `durabletask-azurefunctions` to use " \
-                "Durable Functions."
-        raise Exception(error_message)
+        return None
 
     df = durable_functions
 

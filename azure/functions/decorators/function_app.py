@@ -351,8 +351,16 @@ class DecoratorApi(ABC):
         """
         _logger.info("Getting Durable Functions blueprint.")
         df = get_durable_package()
-        df_bp = df.Blueprint()
-        return df_bp
+        if df:
+            df_bp = df.Blueprint()
+            return df_bp
+        else:
+            error_message = \
+                "Attempted to use a Durable Functions decorator, " \
+                "but the `durabletask-azurefunctions` SDK package could not be " \
+                "found. Please install `durabletask-azurefunctions` to use " \
+                "Durable Functions."
+            raise Exception(error_message)
 
 
     @property
