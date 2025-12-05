@@ -30,8 +30,7 @@ def get_durable_package():
     try:
         import azure.durable_functions as durable_functions
         using_legacy = True
-        _logger.warning("`azure-functions-durable` is deprecated. " \
-        "Please migrate to the new `durabletask-azurefunctions` package. " \
+        _logger.warning("`durabletask-azurefunctions` is available now! " \
         "See <AKA.MS LINK HERE> for more details.")
     except ImportError:
         _logger.info("`azure-functions-durable` package not found.")
@@ -47,7 +46,10 @@ def get_durable_package():
         # Both packages are installed; prefer `durabletask-azurefunctions`.
         _logger.warning("Both `azure-functions-durable` and " \
         "`durabletask-azurefunctions` packages are installed. " \
-        "The `durabletask-azurefunctions` package will be used.")
+        "This may lead to unexpected behavior. Please resolve this " \
+        "conflict by removing one of these packages from the Python " \
+        "environment. Decorators from `durabletask-azurefunctions` will " \
+        "be used.")
     
     if not using_durable_task and not using_legacy:
         return None

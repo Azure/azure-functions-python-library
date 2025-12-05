@@ -331,6 +331,11 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
+        try:
+            import azure.durable_functions as adf
+            return issubclass(pytype, (str, bytes, adf.DurableFunctionsClient))
+        except ImportError:
+            pass
         return issubclass(pytype, (str, bytes))
 
     @classmethod

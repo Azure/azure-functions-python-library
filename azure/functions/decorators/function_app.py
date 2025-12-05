@@ -362,7 +362,6 @@ class DecoratorApi(ABC):
                 "Durable Functions."
             raise Exception(error_message)
 
-
     @property
     def app_script_file(self) -> str:
         """Name of function app script file in which all the functions
