@@ -252,8 +252,8 @@ class EnitityTriggerConverter(meta.InConverter,
     @classmethod
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
-        # Durable function context should be a json
-        return meta.Datum(type='json', value=obj)
+        # Durable function context should be a string
+        return meta.Datum(type='string', value=obj)
 
     @classmethod
     def has_implicit_output(cls) -> bool:
@@ -331,12 +331,8 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        try:
-            import azure.durable_functions as adf
-            return issubclass(pytype, (str, bytes, adf.DurableFunctionsClient))
-        except ImportError:
-            pass
-        return issubclass(pytype, (str, bytes))
+        import durabletask.azurefunctions as adf
+        return issubclass(pytype, (str, bytes, adf.DurableFunctionsClient))
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
@@ -367,25 +363,8 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
-        if data is None:
-            return None
-        data_type = data.type
-
-        if data_type == 'string':
-            result = data.value
-        elif data_type == 'bytes':
-            result = data.value
-        elif data_type == 'json':
-            result = data.value
-        elif data_type is None:
-            result = None
-        else:
-            raise ValueError(
-                'unexpected type of data received for the "generic" binding ',
-                repr(data_type)
-            )
-
-        return result
+        from durabletask.azurefunctions.client import DurableFunctionsClient
+        return DurableFunctionsClient(data.value)
 
 
 def register_durable_converters():
