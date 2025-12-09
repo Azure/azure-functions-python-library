@@ -17,7 +17,7 @@ def get_durable_package():
     If both the legacy and current packages are installed,
     we log a warning and prefer the current package.
 
-    If neither package is installed, we return None.    
+    If neither package is installed, we return None.
     """
     _logger.info("Attempting to import Durable Functions package.")
     using_legacy = False
@@ -30,13 +30,13 @@ def get_durable_package():
     try:
         import azure.durable_functions as durable_functions
         using_legacy = True
-        _logger.warning("`durabletask-azurefunctions` is available now! " \
-        "See <AKA.MS LINK HERE> for more details.")
+        _logger.warning("`durabletask-azurefunctions` is available now! "
+                        "See <AKA.MS LINK HERE> for more details.")
     except ImportError:
         _logger.info("`azure-functions-durable` package not found.")
         pass
     try:
-        import durabletask.azurefunctions as durable_functions
+        import durabletask.azurefunctions as durable_functions  # noqa
         using_durable_task = True
     except ImportError:
         _logger.info("`durabletask-azurefunctions` package not found.")
@@ -44,13 +44,13 @@ def get_durable_package():
 
     if using_durable_task and using_legacy:
         # Both packages are installed; prefer `durabletask-azurefunctions`.
-        _logger.warning("Both `azure-functions-durable` and " \
-        "`durabletask-azurefunctions` packages are installed. " \
-        "This may lead to unexpected behavior. Please resolve this " \
-        "conflict by removing one of these packages from the Python " \
-        "environment. Decorators from `durabletask-azurefunctions` will " \
-        "be used.")
-    
+        _logger.warning("Both `azure-functions-durable` and "
+                        "`durabletask-azurefunctions` packages are installed. "
+                        "This may lead to unexpected behavior. Please resolve this "
+                        "conflict by removing one of these packages from the Python "
+                        "environment. Decorators from `durabletask-azurefunctions` will "
+                        "be used.")
+
     if not using_durable_task and not using_legacy:
         return None
 

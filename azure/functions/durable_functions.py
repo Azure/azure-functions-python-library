@@ -9,14 +9,15 @@ from azure.functions.decorators.durable_functions import get_durable_package
 from . import meta
 
 import logging
-_logger = logging.getLogger('azure.functions.AsgiMiddleware')
+_logger = logging.getLogger('azure.functions.DurableFunctions')
+
 
 # ---------------- Legacy Durable Functions Converters ---------------- #
 # Legacy Durable Function Orchestration Trigger
 class LegacyOrchestrationTriggerConverter(meta.InConverter,
-                                    meta.OutConverter,
-                                    binding=None,
-                                    trigger=True):
+                                          meta.OutConverter,
+                                          binding=None,
+                                          trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
         return issubclass(pytype, _durable_functions.OrchestrationContext)
@@ -45,9 +46,9 @@ class LegacyOrchestrationTriggerConverter(meta.InConverter,
 
 # Legacy Durable Function Entity Trigger
 class LegacyEnitityTriggerConverter(meta.InConverter,
-                              meta.OutConverter,
-                              binding=None,
-                              trigger=True):
+                                    meta.OutConverter,
+                                    binding=None,
+                                    trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
         return issubclass(pytype, _durable_functions.EntityContext)
@@ -76,9 +77,9 @@ class LegacyEnitityTriggerConverter(meta.InConverter,
 
 # Legacy Durable Function Activity Trigger
 class LegacyActivityTriggerConverter(meta.InConverter,
-                               meta.OutConverter,
-                               binding=None,
-                               trigger=True):
+                                     meta.OutConverter,
+                                     binding=None,
+                                     trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
         # Activity Trigger's arguments should accept any types
@@ -133,8 +134,8 @@ class LegacyActivityTriggerConverter(meta.InConverter,
 
 # Legacy Durable Functions Durable Client Bindings
 class LegacyDurableClientConverter(meta.InConverter,
-                             meta.OutConverter,
-                             binding=None):
+                                   meta.OutConverter,
+                                   binding=None):
     @classmethod
     def has_implicit_output(cls) -> bool:
         return False
@@ -368,6 +369,10 @@ class DurableClientConverter(meta.InConverter,
 
 
 def register_durable_converters():
+    """
+    Registers the appropriate Durable Functions converters based on the
+    installed Durable Functions package.
+    """
     _logger.info("Registering Durable Functions converters based on ")
     pkg = get_durable_package()
     if pkg is None:

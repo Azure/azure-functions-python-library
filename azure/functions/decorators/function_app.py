@@ -58,7 +58,8 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
-_logger = logging.getLogger('azure.functions.AsgiMiddleware')
+_logger = logging.getLogger('azure.functions.DurableFunctions')
+
 
 class Function(object):
     """
