@@ -2,7 +2,7 @@
 #  Licensed under the MIT License.
 import logging
 
-_logger = logging.getLogger('azure.functions.AsgiMiddleware')
+_logger = logging.getLogger('azure.functions.DurableFunctions')
 
 df = None
 

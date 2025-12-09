@@ -5,10 +5,10 @@ import unittest
 import json
 
 from azure.functions.durable_functions import (
-    OrchestrationTriggerConverter,
-    EnitityTriggerConverter,
-    ActivityTriggerConverter,
-    DurableClientConverter
+    LegacyOrchestrationTriggerConverter,
+    LegacyEnitityTriggerConverter,
+    LegacyActivityTriggerConverter,
+    LegacyDurableClientConverter
 )
 from azure.functions._durable_functions import (
     OrchestrationContext,
@@ -17,7 +17,7 @@ from azure.functions._durable_functions import (
 from azure.functions.meta import Datum
 
 CONTEXT_CLASSES = [OrchestrationContext, EntityContext]
-CONVERTERS = [OrchestrationTriggerConverter, EnitityTriggerConverter]
+CONVERTERS = [LegacyOrchestrationTriggerConverter, LegacyEnitityTriggerConverter]
 
 
 class TestDurableFunctions(unittest.TestCase):
@@ -127,7 +127,7 @@ class TestDurableFunctions(unittest.TestCase):
         ]
 
         for datum in data:
-            decoded = ActivityTriggerConverter.decode(
+            decoded = LegacyActivityTriggerConverter.decode(
                 data=datum['input'],
                 trigger_metadata=None)
             self.assertEqual(decoded, datum['expected_value'])
@@ -160,7 +160,7 @@ class TestDurableFunctions(unittest.TestCase):
         ]
 
         for datum in data:
-            encoded = ActivityTriggerConverter.encode(
+            encoded = LegacyActivityTriggerConverter.encode(
                 obj=datum['output'],
                 expected_type=type(datum['output']))
             self.assertEqual(encoded, datum['expected_value'])
@@ -173,7 +173,7 @@ class TestDurableFunctions(unittest.TestCase):
         data = NonEncodable()
 
         try:
-            ActivityTriggerConverter.encode(data, expected_type=None)
+            LegacyActivityTriggerConverter.encode(data, expected_type=None)
         except ValueError as e:
             self.assertIsNotNone(e.__cause__)
             self.assertIsInstance(e.__cause__, TypeError)
@@ -217,7 +217,7 @@ class TestDurableFunctions(unittest.TestCase):
         ]
 
         for datum in data:
-            decoded = ActivityTriggerConverter.decode(
+            decoded = LegacyActivityTriggerConverter.decode(
                 data=datum['input'],
                 trigger_metadata=None)
             self.assertEqual(decoded, datum['expected_value'])
@@ -226,7 +226,7 @@ class TestDurableFunctions(unittest.TestCase):
         data = Datum('{"value": "bar"}', 'json')
 
         try:
-            ActivityTriggerConverter.decode(
+            LegacyActivityTriggerConverter.decode(
                 data=data,
                 trigger_metadata=None)
         except ValueError as e:
@@ -235,17 +235,17 @@ class TestDurableFunctions(unittest.TestCase):
 
     def test_activity_trigger_has_implicit_return(self):
         self.assertTrue(
-            ActivityTriggerConverter.has_implicit_output()
+            LegacyActivityTriggerConverter.has_implicit_output()
         )
 
     def test_durable_client_no_implicit_return(self):
         self.assertFalse(
-            DurableClientConverter.has_implicit_output()
+            LegacyDurableClientConverter.has_implicit_output()
         )
 
     def test_enitity_trigger_check_output_type_annotation(self):
         self.assertTrue(
-            EnitityTriggerConverter.check_output_type_annotation(pytype=None)
+            LegacyEnitityTriggerConverter.check_output_type_annotation(pytype=None)
         )
 
     def test_activity_trigger_converter_decode_no_implementation_exception(
@@ -254,7 +254,7 @@ class TestDurableFunctions(unittest.TestCase):
         datum = Datum(value=b"dummy", type="bytes")
         # when
         try:
-            ActivityTriggerConverter.decode(data=datum, trigger_metadata=None)
+            LegacyActivityTriggerConverter.decode(data=datum, trigger_metadata=None)
         except NotImplementedError:
             is_exception_raised = True
 
@@ -265,82 +265,82 @@ class TestDurableFunctions(unittest.TestCase):
 
         data = '{"dummy_key": "dummy_value"}'
 
-        result = EnitityTriggerConverter.encode(
+        result = LegacyEnitityTriggerConverter.encode(
             obj=data, expected_type=None)
 
         self.assertEqual(result.type, "json")
         self.assertEqual(result.python_value, {'dummy_key': 'dummy_value'})
 
     def test_durable_client_converter_has_trigger_support(self):
-        self.assertFalse(DurableClientConverter.has_trigger_support())
+        self.assertFalse(LegacyDurableClientConverter.has_trigger_support())
 
     def test_durable_client_converter_check_input_type_annotation(self):
-        self.assertTrue(DurableClientConverter.check_input_type_annotation(str))
-        self.assertTrue(DurableClientConverter.check_input_type_annotation(bytes))
-        self.assertFalse(DurableClientConverter.check_input_type_annotation(int))
+        self.assertTrue(LegacyDurableClientConverter.check_input_type_annotation(str))
+        self.assertTrue(LegacyDurableClientConverter.check_input_type_annotation(bytes))
+        self.assertFalse(LegacyDurableClientConverter.check_input_type_annotation(int))
 
     def test_durable_client_converter_check_output_type_annotation(self):
-        self.assertTrue(DurableClientConverter.check_output_type_annotation(str))
-        self.assertTrue(DurableClientConverter.check_output_type_annotation(bytes))
-        self.assertTrue(DurableClientConverter.check_output_type_annotation(bytearray))
-        self.assertFalse(DurableClientConverter.check_output_type_annotation(int))
+        self.assertTrue(LegacyDurableClientConverter.check_output_type_annotation(str))
+        self.assertTrue(LegacyDurableClientConverter.check_output_type_annotation(bytes))
+        self.assertTrue(LegacyDurableClientConverter.check_output_type_annotation(bytearray))
+        self.assertFalse(LegacyDurableClientConverter.check_output_type_annotation(int))
 
     def test_durable_client_converter_encode(self):
-        datum = DurableClientConverter.encode(obj="hello", expected_type=str)
+        datum = LegacyDurableClientConverter.encode(obj="hello", expected_type=str)
         self.assertEqual(datum.type, "string")
         self.assertEqual(datum.value, "hello")
 
-        datum = DurableClientConverter.encode(obj=b"data", expected_type=bytes)
+        datum = LegacyDurableClientConverter.encode(obj=b"data", expected_type=bytes)
         self.assertEqual(datum.type, "bytes")
         self.assertEqual(datum.value, b"data")
 
-        datum = DurableClientConverter.encode(obj=None, expected_type=None)
+        datum = LegacyDurableClientConverter.encode(obj=None, expected_type=None)
         self.assertIsNone(datum.type)
         self.assertIsNone(datum.value)
 
-        datum = DurableClientConverter.encode(obj={"a": 1}, expected_type=dict)
+        datum = LegacyDurableClientConverter.encode(obj={"a": 1}, expected_type=dict)
         self.assertEqual(datum.type, "dict")
         self.assertEqual(datum.value, {"a": 1})
 
-        datum = DurableClientConverter.encode(obj=[1, 2], expected_type=list)
+        datum = LegacyDurableClientConverter.encode(obj=[1, 2], expected_type=list)
         self.assertEqual(datum.type, "list")
         self.assertEqual(datum.value, [1, 2])
 
-        datum = DurableClientConverter.encode(obj=42, expected_type=int)
+        datum = LegacyDurableClientConverter.encode(obj=42, expected_type=int)
         self.assertEqual(datum.type, "int")
         self.assertEqual(datum.value, 42)
 
-        datum = DurableClientConverter.encode(obj=3.14, expected_type=float)
+        datum = LegacyDurableClientConverter.encode(obj=3.14, expected_type=float)
         self.assertEqual(datum.type, "double")
         self.assertEqual(datum.value, 3.14)
 
-        datum = DurableClientConverter.encode(obj=True, expected_type=bool)
+        datum = LegacyDurableClientConverter.encode(obj=True, expected_type=bool)
         self.assertEqual(datum.type, "bool")
         self.assertTrue(datum.value)
 
         with self.assertRaises(NotImplementedError):
-            DurableClientConverter.encode(obj=set([1, 2]), expected_type=set)
+            LegacyDurableClientConverter.encode(obj=set([1, 2]), expected_type=set)
 
     def test_durable_client_converter_decode(self):
         data = Datum(type="string", value="abc")
-        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        result = LegacyDurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, "abc")
 
         data = Datum(type="bytes", value=b"123")
-        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        result = LegacyDurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, b"123")
 
         data = Datum(type="json", value={"key": "val"})
-        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        result = LegacyDurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertEqual(result, {"key": "val"})
 
         data = Datum(type=None, value=None)
-        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        result = LegacyDurableClientConverter.decode(data=data, trigger_metadata=None)
         self.assertIsNone(result)
 
-        result = DurableClientConverter.decode(data=None, trigger_metadata=None)
+        result = LegacyDurableClientConverter.decode(data=None, trigger_metadata=None)
         self.assertIsNone(result)
 
         data = Datum(type="weird", value="???")
         with self.assertRaises(ValueError):
-            DurableClientConverter.decode(data=data, trigger_metadata=None)
+            LegacyDurableClientConverter.decode(data=data, trigger_metadata=None)
