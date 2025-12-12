@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import logging
+import re
+
 from io import BytesIO, StringIO
 from os import linesep
 from typing import Dict, List, Optional, Any
@@ -17,6 +19,7 @@ def wsgi_encoding_dance(value):
 
 class WsgiRequest:
     _environ_cache: Optional[Dict[str, Any]] = None
+    _logger = logging.getLogger('azure.functions.WsgiMiddleware')
 
     def __init__(self,
                  func_req: HttpRequest,
@@ -113,7 +116,18 @@ class WsgiRequest:
     def _get_port(self, parsed_url, lowercased_headers: Dict[str, str]) -> int:
         port: int = 80
         if lowercased_headers.get('x-forwarded-port'):
-            return int(lowercased_headers['x-forwarded-port'])
+            # Split on commas in case of multiple proxy hops
+            parts = [p.strip() for p in lowercased_headers['x-forwarded-port'].split(',')]
+
+            for part in parts:
+                # Extract leading number (port must start with digits)
+                match = re.match(r"(\d+)", part)
+                if match:
+                    port = int(match.group(1))
+                    return port
+            # If no valid port found, log a warning
+            self._logger.warning("Invalid X-Forwarded-Port header value: %s. "
+                                 "Using default port 80", parts)
         elif getattr(parsed_url, 'port', None):
             return int(parsed_url.port)
         elif parsed_url.scheme == 'https':
