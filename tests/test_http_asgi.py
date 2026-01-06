@@ -318,3 +318,211 @@ class TestHttpAsgiMiddleware(unittest.TestCase):
 
         with pytest.raises(RuntimeError):
             asyncio.run(run_test())
+
+    def test_asgi_request_to_http_scope_with_state(self):
+        """Test that to_asgi_http_scope() accepts and includes state parameter"""
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        from azure.functions._http_asgi import AsgiRequest
+        asgi_request = AsgiRequest(req, ctx)
+
+        # Test with state parameter
+        test_state = {"key": "value", "counter": 42}
+        scope = asgi_request.to_asgi_http_scope(state=test_state)
+
+        self.assertIn("state", scope)
+        self.assertEqual(scope["state"], test_state)
+        self.assertEqual(scope["state"]["key"], "value")
+        self.assertEqual(scope["state"]["counter"], 42)
+
+    def test_asgi_request_to_http_scope_without_state(self):
+        """Test that to_asgi_http_scope() works when state is not provided"""
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        from azure.functions._http_asgi import AsgiRequest
+        asgi_request = AsgiRequest(req, ctx)
+
+        # Test without state parameter (should be None)
+        scope = asgi_request.to_asgi_http_scope()
+
+        self.assertIn("state", scope)
+        self.assertIsNone(scope["state"])
+
+    def test_middleware_state_shared_across_requests(self):
+        """Test that middleware state is accessible in the ASGI scope"""
+        class StateCapturingApp:
+            def __init__(self):
+                self.captured_state = None
+
+            async def __call__(self, scope, receive, send):
+                if scope['type'] == 'http':
+                    self.captured_state = scope.get('state')
+                    await send({
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [[b"content-type", b"text/plain"]],
+                    })
+                    await send({
+                        "type": "http.response.body",
+                        "body": b"OK",
+                    })
+
+        app = StateCapturingApp()
+        middleware = AsgiMiddleware(app)
+
+        # Set some state on the middleware
+        middleware.state["user_id"] = 123
+        middleware.state["session"] = "abc-xyz"
+
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        async def run_test():
+            return await middleware.handle_async(req, ctx)
+
+        asyncio.run(run_test())
+
+        # Verify the state was passed to the app
+        self.assertIsNotNone(app.captured_state)
+        self.assertEqual(app.captured_state["user_id"], 123)
+        self.assertEqual(app.captured_state["session"], "abc-xyz")
+
+    def test_middleware_state_is_copied_not_shared(self):
+        """Test that middleware state is copied, not shared by reference"""
+        class StateMutatingApp:
+            def __init__(self):
+                self.state_at_call = None
+
+            async def __call__(self, scope, receive, send):
+                if scope['type'] == 'http':
+                    # Capture the state and mutate it
+                    self.state_at_call = scope.get('state')
+                    if self.state_at_call is not None:
+                        self.state_at_call['mutated'] = True
+                        self.state_at_call['counter'] = self.state_at_call.get('counter', 0) + 1
+
+                    await send({
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [[b"content-type", b"text/plain"]],
+                    })
+                    await send({
+                        "type": "http.response.body",
+                        "body": b"OK",
+                    })
+
+        app = StateMutatingApp()
+        middleware = AsgiMiddleware(app)
+
+        # Set initial state
+        middleware.state["counter"] = 0
+
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        async def run_test():
+            return await middleware.handle_async(req, ctx)
+
+        # Make first request
+        asyncio.run(run_test())
+
+        # Verify middleware state wasn't mutated
+        self.assertEqual(middleware.state["counter"], 0)
+        self.assertNotIn("mutated", middleware.state)
+
+        # Make second request to verify state isn't carried over
+        asyncio.run(run_test())
+        self.assertEqual(middleware.state["counter"], 0)
+
+    def test_middleware_state_with_nested_objects(self):
+        """Test that state with nested objects is properly handled"""
+        class NestedStateApp:
+            def __init__(self):
+                self.captured_state = None
+
+            async def __call__(self, scope, receive, send):
+                if scope['type'] == 'http':
+                    self.captured_state = scope.get('state')
+                    await send({
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [[b"content-type", b"text/plain"]],
+                    })
+                    await send({
+                        "type": "http.response.body",
+                        "body": b"OK",
+                    })
+
+        app = NestedStateApp()
+        middleware = AsgiMiddleware(app)
+
+        # Set state with nested objects
+        middleware.state["config"] = {
+            "database": "mydb",
+            "timeout": 30
+        }
+        middleware.state["features"] = ["feature1", "feature2"]
+
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        async def run_test():
+            return await middleware.handle_async(req, ctx)
+
+        asyncio.run(run_test())
+
+        # Verify nested state is accessible
+        self.assertIsNotNone(app.captured_state)
+        self.assertIn("config", app.captured_state)
+        self.assertEqual(app.captured_state["config"]["database"], "mydb")
+        self.assertEqual(app.captured_state["config"]["timeout"], 30)
+        self.assertEqual(app.captured_state["features"], ["feature1", "feature2"])
+
+    def test_middleware_state_empty_by_default(self):
+        """Test that middleware state is empty dict by default"""
+        app = MockAsgiApplication()
+        middleware = AsgiMiddleware(app)
+
+        self.assertIsInstance(middleware.state, dict)
+        self.assertEqual(len(middleware.state), 0)
+
+    def test_middleware_state_persists_across_calls(self):
+        """Test that state on middleware instance persists across multiple calls"""
+        class CounterApp:
+            call_count = 0
+
+            async def __call__(self, scope, receive, send):
+                if scope['type'] == 'http':
+                    CounterApp.call_count += 1
+                    await send({
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [[b"content-type", b"text/plain"]],
+                    })
+                    await send({
+                        "type": "http.response.body",
+                        "body": b"OK",
+                    })
+
+        app = CounterApp()
+        middleware = AsgiMiddleware(app)
+
+        # Set state before first call
+        middleware.state["initialized"] = True
+
+        req = self._generate_func_request()
+        ctx = self._generate_func_context()
+
+        async def run_test():
+            return await middleware.handle_async(req, ctx)
+
+        # First call
+        asyncio.run(run_test())
+        self.assertTrue(middleware.state["initialized"])
+
+        # Second call - state should still be there
+        asyncio.run(run_test())
+        self.assertTrue(middleware.state["initialized"])
+        self.assertEqual(len(middleware.state), 1)
