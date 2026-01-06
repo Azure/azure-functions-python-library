@@ -21,7 +21,7 @@ class TestMCP(unittest.TestCase):
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
-        self.assertEqual(trigger.get_binding_name(), "_MCPToolTrigger")
+        self.assertEqual(trigger.get_binding_name(), "mcpToolTrigger")
         self.assertEqual(
             trigger.get_dict_repr(),
             {
@@ -29,7 +29,7 @@ class TestMCP(unittest.TestCase):
                 "toolName": "hello",
                 "description": "Hello world.",
                 "toolProperties": "[]",
-                "type": "_MCPToolTrigger",
+                "type": "mcpToolTrigger",
                 "dataType": DataType.UNDEFINED,
                 "dummyField": "dummy",
                 "direction": BindingDirection.IN,

@@ -26,7 +26,7 @@ class TestOpenAI(unittest.TestCase):
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
-        self.assertEqual(trigger.get_binding_name(), "_AssistantSkillTrigger")
+        self.assertEqual(trigger.get_binding_name(), "assistantSkillTrigger")
         self.assertEqual(
             trigger.get_dict_repr(),
             {
@@ -35,7 +35,7 @@ class TestOpenAI(unittest.TestCase):
                 "functionName": "test_function_name",
                 "parameterDescriptionJson": "test_json",
                 "dataType": DataType.UNDEFINED,
-                "type": "_AssistantSkillTrigger",
+                "type": "assistantSkillTrigger",
                 "dummyField": "dummy",
                 "direction": BindingDirection.IN,
             },
