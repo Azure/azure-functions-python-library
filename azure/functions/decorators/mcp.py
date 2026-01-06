@@ -22,7 +22,7 @@ _TYPE_MAPPING = {
 }
 
 
-class MCPToolTrigger(Trigger):
+class _MCPToolTrigger(Trigger):
 
     @staticmethod
     def get_binding_name() -> str:
