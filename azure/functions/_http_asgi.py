@@ -5,6 +5,7 @@ from typing import Dict, List, Tuple, Optional, Any, Union
 import logging
 import asyncio
 from asyncio import Event, Queue
+from copy import copy
 from urllib.parse import ParseResult, urlparse
 from warnings import warn
 from wsgiref.headers import Headers
@@ -36,7 +37,7 @@ class AsgiRequest(WsgiRequest):
             return (self.server_name, int(self.server_port))
         return None
 
-    def to_asgi_http_scope(self):
+    def to_asgi_http_scope(self, state: Optional[Dict] = None):
         if self.path_info is not None:
             _raw_path = self.path_info.encode("utf-8")
         else:
@@ -59,6 +60,7 @@ class AsgiRequest(WsgiRequest):
             "root_path": self.script_name,
             "headers": self._get_encoded_http_headers(),
             "server": self._get_server_address(),
+            "state": state,
             "client": None,
             "azure_functions.function_directory": self.af_function_directory,
             "azure_functions.function_name": self.af_function_name,
@@ -210,7 +212,7 @@ class AsgiMiddleware:
 
     async def _handle_async(self, req, context):
         asgi_request = AsgiRequest(req, context)
-        scope = asgi_request.to_asgi_http_scope()
+        scope = asgi_request.to_asgi_http_scope(state=copy(self.state))
         asgi_response = await AsgiResponse.from_app(self._app,
                                                     scope,
                                                     req.get_body())
