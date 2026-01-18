@@ -40,6 +40,7 @@ class TestKafka(unittest.TestCase):
                           "direction": BindingDirection.IN,
                           "dummyField": "dummy",
                           "eventHubConnectionString": "ehcs",
+                          "keyDataType": KafkaMessageKeyType.STRING,
                           "lagThreshold": 1000,
                           "name": "arg_name",
                           "password": "password",
@@ -76,7 +77,7 @@ class TestKafka(unittest.TestCase):
 
         self.assertEqual(output.get_binding_name(), "kafka")
         self.assertEqual(output.get_dict_repr(),
-                         {'authenticationMode': BrokerAuthenticationMode.NOTSET,  # noqa: E501
+                         {'authenticationMode': BrokerAuthenticationMode.NOTSET,
                           'avroSchema': 'avro_schema',
                           'batchSize': 10000,
                           'brokerList': 'broker_list',
@@ -84,6 +85,7 @@ class TestKafka(unittest.TestCase):
                           'direction': BindingDirection.OUT,
                           'dummyField': 'dummy',
                           'enableIdempotence': False,
+                          'keyDataType': KafkaMessageKeyType.STRING,
                           'lingerMs': 5,
                           'maxMessageBytes': 1000000,
                           'maxRetries': 10,
@@ -128,6 +130,7 @@ class TestKafka(unittest.TestCase):
         output = KafkaOutput(name="arg_name",
                              topic="topic",
                              broker_list="broker_list",
+                             avro_schema="avro_schema",
                              key_avro_schema="key_avro_schema",
                              key_data_type=KafkaMessageKeyType.BINARY,
                              ssl_certificate_pem="cert_pem",
@@ -147,17 +150,17 @@ class TestKafka(unittest.TestCase):
 
     def test_kafka_message_key_type_enum(self):
         """Test that KafkaMessageKeyType enum has the correct values"""
-        self.assertEqual(KafkaMessageKeyType.INT, 0)
-        self.assertEqual(KafkaMessageKeyType.LONG, 1)
-        self.assertEqual(KafkaMessageKeyType.STRING, 2)
-        self.assertEqual(KafkaMessageKeyType.BINARY, 3)
+        self.assertEqual(KafkaMessageKeyType.INT.value, 0)
+        self.assertEqual(KafkaMessageKeyType.LONG.value, 1)
+        self.assertEqual(KafkaMessageKeyType.STRING.value, 2)
+        self.assertEqual(KafkaMessageKeyType.BINARY.value, 3)
 
     def test_kafka_trigger_key_data_type_default(self):
         """Test that key_data_type defaults to STRING"""
         trigger = KafkaTrigger(name="arg_name",
                                topic="topic",
                                broker_list="broker_list")
-        
+
         dict_repr = trigger.get_dict_repr()
         self.assertEqual(dict_repr["keyDataType"], KafkaMessageKeyType.STRING)
 
@@ -167,6 +170,6 @@ class TestKafka(unittest.TestCase):
                              topic="topic",
                              broker_list="broker_list",
                              avro_schema="schema")
-        
+
         dict_repr = output.get_dict_repr()
         self.assertEqual(dict_repr["keyDataType"], KafkaMessageKeyType.STRING)
