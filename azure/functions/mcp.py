@@ -12,8 +12,8 @@ class MCPToolContext(typing.Dict[str, typing.Any]):
     pass
 
 
-class MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
-                              trigger=True):
+class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
+                               trigger=True):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:

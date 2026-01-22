@@ -3,22 +3,22 @@ import unittest
 from azure.functions import DataType
 from azure.functions.decorators.core import BindingDirection
 from azure.functions.decorators.openai import (
-    AssistantSkillTrigger,
-    TextCompletionInput,
+    _AssistantSkillTrigger,
+    _TextCompletionInput,
     OpenAIModels,
-    AssistantQueryInput,
-    EmbeddingsInput,
-    AssistantCreateOutput,
-    SemanticSearchInput,
-    EmbeddingsStoreOutput,
-    AssistantPostInput,
+    _AssistantQueryInput,
+    _EmbeddingsInput,
+    _AssistantCreateOutput,
+    _SemanticSearchInput,
+    _EmbeddingsStoreOutput,
+    _AssistantPostInput,
 )
 
 
 class TestOpenAI(unittest.TestCase):
 
     def test_assistant_skill_trigger_valid_creation(self):
-        trigger = AssistantSkillTrigger(
+        trigger = _AssistantSkillTrigger(
             name="test",
             function_description="description",
             function_name="test_function_name",
@@ -42,7 +42,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_text_completion_input_valid_creation(self):
-        input = TextCompletionInput(
+        input = _TextCompletionInput(
             name="test",
             prompt="test_prompt",
             temperature="1",
@@ -72,7 +72,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_text_completion_input_with_string_chat_model(self):
-        input = TextCompletionInput(
+        input = _TextCompletionInput(
             name="test",
             prompt="test_prompt",
             temperature="1",
@@ -102,14 +102,14 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_assistant_query_input_valid_creation(self):
-        input = AssistantQueryInput(
+        input = _AssistantQueryInput(
             name="test",
             timestamp_utc="timestamp_utc",
             chat_storage_connection_setting="AzureWebJobsStorage",  # noqa: E501
             collection_name="ChatState",
             data_type=DataType.UNDEFINED,
             id="test_id",
-            type="assistantQueryInput",
+            type="_AssistantQueryInput",
             dummy_field="dummy",
         )
         self.assertEqual(input.get_binding_name(), "assistantQuery")
@@ -129,7 +129,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_embeddings_input_valid_creation(self):
-        input = EmbeddingsInput(
+        input = _EmbeddingsInput(
             name="test",
             data_type=DataType.UNDEFINED,
             input="test_input",
@@ -159,7 +159,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_embeddings_input_with_enum_embeddings_model(self):
-        input = EmbeddingsInput(
+        input = _EmbeddingsInput(
             name="test",
             data_type=DataType.UNDEFINED,
             input="test_input",
@@ -189,7 +189,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_assistant_create_output_valid_creation(self):
-        output = AssistantCreateOutput(
+        output = _AssistantCreateOutput(
             name="test", data_type=DataType.UNDEFINED
         )
         self.assertEqual(output.get_binding_name(), "assistantCreate")
@@ -204,7 +204,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_assistant_post_input_valid_creation(self):
-        input = AssistantPostInput(
+        input = _AssistantPostInput(
             name="test",
             id="test_id",
             chat_model="test_model",
@@ -240,7 +240,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_assistant_post_input_with_enum_chat_model(self):
-        input = AssistantPostInput(
+        input = _AssistantPostInput(
             name="test",
             id="test_id",
             chat_model=OpenAIModels.DefaultChatModel,
@@ -276,7 +276,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_semantic_search_input_valid_creation(self):
-        input = SemanticSearchInput(
+        input = _SemanticSearchInput(
             name="test",
             data_type=DataType.UNDEFINED,
             chat_model=OpenAIModels.DefaultChatModel,
@@ -316,7 +316,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_semantic_search_input_with_string_models(self):
-        input = SemanticSearchInput(
+        input = _SemanticSearchInput(
             name="test",
             data_type=DataType.UNDEFINED,
             chat_model="gpt-4o",
@@ -356,7 +356,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_embeddings_store_output_valid_creation(self):
-        output = EmbeddingsStoreOutput(
+        output = _EmbeddingsStoreOutput(
             name="test",
             data_type=DataType.UNDEFINED,
             input="test_input",
@@ -390,7 +390,7 @@ class TestOpenAI(unittest.TestCase):
         )
 
     def test_embeddings_store_output_with_string_embeddings_model(self):
-        output = EmbeddingsStoreOutput(
+        output = _EmbeddingsStoreOutput(
             name="test",
             data_type=DataType.UNDEFINED,
             input="test_input",

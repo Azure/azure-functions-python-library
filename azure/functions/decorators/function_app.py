@@ -43,12 +43,12 @@ from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
-from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
-    AssistantCreateOutput, \
-    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
+from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, \
+    _AssistantCreateOutput, \
+    _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
     semantic_search_system_prompt, \
-    SemanticSearchInput, EmbeddingsStoreOutput
-from .mcp import MCPToolTrigger, build_property_metadata
+    _SemanticSearchInput, _EmbeddingsStoreOutput
+from .mcp import _MCPToolTrigger, build_property_metadata
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1552,8 +1552,7 @@ class TriggerApi(DecoratorApi, ABC):
                          tool_properties: Optional[str] = None,
                          data_type: Optional[Union[DataType, str]] = None,
                          **kwargs) -> Callable[..., Any]:
-        """
-        The `mcp_tool_trigger` decorator adds :class:`MCPToolTrigger` to the
+        """The `mcp_tool_trigger` decorator adds :class:`MCPToolTrigger` to the
         :class:`FunctionBuilder` object for building a :class:`Function` object
         used in the worker function indexing model.
 
@@ -1582,7 +1581,7 @@ class TriggerApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=MCPToolTrigger(
+                    trigger=_MCPToolTrigger(
                         name=arg_name,
                         tool_name=tool_name,
                         description=description,
@@ -1597,12 +1596,12 @@ class TriggerApi(DecoratorApi, ABC):
         return wrap
 
     def mcp_tool(self):
-        """
-        Decorator to register an MCP tool function.
+        """Decorator to register an MCP tool function.
+        Ref: https://aka.ms/remote-mcp-functions-python
 
-        Automatically:
+        This decorator performs the following actions automatically:
         - Infers tool name from function name
-        - Extracts first line of docstring as description
+        - Extracts docstrings as description
         - Extracts parameters and types for tool properties
         - Handles MCPToolContext injection
         """
@@ -1664,7 +1663,7 @@ class TriggerApi(DecoratorApi, ABC):
 
             # Add the MCP trigger
             fb.add_trigger(
-                trigger=MCPToolTrigger(
+                trigger=_MCPToolTrigger(
                     name="context",
                     tool_name=tool_name,
                     description=description,
@@ -1682,23 +1681,16 @@ class TriggerApi(DecoratorApi, ABC):
                           as_array: Optional[bool] = False):
         """
         Decorator for defining explicit MCP tool property metadata for a specific argument.
+        Ref: https://aka.ms/remote-mcp-functions-python
 
-        :param arg_name: The name of the argument.
-        :param description: The description of the argument.
-        :param property_type: The type of the argument.
-        :param is_required: If the argument is required or not.
-        :param as_array: If the argument should be passed as an array or not.
-
+        :param str arg_name: The name of the argument.
+        :keyword str description: The description of the argument.
+        :keyword property_type: The type of the argument.
+        :type property_type:
+            ~azure.functions.decorators.core.McpPropertyType
+        :keyword bool is_required: If the argument is required or not.
+        :keyword bool as_array: If the argument should be passed as an array or not.
         :return: Decorator function.
-
-        Example:
-            @app.mcp_tool_property(
-                arg_name="snippetname",
-                description="The name of the snippet.",
-                property_type=func.McpPropertyType.STRING,
-                is_required=True,
-                as_array=False
-            )
         """
         def decorator(func):
             # If this function is already wrapped by FunctionBuilder or similar, unwrap it
@@ -1878,15 +1870,14 @@ class TriggerApi(DecoratorApi, ABC):
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 **kwargs: Any) -> Callable[..., Any]:
-        """
-        Assistants build on top of chat functionality by supporting custom skills
+        """Assistants build on top of chat functionality by supporting custom skills
         defined as functions. This internally uses OpenAI’s function calling
         capabilities in GPT models to determine which functions to invoke and when.
 
         Ref: https://platform.openai.com/docs/guides/function-calling
 
         You can define functions to be triggered by assistants using the
-        `assistantSkillTrigger` trigger binding. These functions are invoked by the
+        assistantSkillTrigger trigger binding. These functions are invoked by the
         extension when an assistant signals it would like to invoke a function in
         response to a user prompt.
 
@@ -1894,19 +1885,21 @@ class TriggerApi(DecoratorApi, ABC):
         parameter descriptions are all used as hints by the language model to
         determine when and how to invoke an assistant function.
 
-        :param arg_name: The name of the trigger parameter in the function code.
-        :param function_description: A description of the assistant function,
+        :param str arg_name: The name of the trigger parameter in the function code.
+        :param str function_description: A description of the assistant function,
             which is provided to the model.
-        :param function_name: The name of the assistant function, which is
+        :keyword str function_name: The name of the assistant function, which is
             passed to the language model.
-        :param parameter_description_json: A JSON-formatted description of the
+        :keyword str parameter_description_json: A JSON-formatted description of the
             function parameters, provided to the model.
             If omitted, the description is autogenerated.
-        :param data_type: Defines how the Functions runtime should treat the
+        :keyword data_type: Defines how the Functions runtime should treat the
             parameter value.
-        :param kwargs: Additional keyword arguments for specifying binding fields
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying binding fields
             to include in the `function.json`.
-
         :return: Decorator function.
         """
 
@@ -1914,7 +1907,7 @@ class TriggerApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=AssistantSkillTrigger(
+                    trigger=_AssistantSkillTrigger(
                         name=arg_name,
                         function_description=function_description,
                         function_name=function_name,
@@ -3458,7 +3451,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=TextCompletionInput(
+                    binding=_TextCompletionInput(
                         name=arg_name,
                         prompt=prompt,
                         ai_connection_name=ai_connection_name,
@@ -3481,14 +3474,16 @@ class BindingApi(DecoratorApi, ABC):
                                     Union[DataType, str]] = None,
                                 **kwargs) \
             -> Callable[..., Any]:
-        """
-        The `assistantCreate` output binding creates a new assistant with a specified system prompt.
+        """The assistantCreate output binding creates a new assistant with a specified system
+        prompt.
 
-        :param arg_name: The name of the binding parameter in the function code.
-        :param data_type: Defines how the Functions runtime should treat the parameter value.
-        :param kwargs: Additional keyword arguments for specifying extra binding fields
+        :param str arg_name: The name of the binding parameter in the function code.
+        :keyword data_type: Defines how the Functions runtime should treat the parameter value.
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying extra binding fields
             to include in the `function.json`.
-
         :return: Decorator function.
         """
 
@@ -3496,7 +3491,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantCreateOutput(
+                    binding=_AssistantCreateOutput(
                         name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -3517,27 +3512,29 @@ class BindingApi(DecoratorApi, ABC):
                                   Union[DataType, str]] = None,
                               **kwargs) \
             -> Callable[..., Any]:
-        """
-        The `assistantQuery` input binding retrieves assistant chat history and
+        """The `assistantQuery` input binding retrieves assistant chat history and
         passes it to the function.
 
         This is typically used to provide the function access to previous messages
         in a conversation, enabling more context-aware responses.
 
-        :param arg_name: The name of the binding parameter in the function code.
-        :param timestamp_utc: The earliest timestamp (in UTC) for the messages to
+        :param str arg_name: The name of the binding parameter in the function code.
+        :param str id: The unique identifier of the assistant whose history is being
+            queried.
+        :param str timestamp_utc: The earliest timestamp (in UTC) for the messages to
             retrieve from the chat history. Must be in ISO 8601 format, e.g.,
             `"2023-08-01T00:00:00Z"`.
-        :param chat_storage_connection_setting: The name of the configuration section
+        :keyword str chat_storage_connection_setting: The name of the configuration section
             containing the connection settings for assistant chat storage. Defaults to
-            `"AzureWebJobsStorage"`.
-        :param collection_name: The name of the table or collection used for assistant
-            chat storage. Defaults to `"ChatState"`.
-        :param id: The unique identifier of the assistant whose history is being
-            queried.
-        :param data_type: Defines how the Functions runtime should treat the
+            "AzureWebJobsStorage".
+        :keyword str collection_name: The name of the table or collection used for assistant
+            chat storage. Defaults to "ChatState".
+        :keyword data_type: Defines how the Functions runtime should treat the
             parameter value.
-        :param kwargs: Additional keyword arguments for specifying binding fields to
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying binding fields to
             include in the `function.json`.
 
         :return: Decorator function.
@@ -3547,7 +3544,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantQueryInput(
+                    binding=_AssistantQueryInput(
                         name=arg_name,
                         id=id,
                         timestamp_utc=timestamp_utc,
@@ -3625,7 +3622,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantPostInput(
+                    binding=_AssistantPostInput(
                         name=arg_name,
                         id=id,
                         user_message=user_message,
@@ -3699,7 +3696,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EmbeddingsInput(
+                    binding=_EmbeddingsInput(
                         name=arg_name,
                         input=input,
                         input_type=input_type,
@@ -3791,7 +3788,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=SemanticSearchInput(
+                    binding=_SemanticSearchInput(
                         name=arg_name,
                         search_connection_name=search_connection_name,
                         collection=collection,
@@ -3874,7 +3871,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EmbeddingsStoreOutput(
+                    binding=_EmbeddingsStoreOutput(
                         name=arg_name,
                         input=input,
                         input_type=input_type,

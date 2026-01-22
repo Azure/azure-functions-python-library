@@ -6,14 +6,14 @@ import unittest
 import azure.functions as func
 from azure.functions import DataType, MCPToolContext
 from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.mcp import MCPToolTrigger
-from azure.functions.mcp import MCPToolTriggerConverter
+from azure.functions.decorators.mcp import _MCPToolTrigger
+from azure.functions.mcp import _MCPToolTriggerConverter
 from azure.functions.meta import Datum
 
 
 class TestMCP(unittest.TestCase):
     def test_mcp_tool_trigger_valid_creation(self):
-        trigger = MCPToolTrigger(
+        trigger = _MCPToolTrigger(
             name="context",
             tool_name="hello",
             description="Hello world.",
@@ -39,13 +39,13 @@ class TestMCP(unittest.TestCase):
     def test_trigger_converter(self):
         # Test with string data
         datum = Datum(value='{"arguments":{}}', type='string')
-        result = MCPToolTriggerConverter.decode(datum, trigger_metadata={})
+        result = _MCPToolTriggerConverter.decode(datum, trigger_metadata={})
         self.assertEqual(result, '{"arguments":{}}')
         self.assertIsInstance(result, str)
 
         # Test with json data
         datum_json = Datum(value={"arguments": {}}, type='json')
-        result_json = MCPToolTriggerConverter.decode(datum_json, trigger_metadata={})
+        result_json = _MCPToolTriggerConverter.decode(datum_json, trigger_metadata={})
         self.assertEqual(result_json, {"arguments": {}})
         self.assertIsInstance(result_json, dict)
 
