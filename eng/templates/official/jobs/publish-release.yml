@@ -145,7 +145,7 @@ jobs:
       
           # Modify SDK Version in pyproject.toml
           Write-Host "Replacing SDK version in worker's pyproject.toml"
-          ((Get-Content workers/pyproject.toml) -replace '"azure-functions==(\d)+.(\d)+.*"','"azure-functions==$(NewLibraryVersion)"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.10''"','"azure-functions==$(NewLibraryVersion); python_version >= ''3.10''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
 
           # Commit Python Version
           Write-Host "Pushing $newBranch to azure-functions-python-worker repo"

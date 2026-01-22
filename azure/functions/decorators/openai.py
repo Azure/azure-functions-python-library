@@ -23,7 +23,7 @@ class OpenAIModels(StringifyEnum):
     DefaultEmbeddingsModel = "text-embedding-ada-002"
 
 
-class AssistantSkillTrigger(Trigger):
+class _AssistantSkillTrigger(Trigger):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -42,7 +42,7 @@ class AssistantSkillTrigger(Trigger):
         super().__init__(name=name, data_type=data_type)
 
 
-class TextCompletionInput(InputBinding):
+class _TextCompletionInput(InputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -71,7 +71,7 @@ class TextCompletionInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class AssistantQueryInput(InputBinding):
+class _AssistantQueryInput(InputBinding):
 
     @staticmethod
     def get_binding_name():
@@ -92,7 +92,7 @@ class AssistantQueryInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class EmbeddingsInput(InputBinding):
+class _EmbeddingsInput(InputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -137,7 +137,7 @@ semantic_search_system_prompt = \
     to the end of your answer on a separate line."""
 
 
-class SemanticSearchInput(InputBinding):
+class _SemanticSearchInput(InputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -179,7 +179,7 @@ class SemanticSearchInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class AssistantPostInput(InputBinding):
+class _AssistantPostInput(InputBinding):
 
     @staticmethod
     def get_binding_name():
@@ -214,7 +214,7 @@ class AssistantPostInput(InputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class EmbeddingsStoreOutput(OutputBinding):
+class _EmbeddingsStoreOutput(OutputBinding):
 
     @staticmethod
     def get_binding_name() -> str:
@@ -246,7 +246,7 @@ class EmbeddingsStoreOutput(OutputBinding):
         super().__init__(name=name, data_type=data_type)
 
 
-class AssistantCreateOutput(OutputBinding):
+class _AssistantCreateOutput(OutputBinding):
 
     @staticmethod
     def get_binding_name():
