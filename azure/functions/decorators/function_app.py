@@ -1309,8 +1309,15 @@ class TriggerApi(DecoratorApi, ABC):
             certificate. Equivalent to 'ssl.ca.location' in librdkafka.
         :param ssl_certificate_location: Path to the client's certificate.
             Equivalent to 'ssl.certificate.location' in librdkafka.
-        :param ssl_key_password: Password for the client’s certificate.
+        :param ssl_key_password: Password for the client's certificate.
             Equivalent to 'ssl.key.password' in librdkafka.
+        :param ssl_certificate_pem: Client certificate in PEM format.
+            Equivalent to 'ssl.certificate.pem' in librdkafka.
+        :param ssl_key_pem: Client private key in PEM format.
+            Equivalent to 'ssl.key.pem' in librdkafka.
+        :param ssl_ca_pem: CA certificate for verifying the broker's certificate in PEM format.
+            Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for the Schema Registry.
         :param schema_registry_password: Password for the Schema Registry.
@@ -1331,6 +1338,7 @@ class TriggerApi(DecoratorApi, ABC):
             ScramSha256, ScramSha512. Default: Plain. Equivalent to 'sasl.mechanism'.
         :param protocol: Security protocol used to communicate with brokers.
             Default: plaintext. Equivalent to 'security.protocol'.
+        :param cardinality: Set to "many" to enable batching. Default is "One".
         :param lag_threshold: Max number of unprocessed messages per worker instance.
             Used in scaling logic to estimate needed worker instances. Default is 1000.
         :param data_type: Defines how Functions runtime should treat the parameter value.
@@ -2678,8 +2686,7 @@ class BindingApi(DecoratorApi, ABC):
             Equivalent to 'ssl.key.pem' in librdkafka.
         :param ssl_ca_pem: CA certificate for verifying the broker's certificate in PEM format.
             Equivalent to 'ssl.ca.pem' in librdkafka.
-        :param ssl_certificate_and_key_pem: Client certificate and key in PEM format.
-            Additional configuration for KeyVault support (certificate with private key).
+        :param ssl_certificate_and_key_pem: Client certificate concatenated with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for accessing the Schema Registry.
         :param schema_registry_password: Password for accessing the Schema Registry.
