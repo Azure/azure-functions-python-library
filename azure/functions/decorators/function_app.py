@@ -47,7 +47,7 @@ from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, 
     _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
     semantic_search_system_prompt, \
     _SemanticSearchInput, _EmbeddingsStoreOutput
-from .mcp import _MCPToolTrigger, build_property_metadata
+from .mcp import _MCPToolTrigger, MCPResourceTrigger, build_property_metadata
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1688,6 +1688,68 @@ class TriggerApi(DecoratorApi, ABC):
             setattr(target_func, "__mcp_tool_properties__", existing)
             return func
         return decorator
+
+    def mcp_resource_trigger(self,
+                             arg_name: str,
+                             uri: str,
+                             resource_name: str,
+                             title: Optional[str] = None,
+                             description: Optional[str] = None,
+                             mime_type: Optional[str] = None,
+                             size: Optional[int] = None,
+                             metadata: Optional[str] = None,
+                             data_type: Optional[Union[DataType, str]] = None,
+                             **kwargs) -> Callable[..., Any]:
+        """The `mcp_resource_trigger` decorator adds :class:`MCPResourceTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `MCPResourceTrigger` in the `function.json`,
+        which enables the function to be triggered when MCP resource requests are
+        received by the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param uri: Unique URI identifier for the resource (must be absolute).
+        :param resource_name: Human-readable name of the resource.
+        :param title: Optional title for display purposes.
+        :param description: Optional description of the resource.
+        :param mime_type: Optional MIME type of the resource content.
+        :param size: Optional size of the resource in bytes.
+        :param metadata: Optional JSON-serialized metadata object.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=MCPResourceTrigger(
+                        name=arg_name,
+                        uri=uri,
+                        resource_name=resource_name,
+                        title=title,
+                        description=description,
+                        mime_type=mime_type,
+                        size=size,
+                        metadata=metadata,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
 
     def dapr_service_invocation_trigger(self,
                                         arg_name: str,
