@@ -332,7 +332,7 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        import durabletask.azurefunctions as adf
+        import azure.durable_functions as adf
         return issubclass(pytype, (str, bytes, adf.DurableFunctionsClient))
 
     @classmethod
@@ -364,8 +364,8 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
-        from durabletask.azurefunctions.client import DurableFunctionsClient
-        return DurableFunctionsClient(data.value)
+        import azure.durable_functions as adf
+        return adf.DurableFunctionsClient(data.value)
 
 
 def register_durable_converters():

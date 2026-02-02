@@ -28,28 +28,18 @@ def get_durable_package():
         return df
 
     try:
-        import azure.durable_functions as durable_functions
-        using_legacy = True
-        _logger.warning("`durabletask-azurefunctions` is available now! "
-                        "See <AKA.MS LINK HERE> for more details.")
+        import durabletask  # noqa
+        using_durable_task = True
+        _logger.info("`durabletask` package found.")
     except ImportError:
-        _logger.info("`azure-functions-durable` package not found.")
+        _logger.info("`durabletask` package not found.")
         pass
     try:
-        import durabletask.azurefunctions as durable_functions  # noqa
-        using_durable_task = True
+        import azure.durable_functions  as durable_functions # noqa
+        _logger.info("`azure.durable_functions` package found.")
     except ImportError:
-        _logger.info("`durabletask-azurefunctions` package not found.")
+        _logger.info("`azure.durable_functions` package not found.")
         pass
-
-    if using_durable_task and using_legacy:
-        # Both packages are installed; prefer `durabletask-azurefunctions`.
-        _logger.warning("Both `azure-functions-durable` and "
-                        "`durabletask-azurefunctions` packages are installed. "
-                        "This may lead to unexpected behavior. Please resolve this "
-                        "conflict by removing one of these packages from the Python "
-                        "environment. Decorators from `durabletask-azurefunctions` will "
-                        "be used.")
 
     if not using_durable_task and not using_legacy:
         return None
