@@ -449,7 +449,7 @@ class TestMCPResourceTrigger(unittest.TestCase):
                 "direction": BindingDirection.IN,
             },
         )
-    
+
     def test_mcp_resource_trigger_only_required_args_creation(self):
         trigger = MCPResourceTrigger(
             name="context",
