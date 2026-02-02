@@ -1315,9 +1315,10 @@ class TriggerApi(DecoratorApi, ABC):
             Equivalent to 'ssl.certificate.pem' in librdkafka.
         :param ssl_key_pem: Client private key in PEM format.
             Equivalent to 'ssl.key.pem' in librdkafka.
-        :param ssl_ca_pem: CA certificate for verifying the broker's certificate in PEM format.
-            Equivalent to 'ssl.ca.pem' in librdkafka.
-        :param ssl_certificate_and_key_pem: Client certificate concatenated with key in PEM format. Can also support KeyVault references.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for the Schema Registry.
         :param schema_registry_password: Password for the Schema Registry.
@@ -2677,9 +2678,10 @@ class BindingApi(DecoratorApi, ABC):
             Equivalent to 'ssl.certificate.pem' in librdkafka.
         :param ssl_key_pem: Client private key in PEM format.
             Equivalent to 'ssl.key.pem' in librdkafka.
-        :param ssl_ca_pem: CA certificate for verifying the broker's certificate in PEM format.
-            Equivalent to 'ssl.ca.pem' in librdkafka.
-        :param ssl_certificate_and_key_pem: Client certificate concatenated with key in PEM format. Can also support KeyVault references.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for accessing the Schema Registry.
         :param schema_registry_password: Password for accessing the Schema Registry.
