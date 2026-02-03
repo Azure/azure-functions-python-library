@@ -358,8 +358,8 @@ class DecoratorApi(ABC):
         else:
             error_message = \
                 "Attempted to use a Durable Functions decorator, " \
-                "but the `durabletask-azurefunctions` SDK package could not be " \
-                "found. Please install `durabletask-azurefunctions` to use " \
+                "but the `azure-functions-durable` SDK package could not be " \
+                "found. Please install `azure-functions-durable` to use " \
                 "Durable Functions."
             raise Exception(error_message)
 

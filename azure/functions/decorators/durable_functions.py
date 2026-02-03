@@ -20,30 +20,26 @@ def get_durable_package():
     If neither package is installed, we return None.
     """
     _logger.info("Attempting to import Durable Functions package.")
-    using_legacy = False
-    using_durable_task = False
     global df
     if df:
         _logger.info("Durable Functions package already loaded. DF: %s", df)
         return df
 
+    # Check for azure-functions-durable package
     try:
-        import durabletask  # noqa
-        using_durable_task = True
-        _logger.info("`durabletask` package found.")
-    except ImportError:
-        _logger.info("`durabletask` package not found.")
-        pass
-    try:
-        import azure.durable_functions  as durable_functions # noqa
+        import azure.durable_functions as durable_functions # noqa
         _logger.info("`azure.durable_functions` package found.")
     except ImportError:
         _logger.info("`azure.durable_functions` package not found.")
-        pass
-
-    if not using_durable_task and not using_legacy:
         return None
+
+    # Check version of azure-functions-durable package
+    try:
+        if hasattr(durable_functions, 'version') and durable_functions.version.startswith("2."):
+            _logger.info("Using `azure.durable_functions` v2.x package.")
+    except Exception:
+        _logger.info("Using `azure.durable_functions` v1.x package.")
 
     df = durable_functions
 
-    return durable_functions
+    return df

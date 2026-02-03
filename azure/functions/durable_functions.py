@@ -387,17 +387,18 @@ def register_durable_converters():
     meta._ConverterMeta._bindings.pop("activityTrigger", None)
     meta._ConverterMeta._bindings.pop("durableClient", None)
 
-    if pkg.__name__ == "azure.durable_functions":
+    if not hasattr(pkg, 'version'):
         _logger.info("Registering Legacy Durable Functions converters.")
         meta._ConverterMeta._bindings["orchestrationTrigger"] = LegacyOrchestrationTriggerConverter
         meta._ConverterMeta._bindings["entityTrigger"] = LegacyEnitityTriggerConverter
         meta._ConverterMeta._bindings["activityTrigger"] = LegacyActivityTriggerConverter
         meta._ConverterMeta._bindings["durableClient"] = LegacyDurableClientConverter
-    else:
+    elif hasattr(pkg, 'version') and pkg.version.startswith("2."):
         _logger.info("Registering Durable Task Durable Functions converters.")
         meta._ConverterMeta._bindings["orchestrationTrigger"] = OrchestrationTriggerConverter
         meta._ConverterMeta._bindings["entityTrigger"] = EnitityTriggerConverter
         meta._ConverterMeta._bindings["activityTrigger"] = ActivityTriggerConverter
         meta._ConverterMeta._bindings["durableClient"] = DurableClientConverter
+
     _logger.info("Durable Functions converters registered.")
     _logger.info("Current bindings after registration: %s", meta._ConverterMeta._bindings)
