@@ -80,7 +80,7 @@ jobs:
           exit -1
       }
     displayName: 'Tag and push x.y.z'
-  - powershell: |
+  - pwsh: |
       $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
       $newLibraryVersion = "$(NewLibraryVersion)"
@@ -123,7 +123,7 @@ jobs:
   dependsOn: ['CheckGitHubRelease']
   displayName: 'Test with Worker'
   steps:
-  - powershell: |
+  - pwsh: |
       $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
       $newLibraryVersion = "$(NewLibraryVersion)"
@@ -203,7 +203,7 @@ jobs:
     displayName: 'Use Python 3.11'
     inputs:
       versionSpec: 3.11
-  - powershell: |
+  - pwsh: |
       $newLibraryVersion = "$(NewLibraryVersion)"
       $pypiToken = "$(PypiToken)"
       
