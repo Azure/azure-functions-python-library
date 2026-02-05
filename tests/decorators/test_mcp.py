@@ -18,6 +18,7 @@ class TestMCP(unittest.TestCase):
             tool_name="hello",
             description="Hello world.",
             tool_properties="[]",
+            metadata='{"key": "value"}',
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
@@ -32,6 +33,7 @@ class TestMCP(unittest.TestCase):
                 "type": "mcpToolTrigger",
                 "dataType": DataType.UNDEFINED,
                 "dummyField": "dummy",
+                "metadata": '{"key": "value"}',
                 "direction": BindingDirection.IN,
             },
         )
@@ -126,6 +128,28 @@ Returns:
         self.assertEqual(trigger.description, "")
         self.assertEqual(trigger.name, "context")
         self.assertEqual(trigger.tool_name, "add_numbers")
+        self.assertEqual(trigger.tool_properties,
+                         '[{"propertyName": "a", '
+                         '"propertyType": "string", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}, '
+                         '{"propertyName": "b", '
+                         '"propertyType": "string", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}]')
+
+    def test_simple_signature_defaults_metadata(self):
+        @self.app.mcp_tool(metadata='{"key": "value"}')
+        def add_numbers(a, b):
+            return a + b
+
+        trigger = add_numbers._function._bindings[0]
+        self.assertEqual(trigger.description, "")
+        self.assertEqual(trigger.name, "context")
+        self.assertEqual(trigger.tool_name, "add_numbers")
+        self.assertEqual(trigger.metadata, '{"key": "value"}')
         self.assertEqual(trigger.tool_properties,
                          '[{"propertyName": "a", '
                          '"propertyType": "string", '

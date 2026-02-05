@@ -60,11 +60,13 @@ class _MCPToolTrigger(Trigger):
                  tool_name: str,
                  description: Optional[str] = None,
                  tool_properties: Optional[str] = None,
+                 metadata: Optional[str] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.tool_name = tool_name
         self.description = description
         self.tool_properties = tool_properties
+        self.metadata = metadata
         super().__init__(name=name, data_type=data_type)
 
 

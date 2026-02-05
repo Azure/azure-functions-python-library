@@ -1576,7 +1576,7 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def mcp_tool(self):
+    def mcp_tool(self, metadata: Optional[str] = None):
         """Decorator to register an MCP tool function.
         Ref: https://aka.ms/remote-mcp-functions-python
 
@@ -1585,6 +1585,8 @@ class TriggerApi(DecoratorApi, ABC):
         - Extracts docstrings as description
         - Extracts parameters and types for tool properties
         - Handles MCPToolContext injection
+
+        :param metadata: JSON-serialized metadata object for the tool.
         """
         @self._configure_function_builder
         def decorator(fb: FunctionBuilder) -> FunctionBuilder:
@@ -1649,6 +1651,7 @@ class TriggerApi(DecoratorApi, ABC):
                     tool_name=tool_name,
                     description=description,
                     tool_properties=tool_properties_json,
+                    metadata=metadata
                 )
             )
             return fb
