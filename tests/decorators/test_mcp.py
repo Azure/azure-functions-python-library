@@ -6,8 +6,8 @@ import unittest
 import azure.functions as func
 from azure.functions import DataType, MCPToolContext
 from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.mcp import _MCPToolTrigger
-from azure.functions.mcp import _MCPToolTriggerConverter
+from azure.functions.decorators.mcp import _MCPToolTrigger, MCPResourceTrigger
+from azure.functions.mcp import _MCPToolTriggerConverter, MCPResourceTriggerConverter
 from azure.functions.meta import Datum
 
 
@@ -18,6 +18,7 @@ class TestMCP(unittest.TestCase):
             tool_name="hello",
             description="Hello world.",
             tool_properties="[]",
+            metadata='{"key": "value"}',
             data_type=DataType.UNDEFINED,
             dummy_field="dummy",
         )
@@ -32,6 +33,7 @@ class TestMCP(unittest.TestCase):
                 "type": "mcpToolTrigger",
                 "dataType": DataType.UNDEFINED,
                 "dummyField": "dummy",
+                "metadata": '{"key": "value"}',
                 "direction": BindingDirection.IN,
             },
         )
@@ -126,6 +128,28 @@ Returns:
         self.assertEqual(trigger.description, "")
         self.assertEqual(trigger.name, "context")
         self.assertEqual(trigger.tool_name, "add_numbers")
+        self.assertEqual(trigger.tool_properties,
+                         '[{"propertyName": "a", '
+                         '"propertyType": "string", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}, '
+                         '{"propertyName": "b", '
+                         '"propertyType": "string", '
+                         '"description": "", '
+                         '"isArray": false, '
+                         '"isRequired": true}]')
+
+    def test_simple_signature_defaults_metadata(self):
+        @self.app.mcp_tool(metadata='{"key": "value"}')
+        def add_numbers(a, b):
+            return a + b
+
+        trigger = add_numbers._function._bindings[0]
+        self.assertEqual(trigger.description, "")
+        self.assertEqual(trigger.name, "context")
+        self.assertEqual(trigger.tool_name, "add_numbers")
+        self.assertEqual(trigger.metadata, '{"key": "value"}')
         self.assertEqual(trigger.tool_properties,
                          '[{"propertyName": "a", '
                          '"propertyType": "string", '
@@ -415,3 +439,68 @@ Returns:
                          '"description": "", '
                          '"isArray": false, '
                          '"isRequired": true}]')
+
+
+class TestMCPResourceTrigger(unittest.TestCase):
+    def test_mcp_resource_trigger_valid_creation(self):
+        trigger = MCPResourceTrigger(
+            name="context",
+            uri="file://readme.md",
+            resource_name="myresource",
+            title="my title",
+            description="my resource description",
+            mime_type="Text/Markdown",
+            size=1024,
+            metadata="",
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy",
+        )
+        self.assertEqual(trigger.get_binding_name(), "mcpResourceTrigger")
+        self.assertEqual(
+            trigger.get_dict_repr(),
+            {
+                "name": "context",
+                "uri": "file://readme.md",
+                "resourceName": "myresource",
+                "title": "my title",
+                "description": "my resource description",
+                "mimeType": "Text/Markdown",
+                "size": 1024,
+                "metadata": "",
+                "type": "mcpResourceTrigger",
+                "dataType": DataType.UNDEFINED,
+                "dummyField": "dummy",
+                "direction": BindingDirection.IN,
+            },
+        )
+
+    def test_mcp_resource_trigger_only_required_args_creation(self):
+        trigger = MCPResourceTrigger(
+            name="context",
+            uri="file://readme.md",
+            resource_name="myresource"
+        )
+        self.assertEqual(trigger.get_binding_name(), "mcpResourceTrigger")
+        self.assertEqual(
+            trigger.get_dict_repr(),
+            {
+                "name": "context",
+                "uri": "file://readme.md",
+                "resourceName": "myresource",
+                "type": "mcpResourceTrigger",
+                "direction": BindingDirection.IN,
+            },
+        )
+
+    def test_trigger_converter(self):
+        # Test with string data
+        datum = Datum(value='{"arguments":{}}', type='string')
+        result = MCPResourceTriggerConverter.decode(datum, trigger_metadata={})
+        self.assertEqual(result, '{"arguments":{}}')
+        self.assertIsInstance(result, str)
+
+        # Test with json data
+        datum_json = Datum(value={"arguments": {}}, type='json')
+        result_json = MCPResourceTriggerConverter.decode(datum_json, trigger_metadata={})
+        self.assertEqual(result_json, {"arguments": {}})
+        self.assertIsInstance(result_json, dict)

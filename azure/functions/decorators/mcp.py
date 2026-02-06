@@ -7,7 +7,7 @@ from datetime import datetime
 
 from ..mcp import MCPToolContext
 from azure.functions.decorators.constants import (
-    MCP_TOOL_TRIGGER
+    MCP_TOOL_TRIGGER, MCP_RESOURCE_TRIGGER
 )
 from azure.functions.decorators.core import Trigger, DataType, McpPropertyType
 
@@ -22,6 +22,33 @@ _TYPE_MAPPING = {
 }
 
 
+class MCPResourceTrigger(Trigger):
+
+    @staticmethod
+    def get_binding_name() -> str:
+        return MCP_RESOURCE_TRIGGER
+
+    def __init__(self,
+                 name: str,
+                 uri: str,
+                 resource_name: str,
+                 title: Optional[str] = None,
+                 description: Optional[str] = None,
+                 mime_type: Optional[str] = None,
+                 size: Optional[int] = None,
+                 metadata: Optional[str] = None,
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
+        self.uri = uri
+        self.resourceName = resource_name
+        self.title = title
+        self.description = description
+        self.mimeType = mime_type
+        self.size = size
+        self.metadata = metadata
+        super().__init__(name=name, data_type=data_type)
+
+
 class _MCPToolTrigger(Trigger):
 
     @staticmethod
@@ -33,11 +60,13 @@ class _MCPToolTrigger(Trigger):
                  tool_name: str,
                  description: Optional[str] = None,
                  tool_properties: Optional[str] = None,
+                 metadata: Optional[str] = None,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.tool_name = tool_name
         self.description = description
         self.tool_properties = tool_properties
+        self.metadata = metadata
         super().__init__(name=name, data_type=data_type)
 
 
