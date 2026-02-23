@@ -18,6 +18,14 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
 
+    def test_cloudevent_input_type(self):
+        check_input_type = azf_event_grid.EventGridEventInConverter.\
+            check_input_type_annotation
+        self.assertTrue(check_input_type(func.CloudEvent))
+        self.assertFalse(check_input_type(List[func.CloudEvent]))
+        self.assertFalse(check_input_type(str))
+        self.assertFalse(check_input_type(bytes))
+
     def test_eventgrid_output_type(self):
         check_output_type = azf_event_grid.EventGridEventOutConverter.\
             check_output_type_annotation
@@ -147,6 +155,66 @@ class MyTestCase(unittest.TestCase):
             data={"tag1": "value1", "tag2": "value2"} if with_date else {},
             data_version='dataVersion',
         )]
+
+    def test_cloudevent_decode(self):
+        event = azf_event_grid.EventGridEventInConverter.decode(
+            data=self._generate_single_cloudevent_datum(), trigger_metadata=None
+        )
+        self.assertIsInstance(event, azf_event_grid.azf_eventgrid.CloudEvent)
+        self.assertEqual(event.id, "A234-1234-1234")
+        self.assertEqual(event.source, "/mycontext/subcontext")
+        self.assertEqual(event.type, "com.example.type")
+        self.assertEqual(event.specversion, "1.0")
+        self.assertEqual(event.subject, "mysubject")
+        self.assertEqual(event.datacontenttype, "application/json")
+        self.assertIsNotNone(event.time)
+        self.assertIsNotNone(event.get_json())
+        self.assertEqual(event.get_json().get("key"), "value")
+
+    def test_cloudevent_decode_with_null_data(self):
+        event = azf_event_grid.EventGridEventInConverter.decode(
+            data=self._generate_single_cloudevent_datum(with_data=False),
+            trigger_metadata=None
+        )
+        self.assertIsInstance(event, azf_event_grid.azf_eventgrid.CloudEvent)
+        self.assertEqual(event.id, "A234-1234-1234")
+        self.assertIsNone(event.get_json())
+
+    def test_cloudevent_decode_with_extensions(self):
+        event = azf_event_grid.EventGridEventInConverter.decode(
+            data=self._generate_single_cloudevent_datum(with_extensions=True),
+            trigger_metadata=None
+        )
+        self.assertIsInstance(event, azf_event_grid.azf_eventgrid.CloudEvent)
+        self.assertEqual(event.extension_attrs.get("customext"), "extvalue")
+
+    def test_eventgrid_schema_not_broken(self):
+        event = azf_event_grid.EventGridEventInConverter.decode(
+            data=self._generate_single_eventgrid_datum(), trigger_metadata=None
+        )
+        self.assertIsInstance(event, azf_event_grid.azf_eventgrid.EventGridEvent)
+        self.assertEqual(event.id, "00010001-0001-0001-0001-000100010001")
+        self.assertEqual(event.topic, "/TestTopic/namespaces/test")
+        self.assertEqual(event.event_type, "captureFileCreated")
+
+    @staticmethod
+    def _generate_single_cloudevent_datum(with_data=True,
+                                          with_extensions=False):
+        payload = {
+            "specversion": "1.0",
+            "type": "com.example.type",
+            "source": "/mycontext/subcontext",
+            "id": "A234-1234-1234",
+            "time": "2018-04-05T17:31:00Z",
+            "subject": "mysubject",
+            "datacontenttype": "application/json",
+        }
+        if with_data:
+            payload["data"] = {"key": "value"}
+        if with_extensions:
+            payload["customext"] = "extvalue"
+        import json as _json
+        return func.meta.Datum(_json.dumps(payload), 'json')
 
     @staticmethod
     def _generate_single_eventgrid_str(in_bytes=False):
