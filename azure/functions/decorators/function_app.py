@@ -30,7 +30,8 @@ from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
-    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod
+    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod, \
+    KafkaMessageKeyType
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -1244,12 +1245,19 @@ class TriggerApi(DecoratorApi, ABC):
                       event_hub_connection_string: Optional[str] = None,
                       consumer_group: Optional[str] = None,
                       avro_schema: Optional[str] = None,
+                      key_avro_schema: Optional[str] = None,
+                      key_data_type: Optional[
+                          Union[KafkaMessageKeyType, str]] = KafkaMessageKeyType.STRING,
                       username: Optional[str] = None,
                       password: Optional[str] = None,
                       ssl_key_location: Optional[str] = None,
                       ssl_ca_location: Optional[str] = None,
                       ssl_certificate_location: Optional[str] = None,
                       ssl_key_password: Optional[str] = None,
+                      ssl_certificate_pem: Optional[str] = None,
+                      ssl_key_pem: Optional[str] = None,
+                      ssl_ca_pem: Optional[str] = None,
+                      ssl_certificate_and_key_pem: Optional[str] = None,
                       schema_registry_url: Optional[str] = None,
                       schema_registry_username: Optional[str] = None,
                       schema_registry_password: Optional[str] = None,
@@ -1287,6 +1295,10 @@ class TriggerApi(DecoratorApi, ABC):
             Azure Event Hubs).
         :param consumer_group: Kafka consumer group used by the trigger.
         :param avro_schema: Used only if a generic Avro record should be generated.
+        :param key_avro_schema: Avro schema for the message key. Used only if a
+            generic Avro record should be generated for the key.
+        :param key_data_type: Data type of the message key. Valid values: Int, Long,
+            String, Binary. Default is String. Ignored if key_avro_schema is set.
         :param username: SASL username for use with the PLAIN or SASL-SCRAM mechanisms.
             Equivalent to 'sasl.username' in librdkafka. Default is empty string.
         :param password: SASL password for use with the PLAIN or SASL-SCRAM mechanisms.
@@ -1297,8 +1309,16 @@ class TriggerApi(DecoratorApi, ABC):
             certificate. Equivalent to 'ssl.ca.location' in librdkafka.
         :param ssl_certificate_location: Path to the client's certificate.
             Equivalent to 'ssl.certificate.location' in librdkafka.
-        :param ssl_key_password: Password for the client’s certificate.
+        :param ssl_key_password: Password for the client's certificate.
             Equivalent to 'ssl.key.password' in librdkafka.
+        :param ssl_certificate_pem: Client certificate in PEM format.
+            Equivalent to 'ssl.certificate.pem' in librdkafka.
+        :param ssl_key_pem: Client private key in PEM format.
+            Equivalent to 'ssl.key.pem' in librdkafka.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for the Schema Registry.
         :param schema_registry_password: Password for the Schema Registry.
@@ -1319,6 +1339,7 @@ class TriggerApi(DecoratorApi, ABC):
             ScramSha256, ScramSha512. Default: Plain. Equivalent to 'sasl.mechanism'.
         :param protocol: Security protocol used to communicate with brokers.
             Default: plaintext. Equivalent to 'security.protocol'.
+        :param cardinality: Set to "many" to enable batching. Default is "One".
         :param lag_threshold: Max number of unprocessed messages per worker instance.
             Used in scaling logic to estimate needed worker instances. Default is 1000.
         :param data_type: Defines how Functions runtime should treat the parameter value.
@@ -1338,12 +1359,19 @@ class TriggerApi(DecoratorApi, ABC):
                         event_hub_connection_string=event_hub_connection_string,  # noqa: E501
                         consumer_group=consumer_group,
                         avro_schema=avro_schema,
+                        key_avro_schema=key_avro_schema,
+                        key_data_type=parse_singular_param_to_enum(
+                            key_data_type, KafkaMessageKeyType),
                         username=username,
                         password=password,
                         ssl_key_location=ssl_key_location,
                         ssl_ca_location=ssl_ca_location,
                         ssl_certificate_location=ssl_certificate_location,
                         ssl_key_password=ssl_key_password,
+                        ssl_certificate_pem=ssl_certificate_pem,
+                        ssl_key_pem=ssl_key_pem,
+                        ssl_ca_pem=ssl_ca_pem,
+                        ssl_certificate_and_key_pem=ssl_certificate_and_key_pem,
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
@@ -2646,12 +2674,19 @@ class BindingApi(DecoratorApi, ABC):
                      topic: str,
                      broker_list: str,
                      avro_schema: Optional[str] = None,
+                     key_avro_schema: Optional[str] = None,
+                     key_data_type: Optional[
+                         Union[KafkaMessageKeyType, str]] = KafkaMessageKeyType.STRING,
                      username: Optional[str] = None,
                      password: Optional[str] = None,
                      ssl_key_location: Optional[str] = None,
                      ssl_ca_location: Optional[str] = None,
                      ssl_certificate_location: Optional[str] = None,
                      ssl_key_password: Optional[str] = None,
+                     ssl_certificate_pem: Optional[str] = None,
+                     ssl_key_pem: Optional[str] = None,
+                     ssl_ca_pem: Optional[str] = None,
+                     ssl_certificate_and_key_pem: Optional[str] = None,
                      schema_registry_url: Optional[str] = None,
                      schema_registry_username: Optional[str] = None,
                      schema_registry_password: Optional[str] = None,
@@ -2688,6 +2723,10 @@ class BindingApi(DecoratorApi, ABC):
         :param topic: The Kafka topic to which messages are published.
         :param broker_list: The list of Kafka brokers to which the producer connects.
         :param avro_schema: Optional. Avro schema to generate a generic record.
+        :param key_avro_schema: Avro schema for the message key. Used only if a
+            generic Avro record should be generated for the key.
+        :param key_data_type: Data type of the message key. Valid values: Int, Long,
+            String, Binary. Default is String. Ignored if key_avro_schema is set.
         :param username: SASL username for use with the PLAIN and SASL-SCRAM
             mechanisms. Equivalent to `'sasl.username'` in librdkafka.
         :param password: SASL password for use with the PLAIN and SASL-SCRAM
@@ -2700,6 +2739,14 @@ class BindingApi(DecoratorApi, ABC):
             Equivalent to `'ssl.certificate.location'` in librdkafka.
         :param ssl_key_password: Password for the client's SSL key.
             Equivalent to `'ssl.key.password'` in librdkafka.
+        :param ssl_certificate_pem: Client certificate in PEM format.
+            Equivalent to 'ssl.certificate.pem' in librdkafka.
+        :param ssl_key_pem: Client private key in PEM format.
+            Equivalent to 'ssl.key.pem' in librdkafka.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for accessing the Schema Registry.
         :param schema_registry_password: Password for accessing the Schema Registry.
@@ -2753,12 +2800,19 @@ class BindingApi(DecoratorApi, ABC):
                         topic=topic,
                         broker_list=broker_list,
                         avro_schema=avro_schema,
+                        key_avro_schema=key_avro_schema,
+                        key_data_type=parse_singular_param_to_enum(
+                            key_data_type, KafkaMessageKeyType),
                         username=username,
                         password=password,
                         ssl_key_location=ssl_key_location,
                         ssl_ca_location=ssl_ca_location,
                         ssl_certificate_location=ssl_certificate_location,
                         ssl_key_password=ssl_key_password,
+                        ssl_certificate_pem=ssl_certificate_pem,
+                        ssl_key_pem=ssl_key_pem,
+                        ssl_ca_pem=ssl_ca_pem,
+                        ssl_certificate_and_key_pem=ssl_certificate_and_key_pem,
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
