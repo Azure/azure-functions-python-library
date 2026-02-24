@@ -3,7 +3,7 @@
 
 from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
-from ._eventgrid import EventGridEvent, EventGridOutputEvent
+from ._eventgrid import CloudEvent, EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest, HttpResponse
 from .decorators import (FunctionApp, Function, Blueprint,
@@ -54,6 +54,7 @@ __all__ = (
     # Binding rich types, sorted alphabetically.
     'Document',
     'DocumentList',
+    'CloudEvent',
     'EventGridEvent',
     'EventGridOutputEvent',
     'EventHubEvent',

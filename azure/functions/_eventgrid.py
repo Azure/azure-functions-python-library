@@ -109,3 +109,76 @@ class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
             f'subject={self.subject} '
             f'at 0x{id(self):0x}>'
         )
+
+
+class CloudEvent(azf_abc.CloudEvent):
+    """A CloudEvents v1.0 event message."""
+
+    def __init__(self, *,
+                 id: str,
+                 source: str,
+                 type: str,
+                 specversion: str,
+                 data: typing.Optional[typing.Any],
+                 time: typing.Optional[datetime.datetime] = None,
+                 subject: typing.Optional[str] = None,
+                 datacontenttype: typing.Optional[str] = None,
+                 dataschema: typing.Optional[str] = None,
+                 **extensions: typing.Any) -> None:
+        self.__id = id
+        self.__source = source
+        self.__type = type
+        self.__specversion = specversion
+        self.__data = data
+        self.__time = time
+        self.__subject = subject
+        self.__datacontenttype = datacontenttype
+        self.__dataschema = dataschema
+        self.__extensions = extensions
+
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @property
+    def source(self) -> str:
+        return self.__source
+
+    @property
+    def type(self) -> str:
+        return self.__type
+
+    @property
+    def specversion(self) -> str:
+        return self.__specversion
+
+    @property
+    def time(self) -> typing.Optional[datetime.datetime]:
+        return self.__time
+
+    @property
+    def subject(self) -> typing.Optional[str]:
+        return self.__subject
+
+    @property
+    def datacontenttype(self) -> typing.Optional[str]:
+        return self.__datacontenttype
+
+    @property
+    def dataschema(self) -> typing.Optional[str]:
+        return self.__dataschema
+
+    def get_json(self) -> typing.Any:
+        return self.__data
+
+    @property
+    def extension_attrs(self) -> typing.Dict[str, typing.Any]:
+        return dict(self.__extensions)
+
+    def __repr__(self) -> str:
+        return (
+            f'<azure.CloudEvent id={self.id} '
+            f'source={self.source} '
+            f'type={self.type} '
+            f'at 0x{id(self):0x}>'
+        )

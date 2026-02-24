@@ -369,6 +369,54 @@ class EventGridOutputEvent(abc.ABC):
         pass
 
 
+class CloudEvent(abc.ABC):
+    """A CloudEvents v1.0 event message."""
+
+    @property
+    @abc.abstractmethod
+    def id(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def source(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def type(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def specversion(self) -> str:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def time(self) -> typing.Optional[datetime.datetime]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def subject(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def datacontenttype(self) -> typing.Optional[str]:
+        pass
+
+    @property
+    @abc.abstractmethod
+    def dataschema(self) -> typing.Optional[str]:
+        pass
+
+    @abc.abstractmethod
+    def get_json(self) -> typing.Any:
+        pass
+
+
 class Document(abc.ABC):
 
     @classmethod

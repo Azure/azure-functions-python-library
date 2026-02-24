@@ -20,14 +20,17 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
         """
         Event Grid always sends an array and may send more than one event in
         the array. The runtime invokes function once for each array element,
-        thus no need to parse List[EventGridEvent]
+        thus no need to parse List[EventGridEvent].
+        Accepts both EventGridEvent (Event Grid schema) and CloudEvent
+        (CloudEvents v1.0 schema).
         """
-        valid_types = azf_eventgrid.EventGridEvent
+        valid_types = (azf_eventgrid.EventGridEvent, azf_eventgrid.CloudEvent)
         return isinstance(pytype, type) and issubclass(pytype, valid_types)
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
-               trigger_metadata) -> azf_eventgrid.EventGridEvent:
+               trigger_metadata) -> Union[azf_eventgrid.EventGridEvent,
+                                          azf_eventgrid.CloudEvent]:
         data_type = data.type
 
         if data_type == 'json':
@@ -35,6 +38,23 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
         else:
             raise NotImplementedError(
                 f'unsupported event grid payload type: {data_type}')
+
+        if 'specversion' in body:
+            known = {'specversion', 'id', 'source', 'type', 'time',
+                     'subject', 'datacontenttype', 'dataschema', 'data'}
+            extensions = {k: v for k, v in body.items() if k not in known}
+            return azf_eventgrid.CloudEvent(
+                id=body.get('id'),
+                source=body.get('source'),
+                type=body.get('type'),
+                specversion=body.get('specversion'),
+                time=cls._parse_datetime(body.get('time')),
+                subject=body.get('subject'),
+                datacontenttype=body.get('datacontenttype'),
+                dataschema=body.get('dataschema'),
+                data=body.get('data'),
+                **extensions,
+            )
 
         return azf_eventgrid.EventGridEvent(
             id=body.get('id'),
