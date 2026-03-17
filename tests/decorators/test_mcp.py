@@ -504,3 +504,171 @@ class TestMCPResourceTrigger(unittest.TestCase):
         result_json = MCPResourceTriggerConverter.decode(datum_json, trigger_metadata={})
         self.assertEqual(result_json, {"arguments": {}})
         self.assertIsInstance(result_json, dict)
+
+
+class TestStructuredContent(unittest.TestCase):
+    """Tests for structured content functionality"""
+
+    def setUp(self):
+        self.app = func.FunctionApp()
+
+    def tearDown(self):
+        self.app = None
+
+    def test_mcp_content_decorator(self):
+        """Test that @mcp_content decorator marks a class properly"""
+        from azure.functions.decorators.mcp import has_mcp_content_marker
+        
+        @func.mcp_content
+        class TestData:
+            def __init__(self, value: str):
+                self.value = value
+        
+        instance = TestData("test")
+        self.assertTrue(has_mcp_content_marker(instance))
+        self.assertTrue(hasattr(TestData, '__mcp_content__'))
+        self.assertEqual(TestData.__mcp_content__, True)
+
+    def test_should_create_structured_content_for_marked_class(self):
+        """Test that marked classes generate structured content"""
+        from azure.functions.decorators.mcp import should_create_structured_content
+        
+        @func.mcp_content
+        class MarkedData:
+            def __init__(self, name: str):
+                self.name = name
+        
+        instance = MarkedData("test")
+        self.assertTrue(should_create_structured_content(instance))
+
+    def test_should_not_create_structured_content_for_primitives(self):
+        """Test that primitive types don't generate structured content"""
+        from azure.functions.decorators.mcp import should_create_structured_content
+        
+        self.assertFalse(should_create_structured_content("string"))
+        self.assertFalse(should_create_structured_content(42))
+        self.assertFalse(should_create_structured_content(3.14))
+        self.assertFalse(should_create_structured_content(True))
+        self.assertFalse(should_create_structured_content(None))
+
+    def test_should_not_create_structured_content_for_unmarked_class(self):
+        """Test that unmarked classes don't generate structured content"""
+        from azure.functions.decorators.mcp import should_create_structured_content
+        
+        class UnmarkedData:
+            def __init__(self, value: str):
+                self.value = value
+        
+        instance = UnmarkedData("test")
+        self.assertFalse(should_create_structured_content(instance))
+
+    def test_mcp_tool_with_use_result_schema_parameter(self):
+        """Test that use_result_schema parameter is passed to trigger"""
+        @self.app.mcp_tool(use_result_schema=True)
+        def test_tool(value: str):
+            """Test tool with result schema"""
+            return value
+        
+        trigger = test_tool._function._bindings[0]
+        self.assertEqual(trigger.useResultSchema, True)
+        self.assertEqual(trigger.tool_name, "test_tool")
+
+    def test_mcp_content_with_dataclass(self):
+        """Test mcp_content decorator works with dataclasses"""
+        from dataclasses import dataclass
+        from azure.functions.decorators.mcp import should_create_structured_content
+        
+        @func.mcp_content
+        @dataclass
+        class DataModel:
+            name: str
+            count: int
+        
+        instance = DataModel(name="test", count=5)
+        self.assertTrue(should_create_structured_content(instance))
+        self.assertTrue(hasattr(DataModel, '__mcp_content__'))
+
+
+class TestContentBlocks(unittest.TestCase):
+    """Tests for ContentBlock types"""
+
+    def test_text_content_block_creation(self):
+        """Test creating a TextContentBlock"""
+        block = func.TextContentBlock(text="Hello, world!")
+        self.assertEqual(block.type, "text")
+        self.assertEqual(block.text, "Hello, world!")
+        self.assertEqual(block.to_dict(), {"type": "text", "text": "Hello, world!"})
+
+    def test_image_content_block_creation(self):
+        """Test creating an ImageContentBlock"""
+        block = func.ImageContentBlock(data="base64data", mime_type="image/png")
+        self.assertEqual(block.type, "image")
+        self.assertEqual(block.data, "base64data")
+        self.assertEqual(block.mime_type, "image/png")
+        
+        block_dict = block.to_dict()
+        self.assertEqual(block_dict["type"], "image")
+        self.assertEqual(block_dict["data"], "base64data")
+        self.assertEqual(block_dict["mimeType"], "image/png")
+
+    def test_resource_link_block_creation(self):
+        """Test creating a ResourceLinkBlock"""
+        block = func.ResourceLinkBlock(
+            uri="https://example.com/resource",
+            name="Example Resource",
+            description="A test resource",
+            mime_type="application/json"
+        )
+        self.assertEqual(block.type, "resource")
+        self.assertEqual(block.uri, "https://example.com/resource")
+        self.assertEqual(block.name, "Example Resource")
+        
+        block_dict = block.to_dict()
+        self.assertEqual(block_dict["type"], "resource")
+        self.assertEqual(block_dict["uri"], "https://example.com/resource")
+        self.assertEqual(block_dict["mimeType"], "application/json")
+
+    def test_resource_link_block_minimal(self):
+        """Test ResourceLinkBlock with only required fields"""
+        block = func.ResourceLinkBlock(uri="file://logo.png")
+        self.assertEqual(block.type, "resource")
+        self.assertEqual(block.uri, "file://logo.png")
+        
+        block_dict = block.to_dict()
+        self.assertEqual(block_dict["type"], "resource")
+        self.assertEqual(block_dict["uri"], "file://logo.png")
+        self.assertNotIn("name", block_dict)
+        self.assertNotIn("description", block_dict)
+
+    def test_call_tool_result_creation(self):
+        """Test creating a CallToolResult"""
+        result = func.CallToolResult(
+            content=[
+                func.TextContentBlock(text="Here's the data"),
+                func.ImageContentBlock(data="imagedata", mime_type="image/jpeg")
+            ],
+            structured_content={"key": "value", "count": 42}
+        )
+        
+        self.assertEqual(len(result.content), 2)
+        self.assertIsInstance(result.content[0], func.TextContentBlock)
+        self.assertIsInstance(result.content[1], func.ImageContentBlock)
+        self.assertEqual(result.structured_content, {"key": "value", "count": 42})
+        
+        result_dict = result.to_dict()
+        self.assertIn("content", result_dict)
+        self.assertIn("structuredContent", result_dict)
+        self.assertEqual(len(result_dict["content"]), 2)
+
+    def test_call_tool_result_without_structured_content(self):
+        """Test CallToolResult without structured content"""
+        result = func.CallToolResult(
+            content=[func.TextContentBlock(text="Simple text")]
+        )
+        
+        self.assertIsNone(result.structured_content)
+        result_dict = result.to_dict()
+        self.assertIn("content", result_dict)
+        self.assertEqual(result.structured_content, None)
+
+
