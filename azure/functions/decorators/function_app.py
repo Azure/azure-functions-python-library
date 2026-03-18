@@ -1685,15 +1685,16 @@ class TriggerApi(DecoratorApi, ABC):
                         "content": json.dumps(result_dict),
                         "structuredContent": json.dumps(result.structured_content) if result.structured_content else None
                     })
-                
+
                 # Handle List[ContentBlock] - multiple content blocks
-                if isinstance(result, list) and all(isinstance(item, ContentBlock) for item in result):
+                if isinstance(result, list) and all(
+                        isinstance(item, ContentBlock) for item in result):
                     content_blocks = [block.to_dict() for block in result]
                     return json.dumps({
                         "type": "multi_content_result",
                         "content": json.dumps(content_blocks)
                     })
-                
+
                 # Handle single ContentBlock
                 if isinstance(result, ContentBlock):
                     block_dict = result.to_dict()
@@ -1701,7 +1702,7 @@ class TriggerApi(DecoratorApi, ABC):
                         "type": result.type,
                         "content": json.dumps(block_dict)
                     })
-                
+
                 # Handle structured content generation when use_result_schema is True
                 if use_result_schema:
                     # Check if we should create structured content
@@ -1709,21 +1710,24 @@ class TriggerApi(DecoratorApi, ABC):
                         # Serialize result as JSON for structured content
                         # Handle dataclasses properly
                         if dataclasses.is_dataclass(result):
-                            result_json = json.dumps(dataclasses.asdict(result))
+                            result_json = json.dumps(
+                                dataclasses.asdict(result))
                         elif hasattr(result, '__dict__'):
                             # For regular classes with __dict__
                             result_json = json.dumps(result.__dict__)
                         else:
                             # Fallback to str conversion
-                            result_json = json.dumps(result) if not isinstance(result, str) else result
-                        
+                            result_json = json.dumps(
+                                result) if not isinstance(
+                                result, str) else result
+
                         # Return McpToolResult format with both text and structured content
                         return json.dumps({
                             "type": "text",
                             "content": json.dumps({"type": "text", "text": result_json}),
                             "structuredContent": result_json
                         })
-                
+
                 return str(result)
 
             wrapper.__signature__ = wrapper_sig

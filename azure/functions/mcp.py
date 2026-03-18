@@ -77,7 +77,7 @@ class CallToolResult:
     """
     Result type for MCP tool calls that allows manual construction
     of content blocks and structured content.
-    
+
     Example:
         return CallToolResult(
             content=[

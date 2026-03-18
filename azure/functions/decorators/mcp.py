@@ -177,36 +177,36 @@ def has_mcp_content_marker(obj: typing.Any) -> bool:
 def should_create_structured_content(obj: typing.Any) -> bool:
     """
     Determines whether structured content should be created for the given object.
-    
+
     Returns True if:
     - The object's class is decorated with a marker that sets __mcp_content__ = True
     - The object is not a primitive type (str, int, float, bool, None)
     - The object is not a dict or list (unless explicitly marked)
-    
+
     This mimics the .NET implementation's McpContentAttribute checking.
     """
     if obj is None:
         return False
-    
+
     # Primitive types don't generate structured content unless explicitly marked
     if isinstance(obj, (str, int, float, bool)):
         return False
-    
+
     # Check for the marker attribute
     return has_mcp_content_marker(obj)
 
 
 def mcp_content(cls):
     """
-    Decorator to mark a class as an MCP result type that should be serialized 
+    Decorator to mark a class as an MCP result type that should be serialized
     as structured content.
-    
+
     When a function returns an object of a type decorated with this decorator,
     the result will be serialized as both text content (for backwards compatibility)
     and structured content (for clients that support it).
-    
+
     This is the Python equivalent of C#'s [McpContent] attribute.
-    
+
     Example:
         @mcp_content
         class ImageMetadata:
@@ -214,7 +214,7 @@ def mcp_content(cls):
                 self.image_id = image_id
                 self.format = format
                 self.tags = tags
-        
+
         @app.mcp_tool(use_result_schema=True)
         def get_image_info():
             return ImageMetadata("logo", "png", ["functions"])
