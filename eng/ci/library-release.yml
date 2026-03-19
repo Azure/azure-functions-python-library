@@ -16,6 +16,26 @@ extends:
       os: windows
 
     stages:
-      - stage: Release
+      - stage: ReleaseV1
+        displayName: 'Release v1.x'
         jobs:
           - template: /eng/templates/official/jobs/publish-release.yml@self
+            parameters:
+              libraryVersion: $(NewLibraryVersionV1)
+              pythonVersionRequirement: '>=3.10'
+              pythonClassifiers: |
+                'Programming Language :: Python :: 3.10',
+                'Programming Language :: Python :: 3.11',
+                'Programming Language :: Python :: 3.12'
+
+      - stage: ReleaseV2
+        displayName: 'Release v2.x'
+        dependsOn: ReleaseV1
+        jobs:
+          - template: /eng/templates/official/jobs/publish-release.yml@self
+            parameters:
+              libraryVersion: $(NewLibraryVersionV2)
+              pythonVersionRequirement: '>=3.13'
+              pythonClassifiers: |
+                'Programming Language :: Python :: 3.13',
+                'Programming Language :: Python :: 3.14'
