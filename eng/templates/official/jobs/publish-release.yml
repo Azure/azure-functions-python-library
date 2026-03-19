@@ -153,6 +153,7 @@ jobs:
       $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
       $newLibraryVersion = "${{ parameters.libraryVersion }}"
+      $pythonVersionRequirement = "${{ parameters.pythonVersionRequirement }}"
       $newBranch = "sdk/$newLibraryVersion"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
@@ -169,9 +170,18 @@ jobs:
           Set-Location "azure-functions-python-worker"
           git checkout -b $newBranch "origin/dev"
       
-          # Modify SDK Version in pyproject.toml
-          Write-Host "Replacing SDK version in worker's pyproject.toml"
-          ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.10''"','"azure-functions==${{ parameters.libraryVersion }}; python_version >= ''3.10''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          # Modify SDK Version in pyproject.toml based on Python version requirement
+          Write-Host "Replacing SDK version in worker's pyproject.toml for Python requirement: $pythonVersionRequirement"
+          
+          if ($pythonVersionRequirement -match '>=3\.13') {
+              # Update version for Python 3.13+
+              Write-Host "Updating azure-functions version for Python 3.13+"
+              ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.13''"','"azure-functions==$newLibraryVersion; python_version >= ''3.13''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          } else {
+              # Update version for Python 3.10-3.12
+              Write-Host "Updating azure-functions version for Python 3.10-3.12"
+              ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.10'' and python_version < ''3\.13''"','"azure-functions==$newLibraryVersion; python_version >= ''3.10'' and python_version < ''3.13''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          }
 
           # Commit Python Version
           Write-Host "Pushing $newBranch to azure-functions-python-worker repo"
