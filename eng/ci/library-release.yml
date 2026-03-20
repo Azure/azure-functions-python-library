@@ -1,5 +1,15 @@
 pr: none
 
+parameters:
+  - name: V1LibraryRelease
+    displayName: 'v1.x Library Release (3.10 - 3.12)'
+    type: boolean
+    default: false
+  - name: V2LibraryRelease
+    displayName: 'v2.x Library Release (3.13+)'
+    type: boolean
+    default: false
+
 resources:
   repositories:
     - repository: 1es
@@ -22,15 +32,17 @@ extends:
           - template: /eng/templates/official/jobs/publish-release.yml@self
             parameters:
               libraryVersion: $(NewLibraryVersionV1)
-              pythonVersionRequirement: '>=3.10'
+              pythonVersionRequirement: '>=3.10,<3.13'
               pythonClassifiers: |
                 'Programming Language :: Python :: 3.10',
                 'Programming Language :: Python :: 3.11',
                 'Programming Language :: Python :: 3.12'
+        condition: eq(${{ parameters.V1LibraryRelease }}, True)
 
       - stage: ReleaseV2
         displayName: 'Release v2.x'
         dependsOn: ReleaseV1
+        condition: and(eq(${{ parameters.V2LibraryRelease }}, True), in(dependencies.ReleaseV1.result, 'Succeeded', 'Skipped'))
         jobs:
           - template: /eng/templates/official/jobs/publish-release.yml@self
             parameters:
