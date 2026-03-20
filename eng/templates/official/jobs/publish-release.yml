@@ -1,3 +1,11 @@
+parameters:
+  - name: libraryVersion
+    type: string
+  - name: pythonVersionRequirement
+    type: string
+  - name: pythonClassifiers
+    type: string
+
 jobs:
 
 - job: "CreateReleaseBranch"
@@ -9,7 +17,11 @@ jobs:
   steps:
   - powershell: |
       $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(NewLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
+      $pythonVersionRequirement = "${{ parameters.pythonVersionRequirement }}"
+      $pythonClassifiers = @"
+      ${{ parameters.pythonClassifiers }}
+      "@
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
@@ -24,6 +36,20 @@ jobs:
           Write-Host "Change version number in azure/functions/__init__.py to $newLibraryVersion"
           ((Get-Content azure/functions/__init__.py) -replace "__version__ = '(\d)+.(\d)+.*'", "__version__ = '$newLibraryVersion'" -join "`n") + "`n" | Set-Content -NoNewline azure/functions/__init__.py
           git add azure/functions/__init__.py
+          
+          # Update pyproject.toml with Python version requirement
+          Write-Host "Updating pyproject.toml with Python version requirement: $pythonVersionRequirement"
+          $content = Get-Content pyproject.toml -Raw
+          $content = $content -replace 'requires-python = ">=[\d\.]+"', "requires-python = `"$pythonVersionRequirement`""
+          
+          # Update Python classifiers
+          Write-Host "Updating Python classifiers in pyproject.toml"
+          $classifiersPattern = "(?s)('Programming Language :: Python :: \d\.\d+',\s*)+"
+          $content = $content -replace $classifiersPattern, "$pythonClassifiers,`n    "
+          
+          $content | Set-Content -NoNewline pyproject.toml
+          git add pyproject.toml
+          
           git commit -m "build: update Python Library Version to $newLibraryVersion"
       
           # Create release branch release/X.Y.Z
@@ -46,9 +72,9 @@ jobs:
     inputs:
       notifyUsers: ''  # No email notifications sent
       instructions: |
-        1. Check if the https://github.com/Azure/azure-functions-python-library/tree/release/$(NewLibraryVersion) build succeeds and passes all unit tests.
-        2. If not, modify the release/$(NewLibraryVersion) branch.
-        3. Ensure release/$(NewLibraryVersion) branch contains all necessary changes.
+        1. Check if the https://github.com/Azure/azure-functions-python-library/tree/release/${{ parameters.libraryVersion }} build succeeds and passes all unit tests.
+        2. If not, modify the release/${{ parameters.libraryVersion }} branch.
+        3. Ensure release/${{ parameters.libraryVersion }} branch contains all necessary changes.
 
 - job: "CreateReleaseTag"
   dependsOn: ['CheckReleaseBranch']
@@ -56,7 +82,7 @@ jobs:
   steps:
   - powershell: |
       $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(NewLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
@@ -83,7 +109,7 @@ jobs:
   - pwsh: |
       $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(NewLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
@@ -126,7 +152,8 @@ jobs:
   - pwsh: |
       $githubUser = "$(GithubUser)"
       $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(NewLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
+      $pythonVersionRequirement = "${{ parameters.pythonVersionRequirement }}"
       $newBranch = "sdk/$newLibraryVersion"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
@@ -143,9 +170,18 @@ jobs:
           Set-Location "azure-functions-python-worker"
           git checkout -b $newBranch "origin/dev"
       
-          # Modify SDK Version in pyproject.toml
-          Write-Host "Replacing SDK version in worker's pyproject.toml"
-          ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.10''"','"azure-functions==$(NewLibraryVersion); python_version >= ''3.10''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          # Modify SDK Version in pyproject.toml based on Python version requirement
+          Write-Host "Replacing SDK version in worker's pyproject.toml for Python requirement: $pythonVersionRequirement"
+          
+          if ($pythonVersionRequirement -match '>=3\.13') {
+              # Update version for Python 3.13+
+              Write-Host "Updating azure-functions version for Python 3.13+"
+              ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.13''"','"azure-functions==$newLibraryVersion; python_version >= ''3.13''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          } else {
+              # Update version for Python 3.10-3.12
+              Write-Host "Updating azure-functions version for Python 3.10-3.12"
+              ((Get-Content workers/pyproject.toml) -replace '"azure-functions==[\d\.a-z]+; python_version >= ''3\.10'' and python_version < ''3\.13''"','"azure-functions==$newLibraryVersion; python_version >= ''3.10'' and python_version < ''3.13''"' -join "`n") + "`n" | Set-Content -NoNewline workers/pyproject.toml
+          }
 
           # Commit Python Version
           Write-Host "Pushing $newBranch to azure-functions-python-worker repo"
@@ -204,7 +240,7 @@ jobs:
     inputs:
       versionSpec: 3.11
   - pwsh: |
-      $newLibraryVersion = "$(NewLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
       $pypiToken = "$(PypiToken)"
       
           # Setup local Python environment
@@ -233,7 +269,7 @@ jobs:
   steps:
   - powershell: |
       $githubToken = "$(GithubPat)"
-      $newLibraryVersion = "$(newLibraryVersion)"
+      $newLibraryVersion = "${{ parameters.libraryVersion }}"
       
       if($newLibraryVersion -match '(\d)+.(\d)+.(\d)+') {
           # Create GitHub credential
