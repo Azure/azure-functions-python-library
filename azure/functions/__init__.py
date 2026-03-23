@@ -106,4 +106,4 @@ __all__ = (
     'McpPropertyType'
 )
 
-__version__ = '1.25.0b3'
+__version__ = '2.0.0'
