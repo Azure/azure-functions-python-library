@@ -23,7 +23,7 @@ classifiers = [
     'Development Status :: 5 - Production/Stable',
 ]
 dependencies = [
-    'werkzeug~=3.1.3'
+    'werkzeug~=3.1.3',
 ]
 [project.optional-dependencies]
 dev = [
@@ -33,8 +33,7 @@ dev = [
     'pytest-instafail',
     'pre-commit',
     'azure-functions-durable',
-    'flake8~=4.0.1; python_version < "3.11"',
-    'flake8~=7.1.1; python_version >= "3.11"',
+    'flake8~=7.1.1',
     'flake8-docstrings'
 ]
 
