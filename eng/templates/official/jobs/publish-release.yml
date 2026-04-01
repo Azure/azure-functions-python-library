@@ -239,6 +239,10 @@ jobs:
     displayName: 'Use Python 3.11'
     inputs:
       versionSpec: 3.11
+  - task: PipAuthenticate@1
+    displayName: 'Pip Authenticate'
+    inputs:
+      artifactFeeds: 'public/PythonSDK_PublicPackages'
   - pwsh: |
       $newLibraryVersion = "${{ parameters.libraryVersion }}"
       $pypiToken = "$(PypiToken)"
