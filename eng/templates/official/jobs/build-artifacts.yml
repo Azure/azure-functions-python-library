@@ -24,7 +24,7 @@ jobs:
       - task: PipAuthenticate@1
         displayName: 'Pip Authenticate'
         inputs:
-          artifactFeeds: 'public/PythonSDK_PublicPackages'
+          artifactFeeds: 'internal/PythonSDK_Internal_TestPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build

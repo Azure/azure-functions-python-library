@@ -1,3 +1,7 @@
+parameters:
+  - name: artifactFeed
+    type: string
+
 jobs:
   - job: "TestPython"
     displayName: "Run Python SDK Unit Tests"
@@ -26,7 +30,7 @@ jobs:
       - task: PipAuthenticate@1
         displayName: 'Pip Authenticate'
         inputs:
-          artifactFeeds: 'public/PythonSDK_PublicPackages'
+          artifactFeeds: ${{ parameters.artifactFeed }}
       - bash: |
           PYTHON_MAJOR=$(echo $(PYTHON_VERSION) | cut -d. -f1)
           PYTHON_MINOR=$(echo $(PYTHON_VERSION) | cut -d. -f2)
