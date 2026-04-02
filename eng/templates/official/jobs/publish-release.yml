@@ -242,7 +242,7 @@ jobs:
   - task: PipAuthenticate@1
     displayName: 'Pip Authenticate'
     inputs:
-      artifactFeeds: internal/PythonSDK_Internal_TestPackages
+      artifactFeeds: internal/PythonSDK_Internal_PublicPackages
   - pwsh: |
       $newLibraryVersion = "${{ parameters.libraryVersion }}"
       $pypiToken = "$(PypiToken)"
