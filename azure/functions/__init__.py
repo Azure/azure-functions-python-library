@@ -20,7 +20,7 @@ from .extension import (ExtensionMeta, FunctionExtensionException,
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
-from .mcp import (MCPToolContext, ContentBlock, TextContentBlock, 
+from .mcp import (MCPToolContext, ContentBlock, TextContentBlock,
                   ImageContentBlock, ResourceLinkBlock, CallToolResult)
 from .meta import get_binding_registry
 from ._queue import QueueMessage
@@ -108,7 +108,7 @@ __all__ = (
     'MCPToolContext',
     'McpPropertyType',
     'mcp_content',
-    
+
     # MCP ContentBlock types
     'ContentBlock',
     'TextContentBlock',

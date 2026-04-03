@@ -167,9 +167,16 @@ def has_mcp_content_marker(obj: typing.Any) -> bool:
     """
     Check if an object or its type is marked for structured content generation.
     Returns True if the object's class has '__mcp_content__' attribute set to True.
+    Handles both class types and instances.
     """
     if obj is None:
         return False
+    
+    # If obj is already a class type, check it directly
+    if isinstance(obj, type):
+        return getattr(obj, '__mcp_content__', False) is True
+    
+    # Otherwise, get the type and check
     obj_type = type(obj)
     return getattr(obj_type, '__mcp_content__', False) is True
 
