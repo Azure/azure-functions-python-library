@@ -621,23 +621,23 @@ class TestContentBlocks(unittest.TestCase):
             description="A test resource",
             mime_type="application/json"
         )
-        self.assertEqual(block.type, "resource")
+        self.assertEqual(block.type, "resource_link")
         self.assertEqual(block.uri, "https://example.com/resource")
         self.assertEqual(block.name, "Example Resource")
 
         block_dict = block.to_dict()
-        self.assertEqual(block_dict["type"], "resource")
+        self.assertEqual(block_dict["type"], "resource_link")
         self.assertEqual(block_dict["uri"], "https://example.com/resource")
         self.assertEqual(block_dict["mimeType"], "application/json")
 
     def test_resource_link_block_minimal(self):
         """Test ResourceLinkBlock with only required fields"""
         block = func.ResourceLinkBlock(uri="file://logo.png")
-        self.assertEqual(block.type, "resource")
+        self.assertEqual(block.type, "resource_link")
         self.assertEqual(block.uri, "file://logo.png")
 
         block_dict = block.to_dict()
-        self.assertEqual(block_dict["type"], "resource")
+        self.assertEqual(block_dict["type"], "resource_link")
         self.assertEqual(block_dict["uri"], "file://logo.png")
         self.assertNotIn("name", block_dict)
         self.assertNotIn("description", block_dict)
@@ -734,7 +734,7 @@ Line 3"""
         )
         block_dict = block.to_dict()
 
-        self.assertEqual(block_dict["type"], "resource")
+        self.assertEqual(block_dict["type"], "resource_link")
         self.assertEqual(block_dict["uri"], "https://example.com/api/resource")
         self.assertEqual(block_dict["name"], "Test Resource")
         self.assertEqual(block_dict["description"], "A detailed description")
@@ -800,7 +800,7 @@ Line 3"""
 
         # Verify each block is correctly serialized
         self.assertEqual(result_dict["content"][0]["type"], "text")
-        self.assertEqual(result_dict["content"][1]["type"], "resource")
+        self.assertEqual(result_dict["content"][1]["type"], "resource_link")
         self.assertEqual(result_dict["content"][2]["type"], "image")
         self.assertEqual(result_dict["content"][3]["type"], "text")
 
@@ -934,9 +934,299 @@ Line 3"""
         # Type should be set via field(init=False)
         self.assertEqual(text_block.type, "text")
         self.assertEqual(image_block.type, "image")
-        self.assertEqual(resource_block.type, "resource")
+        self.assertEqual(resource_block.type, "resource_link")
 
         # Verify in dict output
         self.assertEqual(text_block.to_dict()["type"], "text")
         self.assertEqual(image_block.to_dict()["type"], "image")
-        self.assertEqual(resource_block.to_dict()["type"], "resource")
+        self.assertEqual(resource_block.to_dict()["type"], "resource_link")
+
+
+class TestAutoUseResultSchema(unittest.TestCase):
+    """Tests for automatic use_result_schema detection"""
+
+    def setUp(self):
+        self.app = func.FunctionApp()
+
+    def tearDown(self):
+        self.app = None
+
+    def test_auto_detect_resource_link_block(self):
+        """Test auto-detection of ResourceLinkBlock return type"""
+        @self.app.mcp_tool()
+        def get_logo() -> func.ResourceLinkBlock:
+            """Returns a logo"""
+            return func.ResourceLinkBlock(uri="file://logo.png")
+
+        trigger = get_logo._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_text_content_block(self):
+        """Test auto-detection of TextContentBlock return type"""
+        @self.app.mcp_tool()
+        def get_text() -> func.TextContentBlock:
+            """Returns text"""
+            return func.TextContentBlock(text="Hello")
+
+        trigger = get_text._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_image_content_block(self):
+        """Test auto-detection of ImageContentBlock return type"""
+        @self.app.mcp_tool()
+        def get_image() -> func.ImageContentBlock:
+            """Returns image"""
+            return func.ImageContentBlock(data="base64", mime_type="image/png")
+
+        trigger = get_image._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_call_tool_result(self):
+        """Test auto-detection of CallToolResult return type"""
+        @self.app.mcp_tool()
+        def get_result() -> func.CallToolResult:
+            """Returns CallToolResult"""
+            return func.CallToolResult(content=[])
+
+        trigger = get_result._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_list_content_block(self):
+        """Test auto-detection of List[ContentBlock] return type"""
+        from typing import List
+
+        @self.app.mcp_tool()
+        def get_multiple() -> List[func.ContentBlock]:
+            """Returns multiple blocks"""
+            return [func.TextContentBlock(text="test")]
+
+        trigger = get_multiple._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_list_text_content_block(self):
+        """Test auto-detection of List[TextContentBlock] return type"""
+        from typing import List
+
+        @self.app.mcp_tool()
+        def get_texts() -> List[func.TextContentBlock]:
+            """Returns text blocks"""
+            return [func.TextContentBlock(text="test")]
+
+        trigger = get_texts._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_optional_content_block(self):
+        """Test auto-detection of Optional[ContentBlock] return type"""
+        from typing import Optional
+
+        @self.app.mcp_tool()
+        def maybe_image() -> Optional[func.ImageContentBlock]:
+            """Maybe returns image"""
+            return None
+
+        trigger = maybe_image._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_auto_detect_mcp_content_class(self):
+        """Test auto-detection of @mcp_content decorated class"""
+        @func.mcp_content
+        class MyData:
+            def __init__(self, value: str):
+                self.value = value
+
+        @self.app.mcp_tool()
+        def get_data() -> MyData:
+            """Returns custom data"""
+            return MyData("test")
+
+        trigger = get_data._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_no_auto_detect_string(self):
+        """Test that plain string return type doesn't trigger auto-detection"""
+        @self.app.mcp_tool()
+        def get_string() -> str:
+            """Returns string"""
+            return "Hello"
+
+        trigger = get_string._function._bindings[0]
+        self.assertFalse(trigger.use_result_schema)
+
+    def test_no_auto_detect_int(self):
+        """Test that int return type doesn't trigger auto-detection"""
+        @self.app.mcp_tool()
+        def get_number() -> int:
+            """Returns number"""
+            return 42
+
+        trigger = get_number._function._bindings[0]
+        self.assertFalse(trigger.use_result_schema)
+
+    def test_no_auto_detect_dict(self):
+        """Test that dict return type doesn't trigger auto-detection"""
+        @self.app.mcp_tool()
+        def get_dict() -> dict:
+            """Returns dict"""
+            return {"key": "value"}
+
+        trigger = get_dict._function._bindings[0]
+        self.assertFalse(trigger.use_result_schema)
+
+    def test_no_auto_detect_no_annotation(self):
+        """Test that no return annotation doesn't trigger auto-detection"""
+        @self.app.mcp_tool()
+        def no_annotation():
+            """No annotation"""
+            return "test"
+
+        trigger = no_annotation._function._bindings[0]
+        self.assertFalse(trigger.use_result_schema)
+
+    def test_explicit_use_result_schema_true(self):
+        """Test that explicit use_result_schema=True is preserved"""
+        @self.app.mcp_tool(use_result_schema=True)
+        def explicit_true() -> str:
+            """Explicit True"""
+            return "test"
+
+        trigger = explicit_true._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+    def test_explicit_use_result_schema_false(self):
+        """Test that explicit use_result_schema=False works"""
+        @self.app.mcp_tool(use_result_schema=False)
+        def explicit_false() -> str:
+            """Explicit False"""
+            return "test"
+
+        trigger = explicit_false._function._bindings[0]
+        self.assertFalse(trigger.use_result_schema)
+
+    def test_explicit_overrides_auto_detection(self):
+        """Test that explicit value is not overridden by auto-detection"""
+        @self.app.mcp_tool(use_result_schema=True)
+        def override_test() -> func.ResourceLinkBlock:
+            """Override test"""
+            return func.ResourceLinkBlock(uri="test")
+
+        trigger = override_test._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
+
+class TestStructuredContentInResponses(unittest.TestCase):
+    """Tests for structuredContent field in MCP responses"""
+
+    def setUp(self):
+        self.app = func.FunctionApp()
+
+    def tearDown(self):
+        self.app = None
+
+    def test_structured_content_in_call_tool_result(self):
+        """Test that CallToolResult includes structuredContent"""
+        import json
+        import asyncio
+
+        @self.app.mcp_tool()
+        def test_func() -> func.CallToolResult:
+            """Test function"""
+            return func.CallToolResult(
+                content=[func.TextContentBlock(text="test")],
+                structured_content={"key": "value"}
+            )
+
+        # Get the wrapper function
+        wrapper = test_func._function._func
+
+        # Call the wrapper
+        context = json.dumps({"arguments": {}})
+        result = asyncio.run(wrapper(context))
+
+        # Parse the result
+        result_obj = json.loads(result)
+
+        # Verify structure
+        self.assertIn("type", result_obj)
+        self.assertIn("content", result_obj)
+        self.assertIn("structuredContent", result_obj)
+        self.assertEqual(result_obj["type"], "call_tool_result")
+        self.assertIsNotNone(result_obj["structuredContent"])
+
+    def test_structured_content_in_single_content_block(self):
+        """Test that single ContentBlock includes structuredContent"""
+        import json
+        import asyncio
+
+        @self.app.mcp_tool()
+        def test_func() -> func.ResourceLinkBlock:
+            """Test function"""
+            return func.ResourceLinkBlock(uri="file://test.png", name="Test")
+
+        wrapper = test_func._function._func
+        context = json.dumps({"arguments": {}})
+        result = asyncio.run(wrapper(context))
+        result_obj = json.loads(result)
+
+        self.assertIn("structuredContent", result_obj)
+        self.assertIsNotNone(result_obj["structuredContent"])
+
+        # Verify structuredContent matches content
+        content_obj = json.loads(result_obj["content"])
+        structured_obj = json.loads(result_obj["structuredContent"])
+        self.assertEqual(content_obj, structured_obj)
+
+    def test_structured_content_in_list_content_blocks(self):
+        """Test that List[ContentBlock] includes structuredContent"""
+        import json
+        import asyncio
+        from typing import List
+
+        @self.app.mcp_tool()
+        def test_func() -> List[func.ContentBlock]:
+            """Test function"""
+            return [
+                func.TextContentBlock(text="First"),
+                func.TextContentBlock(text="Second")
+            ]
+
+        wrapper = test_func._function._func
+        context = json.dumps({"arguments": {}})
+        result = asyncio.run(wrapper(context))
+        result_obj = json.loads(result)
+
+        self.assertIn("structuredContent", result_obj)
+        self.assertIsNotNone(result_obj["structuredContent"])
+
+        # Verify structuredContent matches content
+        content_obj = json.loads(result_obj["content"])
+        structured_obj = json.loads(result_obj["structuredContent"])
+        self.assertEqual(content_obj, structured_obj)
+
+    def test_structured_content_with_mcp_content_decorator(self):
+        """Test that @mcp_content decorated class includes structuredContent"""
+        import json
+        import asyncio
+
+        @func.mcp_content
+        class MyData:
+            def __init__(self, name: str, value: int):
+                self.name = name
+                self.value = value
+
+        @self.app.mcp_tool()
+        def test_func() -> MyData:
+            """Test function"""
+            return MyData("test", 42)
+
+        wrapper = test_func._function._func
+        context = json.dumps({"arguments": {}})
+        result = asyncio.run(wrapper(context))
+        result_obj = json.loads(result)
+
+        self.assertIn("structuredContent", result_obj)
+        self.assertIsNotNone(result_obj["structuredContent"])
+
+        # Verify structured content contains the data
+        structured_obj = json.loads(result_obj["structuredContent"])
+        self.assertEqual(structured_obj["name"], "test")
+        self.assertEqual(structured_obj["value"], 42)
