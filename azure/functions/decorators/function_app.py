@@ -1622,6 +1622,65 @@ class TriggerApi(DecoratorApi, ABC):
             target_func = fb._function.get_user_function()
             sig = inspect.signature(target_func)
 
+            # Auto-detect MCP return types and set use_result_schema=True
+            # Use a separate variable to avoid UnboundLocalError
+            auto_use_result_schema = use_result_schema
+            return_annotation = sig.return_annotation
+            if return_annotation != inspect.Signature.empty and not auto_use_result_schema:
+                from azure.functions.mcp import ContentBlock, CallToolResult
+                from azure.functions.decorators.mcp import has_mcp_content_marker
+                
+                # Check if return type is a ContentBlock subclass
+                is_content_block = False
+                is_call_tool_result = False
+                is_mcp_content = False
+                
+                try:
+                    # Handle direct ContentBlock or CallToolResult
+                    if isinstance(return_annotation, type):
+                        if issubclass(return_annotation, ContentBlock):
+                            is_content_block = True
+                        elif issubclass(return_annotation, CallToolResult):
+                            is_call_tool_result = True
+                        elif has_mcp_content_marker(return_annotation):
+                            is_mcp_content = True
+                except TypeError:
+                    pass
+                
+                # Handle List[ContentBlock] and other generic types
+                if hasattr(return_annotation, '__origin__'):
+                    import typing
+                    origin = typing.get_origin(return_annotation)
+                    args = typing.get_args(return_annotation)
+                    
+                    # Check for List[ContentBlock] or list[ContentBlock]
+                    if origin in (list, List) and args:
+                        try:
+                            if issubclass(args[0], ContentBlock):
+                                is_content_block = True
+                        except TypeError:
+                            pass
+                    
+                    # Check for Optional[T] where T is an MCP type
+                    if origin is Union:
+                        for arg in args:
+                            if arg is type(None):
+                                continue
+                            try:
+                                if isinstance(arg, type):
+                                    if issubclass(arg, (ContentBlock, CallToolResult)):
+                                        is_content_block = True
+                                        break
+                                    elif has_mcp_content_marker(arg):
+                                        is_mcp_content = True
+                                        break
+                            except TypeError:
+                                pass
+                
+                # Auto-enable use_result_schema for MCP types
+                if is_content_block or is_call_tool_result or is_mcp_content:
+                    auto_use_result_schema = True
+
             # Pull any explicitly declared MCP tool properties
             explicit_properties = getattr(target_func, "__mcp_tool_properties__", {})
 
@@ -1692,19 +1751,21 @@ class TriggerApi(DecoratorApi, ABC):
                     content_blocks = [block.to_dict() for block in result]
                     return json.dumps({
                         "type": "multi_content_result",
-                        "content": json.dumps(content_blocks)
+                        "content": json.dumps(content_blocks),
+                        "structuredContent": json.dumps(content_blocks)
                     })
 
                 # Handle single ContentBlock
                 if isinstance(result, ContentBlock):
                     block_dict = result.to_dict()
-                    return json.dumps({
+                    return str(json.dumps({
                         "type": result.type,
-                        "content": json.dumps(block_dict)
-                    })
+                        "content": json.dumps(block_dict),
+                        "structuredContent": json.dumps(block_dict)
+                    }))
 
-                # Handle structured content generation when use_result_schema is True
-                if use_result_schema:
+                # Handle structured content generation when auto_use_result_schema is True
+                if auto_use_result_schema:
                     # Check if we should create structured content
                     if should_create_structured_content(result):
                         # Serialize result as JSON for structured content
@@ -1722,11 +1783,11 @@ class TriggerApi(DecoratorApi, ABC):
                                 result, str) else result
 
                         # Return McpToolResult format with both text and structured content
-                        return json.dumps({
+                        return str(json.dumps({
                             "type": "text",
                             "content": json.dumps({"type": "text", "text": result_json}),
                             "structuredContent": result_json
-                        })
+                        }))
 
                 return str(result)
 
@@ -1741,7 +1802,7 @@ class TriggerApi(DecoratorApi, ABC):
                     description=description,
                     tool_properties=tool_properties_json,
                     metadata=metadata,
-                    use_result_schema=use_result_schema
+                    use_result_schema=auto_use_result_schema
                 )
             )
             return fb

@@ -55,7 +55,7 @@ class ResourceLinkBlock(ContentBlock):
     name: Optional[str] = None
     description: Optional[str] = None
     mime_type: Optional[str] = None
-    type: str = field(default="resource", init=False)
+    type: str = field(default="resource_link", init=False)
 
     def to_dict(self) -> dict:
         """Convert to dict with correct JSON property names."""
