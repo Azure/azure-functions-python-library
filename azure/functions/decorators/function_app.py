@@ -1666,7 +1666,7 @@ class TriggerApi(DecoratorApi, ABC):
                     # Check for Optional[T] where T is an MCP type
                     if origin is Union:
                         for arg in args:
-                            if arg is type(None):
+                            if isinstance(arg, type(type(None))):
                                 continue
                             try:
                                 if isinstance(arg, type):
