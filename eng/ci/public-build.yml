@@ -48,3 +48,5 @@ extends:
         dependsOn: Build
         jobs:
           - template: /eng/templates/jobs/ci-tests.yml@self
+            parameters:
+              artifactFeed: 'public/PythonSDK_PublicPackages'

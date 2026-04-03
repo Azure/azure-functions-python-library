@@ -1,3 +1,7 @@
+parameters:
+  - name: artifactFeed
+    type: string
+
 jobs:
   - job: "TestPython"
     displayName: "Run Python SDK Unit Tests"
@@ -20,9 +24,35 @@ jobs:
         inputs:
           versionSpec: $(PYTHON_VERSION)
       - bash: |
+          VERSION=$(python -c "import re; content = open('azure/functions/__init__.py').read(); match = re.search(r\"__version__ = '(\d+)\.(\d+)\.(\d+).*'\", content); print(match.group(1)) if match else '1'")
+          echo "##vso[task.setvariable variable=MAJOR_VERSION]$VERSION"
+        displayName: 'Detect package version'
+      - task: PipAuthenticate@1
+        displayName: 'Pip Authenticate'
+        inputs:
+          artifactFeeds: ${{ parameters.artifactFeed }}
+      - bash: |
+          PYTHON_MAJOR=$(echo $(PYTHON_VERSION) | cut -d. -f1)
+          PYTHON_MINOR=$(echo $(PYTHON_VERSION) | cut -d. -f2)
+          
+          if [ "$MAJOR_VERSION" == "2" ] && [ "$PYTHON_MINOR" -lt "13" ]; then
+            echo "Skipping tests for Python $PYTHON_VERSION on package version 2.x (requires Python 3.13+)"
+            exit 0
+          fi
+          
           python -m pip install --upgrade pip
           python -m pip install -U -e .[dev]
         displayName: 'Install dependencies'
+        condition: succeededOrFailed()
       - bash: |
+          PYTHON_MAJOR=$(echo $(PYTHON_VERSION) | cut -d. -f1)
+          PYTHON_MINOR=$(echo $(PYTHON_VERSION) | cut -d. -f2)
+          
+          if [ "$MAJOR_VERSION" == "2" ] && [ "$PYTHON_MINOR" -lt "13" ]; then
+            echo "Skipping tests for Python $PYTHON_VERSION on package version 2.x (requires Python 3.13+)"
+            exit 0
+          fi
+          
           python -m pytest --cache-clear --cov=./azure --cov-report=xml --cov-branch tests
         displayName: 'Test with pytest'
+        condition: succeededOrFailed()
