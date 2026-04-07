@@ -130,6 +130,7 @@ def check_is_required(param: type, param_type_hint: type) -> bool:
 def build_property_metadata(sig,
                             skip_param_names: List[str],
                             explicit_properties: dict) -> List[dict]:
+    """Build the tool_properties list for MCPToolTrigger based on function signature."""
     tool_properties = []
     for param_name, param in sig.parameters.items():
         if param_name in skip_param_names:
@@ -188,7 +189,7 @@ def should_create_structured_content(obj: typing.Any) -> bool:
     Returns True if:
     - The object's class is decorated with a marker that sets __mcp_content__ = True
     - The object is not a primitive type (str, int, float, bool, None)
-    - The object is not a dict or list (unless explicitly marked)
+    - The object is not a dict or list
 
     This mimics the .NET implementation's McpContentAttribute checking.
     """
@@ -196,7 +197,7 @@ def should_create_structured_content(obj: typing.Any) -> bool:
         return False
 
     # Primitive types don't generate structured content unless explicitly marked
-    if isinstance(obj, (str, int, float, bool)):
+    if isinstance(obj, (str, int, float, bool, dict, list)):
         return False
 
     # Check for the marker attribute

@@ -2,6 +2,7 @@
 #  Licensed under the MIT License.
 import abc
 import asyncio
+import dataclasses
 import functools
 import inspect
 import json
@@ -48,11 +49,12 @@ from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, 
     _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
     semantic_search_system_prompt, \
     _SemanticSearchInput, _EmbeddingsStoreOutput
-from .mcp import _MCPToolTrigger, MCPResourceTrigger, build_property_metadata
+from .mcp import _MCPToolTrigger, MCPResourceTrigger, build_property_metadata, \
+    has_mcp_content_marker, should_create_structured_content
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
-from ..mcp import MCPToolContext
+from ..mcp import MCPToolContext, ContentBlock, CallToolResult
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
@@ -1629,8 +1631,6 @@ class TriggerApi(DecoratorApi, ABC):
             auto_use_result_schema = use_result_schema
             return_annotation = sig.return_annotation
             if return_annotation != inspect.Signature.empty and not auto_use_result_schema:
-                from azure.functions.mcp import ContentBlock, CallToolResult
-                from azure.functions.decorators.mcp import has_mcp_content_marker
 
                 # Check if return type is a ContentBlock subclass
                 is_content_block = False
@@ -1670,8 +1670,11 @@ class TriggerApi(DecoratorApi, ABC):
                                 continue
                             try:
                                 if isinstance(arg, type):
-                                    if issubclass(arg, (ContentBlock, CallToolResult)):
+                                    if issubclass(arg, ContentBlock):
                                         is_content_block = True
+                                        break
+                                    elif issubclass(arg, CallToolResult):
+                                        is_call_tool_result = True
                                         break
                                     elif has_mcp_content_marker(arg):
                                         is_mcp_content = True
@@ -1715,11 +1718,6 @@ class TriggerApi(DecoratorApi, ABC):
             # Wrap the original function
             @functools.wraps(target_func)
             async def wrapper(context: str, *args, **kwargs):
-                from azure.functions.mcp import (
-                    ContentBlock, CallToolResult)
-                from azure.functions.decorators.mcp import should_create_structured_content
-                import dataclasses
-
                 content = json.loads(context)
                 arguments = content.get("arguments", {})
                 call_kwargs = {}
@@ -1736,7 +1734,7 @@ class TriggerApi(DecoratorApi, ABC):
                     result = await result
 
                 if result is None:
-                    return str(result)
+                    return ""
 
                 # Handle CallToolResult - manual construction by user
                 if isinstance(result, CallToolResult):
