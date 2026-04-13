@@ -117,4 +117,4 @@ __all__ = (
     'CallToolResult'
 )
 
-__version__ = '2.1.0'
+__version__ = '1.26.0b1'
