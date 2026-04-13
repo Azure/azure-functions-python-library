@@ -39,6 +39,11 @@ jobs:
             echo "Skipping tests for Python $PYTHON_VERSION on package version 2.x (requires Python 3.13+)"
             exit 0
           fi
+
+          if [ "$MAJOR_VERSION" == "1" ] && [ "$PYTHON_MINOR" -gt "12" ]; then
+            echo "Skipping tests for Python $PYTHON_VERSION on package version 1.x (requires Python 3.12 or lower)"
+            exit 0
+          fi
           
           python -m pip install --upgrade pip
           python -m pip install -U -e .[dev]
@@ -50,6 +55,11 @@ jobs:
           
           if [ "$MAJOR_VERSION" == "2" ] && [ "$PYTHON_MINOR" -lt "13" ]; then
             echo "Skipping tests for Python $PYTHON_VERSION on package version 2.x (requires Python 3.13+)"
+            exit 0
+          fi
+
+          if [ "$MAJOR_VERSION" == "1" ] && [ "$PYTHON_MINOR" -gt "12" ]; then
+            echo "Skipping tests for Python $PYTHON_VERSION on package version 1.x (requires Python 3.12 or lower)"
             exit 0
           fi
           

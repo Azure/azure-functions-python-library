@@ -29,9 +29,6 @@ jobs:
       - bash: |
           python -m pip install -U pip
           python -m pip install build
-          if [[ $(PYTHON_VERSION) == "3.7" ]]; then
-              python -m pip install importlib_metadata
-          fi
           python -m build
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
