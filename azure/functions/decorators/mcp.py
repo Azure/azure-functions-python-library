@@ -2,8 +2,7 @@
 # Licensed under the MIT License.
 import inspect
 from dataclasses import dataclass
-
-from typing import List, Optional, Union, get_origin, get_args
+from typing import Any, List, Optional, Union, get_origin, get_args
 from datetime import datetime
 
 from ..mcp import MCPToolContext
@@ -65,6 +64,7 @@ class MCPResourceTrigger(Trigger):
                  mime_type: Optional[str] = None,
                  size: Optional[int] = None,
                  metadata: Optional[str] = None,
+                 use_result_schema: Optional[bool] = False,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.uri = uri
@@ -74,6 +74,7 @@ class MCPResourceTrigger(Trigger):
         self.mimeType = mime_type
         self.size = size
         self.metadata = metadata
+        self.useResultSchema = use_result_schema
         super().__init__(name=name, data_type=data_type)
 
 
@@ -115,12 +116,14 @@ class _MCPToolTrigger(Trigger):
                  description: Optional[str] = None,
                  tool_properties: Optional[str] = None,
                  metadata: Optional[str] = None,
+                 use_result_schema: Optional[bool] = False,
                  data_type: Optional[DataType] = None,
                  **kwargs):
         self.tool_name = tool_name
         self.description = description
         self.tool_properties = tool_properties
         self.metadata = metadata
+        self.use_result_schema = use_result_schema
         super().__init__(name=name, data_type=data_type)
 
 
@@ -179,6 +182,7 @@ def check_is_required(param: type, param_type_hint: type) -> bool:
 def build_property_metadata(sig,
                             skip_param_names: List[str],
                             explicit_properties: dict) -> List[dict]:
+    """Build the tool_properties list for MCPToolTrigger based on function signature."""
     tool_properties = []
     for param_name, param in sig.parameters.items():
         if param_name in skip_param_names:
@@ -210,3 +214,70 @@ def build_property_metadata(sig,
 
         tool_properties.append(property_data)
     return tool_properties
+
+
+def has_mcp_content_marker(obj: Any) -> bool:
+    """
+    Check if an object or its type is marked for structured content generation.
+    Returns True if the object's class has '__mcp_content__' attribute set to True.
+    Handles both class types and instances.
+    """
+    if obj is None:
+        return False
+
+    # If obj is already a class type, check it directly
+    if isinstance(obj, type):
+        return getattr(obj, '__mcp_content__', False) is True
+
+    # Otherwise, get the type and check
+    obj_type = type(obj)
+    return getattr(obj_type, '__mcp_content__', False) is True
+
+
+def should_create_structured_content(obj: Any) -> bool:
+    """
+    Determines whether structured content should be created for the given object.
+
+    Returns True if:
+    - The object's class is decorated with a marker that sets __mcp_content__ = True
+    - The object is not a primitive type (str, int, float, bool, None)
+    - The object is not a dict or list
+
+    This mimics the .NET implementation's McpContentAttribute checking.
+    """
+    if obj is None:
+        return False
+
+    # Primitive types don't generate structured content unless explicitly marked
+    if isinstance(obj, (str, int, float, bool, dict, list)):
+        return False
+
+    # Check for the marker attribute
+    return has_mcp_content_marker(obj)
+
+
+def mcp_content(cls):
+    """
+    Decorator to mark a class as an MCP result type that should be serialized
+    as structured content.
+
+    When a function returns an object of a type decorated with this decorator,
+    the result will be serialized as both text content (for backwards compatibility)
+    and structured content (for clients that support it).
+
+    This is the Python equivalent of C#'s [McpContent] attribute.
+
+    Example:
+        @mcp_content
+        class ImageMetadata:
+            def __init__(self, image_id: str, format: str, tags: list):
+                self.image_id = image_id
+                self.format = format
+                self.tags = tags
+
+        @app.mcp_tool(use_result_schema=True)
+        def get_image_info():
+            return ImageMetadata("logo", "png", ["functions"])
+    """
+    cls.__mcp_content__ = True
+    return cls

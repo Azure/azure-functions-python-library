@@ -12,6 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp, BlobSource, McpPropertyType,
                          PromptArgument)
+from .decorators.mcp import mcp_content
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
@@ -20,7 +21,8 @@ from .extension import (ExtensionMeta, FunctionExtensionException,
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
-from .mcp import MCPToolContext, PromptInvocationContext
+from .mcp import (MCPToolContext, PromptInvocationContext, ContentBlock, TextContentBlock,
+                  ImageContentBlock, ResourceLinkBlock, CallToolResult)
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
@@ -107,7 +109,15 @@ __all__ = (
     'MCPToolContext',
     'PromptInvocationContext',
     'PromptArgument',
-    'McpPropertyType'
+    'McpPropertyType',
+    'mcp_content',
+
+    # MCP ContentBlock types
+    'ContentBlock',
+    'TextContentBlock',
+    'ImageContentBlock',
+    'ResourceLinkBlock',
+    'CallToolResult'
 )
 
-__version__ = '2.1.0'
+__version__ = '1.26.0b1'
