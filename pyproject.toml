@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "azure-functions"
 dynamic = ["version"]
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.13"
 authors = [{ name = "Azure Functions team at Microsoft Corp.", email = "azurefunctions@microsoft.com" }]
 description = "Python library for Azure Functions."
 readme = "README.md"
