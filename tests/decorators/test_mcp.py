@@ -2,12 +2,17 @@
 #  Licensed under the MIT License.
 import typing
 import unittest
+import json
 
 import azure.functions as func
-from azure.functions import DataType, MCPToolContext
+from azure.functions import (DataType, MCPToolContext,
+                             PromptInvocationContext, PromptArgument)
 from azure.functions.decorators.core import BindingDirection
-from azure.functions.decorators.mcp import _MCPToolTrigger, MCPResourceTrigger
-from azure.functions.mcp import _MCPToolTriggerConverter, MCPResourceTriggerConverter
+from azure.functions.decorators.mcp import (_MCPToolTrigger,
+                                            MCPResourceTrigger,
+                                            MCPPromptTrigger)
+from azure.functions.mcp import (_MCPToolTriggerConverter,
+                                 MCPResourceTriggerConverter)
 from azure.functions.meta import Datum
 
 
@@ -504,3 +509,276 @@ class TestMCPResourceTrigger(unittest.TestCase):
         result_json = MCPResourceTriggerConverter.decode(datum_json, trigger_metadata={})
         self.assertEqual(result_json, {"arguments": {}})
         self.assertIsInstance(result_json, dict)
+
+
+class TestPromptArgument(unittest.TestCase):
+    """Unit tests for PromptArgument dataclass"""
+
+    def test_prompt_argument_creation_all_fields(self):
+        arg = PromptArgument(
+            name="code",
+            description="The code to review",
+            required=True
+        )
+        self.assertEqual(arg.name, "code")
+        self.assertEqual(arg.description, "The code to review")
+        self.assertTrue(arg.required)
+
+    def test_prompt_argument_creation_minimal(self):
+        arg = PromptArgument(name="text")
+        self.assertEqual(arg.name, "text")
+        self.assertIsNone(arg.description)
+        self.assertFalse(arg.required)
+
+    def test_prompt_argument_to_dict_all_fields(self):
+        arg = PromptArgument(
+            name="language",
+            description="Programming language",
+            required=True
+        )
+        result = arg.to_dict()
+        self.assertEqual(result, {
+            "name": "language",
+            "description": "Programming language",
+            "required": True
+        })
+
+    def test_prompt_argument_to_dict_minimal(self):
+        arg = PromptArgument(name="input")
+        result = arg.to_dict()
+        self.assertEqual(result, {
+            "name": "input",
+            "description": None,
+            "required": False
+        })
+
+    def test_prompt_argument_to_dict_no_description(self):
+        arg = PromptArgument(name="data", required=True)
+        result = arg.to_dict()
+        self.assertEqual(result["name"], "data")
+        self.assertIsNone(result["description"])
+        self.assertTrue(result["required"])
+
+
+class TestMCPPromptTrigger(unittest.TestCase):
+    """Unit tests for MCPPromptTrigger"""
+
+    def test_mcp_prompt_trigger_valid_creation_all_fields(self):
+        args_json = json.dumps([
+            {"name": "code", "description": "Code to review", "required": True},
+            {"name": "language", "description": "Programming language", "required": False}
+        ], separators=(',', ':'))
+
+        trigger = MCPPromptTrigger(
+            name="context",
+            prompt_name="code_review",
+            prompt_arguments=args_json,
+            title="Code Review",
+            description="Review code for quality",
+            metadata='{"version": "1.0"}',
+            icons=[{"name": "code", "url": "https://example.com/icon.png"}],
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy"
+        )
+
+        self.assertEqual(trigger.get_binding_name(), "mcpPromptTrigger")
+        dict_repr = trigger.get_dict_repr()
+
+        self.assertEqual(dict_repr["name"], "context")
+        self.assertEqual(dict_repr["promptName"], "code_review")
+        self.assertEqual(dict_repr["title"], "Code Review")
+        self.assertEqual(dict_repr["description"], "Review code for quality")
+        self.assertEqual(dict_repr["metadata"], '{"version": "1.0"}')
+        self.assertEqual(dict_repr["promptArguments"], args_json)
+        self.assertEqual(dict_repr["type"], "mcpPromptTrigger")
+        self.assertEqual(dict_repr["direction"], BindingDirection.IN)
+        self.assertEqual(dict_repr["dummyField"], "dummy")
+
+    def test_mcp_prompt_trigger_only_required_args_creation(self):
+        args_json = json.dumps([], separators=(',', ':'))
+
+        trigger = MCPPromptTrigger(
+            name="context",
+            prompt_name="simple_prompt",
+            prompt_arguments=args_json
+        )
+
+        self.assertEqual(trigger.get_binding_name(), "mcpPromptTrigger")
+        dict_repr = trigger.get_dict_repr()
+
+        self.assertEqual(dict_repr["name"], "context")
+        self.assertEqual(dict_repr["promptName"], "simple_prompt")
+        self.assertEqual(dict_repr["promptArguments"], "[]")
+        self.assertEqual(dict_repr["type"], "mcpPromptTrigger")
+
+    def test_mcp_prompt_trigger_empty_arguments(self):
+        trigger = MCPPromptTrigger(
+            name="ctx",
+            prompt_name="test",
+            prompt_arguments="[]"
+        )
+
+        dict_repr = trigger.get_dict_repr()
+        self.assertEqual(dict_repr["promptArguments"], "[]")
+
+    def test_mcp_prompt_trigger_with_icons(self):
+        icons = [
+            {"name": "icon1", "url": "https://example.com/1.png"},
+            {"name": "icon2", "url": "https://example.com/2.png"}
+        ]
+
+        trigger = MCPPromptTrigger(
+            name="ctx",
+            prompt_name="test",
+            prompt_arguments="[]",
+            icons=icons
+        )
+
+        dict_repr = trigger.get_dict_repr()
+        self.assertEqual(dict_repr["icons"], icons)
+
+
+class TestMcpPromptDecorator(unittest.TestCase):
+    """Unit tests for mcp_prompt_trigger decorator"""
+
+    def test_mcp_prompt_decorator_all_fields(self):
+        app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+        @app.mcp_prompt_trigger(
+            arg_name="context",
+            prompt_name="code_review",
+            prompt_arguments=[
+                PromptArgument("code", "Code to review", True),
+                PromptArgument("language", "Programming language", False)
+            ],
+            title="Code Review",
+            description="Reviews code quality",
+            metadata='{"version": "1.0"}',
+            icons=[{"name": "code", "url": "https://example.com/icon.png"}]
+        )
+        def code_review_prompt(context: PromptInvocationContext) -> str:
+            return "Reviewed"
+
+        func_name = code_review_prompt.get_function_name()
+        self.assertEqual(func_name, "code_review_prompt")
+
+        bindings = code_review_prompt.get_bindings()
+        self.assertEqual(len(bindings), 1)
+
+        trigger = bindings[0]
+        self.assertEqual(trigger.get_binding_name(), "mcpPromptTrigger")
+
+        dict_repr = trigger.get_dict_repr()
+        self.assertEqual(dict_repr["name"], "context")
+        self.assertEqual(dict_repr["promptName"], "code_review")
+        self.assertEqual(dict_repr["title"], "Code Review")
+        self.assertEqual(dict_repr["description"], "Reviews code quality")
+
+        # Verify arguments were serialized correctly
+        args = json.loads(dict_repr["promptArguments"])
+        self.assertEqual(len(args), 2)
+        self.assertEqual(args[0]["name"], "code")
+        self.assertTrue(args[0]["required"])
+        self.assertEqual(args[1]["name"], "language")
+        self.assertFalse(args[1]["required"])
+
+    def test_mcp_prompt_decorator_minimal(self):
+        app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+        @app.mcp_prompt_trigger(
+            arg_name="ctx",
+            prompt_name="simple",
+            prompt_arguments=[]
+        )
+        def simple_prompt(ctx: PromptInvocationContext) -> str:
+            return "Done"
+
+        bindings = simple_prompt.get_bindings()
+        trigger = bindings[0]
+        dict_repr = trigger.get_dict_repr()
+
+        self.assertEqual(dict_repr["promptName"], "simple")
+        self.assertEqual(dict_repr["promptArguments"], "[]")
+
+    def test_mcp_prompt_decorator_with_one_argument(self):
+        app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+        @app.mcp_prompt_trigger(
+            arg_name="context",
+            prompt_name="summarize",
+            prompt_arguments=[PromptArgument("text", "Text to summarize", True)]
+        )
+        def summarize(context: PromptInvocationContext) -> str:
+            text = context.arguments.get("text", "")
+            return f"Summary of: {text}"
+
+        bindings = summarize.get_bindings()
+        trigger = bindings[0]
+        dict_repr = trigger.get_dict_repr()
+
+        args = json.loads(dict_repr["promptArguments"])
+        self.assertEqual(len(args), 1)
+        self.assertEqual(args[0]["name"], "text")
+        self.assertEqual(args[0]["description"], "Text to summarize")
+        self.assertTrue(args[0]["required"])
+
+    def test_mcp_prompt_decorator_multiple_arguments(self):
+        app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+        @app.mcp_prompt_trigger(
+            arg_name="context",
+            prompt_name="translate",
+            prompt_arguments=[
+                PromptArgument("text", "Text to translate", True),
+                PromptArgument("source_lang", "Source language", False),
+                PromptArgument("target_lang", "Target language", True)
+            ]
+        )
+        def translate(context: PromptInvocationContext) -> str:
+            return "Translated"
+
+        bindings = translate.get_bindings()
+        trigger = bindings[0]
+        dict_repr = trigger.get_dict_repr()
+
+        args = json.loads(dict_repr["promptArguments"])
+        self.assertEqual(len(args), 3)
+        self.assertEqual(args[0]["name"], "text")
+        self.assertEqual(args[1]["name"], "source_lang")
+        self.assertEqual(args[2]["name"], "target_lang")
+
+    def test_mcp_prompt_decorator_arguments_serialization(self):
+        """Ensure PromptArgument objects are properly serialized to JSON"""
+        app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+
+        @app.mcp_prompt_trigger(
+            arg_name="ctx",
+            prompt_name="test",
+            prompt_arguments=[
+                PromptArgument("arg1", None, False),
+                PromptArgument("arg2", "Description", True)
+            ]
+        )
+        def test_func(ctx: PromptInvocationContext) -> str:
+            return ""
+
+        bindings = test_func.get_bindings()
+        trigger = bindings[0]
+        dict_repr = trigger.get_dict_repr()
+
+        # Should be valid JSON string
+        args_json = dict_repr["promptArguments"]
+        args = json.loads(args_json)
+
+        self.assertIsInstance(args, list)
+        self.assertEqual(len(args), 2)
+
+        # First argument with None description
+        self.assertEqual(args[0]["name"], "arg1")
+        self.assertIsNone(args[0]["description"])
+        self.assertFalse(args[0]["required"])
+
+        # Second argument with description
+        self.assertEqual(args[1]["name"], "arg2")
+        self.assertEqual(args[1]["description"], "Description")
+        self.assertTrue(args[1]["required"])

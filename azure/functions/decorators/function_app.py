@@ -48,7 +48,8 @@ from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, 
     _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
     semantic_search_system_prompt, \
     _SemanticSearchInput, _EmbeddingsStoreOutput
-from .mcp import _MCPToolTrigger, MCPResourceTrigger, build_property_metadata
+from .mcp import _MCPToolTrigger, MCPResourceTrigger, MCPPromptTrigger, \
+    PromptArgument, build_property_metadata
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
@@ -1773,6 +1774,75 @@ class TriggerApi(DecoratorApi, ABC):
                         mime_type=mime_type,
                         size=size,
                         metadata=metadata,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def mcp_prompt_trigger(self,
+                           arg_name: str,
+                           prompt_name: str,
+                           prompt_arguments: Optional[List[PromptArgument]] = None,
+                           title: Optional[str] = None,
+                           description: Optional[str] = None,
+                           metadata: Optional[str] = None,
+                           icons: Optional[str] = None,
+                           data_type: Optional[Union[DataType, str]] = None,
+                           **kwargs) -> Callable[..., Any]:
+        """The `mcp_prompt_trigger` decorator adds :class:`MCPPromptTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `MCPPromptTrigger` in the `function.json`,
+        which enables the function to be triggered when MCP prompt requests are
+        received by the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param prompt_name: Unique name of the prompt.
+        :param prompt_arguments: Optional list of PromptArgument objects defining the
+            prompt's expected arguments.
+        :param title: Optional human-readable title for display purposes.
+        :param description: Optional description of the prompt.
+        :param metadata: Optional JSON-serialized metadata object.
+        :param icons: Optional JSON-serialized array of icon objects.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                # Convert PromptArgument list to JSON string
+                prompt_arguments_json = None
+                if prompt_arguments:
+                    import json
+                    prompt_arguments_json = json.dumps(
+                        [arg.to_dict() for arg in prompt_arguments],
+                        separators=(',', ':')
+                    )
+
+                fb.add_trigger(
+                    trigger=MCPPromptTrigger(
+                        name=arg_name,
+                        prompt_name=prompt_name,
+                        prompt_arguments=prompt_arguments_json,
+                        title=title,
+                        description=description,
+                        metadata=metadata,
+                        icons=icons,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))
