@@ -101,7 +101,7 @@ class MCPPromptTrigger(Trigger):
         self.icons = icons
         self.promptArguments = prompt_arguments
 
-        super().__init__(name=name, data_type=data_type, **kwargs)
+        super().__init__(name=name, data_type=data_type)
 
 
 class _MCPToolTrigger(Trigger):

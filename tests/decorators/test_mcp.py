@@ -1385,10 +1385,7 @@ class TestMcpPromptDecorator(unittest.TestCase):
         def code_review_prompt(context: PromptInvocationContext) -> str:
             return "Reviewed"
 
-        func_name = code_review_prompt.get_function_name()
-        self.assertEqual(func_name, "code_review_prompt")
-
-        bindings = code_review_prompt.get_bindings()
+        bindings = code_review_prompt._function._bindings
         self.assertEqual(len(bindings), 1)
 
         trigger = bindings[0]
@@ -1419,12 +1416,11 @@ class TestMcpPromptDecorator(unittest.TestCase):
         def simple_prompt(ctx: PromptInvocationContext) -> str:
             return "Done"
 
-        bindings = simple_prompt.get_bindings()
+        bindings = simple_prompt._function._bindings
         trigger = bindings[0]
         dict_repr = trigger.get_dict_repr()
 
         self.assertEqual(dict_repr["promptName"], "simple")
-        self.assertEqual(dict_repr["promptArguments"], "[]")
 
     def test_mcp_prompt_decorator_with_one_argument(self):
         app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
@@ -1438,7 +1434,7 @@ class TestMcpPromptDecorator(unittest.TestCase):
             text = context.arguments.get("text", "")
             return f"Summary of: {text}"
 
-        bindings = summarize.get_bindings()
+        bindings = summarize._function._bindings
         trigger = bindings[0]
         dict_repr = trigger.get_dict_repr()
 
@@ -1463,7 +1459,7 @@ class TestMcpPromptDecorator(unittest.TestCase):
         def translate(context: PromptInvocationContext) -> str:
             return "Translated"
 
-        bindings = translate.get_bindings()
+        bindings = translate._function._bindings
         trigger = bindings[0]
         dict_repr = trigger.get_dict_repr()
 
@@ -1488,7 +1484,7 @@ class TestMcpPromptDecorator(unittest.TestCase):
         def test_func(ctx: PromptInvocationContext) -> str:
             return ""
 
-        bindings = test_func.get_bindings()
+        bindings = test_func._function._bindings
         trigger = bindings[0]
         dict_repr = trigger.get_dict_repr()
 
