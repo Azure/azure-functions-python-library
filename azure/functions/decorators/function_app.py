@@ -1954,7 +1954,6 @@ class TriggerApi(DecoratorApi, ABC):
                 # Convert PromptArgument list to JSON string
                 prompt_arguments_json = None
                 if prompt_arguments:
-                    import json
                     prompt_arguments_json = json.dumps(
                         [arg.to_dict() for arg in prompt_arguments],
                         separators=(',', ':')
