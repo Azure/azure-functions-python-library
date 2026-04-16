@@ -1,14 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import inspect
-import typing
-
-from typing import List, Optional, Union, get_origin, get_args
+from dataclasses import dataclass
+from typing import Any, List, Optional, Union, get_origin, get_args
 from datetime import datetime
 
 from ..mcp import MCPToolContext
 from azure.functions.decorators.constants import (
-    MCP_TOOL_TRIGGER, MCP_RESOURCE_TRIGGER
+    MCP_TOOL_TRIGGER, MCP_RESOURCE_TRIGGER, MCP_PROMPT_TRIGGER
 )
 from azure.functions.decorators.core import Trigger, DataType, McpPropertyType
 
@@ -21,6 +20,33 @@ _TYPE_MAPPING = {
     object: "object",
     datetime: "string"
 }
+
+
+@dataclass
+class PromptArgument:
+    """Defines a prompt argument with its metadata.
+
+    Args:
+        name: The argument name
+        description: Optional description of the argument
+        required: Whether the argument is required (default: False)
+    """
+
+    name: str
+    description: Optional[str] = None
+    required: bool = False
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary format expected by host."""
+        return {
+            "name": self.name,
+            "description": self.description,
+            "required": self.required
+        }
+
+    def serializer(obj):
+        if isinstance(obj, PromptArgument):
+            return obj.to_dict()
 
 
 class MCPResourceTrigger(Trigger):
@@ -49,6 +75,32 @@ class MCPResourceTrigger(Trigger):
         self.size = size
         self.metadata = metadata
         self.useResultSchema = use_result_schema
+        super().__init__(name=name, data_type=data_type)
+
+
+class MCPPromptTrigger(Trigger):
+
+    @staticmethod
+    def get_binding_name() -> str:
+        return MCP_PROMPT_TRIGGER
+
+    def __init__(self,
+                 name: str,
+                 prompt_name: str,
+                 prompt_arguments: Optional[str] = None,
+                 title: Optional[str] = None,
+                 description: Optional[str] = None,
+                 metadata: Optional[str] = None,
+                 icons: Optional[str] = None,
+                 data_type: Optional[DataType] = None,
+                 **kwargs):
+        self.promptName = prompt_name
+        self.title = title
+        self.description = description
+        self.metadata = metadata
+        self.icons = icons
+        self.promptArguments = prompt_arguments
+
         super().__init__(name=name, data_type=data_type)
 
 
@@ -164,7 +216,7 @@ def build_property_metadata(sig,
     return tool_properties
 
 
-def has_mcp_content_marker(obj: typing.Any) -> bool:
+def has_mcp_content_marker(obj: Any) -> bool:
     """
     Check if an object or its type is marked for structured content generation.
     Returns True if the object's class has '__mcp_content__' attribute set to True.
@@ -182,7 +234,7 @@ def has_mcp_content_marker(obj: typing.Any) -> bool:
     return getattr(obj_type, '__mcp_content__', False) is True
 
 
-def should_create_structured_content(obj: typing.Any) -> bool:
+def should_create_structured_content(obj: Any) -> bool:
     """
     Determines whether structured content should be created for the given object.
 

@@ -10,7 +10,8 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
-                         ExternalHttpFunctionApp, BlobSource, McpPropertyType)
+                         ExternalHttpFunctionApp, BlobSource, McpPropertyType,
+                         PromptArgument)
 from .decorators.mcp import mcp_content
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
@@ -20,7 +21,7 @@ from .extension import (ExtensionMeta, FunctionExtensionException,
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
-from .mcp import (MCPToolContext, ContentBlock, TextContentBlock,
+from .mcp import (MCPToolContext, PromptInvocationContext, ContentBlock, TextContentBlock,
                   ImageContentBlock, ResourceLinkBlock, CallToolResult)
 from .meta import get_binding_registry
 from ._queue import QueueMessage
@@ -106,6 +107,8 @@ __all__ = (
     'HttpMethod',
     'BlobSource',
     'MCPToolContext',
+    'PromptInvocationContext',
+    'PromptArgument',
     'McpPropertyType',
     'mcp_content',
 
