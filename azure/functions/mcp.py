@@ -13,12 +13,6 @@ from . import meta
 _MCP_SDK_AVAILABLE = False
 _mcp_types = None
 
-try:
-    from mcp import types as _mcp_types
-    _MCP_SDK_AVAILABLE = True
-except ImportError:
-    _mcp_types = None
-
 
 # MCP-specific context object
 class MCPToolContext(typing.Dict[str, typing.Any]):
@@ -33,8 +27,14 @@ def _is_mcp_sdk_type(obj: Any) -> bool:
     This uses module checking to detect any MCP SDK type,
     avoiding the need to hard-code specific type names.
     """
+    global _MCP_SDK_AVAILABLE, _mcp_types
     if not _MCP_SDK_AVAILABLE or _mcp_types is None:
-        return False
+        try:
+            from mcp import types as _mcp_types
+            _MCP_SDK_AVAILABLE = True
+        except ImportError:
+            _mcp_types = None
+            return False
 
     # Check if the object's class is from the mcp.types module
     obj_type = type(obj)
@@ -49,8 +49,14 @@ def _is_mcp_sdk_type(obj: Any) -> bool:
 
 def _is_mcp_call_tool_result(obj: Any) -> bool:
     """Check if an object is CallToolResult from the official MCP SDK."""
+    global _MCP_SDK_AVAILABLE, _mcp_types
     if not _MCP_SDK_AVAILABLE or _mcp_types is None:
-        return False
+        try:
+            from mcp import types as _mcp_types
+            _MCP_SDK_AVAILABLE = True
+        except ImportError:
+            _mcp_types = None
+            return False
 
     # Check for CallToolResult from mcp.types
     if hasattr(_mcp_types, 'CallToolResult'):
