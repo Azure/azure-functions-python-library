@@ -51,15 +51,17 @@ from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, 
     _SemanticSearchInput, _EmbeddingsStoreOutput
 from .mcp import _MCPToolTrigger, MCPResourceTrigger, MCPPromptTrigger, \
     PromptArgument, build_property_metadata, \
-    has_mcp_content_marker, should_create_structured_content
+    has_mcp_content_marker
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
-from ..mcp import MCPToolContext, ContentBlock, CallToolResult
+from ..mcp import MCPToolContext, _is_mcp_call_tool_result, _is_mcp_sdk_type
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
+
+_logger = logging.getLogger('azure.functions.AsgiMiddleware')
 
 
 class Function(object):
@@ -1633,36 +1635,46 @@ class TriggerApi(DecoratorApi, ABC):
             return_annotation = sig.return_annotation
             if return_annotation != inspect.Signature.empty and not auto_use_result_schema:
 
-                # Check if return type is a ContentBlock subclass
-                is_content_block = False
-                is_call_tool_result = False
+                # Check if return type is an MCP SDK type or @mcp_content decorated
                 is_mcp_content = False
+                is_mcp_sdk_type = False
 
+                # Try to detect official MCP SDK types by checking module
                 try:
-                    # Handle direct ContentBlock or CallToolResult
                     if isinstance(return_annotation, type):
-                        if issubclass(return_annotation, ContentBlock):
-                            is_content_block = True
-                        elif issubclass(return_annotation, CallToolResult):
-                            is_call_tool_result = True
-                        elif has_mcp_content_marker(return_annotation):
+                        # Check if the type is from the mcp.types module
+                        if hasattr(return_annotation, '__module__'):
+                            module = return_annotation.__module__
+                            if module and (module.startswith('mcp.types') or module == 'mcp.types'):
+                                is_mcp_sdk_type = True
+                except (ImportError, TypeError, AttributeError):
+                    pass
+
+                # Check for @mcp_content decorated classes
+                try:
+                    if isinstance(return_annotation, type):
+                        if has_mcp_content_marker(return_annotation):
                             is_mcp_content = True
                 except TypeError:
                     pass
 
-                # Handle List[ContentBlock] and other generic types
+                # Handle List[MCP types] and Optional[MCP types]
                 if hasattr(return_annotation, '__origin__'):
                     import typing
                     origin = typing.get_origin(return_annotation)
                     args = typing.get_args(return_annotation)
 
-                    # Check for List[ContentBlock] or list[ContentBlock]
-                    if origin in (list, List) and args:
-                        try:
-                            if issubclass(args[0], ContentBlock):
-                                is_content_block = True
-                        except TypeError:
-                            pass
+                    # Check for official MCP SDK types in lists
+                    try:
+                        if isinstance(args[0], type):
+                            # Check if the type is from the mcp.types module
+                            if hasattr(args[0], '__module__'):
+                                module = args[0].__module__
+                                if module and (module.startswith('mcp.types')
+                                               or module == 'mcp.types'):
+                                    is_mcp_sdk_type = True
+                    except (ImportError, TypeError, AttributeError):
+                        pass
 
                     # Check for Optional[T] where T is an MCP type
                     if origin is Union:
@@ -1671,20 +1683,33 @@ class TriggerApi(DecoratorApi, ABC):
                                 continue
                             try:
                                 if isinstance(arg, type):
-                                    if issubclass(arg, ContentBlock):
-                                        is_content_block = True
-                                        break
-                                    elif issubclass(arg, CallToolResult):
-                                        is_call_tool_result = True
-                                        break
-                                    elif has_mcp_content_marker(arg):
+                                    if has_mcp_content_marker(arg):
                                         is_mcp_content = True
                                         break
                             except TypeError:
                                 pass
 
+                            # Check for MCP SDK types in Union
+                            try:
+                                if isinstance(arg, type):
+                                    # Check module for mcp.types
+                                    if hasattr(arg, '__module__'):
+                                        module = arg.__module__
+                                        if (module
+                                                and (module.startswith('mcp.types')
+                                                     or module == 'mcp.types')):
+                                            is_mcp_sdk_type = True
+                                            break
+                            except (ImportError, TypeError, AttributeError):
+                                pass
+
                 # Auto-enable use_result_schema for MCP types
-                if is_content_block or is_call_tool_result or is_mcp_content:
+                if is_mcp_content or is_mcp_sdk_type:
+                    _logger.info(
+                        f"Auto-detected MCP content return type for "
+                        f"function '{target_func.__name__}'. "
+                        f"Setting use_result_schema=True for proper "
+                        f"structured content handling.")
                     auto_use_result_schema = True
 
             # Pull any explicitly declared MCP tool properties
@@ -1737,63 +1762,126 @@ class TriggerApi(DecoratorApi, ABC):
                 if result is None:
                     return ""
 
-                # Handle CallToolResult - manual construction by user
-                if isinstance(result, CallToolResult):
-                    result_dict = result.to_dict()
-                    structured = (json.dumps(result.structured_content)
-                                  if result.structured_content else None)
-                    return json.dumps({
-                        "type": "call_tool_result",
-                        "content": json.dumps(result_dict),
-                        "structuredContent": structured
-                    })
-
-                # Handle List[ContentBlock] - multiple content blocks
-                if isinstance(result, list) and all(
-                        isinstance(item, ContentBlock) for item in result):
-                    content_blocks = [block.to_dict() for block in result]
-                    return json.dumps({
-                        "type": "multi_content_result",
-                        "content": json.dumps(content_blocks),
-                        "structuredContent": json.dumps(content_blocks)
-                    })
-
-                # Handle single ContentBlock
-                if isinstance(result, ContentBlock):
-                    block_dict = result.to_dict()
-                    return str(json.dumps({
-                        "type": result.type,
-                        "content": json.dumps(block_dict),
-                        "structuredContent": json.dumps(block_dict)
-                    }))
-
                 # Handle structured content generation when
                 # auto_use_result_schema is True
                 if auto_use_result_schema:
-                    # Check if we should create structured content
-                    if should_create_structured_content(result):
-                        # Serialize result as JSON for structured content
-                        # Handle dataclasses properly
-                        if dataclasses.is_dataclass(result):
-                            result_json = json.dumps(
-                                dataclasses.asdict(result))
-                        elif hasattr(result, '__dict__'):
-                            # For regular classes with __dict__
-                            result_json = json.dumps(result.__dict__)
-                        else:
-                            # Fallback to str conversion
-                            result_json = json.dumps(
-                                result) if not isinstance(
-                                result, str) else result
+                    _logger.info(
+                        f"Processing result of function "
+                        f"'{target_func.__name__}' for structured content "
+                        f"generation.")
 
-                        # Return McpToolResult format with both text and structured content
+                    # Handle official MCP SDK CallToolResult
+                    if _is_mcp_call_tool_result(result):
+                        # CallToolResult already has the correct structure
+                        # Serialize using model_dump() for Pydantic models
+                        if hasattr(result, 'model_dump'):
+                            result_dict = result.model_dump(
+                                mode='json', exclude_none=True)
+                        elif hasattr(result, 'dict'):
+                            result_dict = result.dict(exclude_none=True)
+                        else:
+                            # Fallback: convert to dict manually
+                            result_dict = {
+                                'content': [
+                                    block.model_dump(
+                                        mode='json', exclude_none=True)
+                                    if hasattr(block, 'model_dump')
+                                    else dict(block)
+                                    for block in result.content
+                                ] if hasattr(result, 'content') else []
+                            }
+                            if (hasattr(result, 'structuredContent')
+                                    and result.structuredContent is not None):
+                                result_dict['structuredContent'] = (
+                                    result.structuredContent)
+
+                        # Full CallToolResult as JSON string
+                        full_result_json = json.dumps(result_dict)
+
+                        # Extract structuredContent value
+                        structured_content_value = result_dict.get(
+                            'structuredContent')
+                        structured_content_json = json.dumps(
+                            structured_content_value
+                        ) if structured_content_value is not None else None
+
+                        # Return in the expected format for CallToolResult
                         return str(json.dumps({
-                            "type": "text",
-                            "content": json.dumps({"type": "text", "text": result_json}),
+                            "type": "call_tool_result",
+                            "content": full_result_json,
+                            "structuredContent": structured_content_json
+                        }))
+
+                    # Handle all other MCP SDK types
+                    # (TextContent, ImageContent, ResourceLink, etc.)
+                    elif _is_mcp_sdk_type(result):
+                        if hasattr(result, 'model_dump'):
+                            result_dict = result.model_dump(
+                                mode='json', exclude_none=True)
+                            result_json = json.dumps(result_dict)
+                        elif hasattr(result, 'dict'):
+                            result_dict = result.dict(exclude_none=True)
+                            result_json = json.dumps(result_dict)
+                        else:
+                            result_dict = result.__dict__
+                            result_json = json.dumps(result_dict)
+
+                        # Extract type from the object itself
+                        # (works for any MCP type)
+                        # e.g., TextContent has type="text",
+                        result_type = result_dict.get('type', 'text')
+
+                        # Return format with type extracted from the object
+                        return str(json.dumps({
+                            "type": result_type,
+                            "content": result_json,
                             "structuredContent": result_json
                         }))
 
-                return str(result)
+                    # Handle dataclasses (e.g., @mcp_content decorated)
+                    elif dataclasses.is_dataclass(result):
+                        result_json = json.dumps(
+                            dataclasses.asdict(result))
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+
+                    # Handle regular classes with __dict__
+                    elif hasattr(result, '__dict__'):
+                        result_json = json.dumps(result.__dict__)
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+                    else:
+                        # Fallback to str conversion
+                        result_json = json.dumps(
+                            result) if not isinstance(
+                            result, str) else result
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+                else:
+                    # Backwards compatibility: when structured content
+                    # is not enabled, return the result as-is
+                    if isinstance(result, str):
+                        return result
+                    else:
+                        return str(result)
 
             wrapper.__signature__ = wrapper_sig
             fb._function._func = wrapper

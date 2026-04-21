@@ -37,7 +37,8 @@ dev = [
     'azure-functions-durable',
     'flake8~=4.0.1; python_version < "3.11"',
     'flake8~=7.1.1; python_version >= "3.11"',
-    'flake8-docstrings'
+    'flake8-docstrings',
+    'mcp'
 ]
 
 [tool.setuptools.packages.find]

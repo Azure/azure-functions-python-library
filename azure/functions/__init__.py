@@ -21,8 +21,7 @@ from .extension import (ExtensionMeta, FunctionExtensionException,
 from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
-from .mcp import (MCPToolContext, PromptInvocationContext, ContentBlock, TextContentBlock,
-                  ImageContentBlock, ResourceLinkBlock, CallToolResult)
+from .mcp import MCPToolContext, PromptInvocationContext
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
@@ -111,13 +110,6 @@ __all__ = (
     'PromptArgument',
     'McpPropertyType',
     'mcp_content',
-
-    # MCP ContentBlock types
-    'ContentBlock',
-    'TextContentBlock',
-    'ImageContentBlock',
-    'ResourceLinkBlock',
-    'CallToolResult'
 )
 
 __version__ = '2.2.0b1'

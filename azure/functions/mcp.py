@@ -1,10 +1,29 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import typing
-from dataclasses import dataclass, field, asdict
-from typing import Optional, List, Any
+import json
+from dataclasses import asdict, is_dataclass
+from typing import Any
 
 from . import meta
+import logging
+
+_logger = logging.getLogger('azure.functions.AsgiMiddleware')
+
+
+# Try to import the official MCP SDK types if available
+# This allows users to use the canonical types without us taking a hard dependency
+_MCP_SDK_AVAILABLE = False
+_mcp_types = None
+
+try:
+    _logger.info("Attempting to import official MCP SDK types for better compatibility.")
+    from mcp import types as _mcp_types
+    _MCP_SDK_AVAILABLE = True
+except ImportError:
+    _logger.warning("Official MCP SDK not found. Using fallback types. "
+                    "For best compatibility with MCP tools, please install the 'mcp' package.")
+    _mcp_types = None
 
 
 # MCP-specific context object
@@ -14,90 +33,65 @@ class MCPToolContext(typing.Dict[str, typing.Any]):
     pass
 
 
-# ContentBlock types for MCP responses
-@dataclass
-class ContentBlock:
-    """Base class for MCP content blocks."""
-    type: str = field(init=False)
+def _is_mcp_sdk_type(obj: Any) -> bool:
+    """Check if an object is from the official MCP SDK.
 
-    def to_dict(self) -> dict:
-        """Convert the content block to a dictionary for JSON serialization."""
-        return asdict(self)
-
-
-@dataclass
-class TextContentBlock(ContentBlock):
-    """Text content block for MCP responses."""
-    text: str
-    type: str = field(default="text", init=False)
-
-
-@dataclass
-class ImageContentBlock(ContentBlock):
-    """Image content block for MCP responses."""
-    data: str  # base64-encoded image data
-    mime_type: str
-    type: str = field(default="image", init=False)
-
-    def to_dict(self) -> dict:
-        """Convert to dict with correct JSON property names."""
-        return {
-            "type": self.type,
-            "data": self.data,
-            "mimeType": self.mime_type
-        }
-
-
-@dataclass
-class ResourceLinkBlock(ContentBlock):
-    """Resource link content block for MCP responses."""
-    uri: str
-    name: Optional[str] = None
-    description: Optional[str] = None
-    mime_type: Optional[str] = None
-    type: str = field(default="resource_link", init=False)
-
-    def to_dict(self) -> dict:
-        """Convert to dict with correct JSON property names."""
-        result = {
-            "type": self.type,
-            "uri": self.uri
-        }
-        if self.name is not None:
-            result["name"] = self.name
-        if self.description is not None:
-            result["description"] = self.description
-        if self.mime_type is not None:
-            result["mimeType"] = self.mime_type
-        return result
-
-
-@dataclass
-class CallToolResult:
+    This uses module checking to detect any MCP SDK type,
+    avoiding the need to hard-code specific type names.
     """
-    Result type for MCP tool calls that allows manual construction
-    of content blocks and structured content.
+    if not _MCP_SDK_AVAILABLE or _mcp_types is None:
+        return False
 
-    Example:
-        return CallToolResult(
-            content=[
-                TextContentBlock(text="Here's the data"),
-                ImageContentBlock(data=base64_data, mime_type="image/png")
-            ],
-            structured_content={"key": "value"}
-        )
+    # Check if the object's class is from the mcp.types module
+    obj_type = type(obj)
+    if hasattr(obj_type, '__module__'):
+        module = obj_type.__module__
+        # Check if it's from mcp.types or any mcp submodule
+        if module and (module.startswith('mcp.types') or module == 'mcp.types'):
+            return True
+
+    return False
+
+
+def _is_mcp_call_tool_result(obj: Any) -> bool:
+    """Check if an object is CallToolResult from the official MCP SDK."""
+    if not _MCP_SDK_AVAILABLE or _mcp_types is None:
+        return False
+
+    # Check for CallToolResult from mcp.types
+    if hasattr(_mcp_types, 'CallToolResult'):
+        return isinstance(obj, _mcp_types.CallToolResult)
+
+    return False
+
+
+def _serialize_content_block(block: Any) -> dict:
+    """Serialize a content block to a dictionary.
+
+    Handles official mcp.types and @mcp_content decorated classes.
     """
-    content: List[ContentBlock]
-    structured_content: Optional[Any] = None
+    # If it's from the official MCP SDK
+    if _is_mcp_sdk_type(block):
+        # MCP SDK types should be JSON-serializable
+        if hasattr(block, 'model_dump'):
+            return block.model_dump(mode='json', exclude_none=True)
+        elif hasattr(block, 'dict'):
+            return block.dict(exclude_none=True)
 
-    def to_dict(self) -> dict:
-        """Convert to dictionary for JSON serialization."""
-        result = {
-            "content": [block.to_dict() for block in self.content]
-        }
-        if self.structured_content is not None:
-            result["structuredContent"] = self.structured_content
-        return result
+    # If it's a dataclass (e.g., @mcp_content decorated)
+    if is_dataclass(block) and not isinstance(block, type):
+        return asdict(block)
+
+    # If it's already a dict
+    if isinstance(block, dict):
+        return block
+
+    # Fallback: try to convert to dict
+    if hasattr(block, '__dict__'):
+        return block.__dict__
+
+    msg = f"Unable to serialize content block of type {type(block).__name__}"
+    raise TypeError(msg)
 
 
 class PromptInvocationContext:
@@ -167,8 +161,8 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata):
-        """
-        Decode incoming MCP tool request data.
+        """Decode incoming MCP tool request data.
+
         Returns the raw data in its native format (string, dict, bytes).
         """
         # Handle different data types appropriately
@@ -185,10 +179,15 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
             return data.python_value if hasattr(data, 'python_value') else data.value
 
     @classmethod
-    def encode(cls, obj: typing.Any, *, expected_type: typing.Optional[type] = None):
-        """
-        Encode the return value from MCP tool functions.
-        MCP tools typically return string responses.
+    def encode(cls, obj: typing.Any, *,
+               expected_type: typing.Optional[type] = None):
+        """Encode the return value from MCP tool functions.
+
+        Supports multiple return types:
+        - Strings, bytes
+        - Official mcp.types content blocks (TextContent, ImageContent, etc.)
+        - Official mcp.types.CallToolResult
+        - Classes decorated with @mcp_content
         """
         if obj is None:
             return meta.Datum(type='string', value='')
@@ -196,9 +195,43 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
             return meta.Datum(type='string', value=obj)
         elif isinstance(obj, (bytes, bytearray)):
             return meta.Datum(type='bytes', value=bytes(obj))
-        else:
-            # Convert other types to string
-            return meta.Datum(type='string', value=str(obj))
+
+        # Handle official MCP SDK CallToolResult
+        elif _is_mcp_call_tool_result(obj):
+            # Serialize the MCP SDK's CallToolResult
+            if hasattr(obj, 'model_dump'):
+                result_dict = obj.model_dump(mode='json', exclude_none=True)
+            elif hasattr(obj, 'dict'):
+                result_dict = obj.dict(exclude_none=True)
+            else:
+                # Fallback: try to access attributes directly
+                content_blocks = [_serialize_content_block(block)
+                                  for block in obj.content]
+                result_dict = {
+                    'content': content_blocks if hasattr(obj, 'content') else [],
+                }
+                if (hasattr(obj, 'structured_content')
+                        and obj.structured_content is not None):
+                    result_dict['structuredContent'] = obj.structured_content
+            result_json = json.dumps(result_dict)
+            return meta.Datum(type='string', value=result_json)
+
+        # Handle official MCP SDK content types
+        elif _is_mcp_sdk_type(obj):
+            serialized = _serialize_content_block(obj)
+            return meta.Datum(type='string', value=json.dumps(serialized))
+
+        # Handle list of MCP SDK content blocks
+        elif isinstance(obj, list) and len(obj) > 0:
+            # Check if it's a list of MCP SDK content blocks
+            first_item = obj[0]
+            if _is_mcp_sdk_type(first_item):
+                blocks_list = [_serialize_content_block(block)
+                               for block in obj]
+                return meta.Datum(type='string', value=json.dumps(blocks_list))
+
+        # Fallback: convert other types to string
+        return meta.Datum(type='string', value=str(obj))
 
 
 class MCPResourceTriggerConverter(meta.InConverter, binding='mcpResourceTrigger',
