@@ -61,8 +61,6 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
-_logger = logging.getLogger('azure.functions.AsgiMiddleware')
-
 
 class Function(object):
     """
@@ -1705,11 +1703,6 @@ class TriggerApi(DecoratorApi, ABC):
 
                 # Auto-enable use_result_schema for MCP types
                 if is_mcp_content or is_mcp_sdk_type:
-                    _logger.info(
-                        f"Auto-detected MCP content return type for "
-                        f"function '{target_func.__name__}'. "
-                        f"Setting use_result_schema=True for proper "
-                        f"structured content handling.")
                     auto_use_result_schema = True
 
             # Pull any explicitly declared MCP tool properties
@@ -1765,10 +1758,6 @@ class TriggerApi(DecoratorApi, ABC):
                 # Handle structured content generation when
                 # auto_use_result_schema is True
                 if auto_use_result_schema:
-                    _logger.info(
-                        f"Processing result of function "
-                        f"'{target_func.__name__}' for structured content "
-                        f"generation.")
 
                     # Handle official MCP SDK CallToolResult
                     if _is_mcp_call_tool_result(result):

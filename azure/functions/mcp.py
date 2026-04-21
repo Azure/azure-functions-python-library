@@ -6,9 +6,6 @@ from dataclasses import asdict, is_dataclass
 from typing import Any
 
 from . import meta
-import logging
-
-_logger = logging.getLogger('azure.functions.AsgiMiddleware')
 
 
 # Try to import the official MCP SDK types if available
@@ -17,12 +14,9 @@ _MCP_SDK_AVAILABLE = False
 _mcp_types = None
 
 try:
-    _logger.info("Attempting to import official MCP SDK types for better compatibility.")
     from mcp import types as _mcp_types
     _MCP_SDK_AVAILABLE = True
 except ImportError:
-    _logger.warning("Official MCP SDK not found. Using fallback types. "
-                    "For best compatibility with MCP tools, please install the 'mcp' package.")
     _mcp_types = None
 
 
