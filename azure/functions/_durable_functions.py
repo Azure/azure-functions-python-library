@@ -6,8 +6,6 @@ from . import _abc
 from importlib import import_module
 
 
-# Allowlist of modules and classes that can be safely deserialized
-# This prevents arbitrary code execution via malicious module imports
 _SAFE_DESERIALIZATION_ALLOWLIST = {
     'azure.functions._cosmosdb': {'Document'},
     'azure.functions._sql': {'SqlRow'},
@@ -59,9 +57,6 @@ def _deserialize_custom_object(obj: dict) -> object:
     if it contains class metadata suggesting that it should be
     decoded further.
 
-    SECURITY: Only modules and classes in the allowlist can be deserialized
-    to prevent arbitrary code execution via malicious module imports.
-
     Parameters:
     ----------
     obj: dict
@@ -75,7 +70,7 @@ def _deserialize_custom_object(obj: dict) -> object:
     Exceptions
     ----------
     ValueError
-        If the module or class is not in the safe deserialization allowlist
+        If the module or class is not in the deserialization list
     TypeError
         If the decoded object does not contain a `from_json` function
     """
@@ -84,8 +79,7 @@ def _deserialize_custom_object(obj: dict) -> object:
         module_name = obj.pop("__module__")
         obj_data = obj.pop("__data__")
 
-        # SECURITY: Validate module and class against allowlist BEFORE importing
-        # This prevents arbitrary code execution via module-level code
+        # Validate module and class
         if module_name not in _SAFE_DESERIALIZATION_ALLOWLIST:
             raise ValueError(
                 f"Deserialization of module '{module_name}' is not allowed. "
@@ -102,7 +96,6 @@ def _deserialize_custom_object(obj: dict) -> object:
                 f"{', '.join(allowed_classes)}"
             )
 
-        # Safe to import now that we've validated the module and class
         module = import_module(module_name)
         class_ = getattr(module, class_name)
 
