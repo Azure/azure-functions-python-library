@@ -6,7 +6,7 @@ from . import _abc
 from importlib import import_module
 
 
-_SAFE_DESERIALIZATION_ALLOWLIST = {
+_DESERIALIZATION_LIST = {
     'azure.functions._cosmosdb': {'Document'},
     'azure.functions._sql': {'SqlRow'},
     'azure.functions._mysql': {'MySqlRow'},
@@ -80,14 +80,14 @@ def _deserialize_custom_object(obj: dict) -> object:
         obj_data = obj.pop("__data__")
 
         # Validate module and class
-        if module_name not in _SAFE_DESERIALIZATION_ALLOWLIST:
+        if module_name not in _DESERIALIZATION_LIST:
             raise ValueError(
                 f"Deserialization of module '{module_name}' is not allowed. "
                 f"Only the following modules are permitted: "
-                f"{', '.join(_SAFE_DESERIALIZATION_ALLOWLIST.keys())}"
+                f"{', '.join(_DESERIALIZATION_LIST.keys())}"
             )
 
-        allowed_classes = _SAFE_DESERIALIZATION_ALLOWLIST[module_name]
+        allowed_classes = _DESERIALIZATION_LIST[module_name]
         if class_name not in allowed_classes:
             raise ValueError(
                 f"Deserialization of class '{class_name}' from module "
