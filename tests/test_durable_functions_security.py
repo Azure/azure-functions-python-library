@@ -249,7 +249,3 @@ class EvilClass:
             'azure.functions._mysql'
         }
         self.assertEqual(set(_SAFE_DESERIALIZATION_ALLOWLIST.keys()), expected_modules)
-
-
-if __name__ == '__main__':
-    unittest.main()
