@@ -1,8 +1,11 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import unittest
 import json
+import sys
+import threading
+import unittest
+import warnings
 
 from azure.functions.durable_functions import (
     OrchestrationTriggerConverter,
@@ -14,10 +17,56 @@ from azure.functions._durable_functions import (
     OrchestrationContext,
     EntityContext
 )
+from azure.functions import _durable_functions as df
 from azure.functions.meta import Datum
 
 CONTEXT_CLASSES = [OrchestrationContext, EntityContext]
 CONVERTERS = [OrchestrationTriggerConverter, EnitityTriggerConverter]
+
+
+class City:
+    """Sample serializable type used by the helper tests."""
+
+    def __init__(self, name, population):
+        self.name = name
+        self.population = population
+
+    def __eq__(self, other):
+        return (isinstance(other, City)
+                and self.name == other.name
+                and self.population == other.population)
+
+    def to_json(self):
+        return {"name": self.name, "population": self.population}
+
+    @classmethod
+    def from_json(cls, data):
+        return cls(data["name"], data["population"])
+
+
+class PlainFromJsonClass:
+    """Has from_json as an instance method (must be rejected by resolver)."""
+
+    def to_json(self):
+        return {}
+
+    def from_json(self, data):  # not classmethod/staticmethod
+        return self
+
+
+class NoToJsonClass:
+    """Defines from_json but no to_json (must be rejected by resolver)."""
+
+    @classmethod
+    def from_json(cls, data):
+        return cls()
+
+
+_NOT_A_CLASS = "i am a string"
+
+
+def _from_json_function(data):
+    return data
 
 
 class TestDurableFunctions(unittest.TestCase):
@@ -344,3 +393,363 @@ class TestDurableFunctions(unittest.TestCase):
         data = Datum(type="weird", value="???")
         with self.assertRaises(ValueError):
             DurableClientConverter.decode(data=data, trigger_metadata=None)
+
+
+def _register(cls):
+    """Register a class and unregister it during teardown."""
+    df.register_durable_serializable_type(cls)
+
+
+def _unregister_all():
+    df._registered_types.clear()
+
+
+class _NoLazyImports:
+    """Context manager that asserts decode does not trigger lazy imports.
+
+    Decoding is expected to be a data transformation only.
+    """
+
+    def __init__(self, testcase):
+        self.tc = testcase
+        self._original = None
+
+    def __enter__(self):
+        import importlib as _il
+        self._original = _il.import_module
+
+        def _fail(name, package=None):
+            raise AssertionError(
+                "decode triggered a lazy import: "
+                f"name={name!r} package={package!r}"
+            )
+
+        _il.import_module = _fail
+        return self
+
+    def __exit__(self, *exc):
+        import importlib as _il
+        if self._original is not None:
+            _il.import_module = self._original
+
+
+class TestDurableSerializationRegistry(unittest.TestCase):
+
+    def tearDown(self):
+        _unregister_all()
+
+    def test_register_requires_to_json_and_from_json(self):
+        class Bad:
+            pass
+
+        with self.assertRaises(TypeError):
+            df.register_durable_serializable_type(Bad)
+
+    def test_register_is_idempotent_for_same_class(self):
+        df.register_durable_serializable_type(City)
+        df.register_durable_serializable_type(City)  # no error
+
+    def test_register_rejects_conflicting_class(self):
+        df.register_durable_serializable_type(City)
+
+        Other = type("City", (), {
+            "__module__": City.__module__,
+            "__qualname__": City.__qualname__,
+            "to_json": lambda self: {},
+            "from_json": classmethod(lambda cls, d: cls()),
+        })
+        with self.assertRaises(ValueError):
+            df.register_durable_serializable_type(Other)
+
+
+class TestSymmetricRoundTrip(unittest.TestCase):
+
+    def tearDown(self):
+        _unregister_all()
+
+    def _round_trip(self, value):
+        return df.from_json_string(df.to_json_string(value))
+
+    def test_plain_json_values_round_trip_unchanged(self):
+        corpus = [
+            None,
+            True,
+            False,
+            0,
+            -1,
+            3.14,
+            "",
+            "hello",
+            [],
+            [1, 2, 3],
+            {},
+            {"a": 1, "b": [1, 2], "c": {"d": "e"}},
+        ]
+        for value in corpus:
+            with self.subTest(value=value):
+                self.assertEqual(self._round_trip(value), value)
+
+    def test_dicts_with_individual_legacy_keys_round_trip_unchanged(self):
+        corpus = [
+            {"__class__": "X"},
+            {"__module__": "M"},
+            {"__data__": 1},
+            {"__class__": "X", "__module__": "M"},
+            {"__class__": "X", "__data__": 1},
+            {"__module__": "M", "__data__": 1},
+        ]
+        for value in corpus:
+            with self.subTest(value=value):
+                self.assertEqual(self._round_trip(value), value)
+
+    def test_dict_with_all_legacy_keys_round_trips_as_dict(self):
+        forged = {"__class__": "City", "__module__": "antigravity",
+                  "__data__": {}}
+        self.assertEqual(self._round_trip(forged), forged)
+        self.assertNotIsInstance(self._round_trip(forged), City)
+
+    def test_nested_collisions_are_escaped_and_restored(self):
+        value = {
+            "outer": [
+                {"__class__": "X", "__module__": "Y", "__data__": 1},
+                {"__azfunc_obj__": {"t": "x", "d": 0}},
+                {"__azfunc_escaped__": "x"},
+                {"normal": "dict"},
+            ],
+        }
+        self.assertEqual(self._round_trip(value), value)
+
+    def test_registered_instance_round_trips(self):
+        df.register_durable_serializable_type(City)
+        c = City("Seattle", 750000)
+        self.assertEqual(self._round_trip(c), c)
+
+    def test_registered_instance_nested_in_collection(self):
+        df.register_durable_serializable_type(City)
+        value = {"cities": [City("A", 1), City("B", 2)], "count": 2}
+        self.assertEqual(self._round_trip(value), value)
+
+    def test_unregistered_to_json_class_raises_on_serialize(self):
+        c = City("Seattle", 1)
+        with self.assertRaises(TypeError):
+            df.to_json_string(c)
+
+    def test_non_json_serializable_object_raises(self):
+        with self.assertRaises(TypeError):
+            df.to_json_string(object())
+
+
+class TestDecodeIsPureTransformation(unittest.TestCase):
+    """Decode is a data operation only."""
+
+    def tearDown(self):
+        _unregister_all()
+
+    def test_new_pipeline_with_registered_class(self):
+        df.register_durable_serializable_type(City)
+        s = df.to_json_string(City("X", 1))
+        with _NoLazyImports(self):
+            self.assertEqual(df.from_json_string(s), City("X", 1))
+
+    def test_new_pipeline_with_unknown_marker(self):
+        s = json.dumps({"__azfunc_obj__": {"t": "no.such.Thing", "d": {}}})
+        with _NoLazyImports(self):
+            result = df.from_json_string(s)
+        self.assertEqual(
+            result, {"__azfunc_obj__": {"t": "no.such.Thing", "d": {}}}
+        )
+
+    def test_legacy_string_decode_with_unloaded_module(self):
+        s = json.dumps({"__class__": "Thing", "__module__": "no_such_module_xyz",
+                        "__data__": {}})
+        with _NoLazyImports(self), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result["__class__"], "Thing")
+
+    def test_legacy_object_hook_with_loaded_module(self):
+        df.register_durable_serializable_type(City)
+        payload = {"__class__": "City", "__module__": City.__module__,
+                   "__data__": {"name": "X", "population": 1}}
+        s = json.dumps(payload)
+        with _NoLazyImports(self), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            decoded = json.loads(s, object_hook=df._deserialize_custom_object)
+        self.assertEqual(decoded, City("X", 1))
+
+    def test_legacy_object_hook_with_unloaded_module(self):
+        payload = {"__class__": "Thing", "__module__": "no_such_module_xyz",
+                   "__data__": {}}
+        with _NoLazyImports(self), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = df._deserialize_custom_object(dict(payload))
+        self.assertEqual(result, payload)
+
+
+class TestLegacyDecodePathFallback(unittest.TestCase):
+
+    def tearDown(self):
+        _unregister_all()
+        # Restore default; individual tests may toggle.
+        df._STRICT_LEGACY = False
+
+    def test_resolver_finds_class_in_loaded_module(self):
+        # City is defined in this test module (already in sys.modules).
+        cls = df._resolve_loaded_class(City.__module__, "City")
+        self.assertIs(cls, City)
+
+    def test_resolver_returns_none_for_unloaded_module(self):
+        self.assertNotIn("no_such_module_xyz", sys.modules)
+        self.assertIsNone(
+            df._resolve_loaded_class("no_such_module_xyz", "Thing")
+        )
+
+    def test_resolver_rejects_instance_method_from_json(self):
+        self.assertIsNone(
+            df._resolve_loaded_class(__name__, "PlainFromJsonClass")
+        )
+
+    def test_resolver_rejects_class_without_to_json(self):
+        self.assertIsNone(
+            df._resolve_loaded_class(__name__, "NoToJsonClass")
+        )
+
+    def test_resolver_rejects_non_class_attribute(self):
+        self.assertIsNone(df._resolve_loaded_class(__name__, "_NOT_A_CLASS"))
+        self.assertIsNone(
+            df._resolve_loaded_class(__name__, "_from_json_function")
+        )
+
+    def test_resolver_rejects_re_export(self):
+        # City re-exposed under a different module name -> rejected
+        # because cls.__module__ does not match.
+        fake_mod_name = "tests.test_durable_functions_fake_export"
+        fake = type(sys)("fake")
+        fake.City = City
+        sys.modules[fake_mod_name] = fake
+        try:
+            self.assertIsNone(
+                df._resolve_loaded_class(fake_mod_name, "City")
+            )
+        finally:
+            sys.modules.pop(fake_mod_name, None)
+
+    def test_legacy_decode_via_sys_modules_fallback(self):
+        payload = {"__class__": "City", "__module__": City.__module__,
+                   "__data__": {"name": "Y", "population": 2}}
+        s = json.dumps(payload)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result, City("Y", 2))
+        self.assertTrue(any(issubclass(w.category, DeprecationWarning)
+                            for w in caught))
+
+    def test_legacy_decode_strict_mode_returns_dict(self):
+        df._STRICT_LEGACY = True
+        payload = {"__class__": "City", "__module__": City.__module__,
+                   "__data__": {"name": "Y", "population": 2}}
+        s = json.dumps(payload)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result, payload)
+        self.assertTrue(any(issubclass(w.category, DeprecationWarning)
+                            for w in caught))
+
+    def test_legacy_decode_unloaded_module_returns_dict(self):
+        payload = {"__class__": "Thing", "__module__": "no_such_module_xyz",
+                   "__data__": {}}
+        s = json.dumps(payload)
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result, payload)
+        self.assertTrue(any(issubclass(w.category, DeprecationWarning)
+                            for w in caught))
+
+    def test_legacy_decode_registered_class_takes_precedence(self):
+        df.register_durable_serializable_type(City)
+        payload = {"__class__": "City", "__module__": City.__module__,
+                   "__data__": {"name": "Z", "population": 3}}
+        s = json.dumps(payload)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result, City("Z", 3))
+
+    def test_legacy_decode_without_accept_legacy_returns_dict(self):
+        payload = {"__class__": "City", "__module__": City.__module__,
+                   "__data__": {"name": "Q", "population": 4}}
+        s = json.dumps(payload)
+        result = df.from_json_string(s, accept_legacy=False)
+        self.assertEqual(result, payload)
+
+    def test_legacy_decode_unregistered_returns_dict(self):
+        payload = {"__class__": "Nope", "__module__": "no_such_module_xyz",
+                   "__data__": {}}
+        s = json.dumps(payload)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = df.from_json_string(s, accept_legacy=True)
+        self.assertEqual(result, payload)
+
+
+class TestLegacyShimSerialize(unittest.TestCase):
+
+    def tearDown(self):
+        _unregister_all()
+
+    def test_serialize_unregistered_class_raises(self):
+        c = City("X", 1)
+        with self.assertRaises(TypeError):
+            df._serialize_custom_object(c)
+
+    def test_serialize_registered_class_emits_legacy_shape(self):
+        df.register_durable_serializable_type(City)
+        out = df._serialize_custom_object(City("X", 1))
+        self.assertEqual(set(out.keys()),
+                         {"__class__", "__module__", "__data__"})
+        self.assertEqual(out["__class__"], "City")
+        self.assertEqual(out["__module__"], City.__module__)
+        self.assertEqual(out["__data__"], {"name": "X", "population": 1})
+
+    def test_legacy_shim_round_trip_via_json(self):
+        df.register_durable_serializable_type(City)
+        s = json.dumps(City("R", 5), default=df._serialize_custom_object)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            decoded = json.loads(s, object_hook=df._deserialize_custom_object)
+        self.assertEqual(decoded, City("R", 5))
+
+
+class TestRegistryConcurrency(unittest.TestCase):
+
+    def tearDown(self):
+        _unregister_all()
+
+    def test_concurrent_registration_is_safe(self):
+        errors = []
+
+        def worker():
+            try:
+                for _ in range(50):
+                    df.register_durable_serializable_type(City)
+            except Exception as exc:  # pragma: no cover - reported via errors
+                errors.append(exc)
+
+        threads = [threading.Thread(target=worker) for _ in range(8)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        self.assertEqual(errors, [])
+        key = f"{City.__module__}.{City.__qualname__}"
+        self.assertIs(df._registered_types[key], City)
+
+
+class TestModuleSurface(unittest.TestCase):
+    """Module-level imports stay minimal."""
+
+    def test_module_does_not_expose_import_module(self):
+        self.assertFalse(hasattr(df, "import_module"))
