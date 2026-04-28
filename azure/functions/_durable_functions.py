@@ -18,6 +18,7 @@ is imported during decoding.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import warnings
@@ -37,6 +38,8 @@ _registry_lock = Lock()
 _STRICT_LEGACY = os.environ.get(
     "AZURE_FUNCTIONS_DURABLE_STRICT_LEGACY_DESERIALIZE", ""
 ).lower() in ("1", "true", "yes")
+
+_logger = logging.getLogger("azure.functions.DurableFunctions")
 
 
 def register_durable_serializable_type(cls: Type) -> Type:
@@ -144,7 +147,7 @@ def _legacy_resolve(mod_name: str, cls_name: str):
 
 
 def _warn_legacy_hit(mod_name: str, cls_name: str, *, resolved: bool) -> None:
-    """Emit a ``DeprecationWarning`` when the legacy decode path runs."""
+    """Emit a log warning and ``DeprecationWarning`` for legacy decode."""
     if resolved:
         msg = (
             f"Durable Functions reconstructed {mod_name}.{cls_name} via the "
@@ -164,6 +167,7 @@ def _warn_legacy_hit(mod_name: str, cls_name: str, *, resolved: bool) -> None:
             "staticmethod). The legacy shape will be removed in the next "
             "major version."
         )
+    _logger.warning(msg)
     warnings.warn(msg, DeprecationWarning, stacklevel=3)
 
 
