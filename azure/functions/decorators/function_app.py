@@ -1663,16 +1663,44 @@ class TriggerApi(DecoratorApi, ABC):
                     args = typing.get_args(return_annotation)
 
                     # Check for official MCP SDK types in lists
-                    try:
-                        if isinstance(args[0], type):
-                            # Check if the type is from the mcp.types module
-                            if hasattr(args[0], '__module__'):
-                                module = args[0].__module__
-                                if module and (module.startswith('mcp.types')
-                                               or module == 'mcp.types'):
-                                    is_mcp_sdk_type = True
-                    except (ImportError, TypeError, AttributeError):
-                        pass
+                    if origin in (list, List):
+                        # For List[T], check if T is an MCP type
+                        try:
+                            if len(args) > 0:
+                                list_item_type = args[0]
+                                # Check if it's a direct MCP type
+                                if isinstance(list_item_type, type):
+                                    if hasattr(list_item_type, '__module__'):
+                                        module = list_item_type.__module__
+                                        if (module and
+                                            (module.startswith('mcp.types')
+                                             or module == 'mcp.types')):
+                                            is_mcp_sdk_type = True
+                                # Check if it's a Union of MCP types
+                                elif hasattr(list_item_type, '__origin__'):
+                                    union_origin = typing.get_origin(
+                                        list_item_type)
+                                    if union_origin is Union:
+                                        union_args = typing.get_args(
+                                            list_item_type)
+                                        for union_arg in union_args:
+                                            if (isinstance(union_arg, type)
+                                                    and union_arg is not
+                                                    type(None)):
+                                                if hasattr(union_arg,
+                                                           '__module__'):
+                                                    module = (
+                                                        union_arg.__module__)
+                                                    if (module and
+                                                        (module.startswith(
+                                                            'mcp.types')
+                                                         or module ==
+                                                         'mcp.types')):
+                                                        is_mcp_sdk_type = True
+                                                        break
+                        except (ImportError, TypeError, AttributeError,
+                                IndexError):
+                            pass
 
                     # Check for Optional[T] where T is an MCP type
                     if origin is Union:
@@ -1800,6 +1828,32 @@ class TriggerApi(DecoratorApi, ABC):
                             "content": full_result_json,
                             "structuredContent": structured_content_json
                         }))
+
+                    # Handle lists of MCP SDK content blocks
+                    # Wrap them in a CallToolResult structure
+                    elif isinstance(result, list) and len(result) > 0:
+                        first_item = result[0]
+                        if _is_mcp_sdk_type(first_item):
+                            # Serialize all blocks in the list
+                            from ..mcp import _serialize_content_block
+                            blocks_list = [_serialize_content_block(block)
+                                           for block in result]
+
+                            # Create a CallToolResult-like structure
+                            # containing the blocks
+                            call_tool_result = {
+                                "content": blocks_list
+                            }
+                            full_result_json = json.dumps(call_tool_result)
+
+                            # Return in CallToolResult format
+                            # (list of blocks doesn't have separate
+                            # structuredContent)
+                            return str(json.dumps({
+                                "type": "call_tool_result",
+                                "content": full_result_json,
+                                "structuredContent": None
+                            }))
 
                     # Handle all other MCP SDK types
                     # (TextContent, ImageContent, ResourceLink, etc.)
