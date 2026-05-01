@@ -43,7 +43,7 @@ from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
-from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
+from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding, ConnectorTrigger
 from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, \
     _AssistantCreateOutput, \
     _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
@@ -1548,6 +1548,49 @@ class TriggerApi(DecoratorApi, ABC):
                     trigger=GenericTrigger(
                         name=arg_name,
                         type=type,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def generic_connector_trigger(self,
+                                   arg_name: str,
+                                   data_type: Optional[Union[DataType, str]] = None,
+                                   **kwargs
+                                   ) -> Callable[..., Any]:
+        """
+        The `generic_connector_trigger` decorator adds :class:`ConnectorTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a connector trigger in the `function.json`, which
+        triggers the function to execute when connector trigger events are received by
+        the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/azure-function-binding-custom
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=ConnectorTrigger(
+                        name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
                         **kwargs))

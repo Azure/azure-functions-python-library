@@ -22,6 +22,7 @@ from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
 from .mcp import MCPToolContext, PromptInvocationContext
+from .connector import ConnectorContext
 from .meta import get_binding_registry
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
@@ -43,6 +44,7 @@ from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
 from . import mysql  # NoQA
+from . import connector  # NoQA
 
 
 __all__ = (
@@ -76,6 +78,7 @@ __all__ = (
     'WarmUpContext',
     'MySqlRow',
     'MySqlRowList',
+    'ConnectorContext',
 
     # Middlewares
     'WsgiMiddleware',
