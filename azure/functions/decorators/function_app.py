@@ -1672,9 +1672,9 @@ class TriggerApi(DecoratorApi, ABC):
                                 if isinstance(list_item_type, type):
                                     if hasattr(list_item_type, '__module__'):
                                         module = list_item_type.__module__
-                                        if (module and
-                                            (module.startswith('mcp.types')
-                                             or module == 'mcp.types')):
+                                        if (module
+                                            and (module.startswith('mcp.types')
+                                                 or module == 'mcp.types')):
                                             is_mcp_sdk_type = True
                                 # Check if it's a Union of MCP types
                                 elif hasattr(list_item_type, '__origin__'):
@@ -1691,11 +1691,11 @@ class TriggerApi(DecoratorApi, ABC):
                                                            '__module__'):
                                                     module = (
                                                         union_arg.__module__)
-                                                    if (module and
-                                                        (module.startswith(
+                                                    if (module
+                                                        and (module.startswith(
                                                             'mcp.types')
-                                                         or module ==
-                                                         'mcp.types')):
+                                                            or module
+                                                            == 'mcp.types')):
                                                         is_mcp_sdk_type = True
                                                         break
                         except (ImportError, TypeError, AttributeError,
