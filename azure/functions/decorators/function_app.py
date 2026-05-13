@@ -1557,13 +1557,12 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
-    def generic_connector_trigger(self,
-                                   arg_name: str,
-                                   data_type: Optional[Union[DataType, str]] = None,
-                                   **kwargs
-                                   ) -> Callable[..., Any]:
+    def connector_trigger(self,
+                          arg_name: str,
+                          data_type: Optional[Union[DataType, str]] = None,
+                          **kwargs) -> Callable[..., Any]:
         """
-        The `generic_connector_trigger` decorator adds :class:`ConnectorTrigger` to the
+        The `connector_trigger` decorator adds :class:`ConnectorTrigger` to the
         :class:`FunctionBuilder` object for building a :class:`Function` used in the
         worker function indexing model.
 

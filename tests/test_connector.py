@@ -53,7 +53,7 @@ class TestConnectorTriggerConverter(unittest.TestCase):
             type = 'custom'
             value = 'original'
             python_value = 'python version'
-        
+
         data = MockDatum()
         result = ConnectorTriggerConverter.decode(data, trigger_metadata={})
         self.assertEqual(result, 'python version')
@@ -109,7 +109,7 @@ class TestConnectorTriggerConverter(unittest.TestCase):
     def test_connector_context_is_dict_subclass(self):
         # Verify ConnectorContext is a dict subclass
         self.assertTrue(issubclass(ConnectorContext, dict))
-        
+
         # Test that it can be instantiated and used as a dict
         ctx = ConnectorContext({'key': 'value'})
         self.assertEqual(ctx['key'], 'value')
@@ -121,34 +121,40 @@ class TestConnectorDecoratorIntegration(unittest.TestCase):
     def test_decorator_creates_function_with_trigger(self):
         app = func.FunctionApp()
 
-        @app.generic_connector_trigger(arg_name="payload")
+        @app.connector_trigger(arg_name="payload")
         def connector_function(payload):
             return f"Received: {payload}"
 
-        # Verify the function was decorated
-        self.assertIsNotNone(connector_function)
-        
-        # Check that it has the expected structure
-        # The decorator should return a Function object
-        self.assertTrue(hasattr(connector_function, 'get_triggers'))
+        # Get the built function
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        built_func = funcs[0]
+        self.assertIsNotNone(built_func.get_trigger())
+        self.assertEqual(built_func.get_trigger().type, 'connectorTrigger')
 
     def test_decorator_with_data_type(self):
         app = func.FunctionApp()
 
-        @app.generic_connector_trigger(
+        @app.connector_trigger(
             arg_name="context",
             data_type=func.DataType.STRING
         )
         def connector_with_datatype(context):
             return context
 
-        self.assertIsNotNone(connector_with_datatype)
-        self.assertTrue(hasattr(connector_with_datatype, 'get_triggers'))
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        built_func = funcs[0]
+        trigger = built_func.get_trigger()
+        self.assertIsNotNone(trigger)
+        self.assertEqual(trigger.get_dict_repr()['dataType'], func.DataType.STRING)
 
     def test_decorator_with_kwargs(self):
         app = func.FunctionApp()
 
-        @app.generic_connector_trigger(
+        @app.connector_trigger(
             arg_name="data",
             custom_field="custom_value",
             another_property=123
@@ -156,13 +162,14 @@ class TestConnectorDecoratorIntegration(unittest.TestCase):
         def connector_with_kwargs(data):
             return data
 
-        self.assertIsNotNone(connector_with_kwargs)
-        
-        # Verify trigger was added with kwargs
-        triggers = connector_with_kwargs.get_triggers()
-        self.assertEqual(len(triggers), 1)
-        
-        trigger_dict = triggers[0].get_dict_repr()
+        funcs = app.get_functions()
+        self.assertEqual(len(funcs), 1)
+
+        built_func = funcs[0]
+        bindings = built_func.get_bindings()
+        self.assertEqual(len(bindings), 1)
+
+        trigger_dict = bindings[0].get_dict_repr()
         self.assertEqual(trigger_dict['type'], 'connectorTrigger')
         self.assertEqual(trigger_dict['customField'], 'custom_value')
         self.assertEqual(trigger_dict['anotherProperty'], 123)
