@@ -4,7 +4,7 @@ import unittest
 
 from azure.functions.decorators.constants import CONNECTOR_TRIGGER
 from azure.functions.decorators.core import BindingDirection, DataType
-from azure.functions.decorators.generic import ConnectorTrigger
+from azure.functions.decorators.connectors import ConnectorTrigger
 
 
 class TestConnectorTrigger(unittest.TestCase):
