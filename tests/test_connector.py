@@ -4,8 +4,7 @@ import unittest
 import json
 import azure.functions as func
 from azure.functions.meta import Datum
-from azure.functions.connector import (ConnectorTriggerConverter,
-                                       ConnectorContext)
+from azure.functions.connectors import ConnectorTriggerConverter
 
 
 class TestConnectorTriggerConverter(unittest.TestCase):
@@ -15,7 +14,6 @@ class TestConnectorTriggerConverter(unittest.TestCase):
         self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(str))
         self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(dict))
         self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(bytes))
-        self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(ConnectorContext))
 
     def test_check_input_type_annotation_invalid_type(self):
         with self.assertRaises(TypeError):
@@ -105,14 +103,6 @@ class TestConnectorTriggerConverter(unittest.TestCase):
         result = ConnectorTriggerConverter.encode(True)
         self.assertEqual(result.type, 'string')
         self.assertEqual(result.value, 'True')
-
-    def test_connector_context_is_dict_subclass(self):
-        # Verify ConnectorContext is a dict subclass
-        self.assertTrue(issubclass(ConnectorContext, dict))
-
-        # Test that it can be instantiated and used as a dict
-        ctx = ConnectorContext({'key': 'value'})
-        self.assertEqual(ctx['key'], 'value')
 
 
 class TestConnectorDecoratorIntegration(unittest.TestCase):

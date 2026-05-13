@@ -6,17 +6,12 @@ import typing
 from . import meta
 
 
-class ConnectorContext(typing.Dict[str, typing.Any]):
-    """Context object for connector triggers."""
-    pass
-
-
 class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
                                 trigger=True):
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes, ConnectorContext))
+        return issubclass(pytype, (str, dict, bytes))
 
     @classmethod
     def has_implicit_output(cls) -> bool:
