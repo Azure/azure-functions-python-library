@@ -675,6 +675,18 @@ class TestAutoUseResultSchema(unittest.TestCase):
         trigger = get_texts._function._bindings[0]
         self.assertTrue(trigger.use_result_schema)
 
+    def test_auto_detect_list_union_mcp_types(self):
+        """Test auto-detection of List[Union[MCP types]] return type"""
+        from typing import Union
+
+        @self.app.mcp_tool()
+        def get_mixed_content() -> List[Union[TextContent, ImageContent]]:
+            """Returns mixed content blocks"""
+            return [TextContent(type="text", text="test")]
+
+        trigger = get_mixed_content._function._bindings[0]
+        self.assertTrue(trigger.use_result_schema)
+
     def test_auto_detect_optional_mcp_image_content(self):
         """Test auto-detection of Optional[ImageContent] return type"""
         @self.app.mcp_tool()
@@ -906,6 +918,34 @@ class TestStructuredContentInResponses(unittest.TestCase):
         self.assertIn("type", result_obj)
         self.assertIn("content", result_obj)
         self.assertIn("structuredContent", result_obj)
+
+    def test_structured_content_in_list_of_mcp_types(self):
+        """Test that List[MCP SDK types] includes structuredContent"""
+        @self.app.mcp_tool()
+        def test_func() -> List[TextContent]:
+            """Test function"""
+            return [
+                TextContent(type="text", text="First item"),
+                TextContent(type="text", text="Second item")
+            ]
+
+        wrapper = test_func._function._func
+        context = json.dumps({"arguments": {}})
+        result = asyncio.run(wrapper(context))
+        result_obj = json.loads(result)
+
+        # List of content blocks is wrapped as CallToolResult
+        self.assertIn("type", result_obj)
+        self.assertEqual(result_obj["type"], "call_tool_result")
+        self.assertIn("content", result_obj)
+        self.assertIn("structuredContent", result_obj)
+
+        # Content contains the CallToolResult structure with the blocks
+        content_obj = json.loads(result_obj["content"])
+        self.assertIn("content", content_obj)
+        self.assertEqual(len(content_obj["content"]), 2)
+        self.assertEqual(content_obj["content"][0]["text"], "First item")
+        self.assertEqual(content_obj["content"][1]["text"], "Second item")
 
 
 class TestMCPPackageNotInstalled(unittest.TestCase):
