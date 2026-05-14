@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import sys
+import warnings
 from typing import Any, Callable, Optional, Union
 
 from . import _abc
@@ -15,9 +16,49 @@ _STRICT_ENV_VAR = "AZURE_FUNCTIONS_DURABLE_STRICT_TYPING"
 _TRUTHY = frozenset({"1", "true", "yes"})
 _LEGACY_KEYS = frozenset({"__class__", "__module__", "__data__"})
 
+# One-shot notice flags.  Each becomes True after the corresponding
+# advisory has been emitted in this process; tests may reset them.
+_loose_codec_notice_emitted = False
+_no_expected_type_notice_emitted = False
+
 
 def _is_strict_mode() -> bool:
     return os.environ.get(_STRICT_ENV_VAR, "").strip().lower() in _TRUTHY
+
+
+def _notify_loose_codec_used() -> None:
+    """Emit a one-time advisory the first time the loose-mode object_hook
+    path actually reconstructs a custom object in this process."""
+    global _loose_codec_notice_emitted
+    if _loose_codec_notice_emitted or _is_strict_mode():
+        return
+    _loose_codec_notice_emitted = True
+    msg = (
+        "azure.functions Durable JSON codec reconstructed a custom "
+        "object via the loose-mode object_hook path.  Set "
+        "AZURE_FUNCTIONS_DURABLE_STRICT_TYPING=1 and supply "
+        "expected_type at decode call sites to enable type-validated "
+        "deserialization.  This message will not be repeated."
+    )
+    logger.info(msg)
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
+
+
+def _notify_no_expected_type() -> None:
+    """Emit a one-time advisory the first time df_loads is called in
+    loose mode without an expected_type in this process."""
+    global _no_expected_type_notice_emitted
+    if _no_expected_type_notice_emitted or _is_strict_mode():
+        return
+    _no_expected_type_notice_emitted = True
+    msg = (
+        "azure.functions df_loads was called without expected_type.  "
+        "Pass the destination type to enable validation and prepare "
+        "for strict typing (AZURE_FUNCTIONS_DURABLE_STRICT_TYPING=1).  "
+        "This message will not be repeated."
+    )
+    logger.info(msg)
+    warnings.warn(msg, DeprecationWarning, stacklevel=2)
 
 
 # Utilities
@@ -113,6 +154,7 @@ def _deserialize_custom_object(obj: dict) -> object:
 
         # Initialize the object using its `from_json` deserializer
         obj = class_.from_json(obj_data)
+        _notify_loose_codec_used()
     return obj
 
 
@@ -171,6 +213,8 @@ def df_loads(s: str, expected_type: Optional[type] = None) -> Any:
     """
     if expected_type is not None:
         return _loads_with_expected_type(s, expected_type)
+
+    _notify_no_expected_type()
 
     if _is_strict_mode():
         return _loads_strict_no_type(s)

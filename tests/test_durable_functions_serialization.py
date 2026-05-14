@@ -4,6 +4,7 @@
 import json
 import typing
 import unittest
+import warnings
 from unittest import mock
 
 from azure.functions import _durable_functions
@@ -16,6 +17,19 @@ from azure.functions._durable_functions import (
 )
 from azure.functions.durable_functions import ActivityTriggerConverter
 from azure.functions.meta import Datum
+
+
+def _reset_notice_flags():
+    _durable_functions._loose_codec_notice_emitted = False
+    _durable_functions._no_expected_type_notice_emitted = False
+
+
+class _NoticeIsolatedTestCase(unittest.TestCase):
+    """Reset the one-shot notice flags before each test."""
+
+    def setUp(self):
+        _reset_notice_flags()
+        self.addCleanup(_reset_notice_flags)
 
 
 # ---------------------------------------------------------------------------
@@ -93,7 +107,7 @@ def _no_strict_env():
 # ---------------------------------------------------------------------------
 
 
-class TestDfDumps(unittest.TestCase):
+class TestDfDumps(_NoticeIsolatedTestCase):
 
     def test_loose_primitive_roundtrip(self):
         for value in [None, True, 1, 1.5, "x", [1, 2], {"a": 1}]:
@@ -139,7 +153,7 @@ class TestDfDumps(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestDfLoadsNoType(unittest.TestCase):
+class TestDfLoadsNoType(_NoticeIsolatedTestCase):
 
     def test_loose_primitive(self):
         s = json.dumps({"a": 1, "b": [2, 3]})
@@ -200,7 +214,7 @@ class TestDfLoadsNoType(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestDfLoadsWithType(unittest.TestCase):
+class TestDfLoadsWithType(_NoticeIsolatedTestCase):
 
     def test_loose_match_uses_object_hook(self):
         # Loose mode preserves the legacy object_hook path so nested custom
@@ -276,7 +290,7 @@ class TestDfLoadsWithType(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestGetSerializeDefault(unittest.TestCase):
+class TestGetSerializeDefault(_NoticeIsolatedTestCase):
 
     def test_loose_returns_serializer(self):
         self.assertIs(_get_serialize_default(), _serialize_custom_object)
@@ -291,7 +305,7 @@ class TestGetSerializeDefault(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestDeserializeCustomObjectDirect(unittest.TestCase):
+class TestDeserializeCustomObjectDirect(_NoticeIsolatedTestCase):
 
     def test_module_loaded_reconstructs(self):
         result = _deserialize_custom_object({
@@ -329,7 +343,7 @@ class TestDeserializeCustomObjectDirect(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 
-class TestActivityTriggerConverterIntegration(unittest.TestCase):
+class TestActivityTriggerConverterIntegration(_NoticeIsolatedTestCase):
 
     def test_decode_uses_df_loads(self):
         datum = Datum(type="json", value=json.dumps({"x": 1}))
@@ -366,6 +380,81 @@ class TestActivityTriggerConverterIntegration(unittest.TestCase):
         with self.assertRaises(ValueError):
             ActivityTriggerConverter.encode(NotSerializable(),
                                             expected_type=None)
+
+
+# ---------------------------------------------------------------------------
+# One-shot loose-mode notices
+# ---------------------------------------------------------------------------
+
+
+class TestLooseModeNotices(_NoticeIsolatedTestCase):
+
+    def test_loose_codec_notice_fires_once(self):
+        s = df_dumps(Hat("red"))
+        with self.assertLogs(_durable_functions.__name__,
+                             level="INFO") as cm, \
+                warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            df_loads(s)
+            df_loads(s)  # second call must not emit again
+            df_loads(s)
+        self.assertEqual(
+            sum("loose-mode object_hook" in m for m in cm.output), 1)
+        self.assertEqual(
+            sum(issubclass(w.category, DeprecationWarning)
+                and "loose-mode object_hook" in str(w.message)
+                for w in caught),
+            1,
+        )
+
+    def test_loose_codec_notice_not_emitted_for_primitive(self):
+        # No custom-object reconstruction -> no loose-codec notice.
+        with self.assertNoLogs(_durable_functions.__name__, level="INFO"):
+            df_loads(json.dumps({"a": 1}), expected_type=dict)
+        self.assertFalse(
+            _durable_functions._loose_codec_notice_emitted)
+
+    def test_loose_codec_notice_suppressed_in_strict_mode(self):
+        s = df_dumps(Hat("red"))
+        with _strict_env("1"):
+            # In strict mode df_loads with expected_type uses from_json
+            # directly -- the object_hook path doesn't fire.  Even if it
+            # did, the notice helper short-circuits in strict mode.
+            df_loads(s, expected_type=Hat)
+        self.assertFalse(
+            _durable_functions._loose_codec_notice_emitted)
+
+    def test_no_expected_type_notice_fires_once(self):
+        s = json.dumps({"a": 1})
+        with self.assertLogs(_durable_functions.__name__,
+                             level="INFO") as cm, \
+                warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            df_loads(s)
+            df_loads(s)
+            df_loads(s)
+        self.assertEqual(
+            sum("without expected_type" in m for m in cm.output), 1)
+        self.assertEqual(
+            sum(issubclass(w.category, DeprecationWarning)
+                and "without expected_type" in str(w.message)
+                for w in caught),
+            1,
+        )
+
+    def test_no_expected_type_notice_not_emitted_when_type_provided(self):
+        s = json.dumps({"a": 1})
+        with self.assertNoLogs(_durable_functions.__name__, level="INFO"):
+            df_loads(s, expected_type=dict)
+        self.assertFalse(
+            _durable_functions._no_expected_type_notice_emitted)
+
+    def test_no_expected_type_notice_suppressed_in_strict_mode(self):
+        s = json.dumps({"a": 1})
+        with _strict_env("1"):
+            df_loads(s)
+        self.assertFalse(
+            _durable_functions._no_expected_type_notice_emitted)
 
 
 if __name__ == "__main__":
