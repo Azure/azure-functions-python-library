@@ -43,6 +43,7 @@ from . import durable_functions  # NoQA
 from . import sql  # NoQA
 from . import warmup  # NoQA
 from . import mysql  # NoQA
+from . import connectors  # NoQA
 
 
 __all__ = (
