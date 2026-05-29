@@ -10,7 +10,7 @@ from typing import Any, Callable, Optional, Union
 
 from . import _abc
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("azure.functions.DurableFunctions")
 
 _STRICT_ENV_VAR = "AZURE_FUNCTIONS_DURABLE_STRICT_TYPING"
 _TRUTHY = frozenset({"1", "true", "yes"})
@@ -109,7 +109,7 @@ def _deserialize_custom_object(obj: dict) -> object:
 
     Parameters
     ----------
-    obj : dict
+    obj: dict
         Dictionary that potentially encodes a custom class.
 
     Returns
