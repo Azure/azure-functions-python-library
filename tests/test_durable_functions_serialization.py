@@ -232,7 +232,7 @@ class TestDfLoadsWithType(_NoticeIsolatedTestCase):
         # a warning, then falls through to object_hook, which reconstructs
         # Hat (its module is loaded).
         s = df_dumps(Hat("red"))
-        with self.assertLogs(_durable_functions.__name__,
+        with self.assertLogs("azure.functions.DurableFunctions",
                              level="WARNING") as cm:
             result = df_loads(s, expected_type=Order)
         self.assertTrue(any("payload declares" in m for m in cm.output))
@@ -266,7 +266,7 @@ class TestDfLoadsWithType(_NoticeIsolatedTestCase):
 
     def test_primitive_type_validation_loose_mismatch_warns(self):
         s = json.dumps("hello")
-        with self.assertLogs(_durable_functions.__name__,
+        with self.assertLogs("azure.functions.DurableFunctions",
                              level="WARNING") as cm:
             result = df_loads(s, expected_type=int)
         self.assertTrue(any("not compatible" in m for m in cm.output))
@@ -391,7 +391,7 @@ class TestLooseModeNotices(_NoticeIsolatedTestCase):
 
     def test_loose_codec_notice_fires_once(self):
         s = df_dumps(Hat("red"))
-        with self.assertLogs(_durable_functions.__name__,
+        with self.assertLogs("azure.functions.DurableFunctions",
                              level="INFO") as cm, \
                 warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -426,7 +426,7 @@ class TestLooseModeNotices(_NoticeIsolatedTestCase):
 
     def test_no_expected_type_notice_fires_once(self):
         s = json.dumps({"a": 1})
-        with self.assertLogs(_durable_functions.__name__,
+        with self.assertLogs("azure.functions.DurableFunctions",
                              level="INFO") as cm, \
                 warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
