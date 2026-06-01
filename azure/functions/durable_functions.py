@@ -92,10 +92,20 @@ class ActivityTriggerConverter(meta.InConverter,
 
         # Durable functions extension always returns a string of json
         # See durable functions library's call_activity_task docs
+        #
+        # Strict-mode caveat: when the AZURE_FUNCTIONS_DURABLE_STRICT_TYPING
+        # environment variable is set, df_loads requires an `expected_type`
+        # to deserialize custom-object envelopes.  The worker's converter
+        # dispatch does not currently forward the activity function's
+        # parameter type annotation to `decode`, so we have nothing to
+        # pass here -- a strict-mode payload carrying a custom-object
+        # envelope will surface as TypeError below and be re-raised as
+        # ValueError.  Plumbing `expected_type` through `InConverter.decode`
+        # is tracked as future work in the spec (see
+        # spec-functions-sdk-df-serialization.md, section 6).
         if data_type in ['string', 'json']:
             try:
-                callback = _durable_functions._deserialize_custom_object
-                result = json.loads(data.value, object_hook=callback)
+                result = _durable_functions.df_loads(data.value)
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
@@ -113,8 +123,7 @@ class ActivityTriggerConverter(meta.InConverter,
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         try:
-            callback = _durable_functions._serialize_custom_object
-            result = json.dumps(obj, default=callback)
+            result = _durable_functions.df_dumps(obj)
         except TypeError as e:
             raise ValueError(
                 f'activity trigger output must be json serializable ({obj})') from e
