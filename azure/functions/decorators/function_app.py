@@ -1726,7 +1726,7 @@ class TriggerApi(DecoratorApi, ABC):
                                             list_item_type)
                                         for union_arg in union_args:
                                             if (isinstance(union_arg, type)
-                                                    and union_arg is not
+                                                    and union_arg is not  # noqa
                                                     type(None)):
                                                 if hasattr(union_arg,
                                                            '__module__'):
