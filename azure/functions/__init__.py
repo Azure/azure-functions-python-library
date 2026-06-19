@@ -4,7 +4,7 @@
 from ._abc import TimerRequest, InputStream, Context, Out
 from ._eventhub import EventHubEvent
 from ._eventgrid import CloudEvent, EventGridEvent, EventGridOutputEvent
-from ._cosmosdb import Document, DocumentList
+from ._cosmosdb import Document, DocumentList, CosmosDBChangeFeedMode
 from ._http import HttpRequest, HttpResponse
 from .decorators import (FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
@@ -55,9 +55,10 @@ __all__ = (
     'Out',
 
     # Binding rich types, sorted alphabetically.
+    'CloudEvent',
+    'CosmosDBChangeFeedMode',
     'Document',
     'DocumentList',
-    'CloudEvent',
     'EventGridEvent',
     'EventGridOutputEvent',
     'EventHubEvent',
@@ -113,4 +114,4 @@ __all__ = (
     'mcp_content',
 )
 
-__version__ = '1.26.0b3'
+__version__ = '1.26.0'
