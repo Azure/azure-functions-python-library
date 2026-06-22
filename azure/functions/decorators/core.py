@@ -73,6 +73,14 @@ class BlobSource(StringifyEnum):
     """Standard polling mechanism to detect changes in the container."""
 
 
+class CosmosDBChangeFeedMode(StringifyEnum):
+    """Change feed mode for Cosmos DB trigger bindings."""
+    LATEST_VERSION = "LatestVersion"
+    """Latest version of the change feed."""
+    ALL_VERSIONS_AND_DELETES = "AllVersionsAndDeletes"
+    """All versions and delete events in the change feed."""
+
+
 class McpPropertyType(StringifyEnum):
     """MCP property types."""
     INTEGER = "integer"

@@ -2,13 +2,10 @@
 # Licensed under the MIT License.
 
 import collections
-from typing import Literal
 
 from . import _abc
 from ._jsonutils import json
-
-# Change feed mode for Cosmos DB trigger bindings
-CosmosDBChangeFeedMode = Literal['LatestVersion', 'AllVersionsAndDeletes']
+from .decorators.core import CosmosDBChangeFeedMode
 
 
 class Document(_abc.Document, collections.UserDict):

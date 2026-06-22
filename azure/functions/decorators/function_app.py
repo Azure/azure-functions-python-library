@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource, \
-    McpPropertyType
+    McpPropertyType, CosmosDBChangeFeedMode
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -1047,6 +1047,8 @@ class TriggerApi(DecoratorApi, ABC):
                           start_from_beginning: Optional[time] = None,
                           start_from_time: Optional[time] = None,
                           preferred_locations: Optional[str] = None,
+                          change_feed_mode: Optional[Union[CosmosDBChangeFeedMode,
+                                                           str]] = None,
                           data_type: Optional[
                               Union[DataType, str]] = None,
                           **kwargs: Any) -> \
@@ -1108,6 +1110,9 @@ class TriggerApi(DecoratorApi, ABC):
             has no effect once the trigger has a lease state.
         :param preferred_locations: Preferred locations (regions) for geo-replicated
             Cosmos DB accounts.
+        :param change_feed_mode: (Optional) The change feed mode for the Cosmos DB
+            trigger. Can be :class:`CosmosDBChangeFeedMode.LATEST_VERSION` (default)
+            or :class:`CosmosDBChangeFeedMode.ALL_VERSIONS_AND_DELETES`.
         :param data_type: Defines how the Functions runtime should treat the
             parameter value.
         :param kwargs: Additional keyword arguments for specifying binding fields
@@ -1134,6 +1139,7 @@ class TriggerApi(DecoratorApi, ABC):
             start_from_beginning=start_from_beginning,
             start_from_time=start_from_time,
             preferred_locations=preferred_locations,
+            change_feed_mode=change_feed_mode,
             data_type=parse_singular_param_to_enum(data_type, DataType),
             **kwargs)
 
