@@ -5,7 +5,6 @@ import collections
 
 from . import _abc
 from ._jsonutils import json
-from .decorators.core import CosmosDBChangeFeedMode
 
 
 class Document(_abc.Document, collections.UserDict):
