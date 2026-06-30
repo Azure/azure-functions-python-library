@@ -14,6 +14,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          PromptArgument)
 from .decorators.mcp import mcp_content
 from ._durable_functions import OrchestrationContext, EntityContext
+from .durable_functions import register_durable_converters
 from .decorators.function_app import (FunctionRegister, TriggerApi,
                                       BindingApi, SettingsApi)
 from .extension import (ExtensionMeta, FunctionExtensionException,
@@ -44,6 +45,9 @@ from . import sql  # NoQA
 from . import warmup  # NoQA
 from . import mysql  # NoQA
 from . import connectors  # NoQA
+
+
+register_durable_converters()
 
 
 __all__ = (
@@ -113,4 +117,4 @@ __all__ = (
     'mcp_content',
 )
 
-__version__ = '2.2.0b5'
+__version__ = '2.2.0b6'

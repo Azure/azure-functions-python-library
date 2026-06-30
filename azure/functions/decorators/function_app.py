@@ -25,6 +25,7 @@ from azure.functions.decorators.dapr import DaprBindingOutput, \
     DaprBindingTrigger, DaprInvokeOutput, DaprPublishOutput, \
     DaprSecretInput, DaprServiceInvocationTrigger, DaprStateInput, \
     DaprStateOutput, DaprTopicTrigger
+from azure.functions.decorators.durable_functions import get_durable_package
 from azure.functions.decorators.eventgrid import EventGridTrigger, \
     EventGridOutput
 from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
@@ -61,6 +62,8 @@ from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
+
+_logger = logging.getLogger('azure.functions.DurableFunctions')
 
 
 class Function(object):
@@ -352,11 +355,12 @@ class DecoratorApi(ABC):
         """Attempt to import the Durable Functions SDK from which DF
         decorators are implemented.
         """
-        try:
-            import azure.durable_functions as df
+        _logger.info("Getting Durable Functions blueprint.")
+        df = get_durable_package()
+        if df:
             df_bp = df.Blueprint()
             return df_bp
-        except ImportError:
+        else:
             error_message = \
                 "Attempted to use a Durable Functions decorator, " \
                 "but the `azure-functions-durable` SDK package could not be " \
@@ -1726,7 +1730,7 @@ class TriggerApi(DecoratorApi, ABC):
                                             list_item_type)
                                         for union_arg in union_args:
                                             if (isinstance(union_arg, type)
-                                                    and union_arg is not
+                                                    and union_arg is not  # noqa
                                                     type(None)):
                                                 if hasattr(union_arg,
                                                            '__module__'):
