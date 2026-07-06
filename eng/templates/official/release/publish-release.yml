@@ -85,7 +85,7 @@ jobs:
           }
 
           # Locate and validate assets before creating the release.
-          $distFolder = Join-Path '$(Pipeline.Workspace)' (Join-Path '${{ parameters.artifactName }}' 'dist')
+          $distFolder = Join-Path '$(Pipeline.Workspace)' (Join-Path "${{ parameters.artifactName }}" 'dist')
           if (-not (Test-Path -LiteralPath $distFolder)) {
               throw "Distribution folder not found: $distFolder"
           }
@@ -206,8 +206,8 @@ jobs:
           azurePowerShellVersion: LatestVersion
           pwsh: true
           Inline: |
-            $version = '${{ parameters.libraryVersion }}'
-            $blobPath = '${{ parameters.blobPath }}'
+            $version = "${{ parameters.libraryVersion }}"
+            $blobPath = "${{ parameters.blobPath }}"
             $distFolder = '$(Pipeline.Workspace)/${{ parameters.artifactName }}/dist'
 
             Write-Host "Uploading Python artifacts for version: $version"
@@ -221,7 +221,7 @@ jobs:
             azcopy copy "$distFolder/*" "https://azuresdkpartnerdrops.blob.core.windows.net/drops/$blobPath/$version/"
 
             $blobPathFull = "$blobPath/$version"
-            $partnerReleaseUrl = '${{ parameters.partnerReleasePipelineUrl }}'
+            $partnerReleaseUrl = "${{ parameters.partnerReleasePipelineUrl }}"
 
             Write-Host ""
             Write-Host "##[section]Upload complete. The partner-release pipeline will be triggered automatically in the next job."
