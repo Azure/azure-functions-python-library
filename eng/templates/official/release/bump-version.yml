@@ -93,8 +93,9 @@ jobs:
 
           # Change version file.
           $versionFilePath = "${{ parameters.versionFilePath }}"
-          $versionPattern = '${{ parameters.versionPattern }}'
-          $versionReplacement = '${{ parameters.versionReplacement }}' -replace '\{\{VERSION\}\}', $newLibraryVersion
+          $versionPattern = $env:VERSION_PATTERN
+          $versionReplacementTemplate = $env:VERSION_REPLACEMENT
+          $versionReplacement = $versionReplacementTemplate -replace '\{\{VERSION\}\}', $newLibraryVersion
 
           Write-Host "Change version number in $versionFilePath to $newLibraryVersion"
           ((Get-Content $versionFilePath) -replace $versionPattern, $versionReplacement -join "`n") + "`n" | Set-Content -NoNewline $versionFilePath
@@ -102,10 +103,8 @@ jobs:
 
           # Update pyproject metadata when parameters are provided.
           $pyprojectPath = "${{ parameters.pyprojectPath }}"
-          $pythonVersionRequirement = "${{ parameters.pythonVersionRequirement }}"
-          $pythonClassifiers = @"
-          ${{ parameters.pythonClassifiers }}
-          "@
+          $pythonVersionRequirement = $env:PYTHON_VERSION_REQUIREMENT
+          $pythonClassifiers = $env:PYTHON_CLASSIFIERS
 
           if (![string]::IsNullOrWhiteSpace($pyprojectPath) -and (Test-Path $pyprojectPath)) {
               $content = Get-Content $pyprojectPath -Raw
@@ -161,6 +160,11 @@ jobs:
               }
           }
         displayName: 'Push ${{ parameters.releaseBranchPrefix }}/x.y.z'
+        env:
+          VERSION_PATTERN: ${{ parameters.versionPattern }}
+          VERSION_REPLACEMENT: ${{ parameters.versionReplacement }}
+          PYTHON_VERSION_REQUIREMENT: ${{ parameters.pythonVersionRequirement }}
+          PYTHON_CLASSIFIERS: ${{ parameters.pythonClassifiers }}
 
   - job: "CheckReleaseBranch"
     dependsOn: ['CreateReleaseBranch']
