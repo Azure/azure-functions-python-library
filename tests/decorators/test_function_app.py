@@ -62,6 +62,36 @@ class TestFunction(unittest.TestCase):
                              f"is {trigger1} and New trigger "
                              f"being added is {trigger2}")
 
+    def test_function_creation_with_query_method_trigger(self):
+        output = HttpOutput(name="out", data_type=DataType.UNDEFINED)
+        trigger = HttpTrigger(name="req",
+                              methods=(HttpMethod.QUERY,),
+                              data_type=DataType.UNDEFINED,
+                              auth_level=AuthLevel.ANONYMOUS, route="dummy")
+        self.func.add_binding(output)
+        self.func.add_trigger(trigger)
+
+        assert_json(self, self.func, {"scriptFile": "dummy.py",
+                                      "bindings": [
+                                          {
+                                              "type": HTTP_OUTPUT,
+                                              "direction":
+                                                  BindingDirection.OUT,
+                                              "name": "out",
+                                              "dataType": DataType.UNDEFINED
+                                          },
+                                          {
+                                              "authLevel": AuthLevel.ANONYMOUS,
+                                              "type": HTTP_TRIGGER,
+                                              "direction": BindingDirection.IN,
+                                              "name": "req",
+                                              "dataType": DataType.UNDEFINED,
+                                              "route": "dummy",
+                                              "methods": [HttpMethod.QUERY]
+                                          }
+                                      ]
+                                      })
+
     def test_function_creation_with_binding_and_trigger(self):
         output = HttpOutput(name="out", data_type=DataType.UNDEFINED)
         trigger = HttpTrigger(name="req",
