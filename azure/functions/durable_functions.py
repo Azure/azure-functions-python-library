@@ -92,17 +92,27 @@ class ActivityTriggerConverter(meta.InConverter,
 
         # Durable functions extension always returns a string of json
         # See durable functions library's call_activity_task docs
+        #
+        # Strict-mode caveat: when the AZURE_FUNCTIONS_DURABLE_STRICT_TYPING
+        # environment variable is set, df_loads requires an `expected_type`
+        # to deserialize custom-object envelopes.  The worker's converter
+        # dispatch does not currently forward the activity function's
+        # parameter type annotation to `decode`, so we have nothing to
+        # pass here -- a strict-mode payload carrying a custom-object
+        # envelope will surface as TypeError below and be re-raised as
+        # ValueError.  Plumbing `expected_type` through `InConverter.decode`
+        # is tracked as future work in the spec (see
+        # spec-functions-sdk-df-serialization.md, section 6).
         if data_type in ['string', 'json']:
             try:
-                callback = _durable_functions._deserialize_custom_object
-                result = json.loads(data.value, object_hook=callback)
+                result = _durable_functions.df_loads(data.value)
             except json.JSONDecodeError:
                 # String failover if the content is not json serializable
                 result = data.value
-            except Exception:
+            except Exception as e:
                 raise ValueError(
                     'activity trigger input must be a string or a '
-                    f'valid json serializable ({data.value})')
+                    f'valid json serializable ({data.value})') from e
         else:
             raise NotImplementedError(
                 f'unsupported activity trigger payload type: {data_type}')
@@ -113,11 +123,10 @@ class ActivityTriggerConverter(meta.InConverter,
     def encode(cls, obj: typing.Any, *,
                expected_type: typing.Optional[type]) -> meta.Datum:
         try:
-            callback = _durable_functions._serialize_custom_object
-            result = json.dumps(obj, default=callback)
-        except TypeError:
+            result = _durable_functions.df_dumps(obj)
+        except TypeError as e:
             raise ValueError(
-                f'activity trigger output must be json serializable ({obj})')
+                f'activity trigger output must be json serializable ({obj})') from e
 
         return meta.Datum(type='json', value=result)
 
@@ -133,3 +142,60 @@ class DurableClientConverter(meta.InConverter,
     @classmethod
     def has_implicit_output(cls) -> bool:
         return False
+
+    @classmethod
+    def has_trigger_support(cls) -> bool:
+        return False
+
+    @classmethod
+    def check_input_type_annotation(cls, pytype: type) -> bool:
+        return issubclass(pytype, (str, bytes))
+
+    @classmethod
+    def check_output_type_annotation(cls, pytype: type) -> bool:
+        return issubclass(pytype, (str, bytes, bytearray))
+
+    @classmethod
+    def encode(cls, obj: typing.Any, *,
+               expected_type: typing.Optional[type]) -> meta.Datum:
+        if isinstance(obj, str):
+            return meta.Datum(type='string', value=obj)
+
+        elif isinstance(obj, (bytes, bytearray)):
+            return meta.Datum(type='bytes', value=bytes(obj))
+        elif obj is None:
+            return meta.Datum(type=None, value=obj)
+        elif isinstance(obj, dict):
+            return meta.Datum(type='dict', value=obj)
+        elif isinstance(obj, list):
+            return meta.Datum(type='list', value=obj)
+        elif isinstance(obj, bool):
+            return meta.Datum(type='bool', value=obj)
+        elif isinstance(obj, int):
+            return meta.Datum(type='int', value=obj)
+        elif isinstance(obj, float):
+            return meta.Datum(type='double', value=obj)
+        else:
+            raise NotImplementedError
+
+    @classmethod
+    def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:
+        if data is None:
+            return None
+        data_type = data.type
+
+        if data_type == 'string':
+            result = data.value
+        elif data_type == 'bytes':
+            result = data.value
+        elif data_type == 'json':
+            result = data.value
+        elif data_type is None:
+            result = None
+        else:
+            raise ValueError(
+                'unexpected type of data received for the "generic" binding ',
+                repr(data_type)
+            )
+
+        return result

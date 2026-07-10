@@ -4,19 +4,17 @@ jobs:
 
     strategy:
       matrix:
-        Python37:
-          PYTHON_VERSION: '3.7'
-        Python38:
-          PYTHON_VERSION: '3.8'
-        Python39:
-          PYTHON_VERSION: '3.9'
         Python310:
           PYTHON_VERSION: '3.10'
         Python311:
           PYTHON_VERSION: '3.11'
         Python312:
           PYTHON_VERSION: '3.12'
-
+        Python313:
+          PYTHON_VERSION: '3.13'
+        Python314:
+          PYTHON_VERSION: '3.14'
+          
     steps:
       - task: UsePythonVersion@0
         inputs:
@@ -24,12 +22,13 @@ jobs:
       - bash: |
           python --version
         displayName: 'Check python version'
+      - task: PipAuthenticate@1
+        displayName: 'Pip Authenticate'
+        inputs:
+          artifactFeeds: 'public/PythonSDK_PublicPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build
-          if [[ $(PYTHON_VERSION) == "3.7" ]]; then
-              python -m pip install importlib_metadata
-          fi
           python -m build
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |

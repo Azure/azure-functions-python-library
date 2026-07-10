@@ -21,6 +21,10 @@ jobs:
       - bash: |
           python --version
         displayName: 'Check python version'
+      - task: PipAuthenticate@1
+        displayName: 'Pip Authenticate'
+        inputs:
+          artifactFeeds: 'internal/PythonSDK_Internal_PublicPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build

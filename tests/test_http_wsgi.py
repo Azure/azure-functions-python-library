@@ -100,6 +100,51 @@ class TestHttpWsgi(unittest.TestCase):
         self.assertEqual(environ['SERVER_PORT'], str(8081))
         self.assertEqual(environ['wsgi.url_scheme'], 'https')
 
+    def test_request_protocol_by_header_hostlike(self):
+        func_request = self._generate_func_request(headers={
+            "x-forwarded-port": "443.example.com"
+        })
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+        self.assertEqual(environ['SERVER_PORT'], str(443))
+        self.assertEqual(environ['wsgi.url_scheme'], 'https')
+
+    def test_request_protocol_by_header_unusual_tokens(self):
+        func_request = self._generate_func_request(headers={
+            "x-forwarded-port": "443;proto=https"
+        })
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+        self.assertEqual(environ['SERVER_PORT'], str(443))
+        self.assertEqual(environ['wsgi.url_scheme'], 'https')
+
+    def test_request_protocol_by_header_with_multiple_ports(self):
+        func_request = self._generate_func_request(headers={
+            "x-forwarded-port": "443,8080,433"
+        })
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+        self.assertEqual(environ['SERVER_PORT'], str(443))
+        self.assertEqual(environ['wsgi.url_scheme'], 'https')
+
+    def test_request_protocol_by_header_with_spaces(self):
+        func_request = self._generate_func_request(headers={
+            "x-forwarded-port": " 8443 , 8080 "
+        })
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+        self.assertEqual(environ['SERVER_PORT'], str(8443))
+        self.assertEqual(environ['wsgi.url_scheme'], 'https')
+
+    def test_request_protocol_by_header_invalid(self):
+        func_request = self._generate_func_request(headers={
+            "x-forwarded-port": "abc"
+        })
+        error_buffer = StringIO()
+        environ = WsgiRequest(func_request).to_environ(error_buffer)
+        self.assertEqual(environ['SERVER_PORT'], str(80))
+        self.assertEqual(environ['wsgi.url_scheme'], 'https')
+
     def test_request_protocol_by_scheme(self):
         func_request = self._generate_func_request(url="http://a.b.com")
         error_buffer = StringIO()

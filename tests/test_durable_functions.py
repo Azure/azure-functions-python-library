@@ -165,6 +165,19 @@ class TestDurableFunctions(unittest.TestCase):
                 expected_type=type(datum['output']))
             self.assertEqual(encoded, datum['expected_value'])
 
+    def test_activity_trigger_encode_failure_exception_has_cause(self):
+        class NonEncodable:
+            def __init__(self):
+                self.value = 'foo'
+
+        data = NonEncodable()
+
+        try:
+            ActivityTriggerConverter.encode(data, expected_type=None)
+        except ValueError as e:
+            self.assertIsNotNone(e.__cause__)
+            self.assertIsInstance(e.__cause__, TypeError)
+
     def test_activity_trigger_decode(self):
         # Activity Trigger allow inputs to be any JSON serializables
         # The input values to the trigger should be passed into arguments
@@ -209,6 +222,17 @@ class TestDurableFunctions(unittest.TestCase):
                 trigger_metadata=None)
             self.assertEqual(decoded, datum['expected_value'])
 
+    def test_activity_trigger_decode_failure_exception_has_cause(self):
+        data = Datum('{"value": "bar"}', 'json')
+
+        try:
+            ActivityTriggerConverter.decode(
+                data=data,
+                trigger_metadata=None)
+        except ValueError as e:
+            self.assertIsNotNone(e.__cause__)
+            self.assertIsInstance(e.__cause__, TypeError)
+
     def test_activity_trigger_has_implicit_return(self):
         self.assertTrue(
             ActivityTriggerConverter.has_implicit_output()
@@ -246,3 +270,77 @@ class TestDurableFunctions(unittest.TestCase):
 
         self.assertEqual(result.type, "json")
         self.assertEqual(result.python_value, {'dummy_key': 'dummy_value'})
+
+    def test_durable_client_converter_has_trigger_support(self):
+        self.assertFalse(DurableClientConverter.has_trigger_support())
+
+    def test_durable_client_converter_check_input_type_annotation(self):
+        self.assertTrue(DurableClientConverter.check_input_type_annotation(str))
+        self.assertTrue(DurableClientConverter.check_input_type_annotation(bytes))
+        self.assertFalse(DurableClientConverter.check_input_type_annotation(int))
+
+    def test_durable_client_converter_check_output_type_annotation(self):
+        self.assertTrue(DurableClientConverter.check_output_type_annotation(str))
+        self.assertTrue(DurableClientConverter.check_output_type_annotation(bytes))
+        self.assertTrue(DurableClientConverter.check_output_type_annotation(bytearray))
+        self.assertFalse(DurableClientConverter.check_output_type_annotation(int))
+
+    def test_durable_client_converter_encode(self):
+        datum = DurableClientConverter.encode(obj="hello", expected_type=str)
+        self.assertEqual(datum.type, "string")
+        self.assertEqual(datum.value, "hello")
+
+        datum = DurableClientConverter.encode(obj=b"data", expected_type=bytes)
+        self.assertEqual(datum.type, "bytes")
+        self.assertEqual(datum.value, b"data")
+
+        datum = DurableClientConverter.encode(obj=None, expected_type=None)
+        self.assertIsNone(datum.type)
+        self.assertIsNone(datum.value)
+
+        datum = DurableClientConverter.encode(obj={"a": 1}, expected_type=dict)
+        self.assertEqual(datum.type, "dict")
+        self.assertEqual(datum.value, {"a": 1})
+
+        datum = DurableClientConverter.encode(obj=[1, 2], expected_type=list)
+        self.assertEqual(datum.type, "list")
+        self.assertEqual(datum.value, [1, 2])
+
+        datum = DurableClientConverter.encode(obj=42, expected_type=int)
+        self.assertEqual(datum.type, "int")
+        self.assertEqual(datum.value, 42)
+
+        datum = DurableClientConverter.encode(obj=3.14, expected_type=float)
+        self.assertEqual(datum.type, "double")
+        self.assertEqual(datum.value, 3.14)
+
+        datum = DurableClientConverter.encode(obj=True, expected_type=bool)
+        self.assertEqual(datum.type, "bool")
+        self.assertTrue(datum.value)
+
+        with self.assertRaises(NotImplementedError):
+            DurableClientConverter.encode(obj=set([1, 2]), expected_type=set)
+
+    def test_durable_client_converter_decode(self):
+        data = Datum(type="string", value="abc")
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        self.assertEqual(result, "abc")
+
+        data = Datum(type="bytes", value=b"123")
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        self.assertEqual(result, b"123")
+
+        data = Datum(type="json", value={"key": "val"})
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        self.assertEqual(result, {"key": "val"})
+
+        data = Datum(type=None, value=None)
+        result = DurableClientConverter.decode(data=data, trigger_metadata=None)
+        self.assertIsNone(result)
+
+        result = DurableClientConverter.decode(data=None, trigger_metadata=None)
+        self.assertIsNone(result)
+
+        data = Datum(type="weird", value="???")
+        with self.assertRaises(ValueError):
+            DurableClientConverter.decode(data=data, trigger_metadata=None)

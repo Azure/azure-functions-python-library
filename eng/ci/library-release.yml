@@ -1,5 +1,23 @@
 pr: none
 
+parameters:
+  - name: V1LibraryRelease
+    displayName: 'v1.x Library Release (3.10 - 3.12)'
+    type: boolean
+    default: false
+  - name: V2LibraryRelease
+    displayName: 'v2.x Library Release (3.13+)'
+    type: boolean
+    default: false
+  - name: V1LibraryVersion
+    displayName: 'V1 library version to release (e.g., 1.25.0)'
+    type: string
+    default: ''
+  - name: V2LibraryVersion
+    displayName: 'V2 library version to release (e.g., 2.0.0)'
+    type: string
+    default: ''
+
 resources:
   repositories:
     - repository: 1es
@@ -16,6 +34,101 @@ extends:
       os: windows
 
     stages:
-      - stage: Release
+      - stage: ReleaseV1_BumpVersion
+        dependsOn: []
+        displayName: 'V1 Library - Bump Version'
+        condition: eq(${{ parameters.V1LibraryRelease }}, True)
         jobs:
-          - template: /eng/templates/official/jobs/publish-release.yml@self
+          - template: /eng/templates/official/release/bump-version.yml@self
+            parameters:
+              libraryVersion: ${{ parameters.V1LibraryVersion }}
+              projectDisplayName: 'Azure Functions Python Library V1'
+              versionFilePath: 'azure/functions/__init__.py'
+              versionPattern: "__version__ = '([0-9])+\\.([0-9])+.*'"
+              versionReplacement: "__version__ = '{{VERSION}}'"
+              pyprojectPath: 'pyproject.toml'
+              pythonVersionRequirement: '>=3.10,<3.13'
+              pythonClassifiers: |
+                'Programming Language :: Python :: 3.10',
+                'Programming Language :: Python :: 3.11',
+                'Programming Language :: Python :: 3.12'
+              releaseBranchPrefix: 'release'
+              createPullRequest: true
+              baseBranch: 'dev'
+
+      - stage: ReleaseV1_Build
+        dependsOn: ReleaseV1_BumpVersion
+        displayName: 'V1 Library - Build'
+        condition: eq(${{ parameters.V1LibraryRelease }}, True)
+        jobs:
+          - template: /eng/templates/official/release/build-artifacts.yml@self
+            parameters:
+              artifactName: 'azure-functions'
+              projectDisplayName: 'Azure Functions Python Library V1'
+              libraryVersion: ${{ parameters.V1LibraryVersion }}
+              releaseBranchPrefix: 'release'
+              projectDirectory: '.'
+              pythonVersion: '3.11'
+
+      - stage: ReleaseV1_Release
+        dependsOn: ReleaseV1_Build
+        displayName: 'V1 Library - Release'
+        condition: eq(${{ parameters.V1LibraryRelease }}, True)
+        jobs:
+          - template: /eng/templates/official/release/publish-release.yml@self
+            parameters:
+              libraryVersion: ${{ parameters.V1LibraryVersion }}
+              projectDisplayName: 'Azure Functions Python Library V1'
+              releaseBranchPrefix: 'release'
+              tagPrefix: ''
+              blobPath: 'azure-functions/python/azure-functions'
+              artifactName: 'azure-functions'
+
+      - stage: ReleaseV2_BumpVersion
+        dependsOn: []
+        displayName: 'V2 Library - Bump Version'
+        condition: eq(${{ parameters.V2LibraryRelease }}, True)
+        jobs:
+          - template: /eng/templates/official/release/bump-version.yml@self
+            parameters:
+              libraryVersion: ${{ parameters.V2LibraryVersion }}
+              projectDisplayName: 'Azure Functions Python Library V2'
+              versionFilePath: 'azure/functions/__init__.py'
+              versionPattern: "__version__ = '([0-9])+\\.([0-9])+.*'"
+              versionReplacement: "__version__ = '{{VERSION}}'"
+              pyprojectPath: 'pyproject.toml'
+              pythonVersionRequirement: '>=3.13'
+              pythonClassifiers: |
+                'Programming Language :: Python :: 3.13',
+                'Programming Language :: Python :: 3.14'
+              releaseBranchPrefix: 'release'
+              createPullRequest: true
+              baseBranch: 'dev'
+
+      - stage: ReleaseV2_Build
+        dependsOn: ReleaseV2_BumpVersion
+        displayName: 'V2 Library - Build'
+        condition: eq(${{ parameters.V2LibraryRelease }}, True)
+        jobs:
+          - template: /eng/templates/official/release/build-artifacts.yml@self
+            parameters:
+              artifactName: 'azure-functions'
+              projectDisplayName: 'Azure Functions Python Library V2'
+              libraryVersion: ${{ parameters.V2LibraryVersion }}
+              releaseBranchPrefix: 'release'
+              projectDirectory: '.'
+              pythonVersion: '3.13'
+
+      - stage: ReleaseV2_Release
+        dependsOn: ReleaseV2_Build
+        displayName: 'V2 Library - Release'
+        condition: eq(${{ parameters.V2LibraryRelease }}, True)
+        jobs:
+          - template: /eng/templates/official/release/publish-release.yml@self
+            parameters:
+              libraryVersion: ${{ parameters.V2LibraryVersion }}
+              projectDisplayName: 'Azure Functions Python Library V2'
+              releaseBranchPrefix: 'release'
+              tagPrefix: ''
+              blobPath: 'azure-functions/python/azure-functions'
+              artifactName: 'azure-functions'

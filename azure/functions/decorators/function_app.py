@@ -2,8 +2,13 @@
 #  Licensed under the MIT License.
 import abc
 import asyncio
+import dataclasses
+import functools
+import inspect
 import json
 import logging
+import textwrap
+
 from abc import ABC
 from datetime import time
 from typing import Any, Callable, Dict, List, Optional, Union, \
@@ -11,7 +16,8 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
-    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource
+    AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource, \
+    McpPropertyType
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -25,7 +31,8 @@ from azure.functions.decorators.eventhub import EventHubTrigger, EventHubOutput
 from azure.functions.decorators.http import HttpTrigger, HttpOutput, \
     HttpMethod
 from azure.functions.decorators.kafka import KafkaTrigger, KafkaOutput, \
-    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod
+    BrokerAuthenticationMode, BrokerProtocol, OAuthBearerMethod, \
+    KafkaMessageKeyType
 from azure.functions.decorators.queue import QueueTrigger, QueueOutput
 from azure.functions.decorators.servicebus import ServiceBusQueueTrigger, \
     ServiceBusQueueOutput, ServiceBusTopicTrigger, \
@@ -36,15 +43,20 @@ from azure.functions.decorators.timer import TimerTrigger
 from azure.functions.decorators.utils import parse_singular_param_to_enum, \
     parse_iterable_param_to_enums, StringifyEnumJsonEncoder
 from azure.functions.http import HttpRequest
+from .connectors import ConnectorTrigger
 from .generic import GenericInputBinding, GenericTrigger, GenericOutputBinding
-from .openai import AssistantSkillTrigger, OpenAIModels, TextCompletionInput, \
-    AssistantCreateOutput, \
-    AssistantQueryInput, AssistantPostInput, InputType, EmbeddingsInput, \
+from .openai import _AssistantSkillTrigger, OpenAIModels, _TextCompletionInput, \
+    _AssistantCreateOutput, \
+    _AssistantQueryInput, _AssistantPostInput, InputType, _EmbeddingsInput, \
     semantic_search_system_prompt, \
-    SemanticSearchInput, EmbeddingsStoreOutput
+    _SemanticSearchInput, _EmbeddingsStoreOutput
+from .mcp import _MCPToolTrigger, MCPResourceTrigger, MCPPromptTrigger, \
+    PromptArgument, build_property_metadata, \
+    has_mcp_content_marker
 from .retry_policy import RetryPolicy
 from .function_name import FunctionName
 from .warmup import WarmUpTrigger
+from ..mcp import MCPToolContext, _is_mcp_call_tool_result, _is_mcp_sdk_type
 from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
@@ -672,6 +684,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
+            auto_complete_messages: Optional[bool] = None,
             **kwargs: Any) -> Callable[..., Any]:
         """
         The `on_service_bus_queue_change` decorator adds :class:`ServiceBusQueueTrigger` to the
@@ -696,6 +709,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param is_sessions_enabled: Set to True if connecting to a session-aware queue
             or subscription.
         :param cardinality: Set to "many" to enable batching.
+        :param auto_complete_messages: Indicates whether the message should be automatically
+            completed.
 
         :return: Decorator function.
         """
@@ -716,6 +731,7 @@ class TriggerApi(DecoratorApi, ABC):
                         is_sessions_enabled=is_sessions_enabled,
                         cardinality=parse_singular_param_to_enum(cardinality,
                                                                  Cardinality),
+                        auto_complete_messages=auto_complete_messages,
                         **kwargs))
                 return fb
 
@@ -733,6 +749,7 @@ class TriggerApi(DecoratorApi, ABC):
             access_rights: Optional[Union[AccessRights, str]] = None,
             is_sessions_enabled: Optional[bool] = None,
             cardinality: Optional[Union[Cardinality, str]] = None,
+            auto_complete_messages: Optional[bool] = None,
             **kwargs: Any) -> Callable[..., Any]:
         """
         The `on_service_bus_topic_change` decorator adds :class:`ServiceBusTopicTrigger` to the
@@ -758,6 +775,8 @@ class TriggerApi(DecoratorApi, ABC):
         :param is_sessions_enabled: Set to True if connecting to a session-aware queue
             or subscription.
         :param cardinality: Set to "many" to enable batching.
+        :param auto_complete_messages: Indicates whether the message should be automatically
+            completed.
 
         :return: Decorator function.
         """
@@ -779,6 +798,7 @@ class TriggerApi(DecoratorApi, ABC):
                         is_sessions_enabled=is_sessions_enabled,
                         cardinality=parse_singular_param_to_enum(cardinality,
                                                                  Cardinality),
+                        auto_complete_messages=auto_complete_messages,
                         **kwargs))
                 return fb
 
@@ -1229,12 +1249,19 @@ class TriggerApi(DecoratorApi, ABC):
                       event_hub_connection_string: Optional[str] = None,
                       consumer_group: Optional[str] = None,
                       avro_schema: Optional[str] = None,
+                      key_avro_schema: Optional[str] = None,
+                      key_data_type: Optional[
+                          Union[KafkaMessageKeyType, str]] = KafkaMessageKeyType.STRING,
                       username: Optional[str] = None,
                       password: Optional[str] = None,
                       ssl_key_location: Optional[str] = None,
                       ssl_ca_location: Optional[str] = None,
                       ssl_certificate_location: Optional[str] = None,
                       ssl_key_password: Optional[str] = None,
+                      ssl_certificate_pem: Optional[str] = None,
+                      ssl_key_pem: Optional[str] = None,
+                      ssl_ca_pem: Optional[str] = None,
+                      ssl_certificate_and_key_pem: Optional[str] = None,
                       schema_registry_url: Optional[str] = None,
                       schema_registry_username: Optional[str] = None,
                       schema_registry_password: Optional[str] = None,
@@ -1272,6 +1299,10 @@ class TriggerApi(DecoratorApi, ABC):
             Azure Event Hubs).
         :param consumer_group: Kafka consumer group used by the trigger.
         :param avro_schema: Used only if a generic Avro record should be generated.
+        :param key_avro_schema: Avro schema for the message key. Used only if a
+            generic Avro record should be generated for the key.
+        :param key_data_type: Data type of the message key. Valid values: Int, Long,
+            String, Binary. Default is String. Ignored if key_avro_schema is set.
         :param username: SASL username for use with the PLAIN or SASL-SCRAM mechanisms.
             Equivalent to 'sasl.username' in librdkafka. Default is empty string.
         :param password: SASL password for use with the PLAIN or SASL-SCRAM mechanisms.
@@ -1282,8 +1313,16 @@ class TriggerApi(DecoratorApi, ABC):
             certificate. Equivalent to 'ssl.ca.location' in librdkafka.
         :param ssl_certificate_location: Path to the client's certificate.
             Equivalent to 'ssl.certificate.location' in librdkafka.
-        :param ssl_key_password: Password for the client’s certificate.
+        :param ssl_key_password: Password for the client's certificate.
             Equivalent to 'ssl.key.password' in librdkafka.
+        :param ssl_certificate_pem: Client certificate in PEM format.
+            Equivalent to 'ssl.certificate.pem' in librdkafka.
+        :param ssl_key_pem: Client private key in PEM format.
+            Equivalent to 'ssl.key.pem' in librdkafka.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for the Schema Registry.
         :param schema_registry_password: Password for the Schema Registry.
@@ -1304,6 +1343,7 @@ class TriggerApi(DecoratorApi, ABC):
             ScramSha256, ScramSha512. Default: Plain. Equivalent to 'sasl.mechanism'.
         :param protocol: Security protocol used to communicate with brokers.
             Default: plaintext. Equivalent to 'security.protocol'.
+        :param cardinality: Set to "many" to enable batching. Default is "One".
         :param lag_threshold: Max number of unprocessed messages per worker instance.
             Used in scaling logic to estimate needed worker instances. Default is 1000.
         :param data_type: Defines how Functions runtime should treat the parameter value.
@@ -1323,12 +1363,19 @@ class TriggerApi(DecoratorApi, ABC):
                         event_hub_connection_string=event_hub_connection_string,  # noqa: E501
                         consumer_group=consumer_group,
                         avro_schema=avro_schema,
+                        key_avro_schema=key_avro_schema,
+                        key_data_type=parse_singular_param_to_enum(
+                            key_data_type, KafkaMessageKeyType),
                         username=username,
                         password=password,
                         ssl_key_location=ssl_key_location,
                         ssl_ca_location=ssl_ca_location,
                         ssl_certificate_location=ssl_certificate_location,
                         ssl_key_password=ssl_key_password,
+                        ssl_certificate_pem=ssl_certificate_pem,
+                        ssl_key_pem=ssl_key_pem,
+                        ssl_ca_pem=ssl_ca_pem,
+                        ssl_certificate_and_key_pem=ssl_certificate_and_key_pem,
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
@@ -1511,6 +1558,597 @@ class TriggerApi(DecoratorApi, ABC):
 
         return wrap
 
+    def connector_trigger(self,
+                          arg_name: str,
+                          data_type: Optional[Union[DataType, str]] = None,
+                          **kwargs) -> Callable[..., Any]:
+        """
+        The `connector_trigger` decorator adds :class:`ConnectorTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` used in the
+        worker function indexing model.
+
+        This is equivalent to defining a connector trigger in the `function.json`, which
+        triggers the function to execute when connector trigger events are received by
+        the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=ConnectorTrigger(
+                        name=arg_name,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def mcp_tool_trigger(self,
+                         arg_name: str,
+                         tool_name: str,
+                         description: Optional[str] = None,
+                         tool_properties: Optional[str] = None,
+                         data_type: Optional[Union[DataType, str]] = None,
+                         **kwargs) -> Callable[..., Any]:
+        """The `mcp_tool_trigger` decorator adds :class:`MCPToolTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `MCPToolTrigger` in the `function.json`,
+        which enables the function to be triggered when MCP tool requests are
+        received by the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param tool_name: The logical tool name exposed to the host.
+        :param description: Optional human-readable description of the tool.
+        :param tool_properties: JSON-serialized tool properties/parameters list.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=_MCPToolTrigger(
+                        name=arg_name,
+                        tool_name=tool_name,
+                        description=description,
+                        tool_properties=tool_properties,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def mcp_tool(self, metadata: Optional[str] = None, use_result_schema: Optional[bool] = False):
+        """Decorator to register an MCP tool function.
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        This decorator performs the following actions automatically:
+        - Infers tool name from function name
+        - Extracts docstrings as description
+        - Extracts parameters and types for tool properties
+        - Handles MCPToolContext injection
+
+        :param metadata: JSON-serialized metadata object for the tool.
+        :param use_result_schema: Whether the result schema should be
+            provided by the worker instead of being generated by the host
+            extension.
+        """
+        @self._configure_function_builder
+        def decorator(fb: FunctionBuilder) -> FunctionBuilder:
+            target_func = fb._function.get_user_function()
+            sig = inspect.signature(target_func)
+
+            # Auto-detect MCP return types and set use_result_schema=True
+            # Use a separate variable to avoid UnboundLocalError
+            auto_use_result_schema = use_result_schema
+            return_annotation = sig.return_annotation
+            if return_annotation != inspect.Signature.empty and not auto_use_result_schema:
+
+                # Check if return type is an MCP SDK type or @mcp_content decorated
+                is_mcp_content = False
+                is_mcp_sdk_type = False
+
+                # Try to detect official MCP SDK types by checking module
+                try:
+                    if isinstance(return_annotation, type):
+                        # Check if the type is from the mcp.types module
+                        if hasattr(return_annotation, '__module__'):
+                            module = return_annotation.__module__
+                            if module and (module.startswith('mcp.types') or module == 'mcp.types'):
+                                is_mcp_sdk_type = True
+                except (ImportError, TypeError, AttributeError):
+                    pass
+
+                # Check for @mcp_content decorated classes
+                try:
+                    if isinstance(return_annotation, type):
+                        if has_mcp_content_marker(return_annotation):
+                            is_mcp_content = True
+                except TypeError:
+                    pass
+
+                # Handle List[MCP types] and Optional[MCP types]
+                if hasattr(return_annotation, '__origin__'):
+                    import typing
+                    origin = typing.get_origin(return_annotation)
+                    args = typing.get_args(return_annotation)
+
+                    # Check for official MCP SDK types in lists
+                    if origin in (list, List):
+                        # For List[T], check if T is an MCP type
+                        try:
+                            if len(args) > 0:
+                                list_item_type = args[0]
+                                # Check if it's a direct MCP type
+                                if isinstance(list_item_type, type):
+                                    if hasattr(list_item_type, '__module__'):
+                                        module = list_item_type.__module__
+                                        if (module
+                                            and (module.startswith('mcp.types')
+                                                 or module == 'mcp.types')):
+                                            is_mcp_sdk_type = True
+                                # Check if it's a Union of MCP types
+                                elif hasattr(list_item_type, '__origin__'):
+                                    union_origin = typing.get_origin(
+                                        list_item_type)
+                                    if union_origin is Union:
+                                        union_args = typing.get_args(
+                                            list_item_type)
+                                        for union_arg in union_args:
+                                            if (isinstance(union_arg, type)
+                                                    and union_arg is not  # noqa
+                                                    type(None)):
+                                                if hasattr(union_arg,
+                                                           '__module__'):
+                                                    module = (
+                                                        union_arg.__module__)
+                                                    if (module
+                                                        and (module.startswith(
+                                                            'mcp.types')
+                                                            or module
+                                                            == 'mcp.types')):
+                                                        is_mcp_sdk_type = True
+                                                        break
+                        except (ImportError, TypeError, AttributeError,
+                                IndexError):
+                            pass
+
+                    # Check for Optional[T] where T is an MCP type
+                    if origin is Union:
+                        for arg in args:
+                            if isinstance(arg, type(None)):
+                                continue
+                            try:
+                                if isinstance(arg, type):
+                                    if has_mcp_content_marker(arg):
+                                        is_mcp_content = True
+                                        break
+                            except TypeError:
+                                pass
+
+                            # Check for MCP SDK types in Union
+                            try:
+                                if isinstance(arg, type):
+                                    # Check module for mcp.types
+                                    if hasattr(arg, '__module__'):
+                                        module = arg.__module__
+                                        if (module
+                                                and (module.startswith('mcp.types')
+                                                     or module == 'mcp.types')):
+                                            is_mcp_sdk_type = True
+                                            break
+                            except (ImportError, TypeError, AttributeError):
+                                pass
+
+                # Auto-enable use_result_schema for MCP types
+                if is_mcp_content or is_mcp_sdk_type:
+                    auto_use_result_schema = True
+
+            # Pull any explicitly declared MCP tool properties
+            explicit_properties = getattr(target_func, "__mcp_tool_properties__", {})
+
+            # Parse tool name and description from function signature
+            tool_name = target_func.__name__
+            raw_doc = target_func.__doc__ or ""
+            description = textwrap.dedent(raw_doc).strip()
+
+            # Identify arguments that are already bound (bindings)
+            bound_param_names = {b.name for b in getattr(fb._function, "_bindings", [])}
+            skip_param_names = bound_param_names
+
+            # Build tool properties
+            tool_properties = build_property_metadata(sig=sig,
+                                                      skip_param_names=skip_param_names,
+                                                      explicit_properties=explicit_properties)
+
+            tool_properties_json = json.dumps(tool_properties)
+
+            bound_params = [
+                inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+                for name in bound_param_names
+            ]
+            # Build new signature for the wrapper function to pass worker indexing
+            wrapper_sig = inspect.Signature([
+                *bound_params,
+                inspect.Parameter("context", inspect.Parameter.POSITIONAL_OR_KEYWORD)
+            ])
+
+            # Wrap the original function
+            @functools.wraps(target_func)
+            async def wrapper(context: str, *args, **kwargs):
+                content = json.loads(context)
+                arguments = content.get("arguments", {})
+                call_kwargs = {}
+                for param_name, param in sig.parameters.items():
+                    param_type_hint = param.annotation if param.annotation != inspect.Parameter.empty else str  # noqa
+                    actual_type = param_type_hint
+                    if actual_type is MCPToolContext:
+                        call_kwargs[param_name] = content
+                    elif param_name in arguments:
+                        call_kwargs[param_name] = arguments[param_name]
+                call_kwargs.update(kwargs)
+                result = target_func(**call_kwargs)
+                if asyncio.iscoroutine(result):
+                    result = await result
+
+                if result is None:
+                    return ""
+
+                # Handle structured content generation when
+                # auto_use_result_schema is True
+                if auto_use_result_schema:
+
+                    # Handle official MCP SDK CallToolResult
+                    if _is_mcp_call_tool_result(result):
+                        # CallToolResult already has the correct structure
+                        # Serialize using model_dump() for Pydantic models
+                        if hasattr(result, 'model_dump'):
+                            result_dict = result.model_dump(
+                                mode='json', exclude_none=True)
+                        elif hasattr(result, 'dict'):
+                            result_dict = result.dict(exclude_none=True)
+                        else:
+                            # Fallback: convert to dict manually
+                            result_dict = {
+                                'content': [
+                                    block.model_dump(
+                                        mode='json', exclude_none=True)
+                                    if hasattr(block, 'model_dump')
+                                    else dict(block)
+                                    for block in result.content
+                                ] if hasattr(result, 'content') else []
+                            }
+                            if (hasattr(result, 'structuredContent')
+                                    and result.structuredContent is not None):
+                                result_dict['structuredContent'] = (
+                                    result.structuredContent)
+
+                        # Full CallToolResult as JSON string
+                        full_result_json = json.dumps(result_dict)
+
+                        # Extract structuredContent value
+                        structured_content_value = result_dict.get(
+                            'structuredContent')
+                        structured_content_json = json.dumps(
+                            structured_content_value
+                        ) if structured_content_value is not None else None
+
+                        # Return in the expected format for CallToolResult
+                        return str(json.dumps({
+                            "type": "call_tool_result",
+                            "content": full_result_json,
+                            "structuredContent": structured_content_json
+                        }))
+
+                    # Handle lists of MCP SDK content blocks
+                    # Wrap them in a CallToolResult structure
+                    elif isinstance(result, list) and len(result) > 0:
+                        first_item = result[0]
+                        if _is_mcp_sdk_type(first_item):
+                            # Serialize all blocks in the list
+                            from ..mcp import _serialize_content_block
+                            blocks_list = [_serialize_content_block(block)
+                                           for block in result]
+
+                            # Create a CallToolResult-like structure
+                            # containing the blocks
+                            call_tool_result = {
+                                "content": blocks_list
+                            }
+                            full_result_json = json.dumps(call_tool_result)
+
+                            # Return in CallToolResult format
+                            # (list of blocks doesn't have separate
+                            # structuredContent)
+                            return str(json.dumps({
+                                "type": "call_tool_result",
+                                "content": full_result_json,
+                                "structuredContent": None
+                            }))
+
+                    # Handle all other MCP SDK types
+                    # (TextContent, ImageContent, ResourceLink, etc.)
+                    elif _is_mcp_sdk_type(result):
+                        if hasattr(result, 'model_dump'):
+                            result_dict = result.model_dump(
+                                mode='json', exclude_none=True)
+                            result_json = json.dumps(result_dict)
+                        elif hasattr(result, 'dict'):
+                            result_dict = result.dict(exclude_none=True)
+                            result_json = json.dumps(result_dict)
+                        else:
+                            result_dict = result.__dict__
+                            result_json = json.dumps(result_dict)
+
+                        # Extract type from the object itself
+                        # (works for any MCP type)
+                        # e.g., TextContent has type="text",
+                        result_type = result_dict.get('type', 'text')
+
+                        # Return format with type extracted from the object
+                        return str(json.dumps({
+                            "type": result_type,
+                            "content": result_json,
+                            "structuredContent": result_json
+                        }))
+
+                    # Handle dataclasses (e.g., @mcp_content decorated)
+                    elif dataclasses.is_dataclass(result):
+                        result_json = json.dumps(
+                            dataclasses.asdict(result))
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+
+                    # Handle regular classes with __dict__
+                    elif hasattr(result, '__dict__'):
+                        result_json = json.dumps(result.__dict__)
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+                    else:
+                        # Fallback to str conversion
+                        result_json = json.dumps(
+                            result) if not isinstance(
+                            result, str) else result
+
+                        # Return format with both text and structured content
+                        return str(json.dumps({
+                            "type": "text",
+                            "content": json.dumps(
+                                {"type": "text", "text": result_json}),
+                            "structuredContent": result_json
+                        }))
+                else:
+                    # Backwards compatibility: when structured content
+                    # is not enabled, return the result as-is
+                    if isinstance(result, str):
+                        return result
+                    else:
+                        return str(result)
+
+            wrapper.__signature__ = wrapper_sig
+            fb._function._func = wrapper
+
+            # Add the MCP trigger
+            fb.add_trigger(
+                trigger=_MCPToolTrigger(
+                    name="context",
+                    tool_name=tool_name,
+                    description=description,
+                    tool_properties=tool_properties_json,
+                    metadata=metadata,
+                    use_result_schema=auto_use_result_schema
+                )
+            )
+            return fb
+
+        return decorator
+
+    def mcp_tool_property(self, arg_name: str,
+                          description: Optional[str] = None,
+                          property_type: Optional[McpPropertyType] = None,
+                          is_required: Optional[bool] = True,
+                          as_array: Optional[bool] = False):
+        """
+        Decorator for defining explicit MCP tool property metadata for a specific argument.
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param str arg_name: The name of the argument.
+        :keyword str description: The description of the argument.
+        :keyword property_type: The type of the argument.
+        :type property_type:
+            ~azure.functions.decorators.core.McpPropertyType
+        :keyword bool is_required: If the argument is required or not.
+        :keyword bool as_array: If the argument should be passed as an array or not.
+        :return: Decorator function.
+        """
+        def decorator(func):
+            # If this function is already wrapped by FunctionBuilder or similar, unwrap it
+            target_func = getattr(func, "_function", func)
+            target_func = getattr(target_func, "_func", target_func)
+
+            existing = getattr(target_func, "__mcp_tool_properties__", {})
+            existing[arg_name] = {
+                "description": description,
+                "propertyType": property_type.value if property_type else None,  # Get enum value
+                "isRequired": is_required,
+                "isArray": as_array,
+            }
+            setattr(target_func, "__mcp_tool_properties__", existing)
+            return func
+        return decorator
+
+    def mcp_resource_trigger(self,
+                             arg_name: str,
+                             uri: str,
+                             resource_name: str,
+                             title: Optional[str] = None,
+                             description: Optional[str] = None,
+                             mime_type: Optional[str] = None,
+                             size: Optional[int] = None,
+                             metadata: Optional[str] = None,
+                             data_type: Optional[Union[DataType, str]] = None,
+                             **kwargs) -> Callable[..., Any]:
+        """The `mcp_resource_trigger` decorator adds :class:`MCPResourceTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `MCPResourceTrigger` in the `function.json`,
+        which enables the function to be triggered when MCP resource requests are
+        received by the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param uri: Unique URI identifier for the resource (must be absolute).
+        :param resource_name: Human-readable name of the resource.
+        :param title: Optional title for display purposes.
+        :param description: Optional description of the resource.
+        :param mime_type: Optional MIME type of the resource content.
+        :param size: Optional size of the resource in bytes.
+        :param metadata: Optional JSON-serialized metadata object.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                fb.add_trigger(
+                    trigger=MCPResourceTrigger(
+                        name=arg_name,
+                        uri=uri,
+                        resource_name=resource_name,
+                        title=title,
+                        description=description,
+                        mime_type=mime_type,
+                        size=size,
+                        metadata=metadata,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
+    def mcp_prompt_trigger(self,
+                           arg_name: str,
+                           prompt_name: str,
+                           prompt_arguments: Optional[List[PromptArgument]] = None,
+                           title: Optional[str] = None,
+                           description: Optional[str] = None,
+                           metadata: Optional[str] = None,
+                           icons: Optional[str] = None,
+                           data_type: Optional[Union[DataType, str]] = None,
+                           **kwargs) -> Callable[..., Any]:
+        """The `mcp_prompt_trigger` decorator adds :class:`MCPPromptTrigger` to the
+        :class:`FunctionBuilder` object for building a :class:`Function` object
+        used in the worker function indexing model.
+
+        This is equivalent to defining `MCPPromptTrigger` in the `function.json`,
+        which enables the function to be triggered when MCP prompt requests are
+        received by the host.
+
+        All optional fields will be given default values by the function host when
+        they are parsed.
+
+        Ref: https://aka.ms/remote-mcp-functions-python
+
+        :param arg_name: The name of the trigger parameter in the function code.
+        :param prompt_name: Unique name of the prompt.
+        :param prompt_arguments: Optional list of PromptArgument objects defining the
+            prompt's expected arguments.
+        :param title: Optional human-readable title for display purposes.
+        :param description: Optional description of the prompt.
+        :param metadata: Optional JSON-serialized metadata object.
+        :param icons: Optional JSON-serialized array of icon objects.
+        :param data_type: Defines how the Functions runtime should treat the
+            parameter value.
+        :param kwargs: Keyword arguments for specifying additional binding
+            fields to include in the binding JSON.
+
+        :return: Decorator function.
+        """
+
+        @self._configure_function_builder
+        def wrap(fb):
+            def decorator():
+                # Convert PromptArgument list to JSON string
+                prompt_arguments_json = None
+                if prompt_arguments:
+                    prompt_arguments_json = json.dumps(
+                        [arg.to_dict() for arg in prompt_arguments],
+                        separators=(',', ':')
+                    )
+
+                fb.add_trigger(
+                    trigger=MCPPromptTrigger(
+                        name=arg_name,
+                        prompt_name=prompt_name,
+                        prompt_arguments=prompt_arguments_json,
+                        title=title,
+                        description=description,
+                        metadata=metadata,
+                        icons=icons,
+                        data_type=parse_singular_param_to_enum(data_type,
+                                                               DataType),
+                        **kwargs))
+                return fb
+
+            return decorator()
+
+        return wrap
+
     def dapr_service_invocation_trigger(self,
                                         arg_name: str,
                                         method_name: str,
@@ -1673,15 +2311,14 @@ class TriggerApi(DecoratorApi, ABC):
                                 data_type: Optional[
                                     Union[DataType, str]] = None,
                                 **kwargs: Any) -> Callable[..., Any]:
-        """
-        Assistants build on top of chat functionality by supporting custom skills
+        """Assistants build on top of chat functionality by supporting custom skills
         defined as functions. This internally uses OpenAI’s function calling
         capabilities in GPT models to determine which functions to invoke and when.
 
         Ref: https://platform.openai.com/docs/guides/function-calling
 
         You can define functions to be triggered by assistants using the
-        `assistantSkillTrigger` trigger binding. These functions are invoked by the
+        assistantSkillTrigger trigger binding. These functions are invoked by the
         extension when an assistant signals it would like to invoke a function in
         response to a user prompt.
 
@@ -1689,19 +2326,21 @@ class TriggerApi(DecoratorApi, ABC):
         parameter descriptions are all used as hints by the language model to
         determine when and how to invoke an assistant function.
 
-        :param arg_name: The name of the trigger parameter in the function code.
-        :param function_description: A description of the assistant function,
+        :param str arg_name: The name of the trigger parameter in the function code.
+        :param str function_description: A description of the assistant function,
             which is provided to the model.
-        :param function_name: The name of the assistant function, which is
+        :keyword str function_name: The name of the assistant function, which is
             passed to the language model.
-        :param parameter_description_json: A JSON-formatted description of the
+        :keyword str parameter_description_json: A JSON-formatted description of the
             function parameters, provided to the model.
             If omitted, the description is autogenerated.
-        :param data_type: Defines how the Functions runtime should treat the
+        :keyword data_type: Defines how the Functions runtime should treat the
             parameter value.
-        :param kwargs: Additional keyword arguments for specifying binding fields
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying binding fields
             to include in the `function.json`.
-
         :return: Decorator function.
         """
 
@@ -1709,7 +2348,7 @@ class TriggerApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_trigger(
-                    trigger=AssistantSkillTrigger(
+                    trigger=_AssistantSkillTrigger(
                         name=arg_name,
                         function_description=function_description,
                         function_name=function_name,
@@ -2402,12 +3041,19 @@ class BindingApi(DecoratorApi, ABC):
                      topic: str,
                      broker_list: str,
                      avro_schema: Optional[str] = None,
+                     key_avro_schema: Optional[str] = None,
+                     key_data_type: Optional[
+                         Union[KafkaMessageKeyType, str]] = KafkaMessageKeyType.STRING,
                      username: Optional[str] = None,
                      password: Optional[str] = None,
                      ssl_key_location: Optional[str] = None,
                      ssl_ca_location: Optional[str] = None,
                      ssl_certificate_location: Optional[str] = None,
                      ssl_key_password: Optional[str] = None,
+                     ssl_certificate_pem: Optional[str] = None,
+                     ssl_key_pem: Optional[str] = None,
+                     ssl_ca_pem: Optional[str] = None,
+                     ssl_certificate_and_key_pem: Optional[str] = None,
                      schema_registry_url: Optional[str] = None,
                      schema_registry_username: Optional[str] = None,
                      schema_registry_password: Optional[str] = None,
@@ -2444,6 +3090,10 @@ class BindingApi(DecoratorApi, ABC):
         :param topic: The Kafka topic to which messages are published.
         :param broker_list: The list of Kafka brokers to which the producer connects.
         :param avro_schema: Optional. Avro schema to generate a generic record.
+        :param key_avro_schema: Avro schema for the message key. Used only if a
+            generic Avro record should be generated for the key.
+        :param key_data_type: Data type of the message key. Valid values: Int, Long,
+            String, Binary. Default is String. Ignored if key_avro_schema is set.
         :param username: SASL username for use with the PLAIN and SASL-SCRAM
             mechanisms. Equivalent to `'sasl.username'` in librdkafka.
         :param password: SASL password for use with the PLAIN and SASL-SCRAM
@@ -2456,6 +3106,14 @@ class BindingApi(DecoratorApi, ABC):
             Equivalent to `'ssl.certificate.location'` in librdkafka.
         :param ssl_key_password: Password for the client's SSL key.
             Equivalent to `'ssl.key.password'` in librdkafka.
+        :param ssl_certificate_pem: Client certificate in PEM format.
+            Equivalent to 'ssl.certificate.pem' in librdkafka.
+        :param ssl_key_pem: Client private key in PEM format.
+            Equivalent to 'ssl.key.pem' in librdkafka.
+        :param ssl_ca_pem: CA certificate for verifying the broker's
+            certificate in PEM format. Equivalent to 'ssl.ca.pem' in librdkafka.
+        :param ssl_certificate_and_key_pem: Client certificate concatenated
+            with key in PEM format. Can also support KeyVault references.
         :param schema_registry_url: URL of the Avro Schema Registry.
         :param schema_registry_username: Username for accessing the Schema Registry.
         :param schema_registry_password: Password for accessing the Schema Registry.
@@ -2509,12 +3167,19 @@ class BindingApi(DecoratorApi, ABC):
                         topic=topic,
                         broker_list=broker_list,
                         avro_schema=avro_schema,
+                        key_avro_schema=key_avro_schema,
+                        key_data_type=parse_singular_param_to_enum(
+                            key_data_type, KafkaMessageKeyType),
                         username=username,
                         password=password,
                         ssl_key_location=ssl_key_location,
                         ssl_ca_location=ssl_ca_location,
                         ssl_certificate_location=ssl_certificate_location,
                         ssl_key_password=ssl_key_password,
+                        ssl_certificate_pem=ssl_certificate_pem,
+                        ssl_key_pem=ssl_key_pem,
+                        ssl_ca_pem=ssl_ca_pem,
+                        ssl_certificate_and_key_pem=ssl_certificate_and_key_pem,
                         schema_registry_url=schema_registry_url,
                         schema_registry_username=schema_registry_username,
                         schema_registry_password=schema_registry_password,
@@ -3227,7 +3892,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=TextCompletionInput(
+                    binding=_TextCompletionInput(
                         name=arg_name,
                         prompt=prompt,
                         ai_connection_name=ai_connection_name,
@@ -3250,14 +3915,16 @@ class BindingApi(DecoratorApi, ABC):
                                     Union[DataType, str]] = None,
                                 **kwargs) \
             -> Callable[..., Any]:
-        """
-        The `assistantCreate` output binding creates a new assistant with a specified system prompt.
+        """The assistantCreate output binding creates a new assistant with a specified system
+        prompt.
 
-        :param arg_name: The name of the binding parameter in the function code.
-        :param data_type: Defines how the Functions runtime should treat the parameter value.
-        :param kwargs: Additional keyword arguments for specifying extra binding fields
+        :param str arg_name: The name of the binding parameter in the function code.
+        :keyword data_type: Defines how the Functions runtime should treat the parameter value.
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying extra binding fields
             to include in the `function.json`.
-
         :return: Decorator function.
         """
 
@@ -3265,7 +3932,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantCreateOutput(
+                    binding=_AssistantCreateOutput(
                         name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
@@ -3286,27 +3953,29 @@ class BindingApi(DecoratorApi, ABC):
                                   Union[DataType, str]] = None,
                               **kwargs) \
             -> Callable[..., Any]:
-        """
-        The `assistantQuery` input binding retrieves assistant chat history and
+        """The `assistantQuery` input binding retrieves assistant chat history and
         passes it to the function.
 
         This is typically used to provide the function access to previous messages
         in a conversation, enabling more context-aware responses.
 
-        :param arg_name: The name of the binding parameter in the function code.
-        :param timestamp_utc: The earliest timestamp (in UTC) for the messages to
+        :param str arg_name: The name of the binding parameter in the function code.
+        :param str id: The unique identifier of the assistant whose history is being
+            queried.
+        :param str timestamp_utc: The earliest timestamp (in UTC) for the messages to
             retrieve from the chat history. Must be in ISO 8601 format, e.g.,
             `"2023-08-01T00:00:00Z"`.
-        :param chat_storage_connection_setting: The name of the configuration section
+        :keyword str chat_storage_connection_setting: The name of the configuration section
             containing the connection settings for assistant chat storage. Defaults to
-            `"AzureWebJobsStorage"`.
-        :param collection_name: The name of the table or collection used for assistant
-            chat storage. Defaults to `"ChatState"`.
-        :param id: The unique identifier of the assistant whose history is being
-            queried.
-        :param data_type: Defines how the Functions runtime should treat the
+            "AzureWebJobsStorage".
+        :keyword str collection_name: The name of the table or collection used for assistant
+            chat storage. Defaults to "ChatState".
+        :keyword data_type: Defines how the Functions runtime should treat the
             parameter value.
-        :param kwargs: Additional keyword arguments for specifying binding fields to
+        :type data_type:
+            ~azure.functions.decorators.core.DataType or
+            str or None
+        :keyword kwargs: Additional keyword arguments for specifying binding fields to
             include in the `function.json`.
 
         :return: Decorator function.
@@ -3316,7 +3985,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantQueryInput(
+                    binding=_AssistantQueryInput(
                         name=arg_name,
                         id=id,
                         timestamp_utc=timestamp_utc,
@@ -3394,7 +4063,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=AssistantPostInput(
+                    binding=_AssistantPostInput(
                         name=arg_name,
                         id=id,
                         user_message=user_message,
@@ -3468,7 +4137,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EmbeddingsInput(
+                    binding=_EmbeddingsInput(
                         name=arg_name,
                         input=input,
                         input_type=input_type,
@@ -3560,7 +4229,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=SemanticSearchInput(
+                    binding=_SemanticSearchInput(
                         name=arg_name,
                         search_connection_name=search_connection_name,
                         collection=collection,
@@ -3643,7 +4312,7 @@ class BindingApi(DecoratorApi, ABC):
         def wrap(fb):
             def decorator():
                 fb.add_binding(
-                    binding=EmbeddingsStoreOutput(
+                    binding=_EmbeddingsStoreOutput(
                         name=arg_name,
                         input=input,
                         input_type=input_type,
@@ -4067,3 +4736,28 @@ class WsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         def http_app_func(req: HttpRequest, context: Context):
             return wsgi_middleware.handle(req, context)
+
+
+def _get_user_function(target_func):
+    """
+    Unwraps decorated or builder-wrapped functions to find the original
+    user-defined function (the one starting with 'def' or 'async def').
+    """
+    # Case 1: It's a FunctionBuilder object
+    if isinstance(target_func, FunctionBuilder):
+        # Access the internal user function
+        try:
+            return target_func._function.get_user_function()
+        except AttributeError:
+            pass
+
+    # Case 2: It's already the user-defined function
+    if callable(target_func) and hasattr(target_func, "__name__"):
+        return target_func
+
+    # Case 3: It might be a partially wrapped callable
+    if hasattr(target_func, "__wrapped__"):
+        return _get_user_function(target_func.__wrapped__)
+
+    # Default fallback
+    return target_func

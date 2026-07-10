@@ -7,16 +7,15 @@
 
 ## Overview
 
-Python support for Azure Functions is based on Python 3.8, 3.9, 3.10, 3.11, and 3.12 serverless hosting on Linux, and the Functions 2.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)), 3.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)) and 4.0 runtime.
+Python support for Azure Functions is based on Python 3.10, 3.11, 3.12, and 3.13 serverless hosting on Linux, and the Functions 2.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)), 3.x ([EOL](https://learn.microsoft.com/azure/azure-functions/functions-versions?#retired-versions)) and 4.0 runtime.
 
 Here is the current status of Python in Azure Functions:
 
 _What are the supported Python versions?_
 
-| Azure Functions Runtime | Python 3.8                                                                           | Python 3.9                                                                           | Python 3.10 | Python 3.11 | Python 3.12 |
-|-------------------------|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|-------------|-------------|-------------|
-| Azure Functions 3.0     | [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4) | [EOL](https://learn.microsoft.com/azure/azure-functions/migrate-version-3-version-4) | -           | -           | -           |
-| Azure Functions 4.0     | &#x2713;                                                                             | &#x2713;                                                                             | &#x2713;    | &#x2713;    | &#x2713;    |
+| Azure Functions Runtime          | Python 3.10 | Python 3.11 | Python 3.12 | Python 3.13 |
+|----------------------------------|------------|------------|-------------|-------------|
+| Azure Functions 4.0              | ✔          | ✔          | ✔           | ✔           |                                                                              | &#x2713;    | &#x2713;    | &#x2713;    |
 
 _What's available?_
 - Build, test, debug and publish using Azure Functions Core Tools (CLI) or Visual Studio Code
