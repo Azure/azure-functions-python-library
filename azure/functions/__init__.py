@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from ._abc import TimerRequest, InputStream, Context, Out
+from ._abc import Context, Out
+from ._blob import InputStream
 from ._eventhub import EventHubEvent
 from ._eventgrid import CloudEvent, EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
@@ -27,6 +28,7 @@ from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
 from ._mysql import MySqlRow, MySqlRowList
+from ._timer import TimerRequest
 
 # Import binding implementations to register them
 from . import blob  # NoQA
