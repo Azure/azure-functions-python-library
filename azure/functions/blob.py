@@ -5,20 +5,19 @@ import io
 from typing import Any, Optional, Union
 
 from azure.functions import _abc as azf_abc
+from azure.functions import _blob as azf_blob
 from . import meta
 
 
-class InputStream(azf_abc.InputStream):
+class InputStream(azf_blob.InputStream):
     def __init__(self, *, data: Union[bytes, meta.Datum],
                  name: Optional[str] = None,
                  uri: Optional[str] = None,
                  length: Optional[int] = None,
                  blob_properties: Optional[dict] = None,
                  metadata: Optional[dict] = None) -> None:
+        super().__init__(name=name, length=length, uri=uri)
         self._io = io.BytesIO(data)  # type: ignore
-        self._name = name
-        self._length = length
-        self._uri = uri
         self._blob_properties = blob_properties
         self._metadata = metadata
 
