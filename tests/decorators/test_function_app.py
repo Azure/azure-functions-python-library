@@ -1012,11 +1012,12 @@ class TestFunctionApp(unittest.TestCase):
                              '{"direction": "IN", "type": "httpTrigger", '
                              '"authLevel": "FUNCTION", "route": "/{*route}", '
                              '"methods": ["GET", "POST", "DELETE", "HEAD", '
-                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+                             '"PATCH", "PUT", "OPTIONS", "QUERY"], '
+                             '"name": "req"}'))
         self.assertEqual(json.loads(raw_output_binding), json.loads(
             '{"direction": "IN", "type": "httpTrigger", "authLevel": '
             '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
-            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+            '"PATCH", "PUT", "OPTIONS", "QUERY"], "name": "req", "route": "/{'
             '*route}"}'))
         self.assertEqual(func.get_bindings_dict(), {
             "bindings": [
@@ -1027,7 +1028,8 @@ class TestFunctionApp(unittest.TestCase):
                                 HttpMethod.DELETE,
                                 HttpMethod.HEAD,
                                 HttpMethod.PATCH,
-                                HttpMethod.PUT, HttpMethod.OPTIONS],
+                                HttpMethod.PUT, HttpMethod.OPTIONS,
+                                HttpMethod.QUERY],
                     "name": "req",
                     "route": "/{*route}",
                     "type": HTTP_TRIGGER
