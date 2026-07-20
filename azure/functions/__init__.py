@@ -12,7 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp, BlobSource, McpPropertyType,
-                         PromptArgument)
+                         CosmosDBChangeFeedMode, PromptArgument)
 from .decorators.mcp import mcp_content
 from ._durable_functions import OrchestrationContext, EntityContext
 from .decorators.function_app import (FunctionRegister, TriggerApi,
@@ -57,9 +57,10 @@ __all__ = (
     'Out',
 
     # Binding rich types, sorted alphabetically.
+    'CloudEvent',
+    'CosmosDBChangeFeedMode',
     'Document',
     'DocumentList',
-    'CloudEvent',
     'EventGridEvent',
     'EventGridOutputEvent',
     'EventHubEvent',

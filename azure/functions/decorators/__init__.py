@@ -1,6 +1,6 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
-from .core import Cardinality, AccessRights
+from .core import Cardinality, AccessRights, CosmosDBChangeFeedMode
 from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, ExternalHttpFunctionApp, AsgiFunctionApp, \
     WsgiFunctionApp, FunctionRegister, TriggerApi, BindingApi, \
@@ -26,6 +26,7 @@ __all__ = [
     'AccessRights',
     'HttpMethod',
     'BlobSource',
+    'CosmosDBChangeFeedMode',
     'McpPropertyType',
     'PromptArgument'
 ]

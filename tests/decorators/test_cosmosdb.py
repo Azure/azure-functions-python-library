@@ -3,7 +3,8 @@
 import unittest
 
 from azure.functions.decorators.constants import COSMOS_DB_TRIGGER, COSMOS_DB
-from azure.functions.decorators.core import BindingDirection, DataType
+from azure.functions.decorators.core import BindingDirection, \
+    CosmosDBChangeFeedMode, DataType
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBOutputV3, \
     CosmosDBInputV3
@@ -209,3 +210,84 @@ class TestCosmosDB(unittest.TestCase):
                           'sqlQuery': 'dummy_query',
                           'preferredLocations': "EastUS",
                           'type': COSMOS_DB})
+
+    def test_cosmos_db_trigger_creation_with_no_change_feed_mode(self):
+        trigger = CosmosDBTrigger(name="req", database_name="dummy_db",
+                                  container_name="dummy_container",
+                                  connection="dummy_str",
+                                  data_type=DataType.UNDEFINED,
+                                  dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
+        self.assertEqual(trigger.get_dict_repr(),
+                         {"containerName": "dummy_container",
+                          "connection": "dummy_str",
+                          "dataType": DataType.UNDEFINED,
+                          "databaseName": "dummy_db",
+                          "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
+                          "name": "req",
+                          "type": COSMOS_DB_TRIGGER})
+
+    def test_cosmos_db_trigger_creation_with_change_feed_mode_as_enum(self):
+        trigger = CosmosDBTrigger(
+            name="req", database_name="dummy_db",
+            container_name="dummy_container",
+            connection="dummy_str",
+            change_feed_mode=CosmosDBChangeFeedMode.LATEST_VERSION,
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
+        self.assertEqual(trigger.get_dict_repr(),
+                         {"containerName": "dummy_container",
+                          "connection": "dummy_str",
+                          "changeFeedMode": "LatestVersion",
+                          "dataType": DataType.UNDEFINED,
+                          "databaseName": "dummy_db",
+                          "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
+                          "name": "req",
+                          "type": COSMOS_DB_TRIGGER})
+
+    def test_cosmos_db_trigger_creation_with_all_versions_and_deletes_enum(
+            self):
+        trigger = CosmosDBTrigger(
+            name="req", database_name="dummy_db",
+            container_name="dummy_container",
+            connection="dummy_str",
+            change_feed_mode=CosmosDBChangeFeedMode.ALL_VERSIONS_AND_DELETES,
+            data_type=DataType.UNDEFINED,
+            dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
+        self.assertEqual(trigger.get_dict_repr(),
+                         {"containerName": "dummy_container",
+                          "connection": "dummy_str",
+                          "changeFeedMode": "AllVersionsAndDeletes",
+                          "dataType": DataType.UNDEFINED,
+                          "databaseName": "dummy_db",
+                          "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
+                          "name": "req",
+                          "type": COSMOS_DB_TRIGGER})
+
+    def test_cosmos_db_trigger_creation_with_change_feed_mode_as_string(self):
+        trigger = CosmosDBTrigger(name="req", database_name="dummy_db",
+                                  container_name="dummy_container",
+                                  connection="dummy_str",
+                                  change_feed_mode="AllVersionsAndDeletes",
+                                  data_type=DataType.UNDEFINED,
+                                  dummy_field="dummy")
+
+        self.assertEqual(trigger.get_binding_name(), "cosmosDBTrigger")
+        self.assertEqual(trigger.get_dict_repr(),
+                         {"containerName": "dummy_container",
+                          "connection": "dummy_str",
+                          "changeFeedMode": "AllVersionsAndDeletes",
+                          "dataType": DataType.UNDEFINED,
+                          "databaseName": "dummy_db",
+                          "direction": BindingDirection.IN,
+                          'dummyField': 'dummy',
+                          "name": "req",
+                          "type": COSMOS_DB_TRIGGER})

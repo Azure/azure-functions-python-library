@@ -6,12 +6,19 @@ import typing
 
 from azure.functions import _cosmosdb as cdb
 from ._jsonutils import json
+from .decorators.core import CosmosDBChangeFeedMode  # noqa: F401
 
 from . import meta
 
 
 class CosmosDBConverter(meta.InConverter, meta.OutConverter,
                         binding='cosmosDB'):
+    """Converter for Cosmos DB binding.
+
+    By default, this binding processes latest document versions.
+    To include delete events and intermediate mutations, set changeFeedMode
+    to 'AllVersionsAndDeletes' in trigger configuration.
+    """
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
@@ -78,4 +85,10 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
 
 class CosmosDBTriggerConverter(CosmosDBConverter,
                                binding='cosmosDBTrigger', trigger=True):
+    """Converter for Cosmos DB trigger binding.
+
+    Supports change feed mode options:
+    - LatestVersion: Processes only the latest document version (default)
+    - AllVersionsAndDeletes: Includes intermediate mutations and delete events
+    """
     pass
