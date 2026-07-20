@@ -6,6 +6,7 @@ import typing
 
 from azure.functions import _cosmosdb as cdb
 from ._jsonutils import json
+from .decorators.core import CosmosDBChangeFeedMode  # noqa: F401
 
 from . import meta
 

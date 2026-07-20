@@ -192,8 +192,8 @@ class CosmosDBTrigger(Trigger):
                  start_from_beginning: Optional[time] = None,
                  start_from_time: Optional[time] = None,
                  preferred_locations: Optional[str] = None,
-                 change_feed_mode: Optional[Union[CosmosDBChangeFeedMode,
-                                                   str]] = None,
+                 change_feed_mode: Optional[
+                     Union[CosmosDBChangeFeedMode, str]] = None,
                  data_type: Optional[Union[DataType]] = None,
                  **kwargs):
         self.connection = connection
