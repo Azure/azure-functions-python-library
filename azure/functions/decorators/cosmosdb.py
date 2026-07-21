@@ -5,7 +5,7 @@ from typing import Optional, Union
 
 from azure.functions.decorators.constants import COSMOS_DB, COSMOS_DB_TRIGGER
 from azure.functions.decorators.core import DataType, InputBinding, \
-    OutputBinding, Trigger
+    OutputBinding, Trigger, CosmosDBChangeFeedMode
 
 
 #  Used by cosmos_db_input_v3
@@ -192,6 +192,8 @@ class CosmosDBTrigger(Trigger):
                  start_from_beginning: Optional[time] = None,
                  start_from_time: Optional[time] = None,
                  preferred_locations: Optional[str] = None,
+                 change_feed_mode: Optional[
+                     Union[CosmosDBChangeFeedMode, str]] = None,
                  data_type: Optional[Union[DataType]] = None,
                  **kwargs):
         self.connection = connection
@@ -212,4 +214,8 @@ class CosmosDBTrigger(Trigger):
         self.start_from_beginning = start_from_beginning
         self.start_from_time = start_from_time
         self.preferred_locations = preferred_locations
+        if isinstance(change_feed_mode, CosmosDBChangeFeedMode):
+            self.change_feed_mode = change_feed_mode.value
+        else:
+            self.change_feed_mode = change_feed_mode
         super().__init__(name=name, data_type=data_type)
