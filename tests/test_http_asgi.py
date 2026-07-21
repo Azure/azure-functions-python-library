@@ -70,7 +70,7 @@ class MockAsgiApplication:
             assert isinstance(scope['http_version'], str)
 
             assert scope['method'] in ['POST', 'GET', 'PUT', 'DELETE', 'PATCH',
-                                        'QUERY']
+                                       'QUERY']
             assert isinstance(scope['method'], str)
 
             assert scope['scheme'] in ['http', 'https']
