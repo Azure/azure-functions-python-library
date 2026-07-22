@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from ._abc import TimerRequest, InputStream, Context, Out
+from ._abc import Context, Out
+from ._blob import InputStream
 from ._eventhub import EventHubEvent
 from ._eventgrid import CloudEvent, EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
@@ -11,7 +12,7 @@ from .decorators import (FunctionApp, Function, Blueprint,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
                          ExternalHttpFunctionApp, BlobSource, McpPropertyType,
-                         PromptArgument)
+                         CosmosDBChangeFeedMode, PromptArgument)
 from .decorators.mcp import mcp_content
 from ._durable_functions import OrchestrationContext, EntityContext
 from .durable_functions import register_durable_converters
@@ -28,6 +29,7 @@ from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
 from ._mysql import MySqlRow, MySqlRowList
+from ._timer import TimerRequest
 
 # Import binding implementations to register them
 from . import blob  # NoQA
@@ -59,9 +61,10 @@ __all__ = (
     'Out',
 
     # Binding rich types, sorted alphabetically.
+    'CloudEvent',
+    'CosmosDBChangeFeedMode',
     'Document',
     'DocumentList',
-    'CloudEvent',
     'EventGridEvent',
     'EventGridOutputEvent',
     'EventHubEvent',
@@ -117,4 +120,4 @@ __all__ = (
     'mcp_content',
 )
 
-__version__ = '2.2.0b6'
+__version__ = '2.3.0b2'

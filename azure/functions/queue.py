@@ -13,7 +13,7 @@ from ._jsonutils import json
 
 
 class QueueMessage(azf_queue.QueueMessage):
-    """An HTTP response object."""
+    """A Queue message object."""
 
     def __init__(self, *,
                  id=None, body=None,

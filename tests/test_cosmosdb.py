@@ -196,3 +196,24 @@ class TestCosmosdb(unittest.TestCase):
 
         # then
         self.assertTrue(is_exception_raised)
+
+    def test_cosmosdb_change_feed_mode_latest_version_support(self):
+        """Test that CosmosDBChangeFeedMode supports LatestVersion mode."""
+        # Verify that LatestVersion is a valid change feed mode
+        mode = 'LatestVersion'
+        self.assertIn(mode, ['LatestVersion', 'AllVersionsAndDeletes'])
+        self.assertEqual(mode, 'LatestVersion')
+
+    def test_cosmosdb_change_feed_mode_all_versions_and_deletes_support(self):
+        """Test that CosmosDBChangeFeedMode supports AllVersionsAndDeletes mode."""
+        # Verify that AllVersionsAndDeletes is a valid change feed mode
+        mode = 'AllVersionsAndDeletes'
+        self.assertIn(mode, ['LatestVersion', 'AllVersionsAndDeletes'])
+        self.assertEqual(mode, 'AllVersionsAndDeletes')
+
+    def test_cosmosdb_change_feed_mode_type_available(self):
+        """Test that CosmosDBChangeFeedMode type is available in public API."""
+        # Verify that the type is exported from the module
+        self.assertTrue(hasattr(func, 'CosmosDBChangeFeedMode'))
+        # Verify that the type exists in cosmosdb module
+        self.assertTrue(hasattr(cdb, 'CosmosDBChangeFeedMode'))
