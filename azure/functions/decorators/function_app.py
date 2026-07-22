@@ -63,8 +63,6 @@ from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
 
-_logger = logging.getLogger('azure.functions.DurableFunctions')
-
 
 class Function(object):
     """
@@ -355,7 +353,8 @@ class DecoratorApi(ABC):
         """Attempt to import the Durable Functions SDK from which DF
         decorators are implemented.
         """
-        _logger.info("Getting Durable Functions blueprint.")
+        logger = logging.getLogger('azure.functions.DurableFunctions')
+        logger.debug("Getting Durable Functions blueprint.")
         df = get_durable_package()
         if df:
             df_bp = df.Blueprint()

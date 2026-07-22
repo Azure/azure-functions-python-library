@@ -254,3 +254,37 @@ class TestMeta(unittest.TestCase):
 
     def _parse_timedelta(self, timedelta_str):
         return meta._BaseConverter._parse_timedelta(timedelta_str)
+
+
+class TestDeferredRegistration(unittest.TestCase):
+    """Tests for the lazy converter registration hook on _ConverterMeta."""
+
+    def setUp(self):
+        registry = meta._ConverterMeta
+        self._saved_registrations = list(registry._deferred_registrations)
+        self._saved_done = registry._deferred_registrations_done
+        registry._deferred_registrations = []
+        registry._deferred_registrations_done = False
+
+    def tearDown(self):
+        registry = meta._ConverterMeta
+        registry._deferred_registrations = self._saved_registrations
+        registry._deferred_registrations_done = self._saved_done
+
+    def test_deferred_callback_runs_on_first_get(self):
+        calls = []
+        meta._ConverterMeta.register_deferred(lambda: calls.append(1))
+
+        # Callback should not run until the first binding lookup.
+        self.assertEqual(calls, [])
+
+        meta.get_binding_registry().get("someBinding")
+        self.assertEqual(calls, [1])
+
+    def test_deferred_callback_runs_only_once(self):
+        calls = []
+        meta._ConverterMeta.register_deferred(lambda: calls.append(1))
+
+        meta.get_binding_registry().get("someBinding")
+        meta.get_binding_registry().get("anotherBinding")
+        self.assertEqual(calls, [1])

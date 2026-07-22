@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import typing
 import json
+import logging
+import typing
 
 from azure.functions import _durable_functions
 from azure.functions.decorators.durable_functions import get_durable_package
 from . import meta
 
-import logging
 _logger = logging.getLogger('azure.functions.DurableFunctions')
 
 

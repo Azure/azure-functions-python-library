@@ -49,7 +49,11 @@ from . import mysql  # NoQA
 from . import connectors  # NoQA
 
 
-register_durable_converters()
+# Register Durable Functions converters lazily on the first binding lookup.
+# Registering at import time would trigger importing the Durable Functions
+# SDK (which imports azure.functions at its top level) while azure.functions
+# is still initializing -- a re-entrant import.
+get_binding_registry().register_deferred(register_durable_converters)
 
 
 __all__ = (

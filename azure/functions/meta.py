@@ -5,7 +5,7 @@ import abc
 import collections.abc
 import datetime
 import re
-from typing import Dict, Optional, Union, Tuple, Mapping, Any
+from typing import Callable, Dict, List, Optional, Union, Tuple, Mapping, Any
 
 from ._jsonutils import json
 from ._thirdparty import typing_inspect
@@ -84,6 +84,8 @@ class Datum:
 class _ConverterMeta(abc.ABCMeta):
 
     _bindings: Dict[str, type] = {}
+    _deferred_registrations: List[Callable[[], None]] = []
+    _deferred_registrations_done: bool = False
 
     def __new__(mcls, name, bases, dct, *,
                 binding: Optional[str],
@@ -106,7 +108,28 @@ class _ConverterMeta(abc.ABCMeta):
         return cls
 
     @classmethod
+    def register_deferred(cls, callback: Callable[[], None]) -> None:
+        """Register a callback that lazily registers converters on the first
+        binding lookup.
+
+        This lets optional dependencies (e.g. the Durable Functions SDK,
+        which imports ``azure.functions`` at its top level) be imported only
+        after ``azure.functions`` has finished initializing, avoiding a
+        re-entrant import at ``azure.functions`` import time.
+        """
+        cls._deferred_registrations.append(callback)
+
+    @classmethod
+    def _run_deferred_registrations(cls):
+        if cls._deferred_registrations_done:
+            return
+        cls._deferred_registrations_done = True
+        while cls._deferred_registrations:
+            cls._deferred_registrations.pop(0)()
+
+    @classmethod
     def get(cls, binding_name):
+        cls._run_deferred_registrations()
         return cls._bindings.get(binding_name)
 
     def has_trigger_support(cls) -> bool:
