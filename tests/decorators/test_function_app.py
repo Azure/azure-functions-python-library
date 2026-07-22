@@ -62,6 +62,36 @@ class TestFunction(unittest.TestCase):
                              f"is {trigger1} and New trigger "
                              f"being added is {trigger2}")
 
+    def test_function_creation_with_query_method_trigger(self):
+        output = HttpOutput(name="out", data_type=DataType.UNDEFINED)
+        trigger = HttpTrigger(name="req",
+                              methods=(HttpMethod.QUERY,),
+                              data_type=DataType.UNDEFINED,
+                              auth_level=AuthLevel.ANONYMOUS, route="dummy")
+        self.func.add_binding(output)
+        self.func.add_trigger(trigger)
+
+        assert_json(self, self.func, {"scriptFile": "dummy.py",
+                                      "bindings": [
+                                          {
+                                              "type": HTTP_OUTPUT,
+                                              "direction":
+                                                  BindingDirection.OUT,
+                                              "name": "out",
+                                              "dataType": DataType.UNDEFINED
+                                          },
+                                          {
+                                              "authLevel": AuthLevel.ANONYMOUS,
+                                              "type": HTTP_TRIGGER,
+                                              "direction": BindingDirection.IN,
+                                              "name": "req",
+                                              "dataType": DataType.UNDEFINED,
+                                              "route": "dummy",
+                                              "methods": [HttpMethod.QUERY]
+                                          }
+                                      ]
+                                      })
+
     def test_function_creation_with_binding_and_trigger(self):
         output = HttpOutput(name="out", data_type=DataType.UNDEFINED)
         trigger = HttpTrigger(name="req",
@@ -982,11 +1012,12 @@ class TestFunctionApp(unittest.TestCase):
                              '{"direction": "IN", "type": "httpTrigger", '
                              '"authLevel": "FUNCTION", "route": "/{*route}", '
                              '"methods": ["GET", "POST", "DELETE", "HEAD", '
-                             '"PATCH", "PUT", "OPTIONS"], "name": "req"}'))
+                             '"PATCH", "PUT", "OPTIONS", "QUERY"], '
+                             '"name": "req"}'))
         self.assertEqual(json.loads(raw_output_binding), json.loads(
             '{"direction": "IN", "type": "httpTrigger", "authLevel": '
             '"FUNCTION", "methods": ["GET", "POST", "DELETE", "HEAD", '
-            '"PATCH", "PUT", "OPTIONS"], "name": "req", "route": "/{'
+            '"PATCH", "PUT", "OPTIONS", "QUERY"], "name": "req", "route": "/{'
             '*route}"}'))
         self.assertEqual(func.get_bindings_dict(), {
             "bindings": [
@@ -997,7 +1028,8 @@ class TestFunctionApp(unittest.TestCase):
                                 HttpMethod.DELETE,
                                 HttpMethod.HEAD,
                                 HttpMethod.PATCH,
-                                HttpMethod.PUT, HttpMethod.OPTIONS],
+                                HttpMethod.PUT, HttpMethod.OPTIONS,
+                                HttpMethod.QUERY],
                     "name": "req",
                     "route": "/{*route}",
                     "type": HTTP_TRIGGER

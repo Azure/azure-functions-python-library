@@ -211,6 +211,23 @@ class TestHTTP(unittest.TestCase):
             "dummy_params_key": "dummy_params_value"}))
         self.assertEqual(http_request.get_body(), b"test_body")
 
+    def test_http_request_converter_decode_query_method(self):
+        data = {
+            "method": Datum("QUERY", "string"),
+            "url": Datum("www.dummy.com/products", "string"),
+            "headers": {'Content-Type': Datum("application/json", "string")},
+            "query": {},
+            "params": {},
+            "body": Datum('{"category": "laptops"}', "string")
+        }
+        datum = Datum(data, "http")
+
+        http_request = http.HttpRequestConverter.decode(
+            data=datum, trigger_metadata={})
+
+        self.assertEqual(http_request.method, "QUERY")
+        self.assertEqual(http_request.get_body(), b'{"category": "laptops"}')
+
     def test_http_with_bytes_data(self):
         data = (
             b"--foo\r\n"

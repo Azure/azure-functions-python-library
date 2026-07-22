@@ -16,6 +16,7 @@ class HttpMethod(StringifyEnum):
     PATCH = "PATCH"
     PUT = "PUT"
     OPTIONS = "OPTIONS"
+    QUERY = "QUERY"
 
 
 class HttpTrigger(Trigger):

@@ -14,7 +14,7 @@ class TestHttp(unittest.TestCase):
         self.assertEqual([e for e in HttpMethod],
                          [HttpMethod.GET, HttpMethod.POST, HttpMethod.DELETE,
                           HttpMethod.HEAD, HttpMethod.PATCH, HttpMethod.PUT,
-                          HttpMethod.OPTIONS])
+                          HttpMethod.OPTIONS, HttpMethod.QUERY])
 
     def test_http_trigger_valid_creation_with_methods(self):
         http_trigger = HttpTrigger(name='req',
