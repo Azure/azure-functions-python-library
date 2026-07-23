@@ -5,7 +5,8 @@ import abc
 import collections.abc
 import datetime
 import re
-from typing import Callable, Dict, List, Optional, Union, Tuple, Mapping, Any
+from typing import (Any, Callable, Dict, Iterable, List, Mapping, Optional,
+                    Tuple, Union)
 
 from ._jsonutils import json
 from ._thirdparty import typing_inspect
@@ -84,8 +85,8 @@ class Datum:
 class _ConverterMeta(abc.ABCMeta):
 
     _bindings: Dict[str, type] = {}
-    _deferred_registrations: List[Callable[[], None]] = []
-    _deferred_registrations_done: bool = False
+    _deferred_registrations: List[
+        Tuple[Callable[[], None], Optional[frozenset]]] = []
 
     def __new__(mcls, name, bases, dct, *,
                 binding: Optional[str],
@@ -108,28 +109,46 @@ class _ConverterMeta(abc.ABCMeta):
         return cls
 
     @classmethod
-    def register_deferred(cls, callback: Callable[[], None]) -> None:
-        """Register a callback that lazily registers converters on the first
-        binding lookup.
+    def register_deferred(
+            cls,
+            callback: Callable[[], None],
+            binding_names: Optional[Iterable[str]] = None) -> None:
+        """Register a callback that lazily registers converters on binding
+        lookup.
 
         This lets optional dependencies (e.g. the Durable Functions SDK,
         which imports ``azure.functions`` at its top level) be imported only
         after ``azure.functions`` has finished initializing, avoiding a
         re-entrant import at ``azure.functions`` import time.
+
+        If ``binding_names`` is provided, the callback only runs when one of
+        those bindings is actually looked up.  This keeps the callback (and
+        any import it performs) off the code path of apps that never use
+        those bindings -- e.g. a non-Durable app never triggers the Durable
+        Functions SDK import.  When ``binding_names`` is None the callback
+        runs on the first binding lookup of any kind.
         """
-        cls._deferred_registrations.append(callback)
+        names = frozenset(binding_names) if binding_names is not None else None
+        cls._deferred_registrations.append((callback, names))
 
     @classmethod
-    def _run_deferred_registrations(cls):
-        if cls._deferred_registrations_done:
+    def _run_deferred_registrations(cls, binding_name):
+        if not cls._deferred_registrations:
             return
-        cls._deferred_registrations_done = True
-        while cls._deferred_registrations:
-            cls._deferred_registrations.pop(0)()
+        remaining = []
+        fired = []
+        for callback, names in cls._deferred_registrations:
+            if names is None or binding_name in names:
+                fired.append(callback)
+            else:
+                remaining.append((callback, names))
+        cls._deferred_registrations = remaining
+        for callback in fired:
+            callback()
 
     @classmethod
     def get(cls, binding_name):
-        cls._run_deferred_registrations()
+        cls._run_deferred_registrations(binding_name)
         return cls._bindings.get(binding_name)
 
     def has_trigger_support(cls) -> bool:

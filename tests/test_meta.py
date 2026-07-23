@@ -262,14 +262,11 @@ class TestDeferredRegistration(unittest.TestCase):
     def setUp(self):
         registry = meta._ConverterMeta
         self._saved_registrations = list(registry._deferred_registrations)
-        self._saved_done = registry._deferred_registrations_done
         registry._deferred_registrations = []
-        registry._deferred_registrations_done = False
 
     def tearDown(self):
         registry = meta._ConverterMeta
         registry._deferred_registrations = self._saved_registrations
-        registry._deferred_registrations_done = self._saved_done
 
     def test_deferred_callback_runs_on_first_get(self):
         calls = []
@@ -287,4 +284,25 @@ class TestDeferredRegistration(unittest.TestCase):
 
         meta.get_binding_registry().get("someBinding")
         meta.get_binding_registry().get("anotherBinding")
+        self.assertEqual(calls, [1])
+
+    def test_scoped_callback_only_runs_for_matching_binding(self):
+        calls = []
+        meta._ConverterMeta.register_deferred(
+            lambda: calls.append(1),
+            binding_names=("orchestrationTrigger", "activityTrigger"))
+
+        # A lookup for an unrelated binding must not run the callback,
+        # keeping any import it performs off that app's code path.
+        meta.get_binding_registry().get("httpTrigger")
+        meta.get_binding_registry().get("queueTrigger")
+        self.assertEqual(calls, [])
+
+        # A lookup for one of the scoped bindings runs it once.
+        meta.get_binding_registry().get("activityTrigger")
+        self.assertEqual(calls, [1])
+
+        # Subsequent lookups (matching or not) do not re-run it.
+        meta.get_binding_registry().get("orchestrationTrigger")
+        meta.get_binding_registry().get("httpTrigger")
         self.assertEqual(calls, [1])

@@ -49,11 +49,21 @@ from . import mysql  # NoQA
 from . import connectors  # NoQA
 
 
-# Register Durable Functions converters lazily on the first binding lookup.
-# Registering at import time would trigger importing the Durable Functions
-# SDK (which imports azure.functions at its top level) while azure.functions
-# is still initializing -- a re-entrant import.
-get_binding_registry().register_deferred(register_durable_converters)
+# Register Durable Functions converters lazily, and only when a Durable
+# binding is actually looked up.  Registering at import time would trigger
+# importing the Durable Functions SDK (which imports azure.functions at its
+# top level) while azure.functions is still initializing -- a re-entrant
+# import.  Scoping the callback to the Durable binding names also keeps the
+# SDK import off the code path of non-Durable apps entirely: they never look
+# up these bindings, so the import is never attempted.
+_DURABLE_BINDING_NAMES = (
+    "orchestrationTrigger",
+    "entityTrigger",
+    "activityTrigger",
+    "durableClient",
+)
+get_binding_registry().register_deferred(
+    register_durable_converters, binding_names=_DURABLE_BINDING_NAMES)
 
 
 __all__ = (
