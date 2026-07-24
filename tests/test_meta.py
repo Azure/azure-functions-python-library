@@ -269,9 +269,20 @@ class TestRegisterConverter(unittest.TestCase):
 
     @staticmethod
     def _make_dummy_converter():
-        """Return a fresh class usable as a placeholder converter."""
-        class _Dummy:
-            pass
+        """Return a fresh converter class usable as a placeholder."""
+        class _Dummy(meta.InConverter, binding=None):
+            @classmethod
+            def check_input_type_annotation(cls, pytype: type) -> bool:
+                return True
+
+            @classmethod
+            def decode(cls, data: meta.Datum, *, trigger_metadata):
+                return None
+
+            @classmethod
+            def has_implicit_output(cls) -> bool:
+                return False
+
         return _Dummy
 
     # ------------------------------------------------------------------ #

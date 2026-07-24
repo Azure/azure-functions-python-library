@@ -428,9 +428,9 @@ def register_converter(
 
     By default raises RuntimeError if the binding is already registered,
     requiring callers to explicitly pass overwrite=True to replace an
-    existing entry. This allows external packages (e.g.
-    azure-functions-durable) to override built-in converters without
-    accessing private internals.
+    existing entry. This API is intended for integration packages (e.g.
+    azure-functions-durable) that need to override built-in durable
+    converters without accessing private internals.
 
     Parameters
     ----------
@@ -444,12 +444,17 @@ def register_converter(
         ``binding_name``. If False (default), raise RuntimeError when the
         binding is already registered.
     """
+    if not isinstance(converter_cls, type):
+        raise TypeError('converter_cls must be a class')
+    if not issubclass(converter_cls, (InConverter, OutConverter)):
+        raise TypeError(
+            'converter_cls must be a subclass of InConverter and/or '
+            'OutConverter')
     if binding_name not in _OVERRIDABLE_BINDINGS:
         raise ValueError(
-            f'cannot override converter for {binding_name!r}: '
-            f'only durable-related bindings may be overridden via '
-            f'register_converter(). Overridable bindings: '
-            f'{sorted(_OVERRIDABLE_BINDINGS)}')
+            f'cannot register converter for {binding_name!r}: '
+            f'register_converter() only supports durable-related bindings. '
+            f'Overridable bindings: {sorted(_OVERRIDABLE_BINDINGS)}')
     if not overwrite and binding_name in _ConverterMeta._bindings:
         raise RuntimeError(
             f'cannot register a converter for {binding_name!r} binding: '
