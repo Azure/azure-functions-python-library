@@ -15,6 +15,16 @@ from ._utils import (
 )
 
 
+# Binding names whose converters are permitted to be overridden via
+# register_converter(). Only durable-related bindings are overridable.
+_OVERRIDABLE_BINDINGS: frozenset = frozenset({
+    'orchestrationTrigger',
+    'entityTrigger',
+    'activityTrigger',
+    'durableClient',
+})
+
+
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     is_iterable_anno = (
         typing_inspect.is_generic_type(annotation)
@@ -407,3 +417,47 @@ class OutConverter(_BaseConverter, binding=None):
 
 def get_binding_registry():
     return _ConverterMeta
+
+
+def register_converter(
+        binding_name: str,
+        converter_cls: type,
+        *,
+        overwrite: bool = False) -> None:
+    """Register or replace a converter for a binding name.
+
+    By default raises RuntimeError if the binding is already registered,
+    requiring callers to explicitly pass overwrite=True to replace an
+    existing entry. This API is intended for integration packages (e.g.
+    azure-functions-durable) that need to override built-in durable
+    converters without accessing private internals.
+
+    Parameters
+    ----------
+    binding_name:
+        The binding type string as it appears in function.json, e.g.
+        ``'orchestrationTrigger'``.
+    converter_cls:
+        A class that is a subclass of InConverter and/or OutConverter.
+    overwrite:
+        If True, silently replace any existing registration for
+        ``binding_name``. If False (default), raise RuntimeError when the
+        binding is already registered.
+    """
+    if not isinstance(converter_cls, type):
+        raise TypeError('converter_cls must be a class')
+    if not issubclass(converter_cls, (InConverter, OutConverter)):
+        raise TypeError(
+            'converter_cls must be a subclass of InConverter and/or '
+            'OutConverter')
+    if binding_name not in _OVERRIDABLE_BINDINGS:
+        raise ValueError(
+            f'cannot register converter for {binding_name!r}: '
+            f'register_converter() only supports durable-related bindings. '
+            f'Overridable bindings: {sorted(_OVERRIDABLE_BINDINGS)}')
+    if not overwrite and binding_name in _ConverterMeta._bindings:
+        raise RuntimeError(
+            f'cannot register a converter for {binding_name!r} binding: '
+            f'another converter for this binding has already been '
+            f'registered. Pass overwrite=True to replace it.')
+    _ConverterMeta._bindings[binding_name] = converter_cls

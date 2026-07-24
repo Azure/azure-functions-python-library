@@ -254,3 +254,100 @@ class TestMeta(unittest.TestCase):
 
     def _parse_timedelta(self, timedelta_str):
         return meta._BaseConverter._parse_timedelta(timedelta_str)
+
+
+class TestRegisterConverter(unittest.TestCase):
+
+    def setUp(self):
+        # Snapshot the live bindings registry so each test is isolated.
+        self._saved_bindings = dict(meta._ConverterMeta._bindings)
+
+    def tearDown(self):
+        # Restore the registry exactly as it was before the test ran.
+        meta._ConverterMeta._bindings.clear()
+        meta._ConverterMeta._bindings.update(self._saved_bindings)
+
+    @staticmethod
+    def _make_dummy_converter():
+        """Return a fresh converter class usable as a placeholder."""
+        class _Dummy(meta.InConverter, binding=None):
+            @classmethod
+            def check_input_type_annotation(cls, pytype: type) -> bool:
+                return True
+
+            @classmethod
+            def decode(cls, data: meta.Datum, *, trigger_metadata):
+                return None
+
+            @classmethod
+            def has_implicit_output(cls) -> bool:
+                return False
+
+        return _Dummy
+
+    # ------------------------------------------------------------------ #
+    # Allow-list enforcement                                               #
+    # ------------------------------------------------------------------ #
+
+    def test_non_durable_binding_raises_value_error(self):
+        with self.assertRaises(ValueError) as ctx:
+            meta.register_converter('httpTrigger',
+                                    self._make_dummy_converter())
+        self.assertIn('httpTrigger', str(ctx.exception))
+
+    def test_non_durable_binding_with_overwrite_still_raises_value_error(self):
+        # overwrite=True must not bypass the allow-list.
+        with self.assertRaises(ValueError):
+            meta.register_converter('queueTrigger',
+                                    self._make_dummy_converter(),
+                                    overwrite=True)
+
+    # ------------------------------------------------------------------ #
+    # Successful registration                                              #
+    # ------------------------------------------------------------------ #
+
+    def test_all_durable_bindings_are_overridable(self):
+        for name in ('orchestrationTrigger', 'entityTrigger',
+                     'activityTrigger', 'durableClient'):
+            dummy = self._make_dummy_converter()
+            meta.register_converter(name, dummy, overwrite=True)
+            self.assertIs(
+                meta._ConverterMeta._bindings[name], dummy,
+                msg=f'{name!r} was not registered correctly')
+
+    def test_register_new_durable_binding_not_previously_in_registry(self):
+        meta._ConverterMeta._bindings.pop('orchestrationTrigger', None)
+        dummy = self._make_dummy_converter()
+        meta.register_converter('orchestrationTrigger', dummy)
+        self.assertIs(meta._ConverterMeta._bindings['orchestrationTrigger'],
+                      dummy)
+
+    # ------------------------------------------------------------------ #
+    # overwrite=False guard                                                #
+    # ------------------------------------------------------------------ #
+
+    def test_already_registered_without_overwrite_raises_runtime_error(self):
+        dummy = self._make_dummy_converter()
+        meta._ConverterMeta._bindings['orchestrationTrigger'] = dummy
+        with self.assertRaises(RuntimeError) as ctx:
+            meta.register_converter('orchestrationTrigger',
+                                    self._make_dummy_converter())
+        self.assertIn('orchestrationTrigger', str(ctx.exception))
+
+    def test_already_registered_with_overwrite_true_replaces_entry(self):
+        original = self._make_dummy_converter()
+        replacement = self._make_dummy_converter()
+        meta._ConverterMeta._bindings['orchestrationTrigger'] = original
+        meta.register_converter('orchestrationTrigger', replacement,
+                                overwrite=True)
+        self.assertIs(meta._ConverterMeta._bindings['orchestrationTrigger'],
+                      replacement)
+
+    # ------------------------------------------------------------------ #
+    # Public API surface                                                   #
+    # ------------------------------------------------------------------ #
+
+    def test_register_converter_is_exported_from_azure_functions(self):
+        import azure.functions as af
+        self.assertTrue(hasattr(af, 'register_converter'))
+        self.assertIn('register_converter', af.__all__)

@@ -23,7 +23,7 @@ from ._http_wsgi import WsgiMiddleware
 from ._http_asgi import AsgiMiddleware
 from .kafka import KafkaEvent, KafkaConverter, KafkaTriggerConverter
 from .mcp import MCPToolContext, PromptInvocationContext
-from .meta import get_binding_registry
+from .meta import get_binding_registry, register_converter
 from ._queue import QueueMessage
 from ._servicebus import ServiceBusMessage
 from ._sql import SqlRow, SqlRowList
@@ -51,6 +51,7 @@ from . import connectors  # NoQA
 __all__ = (
     # Functions
     'get_binding_registry',
+    'register_converter',
 
     # Generics.
     'Context',
