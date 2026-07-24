@@ -328,7 +328,7 @@ class TestRegisterConverter(unittest.TestCase):
         replacement = self._make_dummy_converter()
         meta._ConverterMeta._bindings['orchestrationTrigger'] = original
         meta.register_converter('orchestrationTrigger', replacement,
-                                 overwrite=True)
+                                overwrite=True)
         self.assertIs(meta._ConverterMeta._bindings['orchestrationTrigger'],
                       replacement)
 
