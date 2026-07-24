@@ -407,3 +407,36 @@ class OutConverter(_BaseConverter, binding=None):
 
 def get_binding_registry():
     return _ConverterMeta
+
+
+def register_converter(
+        binding_name: str,
+        converter_cls: type,
+        *,
+        overwrite: bool = False) -> None:
+    """Register or replace a converter for a binding name.
+
+    By default raises RuntimeError if the binding is already registered,
+    requiring callers to explicitly pass overwrite=True to replace an
+    existing entry. This allows external packages (e.g.
+    azure-functions-durable) to override built-in converters without
+    accessing private internals.
+
+    Parameters
+    ----------
+    binding_name:
+        The binding type string as it appears in function.json, e.g.
+        ``'orchestrationTrigger'``.
+    converter_cls:
+        A class that is a subclass of InConverter and/or OutConverter.
+    overwrite:
+        If True, silently replace any existing registration for
+        ``binding_name``. If False (default), raise RuntimeError when the
+        binding is already registered.
+    """
+    if not overwrite and binding_name in _ConverterMeta._bindings:
+        raise RuntimeError(
+            f'cannot register a converter for {binding_name!r} binding: '
+            f'another converter for this binding has already been '
+            f'registered. Pass overwrite=True to replace it.')
+    _ConverterMeta._bindings[binding_name] = converter_cls
