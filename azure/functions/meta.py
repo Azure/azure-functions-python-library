@@ -15,6 +15,16 @@ from ._utils import (
 )
 
 
+# Binding names whose converters are permitted to be overridden via
+# register_converter(). Only durable-related bindings are overridable.
+_OVERRIDABLE_BINDINGS: frozenset = frozenset({
+    'orchestrationTrigger',
+    'entityTrigger',
+    'activityTrigger',
+    'durableClient',
+})
+
+
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     is_iterable_anno = (
         typing_inspect.is_generic_type(annotation)
@@ -434,6 +444,12 @@ def register_converter(
         ``binding_name``. If False (default), raise RuntimeError when the
         binding is already registered.
     """
+    if binding_name not in _OVERRIDABLE_BINDINGS:
+        raise ValueError(
+            f'cannot override converter for {binding_name!r}: '
+            f'only durable-related bindings may be overridden via '
+            f'register_converter(). Overridable bindings: '
+            f'{sorted(_OVERRIDABLE_BINDINGS)}')
     if not overwrite and binding_name in _ConverterMeta._bindings:
         raise RuntimeError(
             f'cannot register a converter for {binding_name!r} binding: '
