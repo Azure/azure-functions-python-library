@@ -7,6 +7,7 @@ from azure.functions import _abc as azf_abc
 from azure.functions import _timer as azf_timer
 from . import meta
 from ._jsonutils import json
+from ._utils import _serialize_value
 
 
 class TimerRequest(azf_timer.TimerRequest):
@@ -29,7 +30,6 @@ class TimerRequest(azf_timer.TimerRequest):
 
 def to_dict(self) -> typing.Dict[str, typing.Any]:
     """Return a JSON-safe dictionary of all timer request fields."""
-    from ._utils import _serialize_value
 
     return {
         'past_due': self.past_due,
