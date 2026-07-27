@@ -57,7 +57,8 @@ class MySqlRow(BaseMySqlRow, collections.UserDict):
 
     def to_dict(self) -> dict:
         """Return the MySqlRow as a plain dict."""
-        return dict(self)
+        from ._utils import _serialize_value
+        return _serialize_value(dict(self))
 
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)

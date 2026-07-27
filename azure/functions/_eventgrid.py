@@ -74,7 +74,7 @@ class EventGridEvent(azf_abc.EventGridEvent):
             'event_type': self.event_type,
             'event_time': _serialize_value(self.event_time),
             'data_version': self.data_version,
-            'data': self.get_json(),
+            'data': _serialize_value(self.get_json()),
         }
 
 
@@ -229,6 +229,6 @@ class CloudEvent(azf_abc.CloudEvent):
             'time': _serialize_value(self.time),
             'datacontenttype': self.datacontenttype,
             'dataschema': self.dataschema,
-            'data': self.get_json(),
-            'extension_attrs': self.extension_attrs,
+            'data': _serialize_value(self.get_json()),
+            'extension_attrs': _serialize_value(self.extension_attrs),
         }

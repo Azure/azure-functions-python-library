@@ -29,6 +29,10 @@ def _serialize_value(v: Any) -> Any:
         return v.isoformat()
     if isinstance(v, _dt.timedelta):
         return str(v)
+    if isinstance(v, dict):
+        return {k: _serialize_value(val) for k, val in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_serialize_value(item) for item in v]
     return v
 
 

@@ -62,12 +62,13 @@ class InputStream(azf_blob.InputStream):
 
         Blob content is intentionally excluded; use :meth:`read` to access it.
         """
+        from ._utils import _serialize_value
         return {
             'name': self._name,
             'uri': self._uri,
             'length': self._length,
-            'blob_properties': self._blob_properties,
-            'metadata': self._metadata,
+            'blob_properties': _serialize_value(self._blob_properties),
+            'metadata': _serialize_value(self._metadata),
         }
 
 

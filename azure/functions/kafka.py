@@ -91,7 +91,7 @@ class KafkaEvent(AbstractKafkaEvent):
             'partition': self.partition,
             'topic': self.topic,
             'timestamp': self.timestamp,
-            'headers': self.headers,
+            'headers': _serialize_value(self.headers),
         }
 
     def __repr__(self) -> str:

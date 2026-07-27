@@ -477,7 +477,7 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         ttl = self.time_to_live
         return {
             'body': _serialize_value(self.get_body()),
-            'application_properties': self.application_properties,
+            'application_properties': _serialize_value(self.application_properties),
             'content_type': self.content_type,
             'correlation_id': self.correlation_id,
             'dead_letter_error_description': self.dead_letter_error_description,
@@ -503,5 +503,5 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
             'time_to_live': str(ttl) if ttl is not None else None,
             'to': self.to,
             'transaction_partition_key': self.transaction_partition_key,
-            'user_properties': self.user_properties,
+            'user_properties': _serialize_value(self.user_properties),
         }
