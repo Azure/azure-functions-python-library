@@ -15,6 +15,8 @@ def _serialize_value(v: Any) -> Any:
     - ``datetime.datetime`` / ``datetime.date``: ISO-8601 string via
       ``.isoformat()``.
     - ``datetime.timedelta``: ``str(v)`` (e.g. ``"0:05:00"``).
+    - ``dict`` / ``list`` / ``tuple``: normalized recursively by applying this
+      function to nested values.
     - All other types: returned unchanged.
     """
     if isinstance(v, bytes):
