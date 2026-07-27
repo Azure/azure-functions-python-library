@@ -27,13 +27,15 @@ class TimerRequest(azf_timer.TimerRequest):
     def schedule(self) -> dict:
         return self.__schedule
 
-    def to_dict(self) -> typing.Dict[str, typing.Any]:
-        """Return a JSON-safe dictionary of all timer request fields."""
-        return {
-            'past_due': self.past_due,
-            'schedule_status': self.schedule_status,
-            'schedule': self.schedule,
-        }
+def to_dict(self) -> typing.Dict[str, typing.Any]:
+    """Return a JSON-safe dictionary of all timer request fields."""
+    from ._utils import _serialize_value
+
+    return {
+        'past_due': self.past_due,
+        'schedule_status': _serialize_value(self.schedule_status),
+        'schedule': _serialize_value(self.schedule),
+    }
 
 
 class TimerRequestConverter(meta.InConverter,
