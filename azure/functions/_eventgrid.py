@@ -137,7 +137,7 @@ class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
             'event_type': self.event_type,
             'event_time': _serialize_value(self.event_time),
             'data_version': self.data_version,
-'data': _serialize_value(self.get_json()),
+            'data': _serialize_value(self.get_json()),
         }
 
 
