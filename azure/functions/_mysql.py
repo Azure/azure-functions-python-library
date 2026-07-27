@@ -54,7 +54,7 @@ class MySqlRow(BaseMySqlRow, collections.UserDict):
 
     def to_json(self) -> str:
         """Return the JSON representation of the MySqlRow"""
-        return json.dumps(dict(self))
+        return json.dumps(self.to_dict())
 
     def to_dict(self) -> dict:
         """Return the MySqlRow as a plain dict."""
