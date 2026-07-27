@@ -9,6 +9,7 @@ from . import meta
 from ._jsonutils import json
 
 from ._kafka import AbstractKafkaEvent
+from ._utils import _serialize_value
 
 
 class KafkaEvent(AbstractKafkaEvent):
@@ -83,7 +84,6 @@ class KafkaEvent(AbstractKafkaEvent):
         ``body`` bytes are decoded as UTF-8 when valid, otherwise represented
         as ``{"__encoding": "base64", "value": "<base64>"}``.
         """
-        from ._utils import _serialize_value
         return {
             'body': _serialize_value(self.get_body()),
             'key': self.key,

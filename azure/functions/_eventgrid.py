@@ -5,6 +5,7 @@ import datetime
 import typing
 
 from azure.functions import _abc as azf_abc
+from ._utils import _serialize_value
 
 
 class EventGridEvent(azf_abc.EventGridEvent):
@@ -66,7 +67,6 @@ class EventGridEvent(azf_abc.EventGridEvent):
 
         ``event_time`` is represented as an ISO-8601 string.
         """
-        from ._utils import _serialize_value
         return {
             'id': self.id,
             'topic': self.topic,
@@ -131,7 +131,6 @@ class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
 
         ``event_time`` is represented as an ISO-8601 string.
         """
-        from ._utils import _serialize_value
         return {
             'id': self.id,
             'subject': self.subject,
@@ -219,7 +218,6 @@ class CloudEvent(azf_abc.CloudEvent):
 
         ``time`` is represented as an ISO-8601 string.
         """
-        from ._utils import _serialize_value
         return {
             'id': self.id,
             'source': self.source,

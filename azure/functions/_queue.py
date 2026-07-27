@@ -6,6 +6,7 @@ import typing
 
 from . import _abc
 from ._jsonutils import json
+from ._utils import _serialize_value
 
 
 class QueueMessage(_abc.QueueMessage):
@@ -95,7 +96,6 @@ class QueueMessage(_abc.QueueMessage):
         as ``{"__encoding": "base64", "value": "<base64>"}``.
         Datetime fields are ISO-8601 strings.
         """
-        from ._utils import _serialize_value
         return {
             'id': self.id,
             'body': _serialize_value(self.get_body()),

@@ -271,3 +271,49 @@ class TestCloudEventToDict(unittest.TestCase):
         )
         parsed = json.loads(evt.to_json())
         assert parsed["id"] == "ce2"
+
+
+class TestSerializableNonBreaking(unittest.TestCase):
+    """Verify that subclassing a binding ABC without implementing to_dict()
+    does not break instantiation - the error is deferred to call time."""
+
+    def _make_custom_queue_message(self):
+        """Return a minimal concrete subclass of _abc.QueueMessage that
+        implements only the pre-existing abstract surface, not to_dict()."""
+        import azure.functions._abc as azf_abc
+
+        class CustomQueueMessage(azf_abc.QueueMessage):
+            @property
+            def id(self): return "x"
+            def get_body(self): return b"body"
+            def get_json(self): return "body"
+            @property
+            def dequeue_count(self): return None
+            @property
+            def expiration_time(self): return None
+            @property
+            def insertion_time(self): return None
+            @property
+            def time_next_visible(self): return None
+            @property
+            def pop_receipt(self): return None
+
+        return CustomQueueMessage
+
+    def test_subclass_without_to_dict_can_be_instantiated(self):
+        # Must not raise TypeError at instantiation time.
+        cls = self._make_custom_queue_message()
+        msg = cls()
+        assert msg.id == "x"
+
+    def test_subclass_without_to_dict_raises_at_call_time(self):
+        cls = self._make_custom_queue_message()
+        msg = cls()
+        with self.assertRaises(NotImplementedError):
+            msg.to_dict()
+
+    def test_subclass_without_to_dict_to_json_raises_at_call_time(self):
+        cls = self._make_custom_queue_message()
+        msg = cls()
+        with self.assertRaises(NotImplementedError):
+            msg.to_json()

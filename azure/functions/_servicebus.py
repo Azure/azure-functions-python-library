@@ -5,6 +5,7 @@ import datetime
 from typing import Optional, Dict, Any, Union
 
 from . import _abc
+from ._utils import _serialize_value
 
 
 class ServiceBusMessage(_abc.ServiceBusMessage):
@@ -473,7 +474,6 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
         Datetime fields are ISO-8601 strings; ``time_to_live`` is a string
         representation of the ``timedelta``.
         """
-        from ._utils import _serialize_value
         ttl = self.time_to_live
         return {
             'body': _serialize_value(self.get_body()),

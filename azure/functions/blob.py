@@ -8,6 +8,7 @@ from typing import Any, Optional, Union
 from azure.functions import _abc as azf_abc
 from azure.functions import _blob as azf_blob
 from . import meta
+from ._utils import _serialize_value
 
 
 class InputStream(azf_blob.InputStream):
@@ -62,7 +63,6 @@ class InputStream(azf_blob.InputStream):
 
         Blob content is intentionally excluded; use :meth:`read` to access it.
         """
-        from ._utils import _serialize_value
         return {
             'name': self._name,
             'uri': self._uri,

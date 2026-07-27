@@ -4,6 +4,7 @@ import abc
 import collections
 
 from ._jsonutils import json
+from ._utils import _serialize_value
 
 
 class BaseSqlRow(abc.ABC):
@@ -57,7 +58,6 @@ class SqlRow(BaseSqlRow, collections.UserDict):
 
     def to_dict(self) -> dict:
         """Return the SqlRow as a plain dict."""
-        from ._utils import _serialize_value
         return _serialize_value(dict(self))
 
     def __getitem__(self, key):

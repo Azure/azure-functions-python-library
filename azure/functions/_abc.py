@@ -16,12 +16,16 @@ T = typing.TypeVar('T')
 class Serializable(abc.ABC):
     """Mixin that provides a uniform serialization contract for binding types.
 
-    Concrete binding classes must implement :meth:`to_dict`.  A default
-    :meth:`to_json` implementation is provided that serializes the result of
-    :meth:`to_dict` to a JSON string.
+    Binding classes should override :meth:`to_dict` to return a JSON-safe
+    representation.  A default :meth:`to_json` implementation is provided
+    that serializes the result of :meth:`to_dict` to a JSON string.
+
+    :meth:`to_dict` is intentionally non-abstract so that downstream
+    subclasses of the binding ABCs that predate this contract are not broken
+    at instantiation time.  Calling ``to_dict()`` on a class that has not
+    implemented it raises :exc:`NotImplementedError` at call time.
     """
 
-    @abc.abstractmethod
     def to_dict(self) -> typing.Any:
         """Return a JSON-safe representation of this binding object.
 
@@ -30,8 +34,14 @@ class Serializable(abc.ABC):
         All ``bytes`` values are decoded as UTF-8 when possible, otherwise
         represented as ``{"__encoding": "base64", "value": "<base64>"}``.
         All ``datetime`` values are represented as ISO-8601 strings.
+
+        Subclasses that do not override this method will raise
+        :exc:`NotImplementedError` at call time rather than at instantiation.
         """
-        ...
+        raise NotImplementedError(
+            f"{type(self).__name__} does not implement to_dict(). "
+            "Override this method to enable serialization."
+        )
 
     def to_json(self) -> str:
         """Return the JSON string representation of this binding object.

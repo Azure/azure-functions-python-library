@@ -6,6 +6,7 @@ import typing
 
 from azure.functions import _abc as func_abc
 from azure.functions import meta
+from ._utils import _serialize_value
 
 
 class EventHubEvent(func_abc.EventHubEvent):
@@ -87,7 +88,6 @@ class EventHubEvent(func_abc.EventHubEvent):
         as ``{"__encoding": "base64", "value": "<base64>"}``.
         ``enqueued_time`` is an ISO-8601 string.
         """
-        from ._utils import _serialize_value
         return {
             'body': _serialize_value(self.get_body()),
             'partition_key': self.partition_key,
