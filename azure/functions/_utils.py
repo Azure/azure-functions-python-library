@@ -1,8 +1,35 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import List, Tuple, Optional
+import base64
+import datetime as _dt
+from typing import Any, List, Tuple, Optional
 from datetime import datetime, timedelta
+
+
+def _serialize_value(v: Any) -> Any:
+    """Normalize a single field value to a JSON-safe type.
+
+    - ``bytes``: decoded as UTF-8 when valid, otherwise base64-encoded as
+      ``{"__encoding": "base64", "value": "<base64>"}``.
+    - ``datetime.datetime`` / ``datetime.date``: ISO-8601 string via
+      ``.isoformat()``.
+    - ``datetime.timedelta``: ``str(v)`` (e.g. ``"0:05:00"``).
+    - All other types: returned unchanged.
+    """
+    if isinstance(v, bytes):
+        try:
+            return v.decode('utf-8')
+        except UnicodeDecodeError:
+            return {
+                '__encoding': 'base64',
+                'value': base64.b64encode(v).decode('ascii'),
+            }
+    if isinstance(v, (_dt.datetime, _dt.date)):
+        return v.isoformat()
+    if isinstance(v, _dt.timedelta):
+        return str(v)
+    return v
 
 
 def try_parse_datetime_with_formats(

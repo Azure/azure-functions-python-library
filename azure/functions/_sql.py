@@ -55,6 +55,10 @@ class SqlRow(BaseSqlRow, collections.UserDict):
         """Return the JSON representation of the SqlRow"""
         return json.dumps(dict(self))
 
+    def to_dict(self) -> dict:
+        """Return the SqlRow as a plain dict."""
+        return dict(self)
+
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)
 
@@ -69,4 +73,12 @@ class SqlRow(BaseSqlRow, collections.UserDict):
 
 class SqlRowList(BaseSqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
-    pass
+
+    def to_dict(self):
+        """Return a list of plain dicts, one per :class:`~SqlRow`."""
+        return [row.to_dict() for row in self]
+
+    def to_json(self) -> str:
+        """Return the JSON representation of the SqlRowList."""
+        import json as _stdlib_json
+        return _stdlib_json.dumps(self.to_dict())

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import io
+import typing
 from typing import Any, Optional, Union
 
 from azure.functions import _abc as azf_abc
@@ -55,6 +56,19 @@ class InputStream(azf_blob.InputStream):
 
     def writable(self) -> bool:
         return False
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of blob metadata fields.
+
+        Blob content is intentionally excluded; use :meth:`read` to access it.
+        """
+        return {
+            'name': self._name,
+            'uri': self._uri,
+            'length': self._length,
+            'blob_properties': self._blob_properties,
+            'metadata': self._metadata,
+        }
 
 
 class BlobConverter(meta.InConverter,

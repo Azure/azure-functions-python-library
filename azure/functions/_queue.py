@@ -88,6 +88,24 @@ class QueueMessage(_abc.QueueMessage):
         """
         return json.loads(self.__body)
 
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of all message fields.
+
+        ``body`` bytes are decoded as UTF-8 when valid, otherwise represented
+        as ``{"__encoding": "base64", "value": "<base64>"}``.
+        Datetime fields are ISO-8601 strings.
+        """
+        from ._utils import _serialize_value
+        return {
+            'id': self.id,
+            'body': _serialize_value(self.get_body()),
+            'pop_receipt': self.pop_receipt,
+            'dequeue_count': self.dequeue_count,
+            'expiration_time': _serialize_value(self.expiration_time),
+            'insertion_time': _serialize_value(self.insertion_time),
+            'time_next_visible': _serialize_value(self.time_next_visible),
+        }
+
     def __repr__(self) -> str:
         return (
             f'<azure.QueueMessage id={self.id} at 0x{id(self):0x}>'

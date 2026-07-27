@@ -4,8 +4,10 @@
 import abc
 import typing
 
+from . import _abc
 
-class AbstractKafkaEvent(abc.ABC):
+
+class AbstractKafkaEvent(_abc.Serializable):
 
     @abc.abstractmethod
     def get_body(self) -> bytes:

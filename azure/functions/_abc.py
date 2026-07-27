@@ -4,12 +4,42 @@
 import abc
 import datetime
 import io
+import json
 import threading
 import typing
 
 from werkzeug.datastructures import Headers
 
 T = typing.TypeVar('T')
+
+
+class Serializable(abc.ABC):
+    """Mixin that provides a uniform serialization contract for binding types.
+
+    Concrete binding classes must implement :meth:`to_dict`.  A default
+    :meth:`to_json` implementation is provided that serializes the result of
+    :meth:`to_dict` to a JSON string.
+    """
+
+    @abc.abstractmethod
+    def to_dict(self) -> typing.Any:
+        """Return a JSON-safe representation of this binding object.
+
+        Non-list binding types return a ``dict``; collection types such as
+        ``DocumentList`` or ``SqlRowList`` return a ``list`` of ``dict``.
+        All ``bytes`` values are decoded as UTF-8 when possible, otherwise
+        represented as ``{"__encoding": "base64", "value": "<base64>"}``.
+        All ``datetime`` values are represented as ISO-8601 strings.
+        """
+        ...
+
+    def to_json(self) -> str:
+        """Return the JSON string representation of this binding object.
+
+        Delegates to :meth:`to_dict`; subclasses should override
+        :meth:`to_dict` rather than this method.
+        """
+        return json.dumps(self.to_dict())
 
 
 class Out(abc.ABC, typing.Generic[T]):
@@ -215,7 +245,7 @@ class HttpResponse(abc.ABC):
         pass
 
 
-class TimerRequest(abc.ABC):
+class TimerRequest(Serializable):
     """Timer request object."""
 
     @property
@@ -225,7 +255,7 @@ class TimerRequest(abc.ABC):
         pass
 
 
-class InputStream(io.BufferedIOBase, abc.ABC):
+class InputStream(io.BufferedIOBase, Serializable):
     """File-like object representing an input blob."""
 
     @abc.abstractmethod
@@ -261,7 +291,7 @@ class InputStream(io.BufferedIOBase, abc.ABC):
         pass
 
 
-class QueueMessage(abc.ABC):
+class QueueMessage(Serializable):
 
     @property
     @abc.abstractmethod
@@ -302,7 +332,7 @@ class QueueMessage(abc.ABC):
         pass
 
 
-class EventGridEvent(abc.ABC):
+class EventGridEvent(Serializable):
     @property
     @abc.abstractmethod
     def id(self) -> str:
@@ -338,7 +368,7 @@ class EventGridEvent(abc.ABC):
         pass
 
 
-class EventGridOutputEvent(abc.ABC):
+class EventGridOutputEvent(Serializable):
     @property
     @abc.abstractmethod
     def id(self) -> str:
@@ -369,7 +399,7 @@ class EventGridOutputEvent(abc.ABC):
         pass
 
 
-class CloudEvent(abc.ABC):
+class CloudEvent(Serializable):
     """A CloudEvents v1.0 event message."""
 
     @property
@@ -417,7 +447,7 @@ class CloudEvent(abc.ABC):
         pass
 
 
-class Document(abc.ABC):
+class Document(Serializable):
 
     @classmethod
     @abc.abstractmethod
@@ -438,19 +468,15 @@ class Document(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def to_json(self) -> str:
-        pass
-
-    @abc.abstractmethod
     def to_dict(self) -> dict:
         pass
 
 
-class DocumentList(abc.ABC):
+class DocumentList(Serializable):
     pass
 
 
-class EventHubEvent(abc.ABC):
+class EventHubEvent(Serializable):
 
     @abc.abstractmethod
     def get_body(self) -> bytes:
@@ -489,7 +515,7 @@ class OrchestrationContext(abc.ABC):
         pass
 
 
-class ServiceBusMessage(abc.ABC):
+class ServiceBusMessage(Serializable):
 
     @abc.abstractmethod
     def get_body(self) -> typing.Union[str, bytes]:

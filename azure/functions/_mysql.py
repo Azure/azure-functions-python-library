@@ -55,6 +55,10 @@ class MySqlRow(BaseMySqlRow, collections.UserDict):
         """Return the JSON representation of the MySqlRow"""
         return json.dumps(dict(self))
 
+    def to_dict(self) -> dict:
+        """Return the MySqlRow as a plain dict."""
+        return dict(self)
+
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)
 
@@ -69,4 +73,12 @@ class MySqlRow(BaseMySqlRow, collections.UserDict):
 
 class MySqlRowList(BaseMySqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~MySqlRow' objects"
-    pass
+
+    def to_dict(self):
+        """Return a list of plain dicts, one per :class:`~MySqlRow`."""
+        return [row.to_dict() for row in self]
+
+    def to_json(self) -> str:
+        """Return the JSON representation of the MySqlRowList."""
+        import json as _stdlib_json
+        return _stdlib_json.dumps(self.to_dict())

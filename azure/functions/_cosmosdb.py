@@ -46,4 +46,7 @@ class Document(_abc.Document, collections.UserDict):
 
 class DocumentList(_abc.DocumentList, collections.UserList):
     "A ``UserList`` subclass containing a list of :class:`~Document` objects"
-    pass
+
+    def to_dict(self):
+        """Return a list of JSON-safe dicts, one per :class:`~Document`."""
+        return [doc.to_dict() for doc in self]
