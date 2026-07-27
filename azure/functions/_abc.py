@@ -4,7 +4,7 @@
 import abc
 import datetime
 import io
-import json
+from ._jsonutils import json
 import threading
 import typing
 

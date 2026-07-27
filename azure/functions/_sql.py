@@ -81,5 +81,4 @@ class SqlRowList(BaseSqlRowList, collections.UserList):
 
     def to_json(self) -> str:
         """Return the JSON representation of the SqlRowList."""
-        import json as _stdlib_json
-        return _stdlib_json.dumps(self.to_dict())
+        return json.dumps(self.to_dict())
