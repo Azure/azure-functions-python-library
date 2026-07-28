@@ -284,19 +284,34 @@ class TestSerializableNonBreaking(unittest.TestCase):
 
         class CustomQueueMessage(azf_abc.QueueMessage):
             @property
-            def id(self): return "x"
-            def get_body(self): return b"body"
-            def get_json(self): return "body"
+            def id(self):
+                return "x"
+
+            def get_body(self):
+                return b"body"
+
+            def get_json(self):
+                return "body"
+
             @property
-            def dequeue_count(self): return None
+            def dequeue_count(self):
+                return None
+
             @property
-            def expiration_time(self): return None
+            def expiration_time(self):
+                return None
+
             @property
-            def insertion_time(self): return None
+            def insertion_time(self):
+                return None
+
             @property
-            def time_next_visible(self): return None
+            def time_next_visible(self):
+                return None
+
             @property
-            def pop_receipt(self): return None
+            def pop_receipt(self):
+                return None
 
         return CustomQueueMessage
 
