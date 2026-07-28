@@ -18,3 +18,9 @@ class TimerRequest(_abc.TimerRequest):
     def past_due(self) -> bool:
         """Whether the timer is past due."""
         return self.__past_due
+
+    def to_dict(self):
+        """Return a JSON-safe dictionary of timer request fields."""
+        return {
+            'past_due': self.past_due,
+        }

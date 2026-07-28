@@ -5,6 +5,7 @@ import datetime
 from typing import Optional, Dict, Any, Union
 
 from . import _abc
+from ._utils import _serialize_value
 
 
 class ServiceBusMessage(_abc.ServiceBusMessage):
@@ -464,3 +465,43 @@ class ServiceBusMessage(_abc.ServiceBusMessage):
     def get_body(self) -> bytes:
         """Return message content as bytes."""
         return self.__body
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-safe dictionary of all Service Bus message fields.
+
+        ``body`` bytes are decoded as UTF-8 when valid, otherwise represented
+        as ``{"__encoding": "base64", "value": "<base64>"}``.
+        Datetime fields are ISO-8601 strings; ``time_to_live`` is a string
+        representation of the ``timedelta``.
+        """
+        ttl = self.time_to_live
+        return {
+            'body': _serialize_value(self.get_body()),
+            'application_properties': _serialize_value(self.application_properties),
+            'content_type': self.content_type,
+            'correlation_id': self.correlation_id,
+            'dead_letter_error_description': self.dead_letter_error_description,
+            'dead_letter_reason': self.dead_letter_reason,
+            'dead_letter_source': self.dead_letter_source,
+            'delivery_count': self.delivery_count,
+            'enqueued_sequence_number': self.enqueued_sequence_number,
+            'enqueued_time_utc': _serialize_value(self.enqueued_time_utc),
+            'expires_at_utc': _serialize_value(self.expires_at_utc),
+            'label': self.label,
+            'locked_until': _serialize_value(self.locked_until),
+            'lock_token': self.lock_token,
+            'message_id': self.message_id,
+            'partition_key': self.partition_key,
+            'reply_to': self.reply_to,
+            'reply_to_session_id': self.reply_to_session_id,
+            'scheduled_enqueue_time_utc': _serialize_value(
+                self.scheduled_enqueue_time_utc),
+            'sequence_number': self.sequence_number,
+            'session_id': self.session_id,
+            'state': self.state,
+            'subject': self.subject,
+            'time_to_live': str(ttl) if ttl is not None else None,
+            'to': self.to,
+            'transaction_partition_key': self.transaction_partition_key,
+            'user_properties': _serialize_value(self.user_properties),
+        }

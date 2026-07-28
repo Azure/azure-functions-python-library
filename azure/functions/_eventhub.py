@@ -6,6 +6,7 @@ import typing
 
 from azure.functions import _abc as func_abc
 from azure.functions import meta
+from ._utils import _serialize_value
 
 
 class EventHubEvent(func_abc.EventHubEvent):
@@ -79,6 +80,23 @@ class EventHubEvent(func_abc.EventHubEvent):
                 k: v.python_value for (k, v) in self.__trigger_metadata.items()
             }
         return self._trigger_metadata_pyobj
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of all Event Hub event fields.
+
+        ``body`` bytes are decoded as UTF-8 when valid, otherwise represented
+        as ``{"__encoding": "base64", "value": "<base64>"}``.
+        ``enqueued_time`` is an ISO-8601 string.
+        """
+        return {
+            'body': _serialize_value(self.get_body()),
+            'partition_key': self.partition_key,
+            'sequence_number': self.sequence_number,
+            'offset': self.offset,
+            'enqueued_time': _serialize_value(self.enqueued_time),
+            'iothub_metadata': (dict(self.iothub_metadata)
+                                if self.iothub_metadata else None),
+        }
 
     def __repr__(self) -> str:
         return (

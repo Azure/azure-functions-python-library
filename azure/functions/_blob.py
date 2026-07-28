@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import typing
 from typing import Optional
 
 from azure.functions import _abc as azf_abc
@@ -53,3 +54,14 @@ class InputStream(azf_abc.InputStream):
             Bytes read from the input stream.
         """
         return self._io.read(size)
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of blob metadata fields.
+
+        Blob content is intentionally excluded; use :meth:`read` to access it.
+        """
+        return {
+            'name': self._name,
+            'uri': self._uri,
+            'length': self._length,
+        }

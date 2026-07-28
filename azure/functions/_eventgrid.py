@@ -5,6 +5,7 @@ import datetime
 import typing
 
 from azure.functions import _abc as azf_abc
+from ._utils import _serialize_value
 
 
 class EventGridEvent(azf_abc.EventGridEvent):
@@ -61,6 +62,21 @@ class EventGridEvent(azf_abc.EventGridEvent):
             f'at 0x{id(self):0x}>'
         )
 
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of all EventGrid event fields.
+
+        ``event_time`` is represented as an ISO-8601 string.
+        """
+        return {
+            'id': self.id,
+            'topic': self.topic,
+            'subject': self.subject,
+            'event_type': self.event_type,
+            'event_time': _serialize_value(self.event_time),
+            'data_version': self.data_version,
+            'data': _serialize_value(self.get_json()),
+        }
+
 
 class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
     """An EventGrid event message."""
@@ -109,6 +125,20 @@ class EventGridOutputEvent(azf_abc.EventGridOutputEvent):
             f'subject={self.subject} '
             f'at 0x{id(self):0x}>'
         )
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of all EventGrid output event fields.
+
+        ``event_time`` is represented as an ISO-8601 string.
+        """
+        return {
+            'id': self.id,
+            'subject': self.subject,
+            'event_type': self.event_type,
+            'event_time': _serialize_value(self.event_time),
+            'data_version': self.data_version,
+            'data': _serialize_value(self.get_json()),
+        }
 
 
 class CloudEvent(azf_abc.CloudEvent):
@@ -182,3 +212,21 @@ class CloudEvent(azf_abc.CloudEvent):
             f'type={self.type} '
             f'at 0x{id(self):0x}>'
         )
+
+    def to_dict(self) -> typing.Dict[str, typing.Any]:
+        """Return a JSON-safe dictionary of all CloudEvent fields.
+
+        ``time`` is represented as an ISO-8601 string.
+        """
+        return {
+            'id': self.id,
+            'source': self.source,
+            'type': self.type,
+            'specversion': self.specversion,
+            'subject': self.subject,
+            'time': _serialize_value(self.time),
+            'datacontenttype': self.datacontenttype,
+            'dataschema': self.dataschema,
+            'data': _serialize_value(self.get_json()),
+            'extension_attrs': _serialize_value(self.extension_attrs),
+        }

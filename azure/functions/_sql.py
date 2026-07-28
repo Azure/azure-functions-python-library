@@ -4,6 +4,7 @@ import abc
 import collections
 
 from ._jsonutils import json
+from ._utils import _serialize_value
 
 
 class BaseSqlRow(abc.ABC):
@@ -53,7 +54,11 @@ class SqlRow(BaseSqlRow, collections.UserDict):
 
     def to_json(self) -> str:
         """Return the JSON representation of the SqlRow"""
-        return json.dumps(dict(self))
+        return json.dumps(self.to_dict())
+
+    def to_dict(self) -> dict:
+        """Return the SqlRow as a plain dict."""
+        return _serialize_value(dict(self))
 
     def __getitem__(self, key):
         return collections.UserDict.__getitem__(self, key)
@@ -69,4 +74,11 @@ class SqlRow(BaseSqlRow, collections.UserDict):
 
 class SqlRowList(BaseSqlRowList, collections.UserList):
     "A ''UserList'' subclass containing a list of :class:'~SqlRow' objects"
-    pass
+
+    def to_dict(self):
+        """Return a list of plain dicts, one per :class:`~SqlRow`."""
+        return [row.to_dict() for row in self]
+
+    def to_json(self) -> str:
+        """Return the JSON representation of the SqlRowList."""
+        return json.dumps(self.to_dict())
