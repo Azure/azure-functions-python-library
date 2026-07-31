@@ -49,4 +49,4 @@ extends:
         jobs:
           - template: /eng/templates/jobs/ci-tests.yml@self
             parameters:
-              artifactFeed: 'public/upstream-public'
+              artifactFeed: 'public/PythonSDK_PublicPackages'

@@ -18,7 +18,7 @@ jobs:
       - task: PipAuthenticate@1
         displayName: 'Pip Authenticate'
         inputs:
-          artifactFeeds: 'internal/upstream'
+          artifactFeeds: 'internal/PythonSDK_Internal_PublicPackages'
           onlyAddExtraIndex: false
       - task: UsePythonVersion@0
         inputs:
