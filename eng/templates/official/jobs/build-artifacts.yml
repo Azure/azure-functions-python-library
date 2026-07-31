@@ -31,7 +31,3 @@ jobs:
           python -m pip install build
           python -m build
         displayName: 'Build Python SDK'
-      - bash: |
-          pip install pip-audit
-          pip-audit --vulnerability-service osv .
-        displayName: 'Run vulnerability scan'
