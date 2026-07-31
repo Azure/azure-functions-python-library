@@ -33,6 +33,6 @@ jobs:
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
       - bash: |
           pip install pip-audit
-          pip-audit .
+          pip-audit --vulnerability-service osv .
         displayName: 'Run vulnerability scan'
         condition: ne(variables['PYTHON_VERSION'], '3.7')
