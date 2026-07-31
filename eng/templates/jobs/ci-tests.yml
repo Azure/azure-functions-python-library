@@ -1,7 +1,3 @@
-parameters:
-  - name: artifactFeed
-    type: string
-
 jobs:
   - job: "TestPython"
     displayName: "Run Python SDK Unit Tests"
@@ -20,6 +16,11 @@ jobs:
           PYTHON_VERSION: '3.14'
           
     steps:
+      - task: PipAuthenticate@1
+        displayName: 'Authenticate to CFS'
+        inputs:
+          artifactFeeds: 'public/upstream-public'
+          onlyAddExtraIndex: false
       - task: UsePythonVersion@0
         inputs:
           versionSpec: $(PYTHON_VERSION)
@@ -27,10 +28,6 @@ jobs:
           VERSION=$(python -c "import re; content = open('azure/functions/__init__.py').read(); match = re.search(r\"__version__ = '(\d+)\.(\d+)\.(\d+).*'\", content); print(match.group(1)) if match else '1'")
           echo "##vso[task.setvariable variable=MAJOR_VERSION]$VERSION"
         displayName: 'Detect package version'
-      - task: PipAuthenticate@1
-        displayName: 'Pip Authenticate'
-        inputs:
-          artifactFeeds: ${{ parameters.artifactFeed }}
       - bash: |
           PYTHON_MAJOR=$(echo $(PYTHON_VERSION) | cut -d. -f1)
           PYTHON_MINOR=$(echo $(PYTHON_VERSION) | cut -d. -f2)

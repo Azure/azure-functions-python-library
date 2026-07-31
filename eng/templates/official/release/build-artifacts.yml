@@ -56,16 +56,17 @@ jobs:
               "https://$(GithubUser):$(GithubPat)@github.com/${{ parameters.githubOrg }}/${{ parameters.githubRepo }}.git" .
           displayName: 'Checkout ${{ parameters.releaseBranchPrefix }}/${{ parameters.libraryVersion }} branch'
 
+      - task: PipAuthenticate@1
+        displayName: 'Authenticate to CFS'
+        inputs:
+          artifactFeeds: 'public/upstream-public'
+          onlyAddExtraIndex: false
       - task: UsePythonVersion@0
         inputs:
           versionSpec: "${{ parameters.pythonVersion }}"
       - bash: |
           python --version
         displayName: 'Check python version'
-      - task: PipAuthenticate@1
-        displayName: 'Pip Authenticate'
-        inputs:
-          artifactFeeds: 'internal/PythonSDK_Internal_PublicPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build
