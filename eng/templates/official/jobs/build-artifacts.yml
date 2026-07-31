@@ -19,6 +19,7 @@ jobs:
         displayName: 'Pip Authenticate'
         inputs:
           artifactFeeds: 'internal/upstream'
+          onlyAddExtraIndex: false
       - task: UsePythonVersion@0
         inputs:
           versionSpec: "3.11"
