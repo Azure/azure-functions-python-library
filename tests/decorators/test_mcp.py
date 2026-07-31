@@ -16,7 +16,8 @@ from azure.functions.decorators.mcp import (_MCPToolTrigger,
                                             MCPResourceTrigger,
                                             MCPPromptTrigger)
 from azure.functions.mcp import (_MCPToolTriggerConverter,
-                                 MCPResourceTriggerConverter)
+                                 MCPResourceTriggerConverter,
+                                 _is_mcp_sdk_type)
 from azure.functions.meta import Datum
 from mcp.types import (
     ResourceLink,
@@ -27,6 +28,14 @@ from mcp.types import (
 
 
 class TestMCP(unittest.TestCase):
+    def test_legacy_mcp_type_module_remains_supported(self):
+        class LegacyMCPType:
+            pass
+
+        LegacyMCPType.__module__ = "mcp.types"
+
+        self.assertTrue(_is_mcp_sdk_type(LegacyMCPType()))
+
     def test_mcp_tool_trigger_valid_creation(self):
         trigger = _MCPToolTrigger(
             name="context",

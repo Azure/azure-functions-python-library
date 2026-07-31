@@ -36,13 +36,41 @@ def _is_mcp_sdk_type(obj: Any) -> bool:
             _mcp_types = None
             return False
 
-    # Check if the object's class is from the mcp.types module
-    obj_type = type(obj)
-    if hasattr(obj_type, '__module__'):
-        module = obj_type.__module__
-        # Check if it's from mcp.types or any mcp submodule
-        if module and (module.startswith('mcp.types') or module == 'mcp.types'):
+    return _is_mcp_sdk_type_annotation(type(obj))
+
+
+def _is_mcp_sdk_type_annotation(annotation: Any) -> bool:
+    """Check if a return annotation is an official MCP SDK type.
+
+    MCP SDK 1.x types are defined in ``mcp.types``. MCP SDK 2.x re-exports
+    types defined in ``mcp_types`` from that same public module.
+    """
+    if isinstance(annotation, type):
+        module = getattr(annotation, '__module__', None)
+        if module and module.startswith('mcp.types'):
             return True
+
+        if module and (module == 'mcp_types'
+                       or module.startswith('mcp_types.')):
+            global _MCP_SDK_AVAILABLE, _mcp_types
+            if not _MCP_SDK_AVAILABLE or _mcp_types is None:
+                try:
+                    from mcp import types as _mcp_types
+                    _MCP_SDK_AVAILABLE = True
+                except ImportError:
+                    _mcp_types = None
+                    return False
+
+            return any(exported is annotation
+                       for exported in vars(_mcp_types).values())
+
+        return False
+
+    origin = typing.get_origin(annotation)
+    if origin in (list, typing.Union):
+        return any(arg is not type(None)
+                   and _is_mcp_sdk_type_annotation(arg)
+                   for arg in typing.get_args(annotation))
 
     return False
 
@@ -74,9 +102,10 @@ def _serialize_content_block(block: Any) -> dict:
     if _is_mcp_sdk_type(block):
         # MCP SDK types should be JSON-serializable
         if hasattr(block, 'model_dump'):
-            return block.model_dump(mode='json', exclude_none=True)
+            return block.model_dump(
+                mode='json', exclude_none=True, by_alias=True)
         elif hasattr(block, 'dict'):
-            return block.dict(exclude_none=True)
+            return block.dict(exclude_none=True, by_alias=True)
 
     # If it's a dataclass (e.g., @mcp_content decorated)
     if is_dataclass(block) and not isinstance(block, type):
@@ -200,9 +229,10 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
         elif _is_mcp_call_tool_result(obj):
             # Serialize the MCP SDK's CallToolResult
             if hasattr(obj, 'model_dump'):
-                result_dict = obj.model_dump(mode='json', exclude_none=True)
+                result_dict = obj.model_dump(
+                    mode='json', exclude_none=True, by_alias=True)
             elif hasattr(obj, 'dict'):
-                result_dict = obj.dict(exclude_none=True)
+                result_dict = obj.dict(exclude_none=True, by_alias=True)
             else:
                 # Fallback: try to access attributes directly
                 content_blocks = [_serialize_content_block(block)
@@ -210,9 +240,11 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
                 result_dict = {
                     'content': content_blocks if hasattr(obj, 'content') else [],
                 }
-                if (hasattr(obj, 'structured_content')
-                        and obj.structured_content is not None):
-                    result_dict['structuredContent'] = obj.structured_content
+                structured_content = getattr(
+                    obj, 'structuredContent',
+                    getattr(obj, 'structured_content', None))
+                if structured_content is not None:
+                    result_dict['structuredContent'] = structured_content
             result_json = json.dumps(result_dict)
             return meta.Datum(type='string', value=result_json)
 
