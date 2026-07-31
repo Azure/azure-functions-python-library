@@ -15,16 +15,16 @@ jobs:
           artifactName: "azure-functions"
 
     steps:
+      - task: PipAuthenticate@1
+        displayName: 'Pip Authenticate'
+        inputs:
+          artifactFeeds: 'internal/upstream'
       - task: UsePythonVersion@0
         inputs:
           versionSpec: "3.11"
       - bash: |
           python --version
         displayName: 'Check python version'
-      - task: PipAuthenticate@1
-        displayName: 'Pip Authenticate'
-        inputs:
-          artifactFeeds: 'internal/PythonSDK_Internal_PublicPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build

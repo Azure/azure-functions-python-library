@@ -16,16 +16,16 @@ jobs:
           PYTHON_VERSION: '3.14'
           
     steps:
+      - task: PipAuthenticate@1
+        displayName: 'Pip Authenticate'
+        inputs:
+          artifactFeeds: 'public/upstream-public'
       - task: UsePythonVersion@0
         inputs:
           versionSpec: $(PYTHON_VERSION)
       - bash: |
           python --version
         displayName: 'Check python version'
-      - task: PipAuthenticate@1
-        displayName: 'Pip Authenticate'
-        inputs:
-          artifactFeeds: 'public/PythonSDK_PublicPackages'
       - bash: |
           python -m pip install -U pip
           python -m pip install build
