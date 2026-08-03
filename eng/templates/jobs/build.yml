@@ -4,6 +4,8 @@ jobs:
 
     strategy:
       matrix:
+        Python37:
+          PYTHON_VERSION: '3.7'
         Python310:
           PYTHON_VERSION: '3.10'
         Python311:
