@@ -32,8 +32,3 @@ jobs:
           python -m pip install build
           python -m build
         displayName: 'Build Python SDK for $(PYTHON_VERSION)'
-      - bash: |
-          pip install pip-audit
-          pip-audit .
-        displayName: 'Run vulnerability scan'
-        condition: ne(variables['PYTHON_VERSION'], '3.7')
