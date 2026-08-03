@@ -31,3 +31,4 @@ jobs:
           python -m pip install build
           python -m build
         displayName: 'Build Python SDK'
+      - template: /eng/templates/steps/generate-component-governance-requirements.yml@self
