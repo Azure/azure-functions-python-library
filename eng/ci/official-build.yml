@@ -38,6 +38,11 @@ extends:
       name: 1es-pool-azfunc
       image: 1es-windows-2022
       os: windows
+    sdl:
+      componentgovernance:
+        alertWarningLevel: Medium
+        failOnAlert: true
+        verbosity: Normal
 
     stages:
       - stage: Build
