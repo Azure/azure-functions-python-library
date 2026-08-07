@@ -73,3 +73,6 @@ jobs:
           cd ${{ parameters.projectDirectory }}
           python -m build
         displayName: 'Build ${{ parameters.projectDisplayName }}'
+      - template: /eng/templates/steps/generate-component-governance-requirements.yml@self
+        parameters:
+          projectDirectory: ${{ parameters.projectDirectory }}

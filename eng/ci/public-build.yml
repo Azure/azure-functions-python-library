@@ -36,6 +36,10 @@ extends:
          compiled:
            enabled: true # still only runs for default branch
          runSourceLanguagesInSourceAnalysis: true
+      componentgovernance:
+        alertWarningLevel: Medium
+        failOnAlert: true
+        verbosity: Normal
     settings:
       skipBuildTagsForGitHubPullRequests: ${{ variables['System.PullRequest.IsFork'] }}
 

@@ -1,0 +1,39 @@
+parameters:
+  - name: projectDirectory
+    type: string
+    default: '.'
+
+steps:
+  - bash: |
+      if ! python -c "import tomllib" 2>/dev/null; then
+        python -m pip install tomli
+      fi
+
+      python - <<'PY'
+      from pathlib import Path
+
+      try:
+          import tomllib
+      except ModuleNotFoundError:
+          import tomli as tomllib
+
+      pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+      optional_dependencies = pyproject["project"].get("optional-dependencies", {})
+      requirements = [
+          *pyproject["build-system"].get("requires", []),
+          *pyproject["project"].get("dependencies", []),
+          *(
+              dependency
+              for group in optional_dependencies.values()
+              for dependency in group
+          ),
+      ]
+      requirements = list(dict.fromkeys(requirements))
+      Path("requirements.txt").write_text(
+          "\n".join(requirements) + "\n",
+          encoding="utf-8",
+      )
+      print(f"Generated requirements.txt with {len(requirements)} direct dependencies")
+      PY
+    displayName: 'Generate Component Governance requirements'
+    workingDirectory: $(Build.SourcesDirectory)/${{ parameters.projectDirectory }}
