@@ -117,4 +117,4 @@ __all__ = (
     'mcp_content',
 )
 
-__version__ = '2.3.0b3'
+__version__ = '2.3.0'
