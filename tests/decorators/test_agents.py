@@ -107,8 +107,8 @@ class TestAgentApps(unittest.TestCase):
     @patch('azure.functions.decorators.function_app.importlib.import_module')
     def test_missing_base_reports_provider_install(self, import_module):
         import_module.side_effect = ModuleNotFoundError(
-            "No module named 'azurefunctions.extensions.agents_base'",
-            name='azurefunctions.extensions.agents_base',
+            "No module named 'azurefunctions.extensions.agents.base'",
+            name='azurefunctions.extensions.agents.base',
         )
 
         with self.assertRaisesRegex(

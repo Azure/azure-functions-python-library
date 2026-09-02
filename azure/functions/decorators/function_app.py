@@ -74,12 +74,13 @@ def _agent_provider_distribution(provider: str) -> str:
 
 def _load_agents_base(provider: str):
     try:
-        return importlib.import_module('azurefunctions.extensions.agents_base')
+        return importlib.import_module('azurefunctions.extensions.agents.base')
     except ModuleNotFoundError as exc:
         missing_base_modules = {
             'azurefunctions',
             'azurefunctions.extensions',
-            'azurefunctions.extensions.agents_base',
+            'azurefunctions.extensions.agents',
+            'azurefunctions.extensions.agents.base',
         }
         if exc.name not in missing_base_modules:
             raise
