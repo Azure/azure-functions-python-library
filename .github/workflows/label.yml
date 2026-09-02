@@ -11,7 +11,7 @@ jobs:
       pull-requests: write
     steps:
     # Add labels based on file changes using label.yml
-    - uses: actions/labeler@v4
+    - uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
         configuration-path: .github/labeler.yml
