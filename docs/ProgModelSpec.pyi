@@ -1,7 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 from abc import ABC
-from typing import Callable, Dict, List, Optional, Union, Iterable
+from typing import Any, Callable, Dict, List, Optional, Union, Iterable
 
 from azure.functions import AsgiMiddleware, WsgiMiddleware
 from azure.functions.decorators.core import Binding, BlobSource, Trigger, DataType, \
@@ -1327,6 +1327,41 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         present
         on the request in order to invoke the function.
         """
+        pass
+
+    def markdown_agent(self, *, provider: str, **kwargs: Any) -> Callable:
+        """Inject an Agent supplied by a provider extension.
+
+        :param provider: Registered Agent provider ID.
+        :param kwargs: Provider and markdown binding options.
+        :return: Decorator function.
+        """
+        pass
+
+
+class AiApp(FunctionApp):
+    """FunctionApp configured for one Agent provider."""
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 *, provider: str, app_root=None,
+                 **provider_options: Any):
+        """Configure an app with a provider and immutable defaults."""
+        pass
+
+    def markdown_agent(self, *, provider: Optional[str] = None,
+                       **kwargs: Any) -> Callable:
+        """Inject an Agent using the configured provider by default."""
+        pass
+
+
+class DurableAiApp(AiApp):
+    """AiApp with optional replay-safe Durable Agent orchestration."""
+
+    def orchestration_trigger(self, context_name: str,
+                              orchestration: Optional[str] = None,
+                              input_type: Optional[type] = None) -> Callable:
+        """Register an orchestrator with a Durable Agent context."""
         pass
 
 

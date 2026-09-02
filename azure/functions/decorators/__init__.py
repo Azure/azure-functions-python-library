@@ -1,7 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 from .core import Cardinality, AccessRights, CosmosDBChangeFeedMode
-from .function_app import FunctionApp, Function, DecoratorApi, DataType, \
+from .function_app import AiApp, DurableAiApp, FunctionApp, Function, DecoratorApi, DataType, \
     AuthLevel, Blueprint, ExternalHttpFunctionApp, AsgiFunctionApp, \
     WsgiFunctionApp, FunctionRegister, TriggerApi, BindingApi, \
     SettingsApi, BlobSource, McpPropertyType
@@ -10,6 +10,8 @@ from .http import HttpMethod
 
 __all__ = [
     'FunctionApp',
+    'AiApp',
+    'DurableAiApp',
     'Function',
     'FunctionRegister',
     'DecoratorApi',

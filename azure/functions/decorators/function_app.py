@@ -4,6 +4,7 @@ import abc
 import asyncio
 import dataclasses
 import functools
+import importlib
 import inspect
 import json
 import logging
@@ -62,6 +63,31 @@ from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
+
+
+def _agent_provider_distribution(provider: str) -> str:
+    normalized = provider.replace('_', '-')
+    if normalized.startswith('agent-'):
+        normalized = normalized.removeprefix('agent-')
+    return f'azurefunctions-extensions-agents-{normalized}'
+
+
+def _load_agents_base(provider: str):
+    try:
+        return importlib.import_module('azurefunctions.extensions.agents_base')
+    except ModuleNotFoundError as exc:
+        missing_base_modules = {
+            'azurefunctions',
+            'azurefunctions.extensions',
+            'azurefunctions.extensions.agents_base',
+        }
+        if exc.name not in missing_base_modules:
+            raise
+        distribution = _agent_provider_distribution(provider)
+        raise ImportError(
+            f"Agent provider {provider!r} is not installed. "
+            f"Install {distribution!r}."
+        ) from exc
 
 
 class Function(object):
@@ -4539,6 +4565,68 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
             `AuthLevel.FUNCTION`.
         """
         super().__init__(auth_level=http_auth_level)
+
+    def markdown_agent(self, *, provider: str, **kwargs):
+        """Inject a provider Agent built from a markdown definition."""
+        agents_base = _load_agents_base(provider)
+        return agents_base.markdown_agent(self, provider=provider, **kwargs)
+
+
+class AiApp(FunctionApp):
+    """FunctionApp configured for one pluggable Agent provider."""
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 *, provider: str, app_root=None, **provider_options):
+        super().__init__(http_auth_level=http_auth_level)
+        self._agent_provider = provider
+        agents_base = _load_agents_base(provider)
+        agents_base.configure_app(
+            self,
+            provider=provider,
+            app_root=app_root,
+            provider_options=provider_options,
+        )
+
+    def markdown_agent(self, *, provider: Optional[str] = None, **kwargs):
+        selected_provider = provider or self._agent_provider
+        return super().markdown_agent(provider=selected_provider, **kwargs)
+
+
+class DurableAiApp(AiApp):
+    """AiApp with optional replay-safe Durable Agent orchestration."""
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 *, provider: str, app_root=None, **provider_options):
+        super().__init__(
+            http_auth_level=http_auth_level,
+            provider=provider,
+            app_root=app_root,
+            **provider_options,
+        )
+        try:
+            _load_agents_base(provider).configure_durable_app(self)
+        except ModuleNotFoundError as exc:
+            if exc.name != 'azure.durable_functions':
+                raise
+            distribution = _agent_provider_distribution(provider)
+            raise ImportError(
+                f"Durable Agent support is not installed. "
+                f"Install {distribution + '[durable]'!r}."
+            ) from exc
+
+    def orchestration_trigger(self, context_name: str,
+                              orchestration: Optional[str] = None,
+                              input_type: Optional[type] = None):
+        agents_base = _load_agents_base(self._agent_provider)
+        return agents_base.durable_orchestration_trigger(
+            self,
+            sdk_decorator=super().orchestration_trigger,
+            context_name=context_name,
+            orchestration=orchestration,
+            input_type=input_type,
+        )
 
 
 class Blueprint(TriggerApi, BindingApi, SettingsApi):
