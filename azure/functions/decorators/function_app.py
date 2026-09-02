@@ -4567,7 +4567,8 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
         """
         super().__init__(auth_level=http_auth_level)
 
-    def markdown_agent(self, *, provider: str, **kwargs):
+    def markdown_agent(self, *, provider: str,
+                       **kwargs: Any) -> Callable[..., Any]:
         """Inject a provider Agent built from a markdown definition."""
         agents_base = _load_agents_base(provider)
         return agents_base.markdown_agent(self, provider=provider, **kwargs)
@@ -4589,8 +4590,9 @@ class AiApp(FunctionApp):
             provider_options=provider_options,
         )
 
-    def markdown_agent(self, *, provider: Optional[str] = None, **kwargs):
-        selected_provider = provider or self._agent_provider
+    def markdown_agent(self, *, provider: Optional[str] = None,
+                       **kwargs: Any) -> Callable[..., Any]:
+        selected_provider = self._agent_provider if provider is None else provider
         return super().markdown_agent(provider=selected_provider, **kwargs)
 
 
