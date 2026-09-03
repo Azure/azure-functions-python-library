@@ -11,7 +11,7 @@ import textwrap
 
 from abc import ABC
 from datetime import time
-from typing import Any, Callable, Dict, List, Optional, Union, \
+from typing import Any, Callable, cast, Dict, List, Optional, Union, \
     Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
@@ -62,6 +62,7 @@ from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
+from ._agents import _agent_provider_distribution, _load_agents_base
 
 
 class Function(object):
@@ -4539,6 +4540,67 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
             `AuthLevel.FUNCTION`.
         """
         super().__init__(auth_level=http_auth_level)
+
+    def markdown_agent(self, *, provider: str,
+                       **kwargs: Any) -> Callable[..., Any]:
+        """Inject a provider Agent built from a markdown definition."""
+        agents_base = _load_agents_base(provider)
+        return cast(Callable[..., Any], agents_base.markdown_agent(
+            self, provider=provider, **kwargs))
+
+
+class AiApp(FunctionApp):
+    """FunctionApp configured for one pluggable Agent provider."""
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 *, provider: str, app_root=None, **provider_options):
+        super().__init__(http_auth_level=http_auth_level)
+        self._agent_provider = provider
+        agents_base = _load_agents_base(provider)
+        agents_base.configure_app(
+            self,
+            provider=provider,
+            app_root=app_root,
+            provider_options=provider_options,
+        )
+
+    def markdown_agent(self, **kwargs: Any) -> Callable[..., Any]:
+        return super().markdown_agent(provider=self._agent_provider, **kwargs)
+
+
+class DurableAiApp(AiApp):
+    """AiApp with optional replay-safe Durable Agent orchestration."""
+
+    def __init__(self,
+                 http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
+                 *, provider: str, app_root=None, **provider_options):
+        super().__init__(
+            http_auth_level=http_auth_level,
+            provider=provider,
+            app_root=app_root,
+            **provider_options,
+        )
+        try:
+            _load_agents_base(provider).configure_durable_app(self)
+        except ModuleNotFoundError as exc:
+            distribution = _agent_provider_distribution(provider)
+            raise ImportError(
+                f"Durable Agent support is not installed. "
+                f"Install {distribution + '[durable]'!r}."
+            ) from exc
+
+    def orchestration_trigger(self, context_name: str,
+                              orchestration: Optional[str] = None,
+                              input_type: Optional[type] = None):
+        agents_base = _load_agents_base(self._agent_provider)
+        return agents_base.durable_orchestration_trigger(
+            self,
+            sdk_decorator=super().orchestration_trigger,
+            context_name=context_name,
+            orchestration=orchestration,
+            input_type=input_type,
+        )
 
 
 class Blueprint(TriggerApi, BindingApi, SettingsApi):
