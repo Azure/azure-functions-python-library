@@ -91,24 +91,6 @@ class TestAgentApps(unittest.TestCase):
         )
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_configure_agent_provider_delegates_defaults(self, load_agents_base):
-        agents_base = load_agents_base.return_value
-        app = FunctionApp()
-
-        app.configure_agent_provider(
-            provider='langgraph',
-            app_root='app',
-            recursion_limit=10,
-        )
-
-        agents_base.configure_agent_provider.assert_called_once_with(
-            app,
-            provider='langgraph',
-            app_root='app',
-            provider_options={'recursion_limit': 10},
-        )
-
-    @patch('azure.functions.decorators.function_app._load_agents_base')
     def test_durable_ai_app_configures_durable_support(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
@@ -147,6 +129,18 @@ class TestAgentApps(unittest.TestCase):
         import_module.side_effect = ModuleNotFoundError(
             "No module named 'azurefunctions.extensions.agents.base'",
             name='azurefunctions.extensions.agents.base',
+        )
+
+        with self.assertRaisesRegex(
+                ImportError,
+                'azurefunctions-extensions-agents-framework'):
+            FunctionApp().markdown_agent(provider='agent_framework')
+
+    @patch('azure.functions.decorators._agents.importlib.import_module')
+    def test_missing_base_parent_reports_provider_install(self, import_module):
+        import_module.side_effect = ModuleNotFoundError(
+            "No module named 'azurefunctions'",
+            name='azurefunctions',
         )
 
         with self.assertRaisesRegex(

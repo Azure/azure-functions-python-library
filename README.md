@@ -29,8 +29,8 @@ package such as `azurefunctions-extensions-agents-framework`, then use
 `FunctionApp.markdown_agent(provider=...)`, `AiApp`, or `DurableAiApp`. Durable
 support is installed through the provider package's `[durable]` extra and is
 not imported by the core SDK. Each Agent binding may select a different
-installed provider; `AiApp` supplies a default. Configure reusable defaults for
-additional providers with `FunctionApp.configure_agent_provider()`.
+installed provider; `AiApp` supplies a default, which all Durable Agent calls
+use.
 
 #### Get Started
 

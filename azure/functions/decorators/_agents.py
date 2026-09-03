@@ -2,6 +2,8 @@
 # Licensed under the MIT License.
 import importlib
 
+_AGENTS_BASE_MODULE = 'azurefunctions.extensions.agents.base'
+
 
 def _agent_provider_distribution(provider: str) -> str:
     normalized = provider.replace('_', '-')
@@ -12,16 +14,8 @@ def _agent_provider_distribution(provider: str) -> str:
 
 def _load_agents_base(provider: str):
     try:
-        return importlib.import_module('azurefunctions.extensions.agents.base')
+        return importlib.import_module(_AGENTS_BASE_MODULE)
     except ModuleNotFoundError as exc:
-        missing_base_modules = {
-            'azurefunctions',
-            'azurefunctions.extensions',
-            'azurefunctions.extensions.agents',
-            'azurefunctions.extensions.agents.base',
-        }
-        if exc.name not in missing_base_modules:
-            raise
         distribution = _agent_provider_distribution(provider)
         raise ImportError(
             f"Agent provider {provider!r} is not installed. "

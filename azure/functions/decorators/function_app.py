@@ -11,7 +11,7 @@ import textwrap
 
 from abc import ABC
 from datetime import time
-from typing import Any, Callable, Dict, List, Optional, Union, \
+from typing import Any, Callable, cast, Dict, List, Optional, Union, \
     Iterable
 
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
@@ -4545,18 +4545,8 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
                        **kwargs: Any) -> Callable[..., Any]:
         """Inject a provider Agent built from a markdown definition."""
         agents_base = _load_agents_base(provider)
-        return agents_base.markdown_agent(self, provider=provider, **kwargs)
-
-    def configure_agent_provider(self, *, provider: str, app_root=None,
-                                 **provider_options: Any) -> None:
-        """Configure an Agent provider for reuse, including Durable calls."""
-        agents_base = _load_agents_base(provider)
-        agents_base.configure_agent_provider(
-            self,
-            provider=provider,
-            app_root=app_root,
-            provider_options=provider_options,
-        )
+        return cast(Callable[..., Any], agents_base.markdown_agent(
+            self, provider=provider, **kwargs))
 
 
 class AiApp(FunctionApp):
@@ -4596,8 +4586,6 @@ class DurableAiApp(AiApp):
         try:
             _load_agents_base(provider).configure_durable_app(self)
         except ModuleNotFoundError as exc:
-            if exc.name != 'azure.durable_functions':
-                raise
             distribution = _agent_provider_distribution(provider)
             raise ImportError(
                 f"Durable Agent support is not installed. "
