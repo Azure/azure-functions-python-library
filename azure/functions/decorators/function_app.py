@@ -4565,10 +4565,8 @@ class AiApp(FunctionApp):
             provider_options=provider_options,
         )
 
-    def markdown_agent(self, *, provider: Optional[str] = None,
-                       **kwargs: Any) -> Callable[..., Any]:
-        selected_provider = self._agent_provider if provider is None else provider
-        return super().markdown_agent(provider=selected_provider, **kwargs)
+    def markdown_agent(self, **kwargs: Any) -> Callable[..., Any]:
+        return super().markdown_agent(provider=self._agent_provider, **kwargs)
 
 
 class DurableAiApp(AiApp):

@@ -71,24 +71,20 @@ class TestAgentApps(unittest.TestCase):
         )
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_ai_app_markdown_agent_can_override_configured_provider(
+    def test_ai_app_markdown_agent_rejects_provider_override(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
         app = AiApp(provider='agent_framework')
         agents_base.reset_mock()
 
-        app.markdown_agent(
-            provider='langgraph',
-            arg_name='agent',
-            agent_name='researcher',
-        )
+        with self.assertRaisesRegex(TypeError, "multiple values for keyword"):
+            app.markdown_agent(
+                provider='langgraph',
+                arg_name='agent',
+                agent_name='researcher',
+            )
 
-        agents_base.markdown_agent.assert_called_once_with(
-            app,
-            provider='langgraph',
-            arg_name='agent',
-            agent_name='researcher',
-        )
+        agents_base.markdown_agent.assert_not_called()
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
     def test_durable_ai_app_configures_durable_support(
