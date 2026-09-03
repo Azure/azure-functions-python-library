@@ -125,16 +125,21 @@ class TestAgentApps(unittest.TestCase):
         self.assertIs(func.DurableAiApp, DurableAiApp)
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
-    def test_missing_base_reports_provider_install(self, import_module):
+    def test_missing_provider_reports_extension_install(self, import_module):
         import_module.side_effect = ModuleNotFoundError(
             "No module named 'azurefunctions.extensions.agents.base'",
             name='azurefunctions.extensions.agents.base',
         )
 
-        with self.assertRaisesRegex(
-                ImportError,
-                'azurefunctions-extensions-agents-framework'):
+        with self.assertRaises(ImportError) as raised:
             FunctionApp().markdown_agent(provider='agent_framework')
+
+        self.assertEqual(
+            str(raised.exception),
+            "Agent provider 'agent_framework' is not installed. "
+            "Install 'azurefunctions-extensions-agents-framework'.",
+        )
+        self.assertIs(raised.exception.__cause__, import_module.side_effect)
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_missing_base_parent_reports_provider_install(self, import_module):
@@ -149,14 +154,18 @@ class TestAgentApps(unittest.TestCase):
             FunctionApp().markdown_agent(provider='agent_framework')
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
-    def test_provider_import_error_is_not_rewritten(self, import_module):
+    def test_provider_import_error_reports_extension_install(self, import_module):
         import_module.side_effect = ModuleNotFoundError(
             "No module named 'provider_dependency'",
             name='provider_dependency',
         )
 
-        with self.assertRaisesRegex(ModuleNotFoundError, 'provider_dependency'):
+        with self.assertRaisesRegex(
+                ImportError,
+                'azurefunctions-extensions-agents-framework') as raised:
             FunctionApp().markdown_agent(provider='agent_framework')
+
+        self.assertIs(raised.exception.__cause__, import_module.side_effect)
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
     def test_missing_durable_reports_provider_extra(self, load_agents_base):
