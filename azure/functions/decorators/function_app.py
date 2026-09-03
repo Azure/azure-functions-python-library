@@ -4,7 +4,6 @@ import abc
 import asyncio
 import dataclasses
 import functools
-import importlib
 import inspect
 import json
 import logging
@@ -63,32 +62,7 @@ from .._http_asgi import AsgiMiddleware
 from .._http_wsgi import WsgiMiddleware, Context
 from azure.functions.decorators.mysql import MySqlInput, MySqlOutput, \
     MySqlTrigger
-
-
-def _agent_provider_distribution(provider: str) -> str:
-    normalized = provider.replace('_', '-')
-    if normalized.startswith('agent-'):
-        normalized = normalized.removeprefix('agent-')
-    return f'azurefunctions-extensions-agents-{normalized}'
-
-
-def _load_agents_base(provider: str):
-    try:
-        return importlib.import_module('azurefunctions.extensions.agents.base')
-    except ModuleNotFoundError as exc:
-        missing_base_modules = {
-            'azurefunctions',
-            'azurefunctions.extensions',
-            'azurefunctions.extensions.agents',
-            'azurefunctions.extensions.agents.base',
-        }
-        if exc.name not in missing_base_modules:
-            raise
-        distribution = _agent_provider_distribution(provider)
-        raise ImportError(
-            f"Agent provider {provider!r} is not installed. "
-            f"Install {distribution!r}."
-        ) from exc
+from ._agents import _agent_provider_distribution, _load_agents_base
 
 
 class Function(object):

@@ -142,7 +142,7 @@ class TestAgentApps(unittest.TestCase):
         self.assertIs(func.AiApp, AiApp)
         self.assertIs(func.DurableAiApp, DurableAiApp)
 
-    @patch('azure.functions.decorators.function_app.importlib.import_module')
+    @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_missing_base_reports_provider_install(self, import_module):
         import_module.side_effect = ModuleNotFoundError(
             "No module named 'azurefunctions.extensions.agents.base'",
@@ -154,7 +154,7 @@ class TestAgentApps(unittest.TestCase):
                 'azurefunctions-extensions-agents-framework'):
             FunctionApp().markdown_agent(provider='agent_framework')
 
-    @patch('azure.functions.decorators.function_app.importlib.import_module')
+    @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_provider_import_error_is_not_rewritten(self, import_module):
         import_module.side_effect = ModuleNotFoundError(
             "No module named 'provider_dependency'",
