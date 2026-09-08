@@ -4549,7 +4549,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
             self, provider=provider, **kwargs))
 
 
-class AiApp(FunctionApp):
+class AIApp(FunctionApp):
     """FunctionApp configured for one pluggable Agent provider."""
 
     def __init__(self,
@@ -4569,8 +4569,8 @@ class AiApp(FunctionApp):
         return super().markdown_agent(provider=self._agent_provider, **kwargs)
 
 
-class DurableAiApp(AiApp):
-    """AiApp with optional replay-safe Durable Agent orchestration."""
+class DurableAIApp(AIApp):
+    """AIApp with optional replay-safe Durable Agent orchestration."""
 
     def __init__(self,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,
@@ -4583,7 +4583,7 @@ class DurableAiApp(AiApp):
         )
         try:
             _load_agents_base(provider).configure_durable_app(self)
-        except ModuleNotFoundError as exc:
+        except ImportError as exc:
             distribution = _agent_provider_distribution(provider)
             raise ImportError(
                 f"Durable Agent support is not installed. "

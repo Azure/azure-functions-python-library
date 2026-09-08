@@ -3,6 +3,7 @@
 import importlib
 
 _AGENTS_BASE_MODULE = 'azurefunctions.extensions.agents.base'
+_agents_base = None
 
 
 def _agent_provider_distribution(provider: str) -> str:
@@ -12,10 +13,17 @@ def _agent_provider_distribution(provider: str) -> str:
     return f'azurefunctions-extensions-agents-{normalized}'
 
 
+def _import_agents_base():
+    global _agents_base
+    if _agents_base is None:
+        _agents_base = importlib.import_module(_AGENTS_BASE_MODULE)
+    return _agents_base
+
+
 def _load_agents_base(provider: str):
     try:
-        return importlib.import_module(_AGENTS_BASE_MODULE)
-    except ModuleNotFoundError as exc:
+        return _import_agents_base()
+    except ImportError as exc:
         distribution = _agent_provider_distribution(provider)
         raise ImportError(
             f"Agent provider {provider!r} is not installed. "

@@ -26,10 +26,10 @@ _What's available?_
 
 Agent APIs are provider-neutral and add no binding metadata. Install a provider
 package such as `azurefunctions-extensions-agents-framework`, then use
-`FunctionApp.markdown_agent(provider=...)`, `AiApp`, or `DurableAiApp`. Durable
+`FunctionApp.markdown_agent(provider=...)`, `AIApp`, or `DurableAIApp`. Durable
 support is installed through the provider package's `[durable]` extra and is
 not imported by the core SDK. Each Agent binding may select a different
-installed provider; `AiApp` supplies a default, which all Durable Agent calls
+installed provider; `AIApp` supplies a default, which all Durable Agent calls
 use.
 
 #### Get Started

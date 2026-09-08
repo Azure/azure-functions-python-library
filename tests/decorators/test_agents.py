@@ -4,14 +4,29 @@ import unittest
 from unittest.mock import patch
 
 import azure.functions as func
+from azure.functions.decorators import _agents
 from azure.functions.decorators.function_app import (
-    AiApp,
-    DurableAiApp,
+    AIApp,
+    DurableAIApp,
     FunctionApp,
 )
 
 
 class TestAgentApps(unittest.TestCase):
+
+    @patch('azure.functions.decorators._agents.importlib.import_module')
+    def test_agents_base_import_is_cached_across_providers(self, import_module):
+        agents_base = object()
+        import_module.return_value = agents_base
+
+        with patch.object(_agents, '_agents_base', None):
+            self.assertIs(
+                _agents._load_agents_base('agent_framework'), agents_base)
+            self.assertIs(
+                _agents._load_agents_base('other_provider'), agents_base)
+
+        import_module.assert_called_once_with(
+            'azurefunctions.extensions.agents.base')
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
     def test_function_app_markdown_agent_delegates_exact_arguments(
@@ -41,7 +56,7 @@ class TestAgentApps(unittest.TestCase):
     def test_ai_app_configures_provider_and_defaults(self, load_agents_base):
         agents_base = load_agents_base.return_value
 
-        app = AiApp(
+        app = AIApp(
             provider='agent_framework',
             app_root='app',
             client_factory='factory',
@@ -58,7 +73,7 @@ class TestAgentApps(unittest.TestCase):
     def test_ai_app_markdown_agent_uses_configured_provider(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
-        app = AiApp(provider='agent_framework')
+        app = AIApp(provider='agent_framework')
         agents_base.reset_mock()
 
         app.markdown_agent(arg_name='agent', agent_name='orders')
@@ -74,7 +89,7 @@ class TestAgentApps(unittest.TestCase):
     def test_ai_app_markdown_agent_rejects_provider_override(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
-        app = AiApp(provider='agent_framework')
+        app = AIApp(provider='agent_framework')
         agents_base.reset_mock()
 
         with self.assertRaisesRegex(TypeError, "multiple values for keyword"):
@@ -91,7 +106,7 @@ class TestAgentApps(unittest.TestCase):
             self, load_agents_base):
         agents_base = load_agents_base.return_value
 
-        app = DurableAiApp(provider='agent_framework')
+        app = DurableAIApp(provider='agent_framework')
 
         agents_base.configure_durable_app.assert_called_once_with(app)
 
@@ -101,7 +116,7 @@ class TestAgentApps(unittest.TestCase):
         agents_base = load_agents_base.return_value
         sentinel = object()
         agents_base.durable_orchestration_trigger.return_value = sentinel
-        app = DurableAiApp(provider='agent_framework')
+        app = DurableAIApp(provider='agent_framework')
 
         result = app.orchestration_trigger(
             context_name='context',
@@ -117,12 +132,12 @@ class TestAgentApps(unittest.TestCase):
         self.assertTrue(callable(call.kwargs['sdk_decorator']))
 
     def test_agent_apps_are_public(self):
-        self.assertIs(func.AiApp, AiApp)
-        self.assertIs(func.DurableAiApp, DurableAiApp)
+        self.assertIs(func.AIApp, AIApp)
+        self.assertIs(func.DurableAIApp, DurableAIApp)
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_missing_provider_reports_extension_install(self, import_module):
-        import_module.side_effect = ModuleNotFoundError(
+        import_module.side_effect = ImportError(
             "No module named 'azurefunctions.extensions.agents.base'",
             name='azurefunctions.extensions.agents.base',
         )
@@ -139,7 +154,7 @@ class TestAgentApps(unittest.TestCase):
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_missing_base_parent_reports_provider_install(self, import_module):
-        import_module.side_effect = ModuleNotFoundError(
+        import_module.side_effect = ImportError(
             "No module named 'azurefunctions'",
             name='azurefunctions',
         )
@@ -151,7 +166,7 @@ class TestAgentApps(unittest.TestCase):
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_provider_import_error_reports_extension_install(self, import_module):
-        import_module.side_effect = ModuleNotFoundError(
+        import_module.side_effect = ImportError(
             "No module named 'provider_dependency'",
             name='provider_dependency',
         )
@@ -166,7 +181,7 @@ class TestAgentApps(unittest.TestCase):
     @patch('azure.functions.decorators.function_app._load_agents_base')
     def test_missing_durable_reports_provider_extra(self, load_agents_base):
         agents_base = load_agents_base.return_value
-        agents_base.configure_durable_app.side_effect = ModuleNotFoundError(
+        agents_base.configure_durable_app.side_effect = ImportError(
             "No module named 'azure.durable_functions'",
             name='azure.durable_functions',
         )
@@ -174,7 +189,7 @@ class TestAgentApps(unittest.TestCase):
         with self.assertRaisesRegex(
                 ImportError,
                 r'azurefunctions-extensions-agents-framework\[durable\]'):
-            DurableAiApp(provider='agent_framework')
+            DurableAIApp(provider='agent_framework')
 
 
 if __name__ == '__main__':
