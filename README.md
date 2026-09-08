@@ -25,7 +25,7 @@ _What's available?_
 - Pluggable markdown Agent injection through provider extension packages
 
 Agent APIs are provider-neutral and add no binding metadata. Install a provider
-package such as `azurefunctions-extensions-agents-framework`, then use
+package such as `azurefunctions-agents-extension-agent-framework`, then use
 `FunctionApp.markdown_agent(provider=...)`, `AIApp`, or `DurableAIApp`. Durable
 support is installed through the provider package's `[durable]` extra and is
 not imported by the core SDK. Each Agent binding may select a different

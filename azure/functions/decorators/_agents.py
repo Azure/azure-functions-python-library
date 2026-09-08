@@ -8,9 +8,7 @@ _agents_base = None
 
 def _agent_provider_distribution(provider: str) -> str:
     normalized = provider.replace('_', '-')
-    if normalized.startswith('agent-'):
-        normalized = normalized.removeprefix('agent-')
-    return f'azurefunctions-extensions-agents-{normalized}'
+    return f'azurefunctions-agents-extension-{normalized}'
 
 
 def _import_agents_base():

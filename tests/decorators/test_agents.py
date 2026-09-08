@@ -148,7 +148,7 @@ class TestAgentApps(unittest.TestCase):
         self.assertEqual(
             str(raised.exception),
             "Agent provider 'agent_framework' is not installed. "
-            "Install 'azurefunctions-extensions-agents-framework'.",
+            "Install 'azurefunctions-agents-extension-agent-framework'.",
         )
         self.assertIs(raised.exception.__cause__, import_module.side_effect)
 
@@ -158,10 +158,11 @@ class TestAgentApps(unittest.TestCase):
             "No module named 'azurefunctions'",
             name='azurefunctions',
         )
+        expected_distribution = (
+            'azurefunctions-agents-extension-agent-framework'
+        )
 
-        with self.assertRaisesRegex(
-                ImportError,
-                'azurefunctions-extensions-agents-framework'):
+        with self.assertRaisesRegex(ImportError, expected_distribution):
             FunctionApp().markdown_agent(provider='agent_framework')
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
@@ -170,10 +171,11 @@ class TestAgentApps(unittest.TestCase):
             "No module named 'provider_dependency'",
             name='provider_dependency',
         )
+        expected_distribution = (
+            'azurefunctions-agents-extension-agent-framework'
+        )
 
-        with self.assertRaisesRegex(
-                ImportError,
-                'azurefunctions-extensions-agents-framework') as raised:
+        with self.assertRaisesRegex(ImportError, expected_distribution) as raised:
             FunctionApp().markdown_agent(provider='agent_framework')
 
         self.assertIs(raised.exception.__cause__, import_module.side_effect)
@@ -185,10 +187,11 @@ class TestAgentApps(unittest.TestCase):
             "No module named 'azure.durable_functions'",
             name='azure.durable_functions',
         )
+        expected_distribution = (
+            r'azurefunctions-agents-extension-agent-framework\[durable\]'
+        )
 
-        with self.assertRaisesRegex(
-                ImportError,
-                r'azurefunctions-extensions-agents-framework\[durable\]'):
+        with self.assertRaisesRegex(ImportError, expected_distribution):
             DurableAIApp(provider='agent_framework')
 
 
