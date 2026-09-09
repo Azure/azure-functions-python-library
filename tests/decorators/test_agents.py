@@ -6,8 +6,8 @@ from unittest.mock import patch
 import azure.functions as func
 from azure.functions.decorators import _agents
 from azure.functions.decorators.function_app import (
-    AIApp,
-    DurableAIApp,
+    AgentDFApp,
+    AgentFunctionApp,
     FunctionApp,
 )
 
@@ -53,10 +53,11 @@ class TestAgentApps(unittest.TestCase):
         )
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_ai_app_configures_provider_and_defaults(self, load_agents_base):
+    def test_agent_function_app_configures_provider_and_defaults(
+            self, load_agents_base):
         agents_base = load_agents_base.return_value
 
-        app = AIApp(
+        app = AgentFunctionApp(
             provider='agent_framework',
             app_root='app',
             client_factory='factory',
@@ -70,10 +71,10 @@ class TestAgentApps(unittest.TestCase):
         )
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_ai_app_markdown_agent_uses_configured_provider(
+    def test_agent_function_app_markdown_agent_uses_configured_provider(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
-        app = AIApp(provider='agent_framework')
+        app = AgentFunctionApp(provider='agent_framework')
         agents_base.reset_mock()
 
         app.markdown_agent(arg_name='agent', agent_name='orders')
@@ -86,10 +87,10 @@ class TestAgentApps(unittest.TestCase):
         )
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_ai_app_markdown_agent_rejects_provider_override(
+    def test_agent_function_app_markdown_agent_rejects_provider_override(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
-        app = AIApp(provider='agent_framework')
+        app = AgentFunctionApp(provider='agent_framework')
         agents_base.reset_mock()
 
         with self.assertRaisesRegex(TypeError, "multiple values for keyword"):
@@ -102,11 +103,11 @@ class TestAgentApps(unittest.TestCase):
         agents_base.markdown_agent.assert_not_called()
 
     @patch('azure.functions.decorators.function_app._load_agents_base')
-    def test_durable_ai_app_configures_durable_support(
+    def test_agent_df_app_configures_durable_support(
             self, load_agents_base):
         agents_base = load_agents_base.return_value
 
-        app = DurableAIApp(provider='agent_framework')
+        app = AgentDFApp(provider='agent_framework')
 
         agents_base.configure_durable_app.assert_called_once_with(app)
 
@@ -116,7 +117,7 @@ class TestAgentApps(unittest.TestCase):
         agents_base = load_agents_base.return_value
         sentinel = object()
         agents_base.durable_orchestration_trigger.return_value = sentinel
-        app = DurableAIApp(provider='agent_framework')
+        app = AgentDFApp(provider='agent_framework')
 
         result = app.orchestration_trigger(
             context_name='context',
@@ -132,8 +133,8 @@ class TestAgentApps(unittest.TestCase):
         self.assertTrue(callable(call.kwargs['sdk_decorator']))
 
     def test_agent_apps_are_public(self):
-        self.assertIs(func.AIApp, AIApp)
-        self.assertIs(func.DurableAIApp, DurableAIApp)
+        self.assertIs(func.AgentFunctionApp, AgentFunctionApp)
+        self.assertIs(func.AgentDFApp, AgentDFApp)
 
     @patch('azure.functions.decorators._agents.importlib.import_module')
     def test_missing_provider_reports_extension_install(self, import_module):
@@ -192,7 +193,7 @@ class TestAgentApps(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ImportError, expected_distribution):
-            DurableAIApp(provider='agent_framework')
+            AgentDFApp(provider='agent_framework')
 
 
 if __name__ == '__main__':

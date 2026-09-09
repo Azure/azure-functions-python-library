@@ -4549,7 +4549,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi, SettingsApi):
             self, provider=provider, **kwargs))
 
 
-class AIApp(FunctionApp):
+class AgentFunctionApp(FunctionApp):
     """FunctionApp configured for one pluggable Agent provider."""
 
     def __init__(self,
@@ -4569,8 +4569,8 @@ class AIApp(FunctionApp):
         return super().markdown_agent(provider=self._agent_provider, **kwargs)
 
 
-class DurableAIApp(AIApp):
-    """AIApp with optional replay-safe Durable Agent orchestration."""
+class AgentDFApp(AgentFunctionApp):
+    """AgentFunctionApp with optional replay-safe Durable Agent orchestration."""
 
     def __init__(self,
                  http_auth_level: Union[AuthLevel, str] = AuthLevel.FUNCTION,

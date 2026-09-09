@@ -7,7 +7,7 @@ from ._eventhub import EventHubEvent
 from ._eventgrid import CloudEvent, EventGridEvent, EventGridOutputEvent
 from ._cosmosdb import Document, DocumentList
 from ._http import HttpRequest, HttpResponse
-from .decorators import (AIApp, DurableAIApp, FunctionApp, Function, Blueprint,
+from .decorators import (AgentDFApp, AgentFunctionApp, FunctionApp, Function, Blueprint,
                          DecoratorApi, DataType, AuthLevel,
                          Cardinality, AccessRights, HttpMethod,
                          AsgiFunctionApp, WsgiFunctionApp,
@@ -94,8 +94,8 @@ __all__ = (
 
     # PyStein implementation
     'FunctionApp',
-    'AIApp',
-    'DurableAIApp',
+    'AgentFunctionApp',
+    'AgentDFApp',
     'Function',
     'FunctionRegister',
     'DecoratorApi',

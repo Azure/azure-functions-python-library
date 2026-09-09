@@ -1339,7 +1339,7 @@ class FunctionApp(FunctionRegister, TriggerApi, BindingApi):
         pass
 
 
-class AIApp(FunctionApp):
+class AgentFunctionApp(FunctionApp):
     """FunctionApp configured for one Agent provider."""
 
     def __init__(self,
@@ -1355,8 +1355,8 @@ class AIApp(FunctionApp):
         pass
 
 
-class DurableAIApp(AIApp):
-    """AIApp with optional replay-safe Durable Agent orchestration."""
+class AgentDFApp(AgentFunctionApp):
+    """AgentFunctionApp with optional replay-safe Durable Agent orchestration."""
 
     def orchestration_trigger(self, context_name: str,
                               orchestration: Optional[str] = None,
