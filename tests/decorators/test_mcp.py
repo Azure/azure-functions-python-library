@@ -389,7 +389,7 @@ Returns:
         self.assertEqual(trigger.tool_name, "add_numbers")
         self.assertEqual(trigger.tool_properties,
                          '[{"propertyName": "a", '
-                         '"propertyType": "float", '
+                         '"propertyType": "number", '
                          '"description": "", '
                          '"isArray": false, '
                          '"isRequired": true}]')
