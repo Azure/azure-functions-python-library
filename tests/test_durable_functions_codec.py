@@ -537,6 +537,10 @@ class TestStrictNoExpectedType:
 
 class TestWireFormat:
 
+    def test_ensure_ascii_is_keyword_only(self, codec_mode):
+        with pytest.raises(TypeError, match="positional"):
+            df_dumps("\u0416", False)
+
     def test_df_dumps_matches_legacy_json_dumps(self):
         value = {"key": "value", "list": [1, 2, 3]}
         assert df_dumps(value) == json.dumps(value, default=_serialize_custom_object)
@@ -565,8 +569,9 @@ class TestWireFormat:
         assert raw["__data__"] == {"item": "gadget", "hat": {"color": "blue"}}
 
 
+@pytest.mark.parametrize("ensure_ascii", [True, False])
 class TestUnicodeWireFormat:
-    """Keep Unicode compact without changing JSON or custom-object semantics."""
+    """Opt in to compact Unicode without changing legacy default behavior."""
 
     @pytest.mark.parametrize("value", [
         None,
@@ -586,9 +591,11 @@ class TestUnicodeWireFormat:
         pytest.param(ScalarPerson("".join(chr(code) for code in range(128))),
                      id="scalar-all-ascii"),
     ])
-    def test_ascii_output_is_unchanged(self, codec_mode, value):
+    def test_ascii_output_is_unchanged(self, codec_mode, ensure_ascii, value):
         legacy = json.dumps(value, default=_serialize_custom_object)
         assert df_dumps(value).encode("utf-8") == legacy.encode("utf-8")
+        assert df_dumps(value, ensure_ascii=ensure_ascii).encode(
+            "utf-8") == legacy.encode("utf-8")
 
     @pytest.mark.parametrize("text", [
         pytest.param("\u041f\u0440\u0438\u0432\u0435\u0442", id="cyrillic"),
@@ -601,11 +608,13 @@ class TestUnicodeWireFormat:
         pytest.param("\U0001f600\U00020000", id="non-bmp"),
         pytest.param("\u2028\u2029", id="line-separators"),
     ])
-    def test_plain_unicode_is_literal(self, codec_mode, text):
+    def test_plain_unicode_respects_option(self, codec_mode, ensure_ascii, text):
         for value in [text, {text: ["nested", {"text": text}]}]:
-            encoded = df_dumps(value)
-            assert encoded == json.dumps(value, ensure_ascii=False)
-            assert text in encoded
+            assert df_dumps(value) == json.dumps(value)
+            encoded = df_dumps(value, ensure_ascii=ensure_ascii)
+            assert encoded == json.dumps(value, ensure_ascii=ensure_ascii)
+            if not ensure_ascii:
+                assert text in encoded
             assert df_loads(encoded, expected_type=type(value)) == value
             assert encoded.encode("utf-8").decode("utf-8") == encoded
 
@@ -614,10 +623,12 @@ class TestUnicodeWireFormat:
         ScalarPerson("e\u0301\u0645\u0939"),
         SmartOrder("\u65e5", Hat("\u0416")),
     ])
-    def test_custom_envelope_preserves_literal_unicode(self, codec_mode, value):
+    def test_custom_envelope_respects_option(
+            self, codec_mode, ensure_ascii, value):
         envelope = _serialize_custom_object(value)
-        encoded = df_dumps(value)
-        assert encoded == json.dumps(envelope, ensure_ascii=False)
+        assert df_dumps(value) == json.dumps(envelope)
+        encoded = df_dumps(value, ensure_ascii=ensure_ascii)
+        assert encoded == json.dumps(envelope, ensure_ascii=ensure_ascii)
         assert json.loads(encoded) == envelope
         assert df_loads(encoded, expected_type=type(value)) == value
 
@@ -626,22 +637,28 @@ class TestUnicodeWireFormat:
         {"\u0416": PlainPerson("\u4f60", 99)},
         [ScalarPerson("\U0001f600")],
     ])
-    def test_nested_custom_object_rules_are_unchanged(self, codec_mode, value):
+    def test_nested_custom_object_rules_are_unchanged(
+            self, codec_mode, ensure_ascii, value):
         if codec_mode == "strict":
             with pytest.raises(TypeError):
-                df_dumps(value)
+                df_dumps(value, ensure_ascii=ensure_ascii)
         else:
-            encoded = df_dumps(value)
+            assert df_dumps(value) == json.dumps(
+                value, default=_serialize_custom_object)
+            encoded = df_dumps(value, ensure_ascii=ensure_ascii)
             assert encoded == json.dumps(
-                value, default=_serialize_custom_object, ensure_ascii=False)
+                value, default=_serialize_custom_object,
+                ensure_ascii=ensure_ascii)
             assert df_loads(encoded, expected_type=type(value)) == value
             assert df_loads(encoded) == value
 
-    def test_controls_quotes_and_backslashes_remain_escaped(self, codec_mode):
+    def test_controls_quotes_and_backslashes_remain_escaped(
+            self, codec_mode, ensure_ascii):
         text = "\u0416" + "".join(chr(code) for code in range(32))
         text += '"\\ and literal escapes \\u0416 \\ud800 \\n'
-        encoded = df_dumps(text)
-        assert encoded == json.dumps(text, ensure_ascii=False)
+        assert df_dumps(text) == json.dumps(text)
+        encoded = df_dumps(text, ensure_ascii=ensure_ascii)
+        assert encoded == json.dumps(text, ensure_ascii=ensure_ascii)
         assert "\\u0000" in encoded
         assert '\\"' in encoded
         assert "\\\\" in encoded
@@ -654,10 +671,15 @@ class TestUnicodeWireFormat:
         ScalarPerson("\U0001f600"),
         SmartOrder("\u0416", Hat("\u4f60")),
     ])
-    def test_legacy_escaped_payloads_remain_readable(self, codec_mode, value):
+    def test_legacy_escaped_payloads_remain_readable(
+            self, codec_mode, ensure_ascii, value):
         legacy = json.dumps(value, default=_serialize_custom_object)
         assert "\\u" in legacy
+        assert df_dumps(value) == legacy
         assert df_loads(legacy, expected_type=type(value)) == value
+        assert df_loads(
+            df_dumps(value, ensure_ascii=ensure_ascii),
+            expected_type=type(value)) == value
         if codec_mode == "loose" or isinstance(value, dict):
             assert df_loads(legacy) == value
 
@@ -671,10 +693,12 @@ class TestUnicodeWireFormat:
         pytest.param("\ud800x\udfff", id="separated-surrogates"),
     ])
     @pytest.mark.parametrize("custom", [False, True], ids=["plain", "custom"])
-    def test_surrogates_remain_transport_safe(self, codec_mode, text, custom):
+    def test_surrogates_remain_transport_safe(
+            self, codec_mode, ensure_ascii, text, custom):
         value = ScalarPerson(text) if custom else {text: [text]}
         legacy = json.dumps(value, default=_serialize_custom_object)
-        encoded = df_dumps(value)
+        assert df_dumps(value) == legacy
+        encoded = df_dumps(value, ensure_ascii=ensure_ascii)
         assert encoded == legacy
         assert encoded.encode("utf-8").decode("utf-8") == encoded
         # json.loads combines escaped surrogate pairs, as it did before.
@@ -682,12 +706,18 @@ class TestUnicodeWireFormat:
             legacy, expected_type=type(value))
 
     @pytest.mark.parametrize("custom", [False, True], ids=["plain", "custom"])
-    def test_unicode_and_surrogates_can_coexist(self, codec_mode, custom):
+    def test_unicode_and_surrogates_can_coexist(
+            self, codec_mode, ensure_ascii, custom):
         text = "\u0416\ud800\U0001f600\udfff\\ud800\x7f"
         value = ScalarPerson(text) if custom else {text: [text]}
-        encoded = df_dumps(value)
-        assert "\u0416" in encoded
-        assert "\U0001f600" in encoded
+        legacy = json.dumps(value, default=_serialize_custom_object)
+        assert df_dumps(value) == legacy
+        encoded = df_dumps(value, ensure_ascii=ensure_ascii)
+        if ensure_ascii:
+            assert encoded == legacy
+        else:
+            assert "\u0416" in encoded
+            assert "\U0001f600" in encoded
         assert "\\ud800" in encoded
         assert "\\udfff" in encoded
         assert "\\\\ud800" in encoded
@@ -695,12 +725,14 @@ class TestUnicodeWireFormat:
         assert encoded.encode("utf-8").decode("utf-8") == encoded
         assert df_loads(encoded, expected_type=type(value)) == value
 
-    def test_cyrillic_payload_utf8_size(self, codec_mode):
+    def test_cyrillic_payload_utf8_size(self, codec_mode, ensure_ascii):
         value = {"text": "\u0416" * 100000}
         legacy = json.dumps(value)
-        encoded = df_dumps(value)
+        assert df_dumps(value) == legacy
+        encoded = df_dumps(value, ensure_ascii=ensure_ascii)
         assert len(legacy.encode("utf-8")) == 600012
-        assert len(encoded.encode("utf-8")) == 200012
+        assert len(encoded.encode("utf-8")) == (
+            600012 if ensure_ascii else 200012)
         assert df_loads(encoded, expected_type=dict) == value
 
 
