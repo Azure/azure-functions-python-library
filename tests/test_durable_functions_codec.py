@@ -17,6 +17,7 @@ from azure.functions import _durable_functions as df_serialization
 from azure.functions._durable_functions import (
     _STRICT_ENV_VAR,
     _get_serialize_default,
+    _serialize_custom_object,
     df_dumps,
     df_loads,
 )
@@ -171,6 +172,14 @@ def strict(monkeypatch):
 def loose(monkeypatch):
     """Explicitly disable strict typing mode."""
     monkeypatch.delenv(_STRICT_ENV_VAR, raising=False)
+
+
+@pytest.fixture(params=["loose", "strict"])
+def codec_mode(request, monkeypatch):
+    """Run wire-format checks in both typing modes."""
+    monkeypatch.setenv(
+        _STRICT_ENV_VAR, "1" if request.param == "strict" else "0")
+    return request.param
 
 
 # ===================================================================
@@ -529,7 +538,6 @@ class TestStrictNoExpectedType:
 class TestWireFormat:
 
     def test_df_dumps_matches_legacy_json_dumps(self):
-        from azure.functions._durable_functions import _serialize_custom_object
         value = {"key": "value", "list": [1, 2, 3]}
         assert df_dumps(value) == json.dumps(value, default=_serialize_custom_object)
 
@@ -555,6 +563,145 @@ class TestWireFormat:
         raw = json.loads(df_dumps(SmartOrder("gadget", Hat("blue"))))
         assert raw["__class__"] == "SmartOrder"
         assert raw["__data__"] == {"item": "gadget", "hat": {"color": "blue"}}
+
+
+class TestUnicodeWireFormat:
+    """Keep Unicode compact without changing JSON or custom-object semantics."""
+
+    @pytest.mark.parametrize("value", [
+        None,
+        True,
+        False,
+        42,
+        -3.14,
+        "",
+        pytest.param("".join(chr(code) for code in range(128)), id="all-ascii"),
+        [1, None, {"text": "quotes \" and backslashes \\"}],
+        {1: "one", "tuple": (True, False)},
+        PlainPerson("andy", 99),
+        ScalarPerson("andy"),
+        SmartOrder("gadget", Hat("blue")),
+        pytest.param(PlainPerson("".join(chr(code) for code in range(128)), 99),
+                     id="custom-all-ascii"),
+        pytest.param(ScalarPerson("".join(chr(code) for code in range(128))),
+                     id="scalar-all-ascii"),
+    ])
+    def test_ascii_output_is_unchanged(self, codec_mode, value):
+        legacy = json.dumps(value, default=_serialize_custom_object)
+        assert df_dumps(value).encode("utf-8") == legacy.encode("utf-8")
+
+    @pytest.mark.parametrize("text", [
+        pytest.param("\u041f\u0440\u0438\u0432\u0435\u0442", id="cyrillic"),
+        pytest.param("\u4f60\u597d", id="chinese"),
+        pytest.param("\u65e5\u672c\u8a9e", id="japanese"),
+        pytest.param("\u0645\u0631\u062d\u0628\u0627", id="arabic"),
+        pytest.param("\u0939\u093f\u0928\u094d\u0926\u0940", id="devanagari"),
+        pytest.param("e\u0301", id="combining"),
+        pytest.param("\u00e9", id="precomposed"),
+        pytest.param("\U0001f600\U00020000", id="non-bmp"),
+        pytest.param("\u2028\u2029", id="line-separators"),
+    ])
+    def test_plain_unicode_is_literal(self, codec_mode, text):
+        for value in [text, {text: ["nested", {"text": text}]}]:
+            encoded = df_dumps(value)
+            assert encoded == json.dumps(value, ensure_ascii=False)
+            assert text in encoded
+            assert df_loads(encoded, expected_type=type(value)) == value
+            assert encoded.encode("utf-8").decode("utf-8") == encoded
+
+    @pytest.mark.parametrize("value", [
+        PlainPerson("\u0416\u4f60\U0001f600", 99),
+        ScalarPerson("e\u0301\u0645\u0939"),
+        SmartOrder("\u65e5", Hat("\u0416")),
+    ])
+    def test_custom_envelope_preserves_literal_unicode(self, codec_mode, value):
+        envelope = _serialize_custom_object(value)
+        encoded = df_dumps(value)
+        assert encoded == json.dumps(envelope, ensure_ascii=False)
+        assert json.loads(encoded) == envelope
+        assert df_loads(encoded, expected_type=type(value)) == value
+
+    @pytest.mark.parametrize("value", [
+        NaiveOrder("\u0416", Hat("\u4f60")),
+        {"\u0416": PlainPerson("\u4f60", 99)},
+        [ScalarPerson("\U0001f600")],
+    ])
+    def test_nested_custom_object_rules_are_unchanged(self, codec_mode, value):
+        if codec_mode == "strict":
+            with pytest.raises(TypeError):
+                df_dumps(value)
+        else:
+            encoded = df_dumps(value)
+            assert encoded == json.dumps(
+                value, default=_serialize_custom_object, ensure_ascii=False)
+            assert df_loads(encoded, expected_type=type(value)) == value
+            assert df_loads(encoded) == value
+
+    def test_controls_quotes_and_backslashes_remain_escaped(self, codec_mode):
+        text = "\u0416" + "".join(chr(code) for code in range(32))
+        text += '"\\ and literal escapes \\u0416 \\ud800 \\n'
+        encoded = df_dumps(text)
+        assert encoded == json.dumps(text, ensure_ascii=False)
+        assert "\\u0000" in encoded
+        assert '\\"' in encoded
+        assert "\\\\" in encoded
+        assert not any(chr(code) in encoded for code in range(32))
+        assert df_loads(encoded, expected_type=str) == text
+
+    @pytest.mark.parametrize("value", [
+        {"\u0416": ["\u4f60", "e\u0301", "\U0001f600"]},
+        PlainPerson("\u0416", 99),
+        ScalarPerson("\U0001f600"),
+        SmartOrder("\u0416", Hat("\u4f60")),
+    ])
+    def test_legacy_escaped_payloads_remain_readable(self, codec_mode, value):
+        legacy = json.dumps(value, default=_serialize_custom_object)
+        assert "\\u" in legacy
+        assert df_loads(legacy, expected_type=type(value)) == value
+        if codec_mode == "loose" or isinstance(value, dict):
+            assert df_loads(legacy) == value
+
+    @pytest.mark.parametrize("text", [
+        pytest.param("\ud800", id="first-high-surrogate"),
+        pytest.param("\udbff", id="last-high-surrogate"),
+        pytest.param("\udc00", id="first-low-surrogate"),
+        pytest.param("\udfff", id="last-low-surrogate"),
+        pytest.param("\ud83d\ude00", id="explicit-surrogate-pair"),
+        pytest.param("\udc00\ud800", id="reversed-surrogates"),
+        pytest.param("\ud800x\udfff", id="separated-surrogates"),
+    ])
+    @pytest.mark.parametrize("custom", [False, True], ids=["plain", "custom"])
+    def test_surrogates_remain_transport_safe(self, codec_mode, text, custom):
+        value = ScalarPerson(text) if custom else {text: [text]}
+        legacy = json.dumps(value, default=_serialize_custom_object)
+        encoded = df_dumps(value)
+        assert encoded == legacy
+        assert encoded.encode("utf-8").decode("utf-8") == encoded
+        # json.loads combines escaped surrogate pairs, as it did before.
+        assert df_loads(encoded, expected_type=type(value)) == df_loads(
+            legacy, expected_type=type(value))
+
+    @pytest.mark.parametrize("custom", [False, True], ids=["plain", "custom"])
+    def test_unicode_and_surrogates_can_coexist(self, codec_mode, custom):
+        text = "\u0416\ud800\U0001f600\udfff\\ud800\x7f"
+        value = ScalarPerson(text) if custom else {text: [text]}
+        encoded = df_dumps(value)
+        assert "\u0416" in encoded
+        assert "\U0001f600" in encoded
+        assert "\\ud800" in encoded
+        assert "\\udfff" in encoded
+        assert "\\\\ud800" in encoded
+        assert "\\u007f" in encoded
+        assert encoded.encode("utf-8").decode("utf-8") == encoded
+        assert df_loads(encoded, expected_type=type(value)) == value
+
+    def test_cyrillic_payload_utf8_size(self, codec_mode):
+        value = {"text": "\u0416" * 100000}
+        legacy = json.dumps(value)
+        encoded = df_dumps(value)
+        assert len(legacy.encode("utf-8")) == 600012
+        assert len(encoded.encode("utf-8")) == 200012
+        assert df_loads(encoded, expected_type=dict) == value
 
 
 # ===================================================================

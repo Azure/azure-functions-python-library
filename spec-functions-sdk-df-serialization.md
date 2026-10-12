@@ -44,7 +44,8 @@ def df_dumps(value: Any) -> str:
     """Serialize *value* to a JSON string using the Durable Functions convention.
 
     In loose mode (default), equivalent to
-    ``json.dumps(value, default=_serialize_custom_object)``.
+    ``json.dumps(value, default=_serialize_custom_object, ensure_ascii=False)``
+    except that DEL and surrogate code units retain their legacy JSON escapes.
 
     In strict mode, the top-level custom object is wrapped in the
     legacy envelope but its ``to_json()`` output is serialized as
@@ -78,11 +79,20 @@ def df_loads(
 
 ### 2.1 Wire format — Loose mode
 
-**No change.** `df_dumps` produces the same JSON that
-`json.dumps(value, default=_serialize_custom_object)` produces today:
+`df_dumps` preserves the JSON structure produced by
+`json.dumps(value, default=_serialize_custom_object)`, but emits ordinary
+Unicode literally while retaining escapes for surrogate code units:
 - Builtins → plain JSON
 - Custom objects with `to_json` → `{"__class__": ..., "__module__": ..., "__data__": ...}`
 - Nested custom objects are recursively wrapped via the `default=` hook
+
+ASCII output and whitespace/separators are unchanged. This Unicode policy also
+applies to strict-mode primitives and custom-object envelopes. `df_loads`
+continues to read legacy escaped payloads, and Unicode is not normalized.
+Serialized bytes for non-ASCII text change; applications using serialized JSON
+for hashes, signatures, IDs, or replay decisions must review upgrade and
+rollback compatibility. See [Durable Functions JSON serialization](README.md#durable-functions-json-serialization)
+for the synthetic UTF-8 size example and rollout-validation caveats.
 
 ### 2.1.1 Wire format — Strict mode
 

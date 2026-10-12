@@ -358,6 +358,28 @@ class TestActivityTriggerConverterIntegration(_NoticeIsolatedTestCase):
             ActivityTriggerConverter.encode({"x": 1}, expected_type=None)
         spy.assert_called_once_with({"x": 1})
 
+    def test_unicode_output_is_transport_safe_in_both_modes(self):
+        value = {
+            "\u4f60": [
+                "\u0416", "e\u0301", "\U0001f600",
+                "\ud800", "\ud83d\ude00", "\\ud800",
+            ],
+        }
+        for mode in ["0", "1"]:
+            with self.subTest(mode=mode), _strict_env(mode):
+                datum = ActivityTriggerConverter.encode(
+                    value, expected_type=dict)
+                self.assertEqual(datum.type, "json")
+                self.assertIn("\u0416", datum.value)
+                self.assertIn("\U0001f600", datum.value)
+                self.assertIn("\\ud800", datum.value)
+                self.assertEqual(
+                    datum.value.encode("utf-8").decode("utf-8"), datum.value)
+                self.assertEqual(
+                    ActivityTriggerConverter.decode(
+                        datum, trigger_metadata=None),
+                    json.loads(json.dumps(value)))
+
     def test_decode_custom_object_loaded_module(self):
         s = df_dumps(Hat("green"))
         datum = Datum(type="json", value=s)
