@@ -163,3 +163,117 @@ class TestConnectorDecoratorIntegration(unittest.TestCase):
         self.assertEqual(trigger_dict['type'], 'connectorTrigger')
         self.assertEqual(trigger_dict['customField'], 'custom_value')
         self.assertEqual(trigger_dict['anotherProperty'], 123)
+
+    def test_decorator_poll_serializes_all_fields(self):
+        for mode in (func.DeliveryMode.POLL, "Poll", "poll", "POLL"):
+            for cardinality in (func.Cardinality.ONE, "one",
+                                func.Cardinality.MANY, "many"):
+                with self.subTest(mode=mode, cardinality=cardinality):
+                    app = func.FunctionApp()
+
+                    @app.connector_trigger(
+                        arg_name="payload",
+                        delivery_mode=mode,
+                        connection="ConnectorNamespace",
+                        trigger_config_name="%OnNewEmailTriggerConfigName%",
+                        cardinality=cardinality,
+                        max_batch_size=1,
+                        max_concurrent_calls=1,
+                        target_pending_event_threshold=16,
+                        data_type="string",
+                        custom_field="custom",
+                    )
+                    def connector_function(payload):
+                        return payload
+
+                    binding = json.loads(
+                        app.get_functions()[0].get_function_json())['bindings'][0]
+                    self.assertEqual(binding, {
+                        "type": "connectorTrigger",
+                        "direction": "IN",
+                        "name": "payload",
+                        "deliveryMode": "Poll",
+                        "connection": "ConnectorNamespace",
+                        "triggerConfigName": "%OnNewEmailTriggerConfigName%",
+                        "cardinality": str(cardinality).upper(),
+                        "maxBatchSize": 1,
+                        "maxConcurrentCalls": 1,
+                        "targetPendingEventThreshold": 16,
+                        "dataType": "STRING",
+                        "customField": "custom",
+                    })
+
+    def test_decorator_webhook_and_default_require_no_poll_fields(self):
+        for mode in (None, func.DeliveryMode.WEBHOOK, "Webhook", "webhook"):
+            with self.subTest(mode=mode):
+                app = func.FunctionApp()
+
+                @app.connector_trigger(arg_name="payload", delivery_mode=mode)
+                def connector_function(payload):
+                    return payload
+
+                binding = json.loads(
+                    app.get_functions()[0].get_function_json())['bindings'][0]
+                expected = {
+                    "type": "connectorTrigger",
+                    "direction": "IN",
+                    "name": "payload",
+                }
+                if mode is not None:
+                    expected["deliveryMode"] = "Webhook"
+                self.assertEqual(binding, expected)
+
+    def test_decorator_poll_requires_each_field(self):
+        required = {
+            "connection": "ConnectorNamespace",
+            "trigger_config_name": "config",
+            "max_batch_size": 1,
+            "max_concurrent_calls": 1,
+        }
+        for mode in (func.DeliveryMode.POLL, "Poll"):
+            for field in required:
+                with self.subTest(mode=mode, field=field):
+                    app = func.FunctionApp()
+                    params = dict(required)
+                    del params[field]
+                    with self.assertRaisesRegex(ValueError, field):
+                        @app.connector_trigger(arg_name="payload",
+                                               delivery_mode=mode, **params)
+                        def connector_function(payload):
+                            return payload
+
+    def test_decorator_invalid_enums(self):
+        for params, enum_name in (({"delivery_mode": "invalid"}, "DeliveryMode"),
+                                  ({"cardinality": "invalid"}, "Cardinality")):
+            with self.subTest(params=params):
+                app = func.FunctionApp()
+                with self.assertRaisesRegex(KeyError, enum_name):
+                    @app.connector_trigger(arg_name="payload", **params)
+                    def connector_function(payload):
+                        return payload
+
+    def test_decorator_preserves_positional_data_type(self):
+        app = func.FunctionApp()
+
+        @app.connector_trigger("payload", func.DataType.STRING)
+        def connector_function(payload):
+            return payload
+
+        trigger = app.get_functions()[0].get_trigger()
+        self.assertEqual(trigger.get_dict_repr()['dataType'], func.DataType.STRING)
+
+    def test_decorator_poll_cardinality_is_optional(self):
+        app = func.FunctionApp()
+
+        @app.connector_trigger(
+            arg_name="payload", delivery_mode=func.DeliveryMode.POLL,
+            connection="ConnectorNamespace", trigger_config_name="config",
+            max_batch_size=1, max_concurrent_calls=1,
+        )
+        def connector_function(payload):
+            return payload
+
+        binding = app.get_functions()[0].get_trigger().get_dict_repr()
+        self.assertNotIn("cardinality", binding)
+        self.assertNotIn("isBatched", binding)
+        self.assertNotIn("targetPendingEventThreshold", binding)

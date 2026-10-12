@@ -23,6 +23,7 @@ __all__ = [
     'DataType',
     'AuthLevel',
     'Cardinality',
+    'DeliveryMode',
     'AccessRights',
     'HttpMethod',
     'BlobSource',
