@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import json
 import typing
 
 from . import meta
@@ -11,7 +12,11 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes))
+        valid_types = (str, dict, bytes)
+        return (
+            meta.is_iterable_type_annotation(pytype, valid_types)
+            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+        )
 
     @classmethod
     def has_implicit_output(cls) -> bool:
@@ -21,8 +26,21 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
     def decode(cls, data: meta.Datum, *, trigger_metadata):
         """
         Decode incoming connector trigger request data.
-        Returns the raw data in its native format (string, dict, bytes).
+        Returns scalar data unchanged or collection data as a list.
         """
+        # Connector binding data has no Service Bus-style UserPropertiesArray.
+        # The host represents cardinality many with a collection or JSON array.
+        if data.type in ('collection_string', 'collection_bytes'):
+            return cls.decode_multiple_messages(data, trigger_metadata=trigger_metadata)
+        if data.type == 'json':
+            parsed_data = json.loads(data.value) if isinstance(data.value, str) else data.value
+            if isinstance(parsed_data, list):
+                return cls.decode_multiple_messages(data, trigger_metadata=trigger_metadata)
+        return cls.decode_single_message(data, trigger_metadata=trigger_metadata)
+
+    @classmethod
+    def decode_single_message(cls, data: meta.Datum, *, trigger_metadata):
+        """Decode a single connector event, preserving the existing scalar format."""
         # Handle different data types appropriately
         if data.type == 'json':
             # If it's already parsed JSON, use the value directly
@@ -37,6 +55,24 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
             return data.python_value if hasattr(data, 'python_value') else data.value
 
     @classmethod
+    def decode_multiple_messages(
+        cls, data: meta.Datum, *, trigger_metadata
+    ) -> typing.List[typing.Union[str, dict, bytes]]:
+        """Decode cardinality many payloads without parsing individual event strings."""
+        if data.type == 'collection_string':
+            return list(data.value.string)
+        elif data.type == 'collection_bytes':
+            return list(data.value.bytes)
+        elif data.type == 'json':
+            parsed_data = json.loads(data.value) if isinstance(data.value, str) else data.value
+            if isinstance(parsed_data, list):
+                return parsed_data
+            raise ValueError('expected a JSON array for multiple connector messages')
+        else:
+            raise NotImplementedError('unable to decode multiple messages '
+                                      f'with data type {data.type}')
+
+    @classmethod
     def encode(cls, obj: typing.Any, *, expected_type: typing.Optional[type] = None):
         """
         Encode the return value from connector trigger functions.
@@ -48,7 +84,6 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
         elif isinstance(obj, (bytes, bytearray)):
             return meta.Datum(type='bytes', value=bytes(obj))
         elif isinstance(obj, dict):
-            import json
             return meta.Datum(type='string', value=json.dumps(obj))
         else:
             # Convert other types to string

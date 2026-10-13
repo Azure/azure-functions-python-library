@@ -32,8 +32,6 @@ class ConnectorTrigger(Trigger):
             required_params = {
                 "connection": connection,
                 "trigger_config_name": trigger_config_name,
-                "max_batch_size": max_batch_size,
-                "max_concurrent_calls": max_concurrent_calls,
             }
             missing_params = [
                 key for key, value in required_params.items() if value is None

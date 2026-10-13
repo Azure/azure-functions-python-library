@@ -90,9 +90,10 @@ class TestConnectorTrigger(unittest.TestCase):
         trigger = ConnectorTrigger(
             name="payload", delivery_mode=DeliveryMode.POLL,
             connection="ConnectorNamespace", trigger_config_name="config",
-            max_batch_size=1, max_concurrent_calls=1,
         )
         binding = trigger.get_dict_repr()
+        self.assertNotIn("maxBatchSize", binding)
+        self.assertNotIn("maxConcurrentCalls", binding)
         self.assertNotIn("cardinality", binding)
         self.assertNotIn("targetPendingEventThreshold", binding)
         self.assertNotIn("isBatched", binding)
@@ -101,8 +102,6 @@ class TestConnectorTrigger(unittest.TestCase):
         required = {
             "connection": "ConnectorNamespace",
             "trigger_config_name": "config",
-            "max_batch_size": 1,
-            "max_concurrent_calls": 1,
         }
         for field in required:
             with self.subTest(field=field):
@@ -114,9 +113,28 @@ class TestConnectorTrigger(unittest.TestCase):
 
     def test_connector_trigger_poll_reports_all_missing_fields(self):
         with self.assertRaisesRegex(
-                ValueError, "connection, trigger_config_name, "
-                "max_batch_size, max_concurrent_calls"):
+                ValueError, "connection, trigger_config_name$"):
             ConnectorTrigger(name="payload", delivery_mode=DeliveryMode.POLL)
+
+    def test_connector_trigger_poll_independent_overrides(self):
+        for field, value, wire_name in (
+                ("max_batch_size", 10, "maxBatchSize"),
+                ("max_concurrent_calls", 2, "maxConcurrentCalls")):
+            with self.subTest(field=field):
+                trigger = ConnectorTrigger(
+                    name="payload", delivery_mode="Poll",
+                    connection="ConnectorNamespace", trigger_config_name="config",
+                    **{field: value},
+                )
+                self.assertEqual(trigger.get_dict_repr(), {
+                    "type": CONNECTOR_TRIGGER,
+                    "direction": BindingDirection.IN,
+                    "name": "payload",
+                    "deliveryMode": DeliveryMode.POLL,
+                    "connection": "ConnectorNamespace",
+                    "triggerConfigName": "config",
+                    wire_name: value,
+                })
 
     def test_connector_trigger_webhook_requires_no_poll_fields(self):
         trigger = ConnectorTrigger(name="payload",

@@ -2,9 +2,11 @@
 # Licensed under the MIT License.
 import unittest
 import json
+from typing import Iterable, List, Sequence
 import azure.functions as func
 from azure.functions.meta import Datum
 from azure.functions.connectors import ConnectorTriggerConverter
+from tests.utils.testutils import CollectionBytes, CollectionString
 
 
 class TestConnectorTriggerConverter(unittest.TestCase):
@@ -16,12 +18,92 @@ class TestConnectorTriggerConverter(unittest.TestCase):
         self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(bytes))
 
     def test_check_input_type_annotation_invalid_type(self):
-        with self.assertRaises(TypeError):
-            ConnectorTriggerConverter.check_input_type_annotation(123)  # not a type
+        self.assertFalse(ConnectorTriggerConverter.check_input_type_annotation(123))
 
         class Dummy:
             pass
         self.assertFalse(ConnectorTriggerConverter.check_input_type_annotation(Dummy))
+
+    def test_check_input_type_annotation_batch_types(self):
+        for annotation in (List[str], List[bytes], List[dict],
+                           Iterable[str], Sequence[bytes]):
+            with self.subTest(annotation=annotation):
+                self.assertTrue(
+                    ConnectorTriggerConverter.check_input_type_annotation(annotation))
+
+    def test_check_input_type_annotation_unsupported_batch_types(self):
+        for annotation in (List[int], List[float], Iterable[int], List, list):
+            with self.subTest(annotation=annotation):
+                self.assertFalse(
+                    ConnectorTriggerConverter.check_input_type_annotation(annotation))
+
+    def test_decode_batches_with_valid_annotations(self):
+        for annotation, data_type, collection, values in (
+                (List[str], 'collection_string', CollectionString,
+                 ['{"id": "first"}', '{"id": "second"}']),
+                (List[bytes], 'collection_bytes', CollectionBytes,
+                 [b'first', b'second'])):
+            for batch in (values, []):
+                with self.subTest(annotation=annotation, batch=batch):
+                    self.assertTrue(
+                        ConnectorTriggerConverter.check_input_type_annotation(annotation))
+                    data = Datum(type=data_type, value=collection(batch))
+                    result = ConnectorTriggerConverter.decode(data, trigger_metadata={})
+                    self.assertIsInstance(result, list)
+                    self.assertEqual(result, batch)
+
+    def test_decode_json_batch_preserves_parsed_values(self):
+        values = [{'id': 'first'}, {'id': 'second'}]
+        self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(List[dict]))
+        result = ConnectorTriggerConverter.decode(
+            Datum(type='json', value=values), trigger_metadata={})
+        self.assertEqual(result, values)
+
+    def test_decode_serialized_json_batches(self):
+        for values in ([{'id': 'first'}, {'id': 'second'}],
+                       ['{"id": "first"}', '{"id": "second"}'], []):
+            with self.subTest(values=values):
+                data = Datum(type='json', value=json.dumps(values))
+                self.assertEqual(
+                    ConnectorTriggerConverter.decode(data, trigger_metadata={}), values)
+                self.assertEqual(
+                    ConnectorTriggerConverter.decode_multiple_messages(
+                        data, trigger_metadata={}), values)
+
+    def test_decode_multiple_messages_collections(self):
+        for data_type, collection, values in (
+                ('collection_string', CollectionString, ['first', 'second']),
+                ('collection_bytes', CollectionBytes, [b'first', b'second'])):
+            for batch in (values, []):
+                with self.subTest(data_type=data_type, batch=batch):
+                    result = ConnectorTriggerConverter.decode_multiple_messages(
+                        Datum(type=data_type, value=collection(batch)), trigger_metadata={})
+                    self.assertIsInstance(result, list)
+                    self.assertEqual(result, batch)
+
+    def test_decode_multiple_messages_rejects_non_array_json(self):
+        for value in ({'id': 'single'}, '{"id": "single"}', 'null', '42'):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, 'expected a JSON array'):
+                    ConnectorTriggerConverter.decode_multiple_messages(
+                        Datum(type='json', value=value), trigger_metadata={})
+
+    def test_decode_multiple_messages_unsupported_type(self):
+        with self.assertRaisesRegex(NotImplementedError, 'data type string'):
+            ConnectorTriggerConverter.decode_multiple_messages(
+                Datum(type='string', value='single'), trigger_metadata={})
+
+    def test_decode_single_message_preserves_scalar_formats(self):
+        for data_type, value in (('string', 'hello'), ('bytes', b'hello'),
+                                 ('json', {'id': 'single'}),
+                                 ('json', '{"id": "single"}')):
+            with self.subTest(data_type=data_type, value=value):
+                data = Datum(type=data_type, value=value)
+                self.assertEqual(
+                    ConnectorTriggerConverter.decode_single_message(
+                        data, trigger_metadata={}), value)
+                self.assertEqual(
+                    ConnectorTriggerConverter.decode(data, trigger_metadata={}), value)
 
     def test_has_implicit_output(self):
         self.assertTrue(ConnectorTriggerConverter.has_implicit_output())
@@ -227,8 +309,6 @@ class TestConnectorDecoratorIntegration(unittest.TestCase):
         required = {
             "connection": "ConnectorNamespace",
             "trigger_config_name": "config",
-            "max_batch_size": 1,
-            "max_concurrent_calls": 1,
         }
         for mode in (func.DeliveryMode.POLL, "Poll"):
             for field in required:
@@ -262,18 +342,53 @@ class TestConnectorDecoratorIntegration(unittest.TestCase):
         trigger = app.get_functions()[0].get_trigger()
         self.assertEqual(trigger.get_dict_repr()['dataType'], func.DataType.STRING)
 
-    def test_decorator_poll_cardinality_is_optional(self):
+    def test_decorator_poll_optional_fields_are_omitted(self):
         app = func.FunctionApp()
 
         @app.connector_trigger(
             arg_name="payload", delivery_mode=func.DeliveryMode.POLL,
             connection="ConnectorNamespace", trigger_config_name="config",
-            max_batch_size=1, max_concurrent_calls=1,
         )
         def connector_function(payload):
             return payload
 
         binding = app.get_functions()[0].get_trigger().get_dict_repr()
+        self.assertNotIn("maxBatchSize", binding)
+        self.assertNotIn("maxConcurrentCalls", binding)
         self.assertNotIn("cardinality", binding)
         self.assertNotIn("isBatched", binding)
         self.assertNotIn("targetPendingEventThreshold", binding)
+
+    def test_decorator_poll_uses_host_defaults_with_batch_annotation(self):
+        for mode in (func.DeliveryMode.POLL, "poll"):
+            with self.subTest(mode=mode):
+                app = func.FunctionApp()
+
+                @app.connector_trigger(
+                    arg_name="payload", delivery_mode=mode,
+                    connection="ConnectorNamespace", trigger_config_name="config",
+                    cardinality=func.Cardinality.MANY,
+                )
+                def connector_function(payload: List[str]):
+                    return payload
+
+                built_func = app.get_functions()[0]
+                binding = json.loads(built_func.get_function_json())['bindings'][0]
+                self.assertEqual(binding, {
+                    "type": "connectorTrigger",
+                    "direction": "IN",
+                    "name": "payload",
+                    "deliveryMode": "Poll",
+                    "connection": "ConnectorNamespace",
+                    "triggerConfigName": "config",
+                    "cardinality": "MANY",
+                })
+                annotation = built_func.get_user_function().__annotations__['payload']
+                self.assertTrue(
+                    ConnectorTriggerConverter.check_input_type_annotation(annotation))
+                values = ['first', 'second']
+                decoded = ConnectorTriggerConverter.decode(
+                    Datum(type='collection_string', value=CollectionString(values)),
+                    trigger_metadata={},
+                )
+                self.assertEqual(built_func.get_user_function()(decoded), values)
