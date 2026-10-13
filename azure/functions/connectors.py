@@ -28,7 +28,6 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
         Decode incoming connector trigger request data.
         Returns scalar data unchanged or collection data as a list.
         """
-        # Connector binding data has no Service Bus-style UserPropertiesArray.
         # The host represents cardinality many with a collection or JSON array.
         if data.type in ('collection_string', 'collection_bytes'):
             return cls.decode_multiple_messages(data, trigger_metadata=trigger_metadata)

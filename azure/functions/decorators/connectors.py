@@ -39,7 +39,7 @@ class ConnectorTrigger(Trigger):
             if missing_params:
                 raise ValueError(
                     "The following parameters are required for Poll delivery "
-                    f"mode: {', '.join(missing_params)}")
+                    "mode: %s" % ', '.join(missing_params))
 
         self.delivery_mode = delivery_mode
         self.connection = connection
