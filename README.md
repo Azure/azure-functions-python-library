@@ -45,6 +45,35 @@ Issues and feature requests are tracked in a variety of places. To report this f
 | Portal        | User Interface or Experience Issue           | [File an Issue](https://github.com/azure/azure-functions-ux/issues)            |
 | Templates     | Code Issues with Creation Template           | [File an Issue](https://github.com/Azure/azure-functions-templates/issues)     |
 
+## Durable Functions JSON serialization
+
+`azure.functions._durable_functions.df_dumps(value, *, ensure_ascii=True)`
+preserves legacy ASCII-escaped JSON by default. Pass `ensure_ascii=False` to
+opt in to emitting ordinary Unicode literally in either loose or strict typing
+mode. Surrogate code units, including lone surrogates and explicit surrogate-pair
+strings, remain JSON-escaped so the output is safe to encode as UTF-8 and pass
+through protobuf string fields. ASCII DEL also retains its legacy `\u007f`
+escape. Unicode is not normalized. ASCII output, whitespace, custom-object
+envelopes, and strict/loose type rules are unchanged; `df_loads` reads both
+escaped and literal-Unicode payloads.
+
+For the synthetic Python value `{"text": "\u0416" * 100000}` (100,000 Cyrillic
+characters), `df_dumps(value, ensure_ascii=False)` produces **200,012 UTF-8
+bytes**, compared with **600,012 bytes** using the default or explicit
+`ensure_ascii=True`. This isolates escaping overhead; it does not measure a
+complete production request or remove aggregate transport limits.
+
+**Opt-in compatibility:** Serialized bytes change for ordinary non-ASCII text
+only when selecting `ensure_ascii=False`, even though escaped and literal JSON
+decode to the same values. Applications deriving hashes, signatures, IDs, or
+replay decisions from serialized JSON must review their byte-dependent logic
+before opting in or switching back. Existing callers, including the activity
+trigger converter, continue to use ASCII-escaped output. Literal-Unicode output
+has not been validated against live hosted backends; provider integration/replay
+coverage and real-host staging validation are tracked in
+[microsoft/durabletask-python#291](https://github.com/microsoft/durabletask-python/issues/291),
+linked from [#371](https://github.com/Azure/azure-functions-python-library/issues/371).
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
