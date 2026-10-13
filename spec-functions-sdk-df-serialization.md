@@ -40,11 +40,13 @@ Problems:
 Add two public functions to `azure/functions/_durable_functions.py`:
 
 ```python
-def df_dumps(value: Any) -> str:
+def df_dumps(value: Any, *, ensure_ascii: bool = True) -> str:
     """Serialize *value* to a JSON string using the Durable Functions convention.
 
     In loose mode (default), equivalent to
-    ``json.dumps(value, default=_serialize_custom_object)``.
+    ``json.dumps(value, default=_serialize_custom_object)`` by default.
+    The keyword-only ensure_ascii=False option emits ordinary Unicode literally,
+    but DEL and surrogate code units retain their legacy JSON escapes.
 
     In strict mode, the top-level custom object is wrapped in the
     legacy envelope but its ``to_json()`` output is serialized as
@@ -78,11 +80,23 @@ def df_loads(
 
 ### 2.1 Wire format — Loose mode
 
-**No change.** `df_dumps` produces the same JSON that
-`json.dumps(value, default=_serialize_custom_object)` produces today:
+`df_dumps` preserves the JSON structure produced by
+`json.dumps(value, default=_serialize_custom_object)`, including its exact
+ASCII-escaped output by default and with explicit `ensure_ascii=True`:
 - Builtins → plain JSON
 - Custom objects with `to_json` → `{"__class__": ..., "__module__": ..., "__data__": ...}`
 - Nested custom objects are recursively wrapped via the `default=` hook
+
+The keyword-only `ensure_ascii=False` option emits ordinary Unicode literally
+while retaining DEL and surrogate escapes. ASCII output and whitespace/separators
+are unchanged. Both options apply to strict-mode primitives and custom-object
+envelopes. `df_loads` reads escaped and literal-Unicode payloads, and Unicode
+is not normalized. Selecting literal output changes non-ASCII serialized bytes;
+applications using JSON bytes for hashes, signatures, IDs, or replay decisions
+must review compatibility before opting in or switching back. Existing activity
+trigger converters continue to use the default ASCII-escaped output.
+See [Durable Functions JSON serialization](README.md#durable-functions-json-serialization)
+for the synthetic UTF-8 size example and rollout-validation caveats.
 
 ### 2.1.1 Wire format — Strict mode
 
