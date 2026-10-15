@@ -28,13 +28,9 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
         Decode incoming connector trigger request data.
         Returns scalar data unchanged or collection data as a list.
         """
-        # The host represents cardinality many with a collection or JSON array.
+        # Only explicit collection types identify batches; JSON arrays can be single events.
         if data.type in ('collection_string', 'collection_bytes'):
             return cls.decode_multiple_messages(data, trigger_metadata=trigger_metadata)
-        if data.type == 'json':
-            parsed_data = json.loads(data.value) if isinstance(data.value, str) else data.value
-            if isinstance(parsed_data, list):
-                return cls.decode_multiple_messages(data, trigger_metadata=trigger_metadata)
         return cls.decode_single_message(data, trigger_metadata=trigger_metadata)
 
     @classmethod

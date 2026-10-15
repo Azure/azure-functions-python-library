@@ -52,23 +52,34 @@ class TestConnectorTriggerConverter(unittest.TestCase):
                     self.assertIsInstance(result, list)
                     self.assertEqual(result, batch)
 
-    def test_decode_json_batch_preserves_parsed_values(self):
+    def test_decode_json_array_preserves_parsed_values(self):
         values = [{'id': 'first'}, {'id': 'second'}]
         self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(List[dict]))
         result = ConnectorTriggerConverter.decode(
             Datum(type='json', value=values), trigger_metadata={})
-        self.assertEqual(result, values)
+        self.assertIs(result, values)
 
-    def test_decode_serialized_json_batches(self):
+    def test_decode_serialized_json_arrays_preserve_scalar_payload(self):
         for values in ([{'id': 'first'}, {'id': 'second'}],
                        ['{"id": "first"}', '{"id": "second"}'], []):
             with self.subTest(values=values):
                 data = Datum(type='json', value=json.dumps(values))
                 self.assertEqual(
-                    ConnectorTriggerConverter.decode(data, trigger_metadata={}), values)
+                    ConnectorTriggerConverter.decode(data, trigger_metadata={}), data.value)
+
+    def test_decode_multiple_messages_serialized_json_batches(self):
+        for values in ([{'id': 'first'}, {'id': 'second'}],
+                       ['{"id": "first"}', '{"id": "second"}'], []):
+            with self.subTest(values=values):
+                data = Datum(type='json', value=json.dumps(values))
                 self.assertEqual(
                     ConnectorTriggerConverter.decode_multiple_messages(
                         data, trigger_metadata={}), values)
+
+    def test_decode_invalid_json_preserves_scalar_payload(self):
+        data = Datum(type='json', value='[not valid JSON')
+        self.assertEqual(
+            ConnectorTriggerConverter.decode(data, trigger_metadata={}), data.value)
 
     def test_decode_multiple_messages_collections(self):
         for data_type, collection, values in (
