@@ -4,6 +4,7 @@
 import json
 import logging
 import os
+import re
 import sys
 import warnings
 from typing import Any, Callable, Optional, Union
@@ -163,12 +164,21 @@ def _deserialize_custom_object(obj: dict) -> object:
 # ---------------------------------------------------------------------------
 
 
-def df_dumps(value: Any) -> str:
+def _escape_json_code_units(json_string: str) -> str:
+    """Preserve DEL's ASCII representation and UTF-8-safe surrogate escapes."""
+    return re.sub(
+        r"[\x7f\ud800-\udfff]",
+        lambda match: f"\\u{ord(match.group()):04x}",
+        json_string,
+    )
+
+
+def df_dumps(value: Any, *, ensure_ascii: bool = True) -> str:
     """Serialize *value* to a JSON string.
 
     In **loose mode** (default) this is equivalent to
-    ``json.dumps(value, default=_serialize_custom_object)``: nested
-    custom objects are wrapped recursively in the
+    ``json.dumps(value, default=_serialize_custom_object)``.  Nested custom
+    objects are wrapped recursively in the
     ``{"__class__", "__module__", "__data__"}`` envelope.
 
     In **strict mode** (``AZURE_FUNCTIONS_DURABLE_STRICT_TYPING`` set
@@ -177,14 +187,26 @@ def df_dumps(value: Any) -> str:
     without a ``default=`` hook.  ``to_json()`` must therefore return
     a value that is natively JSON-serializable, and ``TypeError`` is
     raised if any nested value is not.
+
+    The keyword-only ``ensure_ascii`` option defaults to ``True``, preserving
+    legacy ASCII-escaped output.  Set it to ``False`` to emit ordinary Unicode
+    literally, without normalization.  DEL and surrogate code units (including
+    explicit surrogate pairs) retain their JSON escapes for ASCII compatibility
+    and UTF-8/protobuf transport safety.  JSON whitespace is unchanged.
+    Opting in changes non-ASCII serialized bytes; byte-dependent hashes,
+    signatures, IDs and replay logic must account for this change.
     """
     if _is_strict_mode():
         if hasattr(value, "to_json"):
             envelope = _serialize_custom_object(value)
-            return json.dumps(envelope)
-        # Primitive / plain-JSON value -- serialize without default=.
-        return json.dumps(value)
-    return json.dumps(value, default=_serialize_custom_object)
+            result = json.dumps(envelope, ensure_ascii=ensure_ascii)
+        else:
+            # Primitive / plain-JSON value -- serialize without default=.
+            result = json.dumps(value, ensure_ascii=ensure_ascii)
+    else:
+        result = json.dumps(
+            value, default=_serialize_custom_object, ensure_ascii=ensure_ascii)
+    return result if ensure_ascii else _escape_json_code_units(result)
 
 
 def df_loads(s: str, expected_type: Optional[type] = None) -> Any:
