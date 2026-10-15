@@ -54,6 +54,18 @@ class Cardinality(StringifyEnum):
     """Multiple messaged passed to the function per invocation."""
 
 
+class DeliveryMode(StringifyEnum):
+    """Delivery mode for connector trigger bindings."""
+    POLL = "Poll"
+    """Poll the connector for events."""
+    WEBHOOK = "Webhook"
+    """Receive webhook events. The default when delivery mode is omitted."""
+
+    def __str__(self):
+        """Return the delivery mode value expected by the extension."""
+        return self.value
+
+
 class AccessRights(StringifyEnum):
     """Access rights for the connection string. The default is manage,
     which indicates that the connection has the Manage permission. """

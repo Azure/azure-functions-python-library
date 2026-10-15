@@ -17,7 +17,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, \
 from azure.functions.decorators.blob import BlobTrigger, BlobInput, BlobOutput
 from azure.functions.decorators.core import Binding, Trigger, DataType, \
     AuthLevel, SCRIPT_FILE_NAME, Cardinality, AccessRights, Setting, BlobSource, \
-    McpPropertyType, CosmosDBChangeFeedMode
+    McpPropertyType, CosmosDBChangeFeedMode, DeliveryMode
 from azure.functions.decorators.cosmosdb import CosmosDBTrigger, \
     CosmosDBOutput, CosmosDBInput, CosmosDBTriggerV3, CosmosDBInputV3, \
     CosmosDBOutputV3
@@ -1568,6 +1568,13 @@ class TriggerApi(DecoratorApi, ABC):
     def connector_trigger(self,
                           arg_name: str,
                           data_type: Optional[Union[DataType, str]] = None,
+                          delivery_mode: Optional[Union[DeliveryMode, str]] = None,
+                          connection: Optional[str] = None,
+                          trigger_config_name: Optional[str] = None,
+                          cardinality: Optional[Union[Cardinality, str]] = None,
+                          max_batch_size: Optional[int] = None,
+                          max_concurrent_calls: Optional[int] = None,
+                          target_pending_event_threshold: Optional[int] = None,
                           **kwargs) -> Callable[..., Any]:
         """
         The `connector_trigger` decorator adds :class:`ConnectorTrigger` to the
@@ -1584,6 +1591,24 @@ class TriggerApi(DecoratorApi, ABC):
         :param arg_name: The name of the trigger parameter in the function code.
         :param data_type: Defines how the Functions runtime should treat the
             parameter value.
+        :param delivery_mode: Poll or Webhook delivery mode. If omitted, the
+            function host defaults to Webhook.
+        :param connection: Connector connection setting. Required for Poll.
+        :param trigger_config_name: Connector trigger configuration name.
+            Required for Poll. Supports app setting expressions.
+        :param cardinality: Set to many to enable batching, equivalent to the
+            extension's IsBatched option. Batch parameters may use typing.List[str]
+            or typing.List[bytes] annotations. If omitted, a single event is passed
+            to the function.
+        :param max_batch_size: Optional per-function override for the maximum
+            number of events per batch. If omitted, Poll delivery uses the
+            extension's app-wide host.json default.
+        :param max_concurrent_calls: Optional per-function override for the maximum
+            number of concurrent calls. If omitted, Poll delivery uses the
+            extension's app-wide host.json default for single-event invocations.
+            Batched invocations are processed one at a time by the extension.
+        :param target_pending_event_threshold: Target number of pending events
+            per function instance used for scaling.
         :param kwargs: Keyword arguments for specifying additional binding
             fields to include in the binding JSON.
 
@@ -1598,6 +1623,15 @@ class TriggerApi(DecoratorApi, ABC):
                         name=arg_name,
                         data_type=parse_singular_param_to_enum(data_type,
                                                                DataType),
+                        delivery_mode=parse_singular_param_to_enum(
+                            delivery_mode, DeliveryMode),
+                        connection=connection,
+                        trigger_config_name=trigger_config_name,
+                        cardinality=parse_singular_param_to_enum(
+                            cardinality, Cardinality),
+                        max_batch_size=max_batch_size,
+                        max_concurrent_calls=max_concurrent_calls,
+                        target_pending_event_threshold=target_pending_event_threshold,
                         **kwargs))
                 return fb
 
