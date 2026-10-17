@@ -151,7 +151,12 @@ class WsgiResponse:
     @classmethod
     def from_app(cls, app, environ) -> 'WsgiResponse':
         res = cls()
-        res._buffer = [x or b'' for x in app(environ, res._start_response)]
+        response = app(environ, res._start_response)
+        try:
+            res._buffer = [x or b'' for x in response]
+        finally:
+            if hasattr(response, 'close'):
+                response.close()
         return res
 
     def to_func_response(self) -> HttpResponse:
