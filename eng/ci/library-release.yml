@@ -85,6 +85,7 @@ extends:
               libraryVersion: ${{ parameters.V1LibraryVersion }}
               projectDisplayName: 'Azure Functions Python Library V1'
               releaseBranchPrefix: 'release'
+              pythonVersionRequirement: '>=3.10,<3.13'
               tagPrefix: ''
               blobPath: 'azure-functions/python/azure-functions'
               artifactName: 'azure-functions'
@@ -134,6 +135,7 @@ extends:
               libraryVersion: ${{ parameters.V2LibraryVersion }}
               projectDisplayName: 'Azure Functions Python Library V2'
               releaseBranchPrefix: 'release'
+              pythonVersionRequirement: '>=3.13'
               tagPrefix: ''
               blobPath: 'azure-functions/python/azure-functions'
               artifactName: 'azure-functions'

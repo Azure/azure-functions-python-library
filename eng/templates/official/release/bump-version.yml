@@ -116,8 +116,19 @@ jobs:
 
               if (![string]::IsNullOrWhiteSpace($pythonClassifiers.Trim())) {
                   Write-Host "Updating pyproject Python classifiers"
-                  $classifiersPattern = "(?s)('Programming Language :: Python :: \d\.\d+',\s*)+"
-                  $content = $content -replace $classifiersPattern, "$pythonClassifiers,`n    "
+                  # Replace complete version-classifier lines, preserving their indentation
+                  # without consuming whitespace belonging to the following classifier.
+                  $classifiersPattern = "(?m)^(?<indent>[ \t]*)'Programming Language :: Python :: \d+\.\d+',?(?:[ \t]*\r?\n[ \t]*'Programming Language :: Python :: \d+\.\d+',?)*"
+                  $newline = if ($content.Contains("`r`n")) { "`r`n" } else { "`n" }
+                  $classifierLines = $pythonClassifiers.Trim() -split '\r?\n' |
+                    Where-Object { ![string]::IsNullOrWhiteSpace($_) } |
+                    ForEach-Object { $_.Trim().TrimEnd(',') + ',' }
+                  $content = [regex]::Replace($content, $classifiersPattern, {
+                    param($match)
+                    ($classifierLines | ForEach-Object {
+                      $match.Groups['indent'].Value + $_
+                    }) -join $newline
+                  })
               }
 
               $content | Set-Content -NoNewline $pyprojectPath
