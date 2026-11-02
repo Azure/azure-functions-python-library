@@ -3,7 +3,7 @@ jobs:
     displayName: 'Build Python SDK'
 
     pool:
-      name: ${{ parameters.poolName }}
+      name: 1es-pool-azfunc-public
       image: 1es-ubuntu-22.04
       os: linux
 
