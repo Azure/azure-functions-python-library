@@ -1,6 +1,9 @@
 parameters:
   - name: libraryVersion
     type: string
+  - name: pythonVersionRequirement
+    type: string
+    displayName: 'Python version requirement used to select the worker SDK dependency'
   - name: projectDisplayName
     type: string
     default: 'Azure Functions Python Library'
@@ -182,8 +185,95 @@ jobs:
           notifyUsers: ''
           instructions: 'Please head to https://github.com/${{ parameters.githubOrg }}/${{ parameters.githubRepo }}/releases to finish the release note'
 
-  - job: PublishRelease
+  - job: "TestWithWorker"
     dependsOn: ['CheckGitHubRelease']
+    displayName: 'Test with Worker'
+    steps:
+      - checkout: none
+      - pwsh: |
+          $ErrorActionPreference = 'Stop'
+          $githubUser = $env:GITHUB_USER
+          $githubToken = $env:GITHUB_TOKEN
+          $newLibraryVersion = "${{ parameters.libraryVersion }}"
+          $pythonVersionRequirement = "${{ parameters.pythonVersionRequirement }}"
+          $newBranch = "sdk/$newLibraryVersion"
+
+          git config --global user.name "AzureFunctions"
+          git config --global user.email "azurefunctions@microsoft.com"
+          $credential = [System.Convert]::ToBase64String(
+              [System.Text.Encoding]::ASCII.GetBytes("${githubUser}:${githubToken}"))
+
+          git clone "https://${githubUser}:${githubToken}@github.com/Azure/azure-functions-python-worker.git"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to clone the worker repository.' }
+          Set-Location 'azure-functions-python-worker'
+          git checkout -b $newBranch origin/dev
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to create the worker SDK branch.' }
+
+          if ($pythonVersionRequirement -eq '>=3.13') {
+              $pythonMarker = "python_version >= '3.13'"
+          } elseif ($pythonVersionRequirement -eq '>=3.10,<3.13') {
+              $pythonMarker = "python_version >= '3.10' and python_version < '3.13'"
+          } else {
+              throw "Unsupported Python version requirement: $pythonVersionRequirement"
+          }
+
+          $projectPath = 'workers/pyproject.toml'
+          $content = Get-Content -LiteralPath $projectPath -Raw
+          $dependencyPattern = 'azure-functions==[^;"\r\n]+; ' + [regex]::Escape($pythonMarker) + '(?=")'
+          if ([regex]::Matches($content, $dependencyPattern).Count -ne 1) {
+              throw "Expected exactly one worker SDK dependency for $pythonMarker. Update it manually."
+          }
+          $content = $content -replace $dependencyPattern, "azure-functions==$newLibraryVersion; $pythonMarker"
+          [System.IO.File]::WriteAllText((Join-Path $PWD $projectPath), $content)
+
+          git add $projectPath
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to stage the worker SDK dependency update.' }
+          git commit -m "build: update Python SDK Version to $newLibraryVersion"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to commit the worker SDK dependency update.' }
+          git push origin $newBranch
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to push the worker SDK branch.' }
+
+          $headers = @{
+              'Authorization' = "Basic $credential"
+              'Accept' = 'application/vnd.github+json'
+              'Content-Type' = 'application/json'
+              'X-GitHub-Api-Version' = '2022-11-28'
+          }
+          $body = @{
+              head = $newBranch
+              base = 'dev'
+              title = "build: update Python SDK Version to $newLibraryVersion"
+              body = "Python SDK Version [$newLibraryVersion](https://github.com/${{ parameters.githubOrg }}/${{ parameters.githubRepo }}/releases/tag/${{ parameters.tagPrefix }}$newLibraryVersion)"
+              draft = $true
+              maintainer_can_modify = $true
+          } | ConvertTo-Json -Compress
+          $response = Invoke-WebRequest -Headers $headers -Method Post -Body $body `
+              -Uri 'https://api.github.com/repos/Azure/azure-functions-python-worker/pulls'
+          if ($response.StatusCode -ne 201) { throw 'Failed to create the worker draft PR.' }
+          Write-Host "Worker PR draft created: $(($response.Content | ConvertFrom-Json).html_url)"
+        displayName: 'Create PR in Worker Repo'
+        # A failed PR attempt must not block manual review or package publication.
+        continueOnError: true
+        env:
+          GITHUB_USER: $(GithubUser)
+          GITHUB_TOKEN: $(GithubPat)
+
+  - job: "WaitForPythonWorkerPR"
+    dependsOn: ['TestWithWorker']
+    displayName: '(Manual) Check Python Worker PR'
+    pool: server
+    steps:
+      - task: ManualValidation@1
+        displayName: 'Check Python Worker PR'
+        inputs:
+          notifyUsers: ''
+          instructions: |
+            1. Check the SDK ${{ parameters.libraryVersion }} PR at https://github.com/Azure/azure-functions-python-worker/pulls and confirm its tests pass.
+            2. Merge the PR into the worker dev branch when ready.
+            3. If automatic PR creation failed, review the TestWithWorker logs and create or update the PR manually, or explicitly approve continuing the release with worker testing deferred.
+
+  - job: PublishRelease
+    dependsOn: ['WaitForPythonWorkerPR']
     displayName: 'Upload artifacts to partner blob for release'
 
     pool:
