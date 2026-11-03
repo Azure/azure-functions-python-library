@@ -68,7 +68,7 @@ def _is_mcp_sdk_type_annotation(annotation: Any) -> bool:
 
     origin = typing.get_origin(annotation)
     if origin in (list, typing.Union):
-        return any(arg is not type(None)
+        return any(arg is not type(None)  # noqa: E721
                    and _is_mcp_sdk_type_annotation(arg)
                    for arg in typing.get_args(annotation))
 
