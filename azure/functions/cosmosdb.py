@@ -22,11 +22,11 @@ class CosmosDBConverter(meta.InConverter, meta.OutConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, cdb.DocumentList)
+        return meta.is_class_type(pytype) and issubclass(pytype, cdb.DocumentList)
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (cdb.DocumentList, cdb.Document))
+        return meta.is_class_type(pytype) and issubclass(pytype, (cdb.DocumentList, cdb.Document))
 
     @classmethod
     def decode(cls,

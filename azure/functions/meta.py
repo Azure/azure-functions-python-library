@@ -5,6 +5,7 @@ import abc
 import collections.abc
 import datetime
 import re
+from types import GenericAlias
 from typing import Dict, Optional, Union, Tuple, Mapping, Any
 
 from ._jsonutils import json
@@ -25,11 +26,17 @@ _OVERRIDABLE_BINDINGS: frozenset = frozenset({
 })
 
 
+def is_class_type(annotation: object) -> bool:
+    """Check for a class, excluding PEP 585 aliases even on Python 3.9/3.10."""
+    return not isinstance(annotation, GenericAlias) and isinstance(annotation, type)
+
+
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
+    origin = typing_inspect.get_origin(annotation)
     is_iterable_anno = (
         typing_inspect.is_generic_type(annotation)
-        and issubclass(typing_inspect.get_origin(annotation),
-                       collections.abc.Iterable)
+        and is_class_type(origin)
+        and issubclass(origin, collections.abc.Iterable)
     )
 
     if not is_iterable_anno:
@@ -40,10 +47,10 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
         return False
 
     if isinstance(pytype, tuple):
-        return any(isinstance(t, type) and issubclass(t, arg)
+        return any(is_class_type(t) and is_class_type(arg) and issubclass(t, arg)
                    for t in pytype for arg in args)
     else:
-        return any(isinstance(pytype, type) and issubclass(pytype, arg)
+        return any(is_class_type(pytype) and is_class_type(arg) and issubclass(pytype, arg)
                    for arg in args)
 
 

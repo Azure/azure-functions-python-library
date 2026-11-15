@@ -59,7 +59,7 @@ class QueueMessageInConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, azf_abc.QueueMessage)
+        return meta.is_class_type(pytype) and issubclass(pytype, azf_abc.QueueMessage)
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
@@ -101,7 +101,7 @@ class QueueMessageOutConverter(meta.OutConverter, binding='queue'):
         valid_types = (azf_abc.QueueMessage, str, bytes)
         return (
             meta.is_iterable_type_annotation(pytype, valid_types)
-            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            or (meta.is_class_type(pytype) and issubclass(pytype, valid_types))
         )
 
     @classmethod

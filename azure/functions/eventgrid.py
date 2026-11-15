@@ -25,7 +25,7 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
         (CloudEvents v1.0 schema).
         """
         valid_types = (azf_eventgrid.EventGridEvent, azf_eventgrid.CloudEvent)
-        return isinstance(pytype, type) and issubclass(pytype, valid_types)
+        return meta.is_class_type(pytype) and issubclass(pytype, valid_types)
 
     @classmethod
     def decode(cls, data: meta.Datum, *,
@@ -70,12 +70,11 @@ class EventGridEventInConverter(meta.InConverter, binding='eventGridTrigger',
 class EventGridEventOutConverter(meta.OutConverter, binding="eventGrid"):
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        valid_types = (str, bytes, azf_eventgrid.EventGridOutputEvent,
-                       List[azf_eventgrid.EventGridOutputEvent])
+        valid_types = (str, bytes, azf_eventgrid.EventGridOutputEvent)
         return (meta.is_iterable_type_annotation(pytype, str) or meta.
                 is_iterable_type_annotation(pytype,
                                             azf_eventgrid.EventGridOutputEvent)
-                or (isinstance(pytype, type)
+                or (meta.is_class_type(pytype)
                 and issubclass(pytype, valid_types)))
 
     @classmethod

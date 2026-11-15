@@ -15,7 +15,7 @@ class WarmUpTriggerConverter(meta.InConverter, binding='warmupTrigger',
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, WarmUpContext)
+        return meta.is_class_type(pytype) and issubclass(pytype, WarmUpContext)
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:

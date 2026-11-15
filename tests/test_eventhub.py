@@ -23,9 +23,11 @@ class TestEventHub(unittest.TestCase):
         )
         self.assertTrue(check_input_type(func.EventHubEvent))
         self.assertTrue(check_input_type(List[func.EventHubEvent]))
+        self.assertTrue(check_input_type(list[func.EventHubEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
         self.assertFalse(check_input_type(List[str]))
+        self.assertFalse(check_input_type(list[str]))
 
     def test_eventhub_output_type(self):
         check_output_type = (
@@ -34,9 +36,12 @@ class TestEventHub(unittest.TestCase):
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(List[str]))
+        self.assertTrue(check_output_type(list[str]))
         self.assertFalse(check_output_type(func.EventHubEvent))
         self.assertFalse(check_output_type(List[bytes]))
+        self.assertFalse(check_output_type(list[bytes]))
         self.assertFalse(check_output_type(List[func.EventHubEvent]))
+        self.assertFalse(check_output_type(list[func.EventHubEvent]))
 
     @patch('azure.functions.eventhub.EventHubTriggerConverter'
            '.decode_single_event')

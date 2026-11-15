@@ -12,6 +12,7 @@ Example usage::
 # NOTE: This module must support Python 2.7 in addition to Python 3.x
 
 import sys
+import types
 NEW_TYPING = sys.version_info[:3] >= (3, 7, 0)  # PEP 560
 if NEW_TYPING:
     import collections.abc
@@ -21,6 +22,9 @@ if NEW_TYPING:
     from typing import (
         Generic, Callable, Union, TypeVar, ClassVar, Tuple, _GenericAlias
     )
+    _GENERIC_ALIAS_TYPES = (_GenericAlias,)
+    if hasattr(types, 'GenericAlias'):
+        _GENERIC_ALIAS_TYPES += (types.GenericAlias,)
 else:
     from typing import (
         Callable, CallableMeta, Union, _Union, TupleMeta, TypeVar,
@@ -58,11 +62,12 @@ def is_generic_type(tp):
         is_generic_type(Mapping) == True
         is_generic_type(MutableMapping[T, List[int]]) == True
         is_generic_type(Sequence[Union[str, bytes]]) == True
+        is_generic_type(list[int]) == True
     """
     if NEW_TYPING:
-        return (isinstance(tp, type) and issubclass(tp, Generic) or
-                isinstance(tp, _GenericAlias) and
-                tp.__origin__ not in (Union, tuple, ClassVar, collections.abc.Callable))
+        if isinstance(tp, _GENERIC_ALIAS_TYPES):
+            return tp.__origin__ not in (Union, tuple, ClassVar, collections.abc.Callable)
+        return isinstance(tp, type) and issubclass(tp, Generic)
     return (isinstance(tp, GenericMeta) and not
             isinstance(tp, (CallableMeta, TupleMeta)))
 
@@ -193,9 +198,10 @@ def get_origin(tp):
         get_origin(Generic[T]) == Generic
         get_origin(Union[T, int]) == Union
         get_origin(List[Tuple[T, T]][int]) == list  # List prior to Python 3.7
+        get_origin(list[int]) == list
     """
     if NEW_TYPING:
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GENERIC_ALIAS_TYPES):
             return tp.__origin__ if tp.__origin__ is not ClassVar else None
         if tp is Generic:
             return Generic
@@ -299,11 +305,12 @@ def get_args(tp, evaluate=None):
         get_args(Dict[int, Tuple[T, T]][Optional[int]], evaluate=True) == \
                  (int, Tuple[Optional[int], Optional[int]])
         get_args(Callable[[], T][int], evaluate=True) == ([], int,)
+        get_args(dict[str, list[int]]) == (str, list[int])
     """
     if NEW_TYPING:
         if not (evaluate is None or evaluate):
             raise ValueError('evaluate can only be True in Python 3.7')
-        if isinstance(tp, _GenericAlias):
+        if isinstance(tp, _GENERIC_ALIAS_TYPES):
             res = tp.__args__
             if get_origin(tp) is collections.abc.Callable and res[0] is not Ellipsis:
                 res = (list(res[:-1]), res[-1])

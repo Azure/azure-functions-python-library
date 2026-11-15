@@ -19,8 +19,9 @@ class TestMCPToolTriggerConverter(unittest.TestCase):
         self.assertTrue(_MCPToolTriggerConverter.check_input_type_annotation(func.MCPToolContext))
 
     def test_check_input_type_annotation_invalid_type(self):
-        with self.assertRaises(TypeError):
-            _MCPToolTriggerConverter.check_input_type_annotation(123)  # not a type
+        for annotation in (123, list[str], dict[str, list[int]]):
+            with self.subTest(annotation=annotation):
+                self.assertFalse(_MCPToolTriggerConverter.check_input_type_annotation(annotation))
 
         class Dummy:
             pass
@@ -162,9 +163,10 @@ class TestMCPPromptTriggerConverter(unittest.TestCase):
                 PromptInvocationContext))
 
     def test_check_input_type_annotation_invalid_type(self):
-        with self.assertRaises(TypeError):
-            _MCPPromptTriggerConverter.check_input_type_annotation(
-                123)  # not a type
+        for annotation in (123, list[str], dict[str, list[int]]):
+            with self.subTest(annotation=annotation):
+                self.assertFalse(
+                    _MCPPromptTriggerConverter.check_input_type_annotation(annotation))
 
         class Dummy:
             pass

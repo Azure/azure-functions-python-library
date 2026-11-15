@@ -43,7 +43,7 @@ class TimerRequestConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, azf_abc.TimerRequest)
+        return meta.is_class_type(pytype) and issubclass(pytype, azf_abc.TimerRequest)
 
     @classmethod
     def decode(cls, data: meta.Datum, *, trigger_metadata) -> typing.Any:

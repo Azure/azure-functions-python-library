@@ -229,7 +229,7 @@ class ServiceBusMessageInConverter(meta.InConverter,
         valid_types = (azf_sbus.ServiceBusMessage)
         return (
             meta.is_iterable_type_annotation(pytype, valid_types)
-            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            or (meta.is_class_type(pytype) and issubclass(pytype, valid_types))
         )
 
     @classmethod
@@ -563,7 +563,7 @@ class ServiceBusMessageOutConverter(meta.OutConverter, binding='serviceBus'):
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, bytes))
+        return meta.is_class_type(pytype) and issubclass(pytype, (str, bytes))
 
     @classmethod
     def encode(cls, obj: Any, *,

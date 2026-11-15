@@ -36,9 +36,11 @@ class Kafka(unittest.TestCase):
         )
         self.assertTrue(check_input_type(func.KafkaEvent))
         self.assertTrue(check_input_type(List[func.KafkaEvent]))
+        self.assertTrue(check_input_type(list[func.KafkaEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
         self.assertFalse(check_input_type(List[str]))
+        self.assertFalse(check_input_type(list[str]))
 
     def test_kafka_output_type(self):
         check_output_type = (
@@ -47,9 +49,12 @@ class Kafka(unittest.TestCase):
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(List[str]))
+        self.assertTrue(check_output_type(list[str]))
         self.assertFalse(check_output_type(func.KafkaEvent))
         self.assertFalse(check_output_type(List[bytes]))
+        self.assertFalse(check_output_type(list[bytes]))
         self.assertFalse(check_output_type(List[func.KafkaEvent]))
+        self.assertFalse(check_output_type(list[func.KafkaEvent]))
 
     @patch('azure.functions.kafka.KafkaTriggerConverter'
            '.decode_single_event')

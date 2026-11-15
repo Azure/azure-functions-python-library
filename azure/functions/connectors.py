@@ -15,7 +15,7 @@ class ConnectorTriggerConverter(meta.InConverter, binding='connectorTrigger',
         valid_types = (str, dict, bytes)
         return (
             meta.is_iterable_type_annotation(pytype, valid_types)
-            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            or (meta.is_class_type(pytype) and issubclass(pytype, valid_types))
         )
 
     @classmethod
