@@ -9,38 +9,18 @@ import typing
 
 import azure.functions as func
 from azure.functions import meta
-from azure.functions._thirdparty import typing_inspect
 
 
 class TestTypeAnnotations(unittest.TestCase):
-    def test_generic_alias_inspection(self):
-        for annotation, origin, args in (
-                (list[int], list, (int,)),
-                (typing.List[int], list, (int,)),
-                (dict[str, list[int]], dict, (str, list[int])),
-                (typing.Dict[str, typing.List[int]], dict, (str, typing.List[int])),
-                (collections.abc.Iterable[str], collections.abc.Iterable, (str,)),
-                (typing.Iterable[str], collections.abc.Iterable, (str,)),
-                (collections.abc.Sequence[bytes], collections.abc.Sequence, (bytes,)),
-                (set[int], set, (int,))):
-            with self.subTest(annotation=annotation):
-                self.assertTrue(typing_inspect.is_generic_type(annotation))
-                self.assertIs(typing_inspect.get_origin(annotation), origin)
-                self.assertEqual(typing_inspect.get_args(annotation), args)
-
-    def test_special_generic_alias_inspection(self):
-        for annotation, origin, args in (
-                (tuple[int, ...], tuple, (int, ...)),
-                (typing.Tuple[int, ...], tuple, (int, ...)),
-                (collections.abc.Callable[[str], int], collections.abc.Callable, ([str], int)),
-                (typing.Callable[[str], int], collections.abc.Callable, ([str], int)),
-                (collections.abc.Callable[[], int], collections.abc.Callable, ([], int)),
-                (collections.abc.Callable[..., int], collections.abc.Callable, (Ellipsis, int)),
-                (int, None, ())):
-            with self.subTest(annotation=annotation):
-                self.assertFalse(typing_inspect.is_generic_type(annotation))
-                self.assertIs(typing_inspect.get_origin(annotation), origin)
-                self.assertEqual(typing_inspect.get_args(annotation), args)
+    def test_iterable_annotation_rejects_special_forms(self):
+        for annotation in (tuple[str, ...], typing.Tuple[str, ...], tuple[str],
+                           typing.Tuple[str, bytes], collections.abc.Callable[[str], str],
+                           typing.Callable[[str], str], typing.Optional[List[str]],
+                           list[str] | None, typing.Union[List[str], str],
+                           typing.ClassVar[List[str]]):
+            for valid_types in (str, (str, bytes)):
+                with self.subTest(annotation=annotation, valid_types=valid_types):
+                    self.assertFalse(meta.is_iterable_type_annotation(annotation, valid_types))
 
     def test_iterable_annotation_element_types(self):
         for iterable in (List, list, typing.Iterable, collections.abc.Iterable,
@@ -85,7 +65,7 @@ class TestTypeAnnotations(unittest.TestCase):
             for annotation in (func.Out[List[str]], func.Out[list[str]]):
                 with self.subTest(binding=binding, annotation=annotation):
                     # The worker unwraps Out[T] before calling the converter.
-                    element_type, = typing_inspect.get_args(annotation)
+                    element_type, = typing.get_args(annotation)
                     self.assertTrue(converter.check_output_type_annotation(element_type))
 
     def test_list_output_encoding(self):

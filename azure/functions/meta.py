@@ -6,10 +6,9 @@ import collections.abc
 import datetime
 import re
 from types import GenericAlias
-from typing import Dict, Optional, Union, Tuple, Mapping, Any
+from typing import Dict, Optional, Union, Tuple, Mapping, Any, get_args, get_origin
 
 from ._jsonutils import json
-from ._thirdparty import typing_inspect
 from ._utils import (
     try_parse_datetime_with_formats,
     try_parse_timedelta_with_formats
@@ -32,9 +31,10 @@ def is_class_type(annotation: object) -> bool:
 
 
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
-    origin = typing_inspect.get_origin(annotation)
+    origin = get_origin(annotation)
+    # Tuples are fixed-shape records rather than batches.
     is_iterable_anno = (
-        typing_inspect.is_generic_type(annotation)
+        origin is not tuple
         and is_class_type(origin)
         and issubclass(origin, collections.abc.Iterable)
     )
@@ -42,7 +42,7 @@ def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
     if not is_iterable_anno:
         return False
 
-    args = typing_inspect.get_args(annotation)
+    args = get_args(annotation)
     if not args:
         return False
 
