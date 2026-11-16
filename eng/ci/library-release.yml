@@ -106,7 +106,8 @@ extends:
               pythonVersionRequirement: '>=3.13'
               pythonClassifiers: |
                 'Programming Language :: Python :: 3.13',
-                'Programming Language :: Python :: 3.14'
+                'Programming Language :: Python :: 3.14',
+                'Programming Language :: Python :: 3.15'
               releaseBranchPrefix: 'release'
               createPullRequest: true
               baseBranch: 'dev'
