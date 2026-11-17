@@ -219,6 +219,7 @@ class TestServiceBus(unittest.TestCase):
 
         # Should accept a multiple service bus message as trigger input type
         self.assertTrue(check_input_type(List[func.ServiceBusMessage]))
+        self.assertTrue(check_input_type(list[func.ServiceBusMessage]))
 
         # Should accept a message class derived from service bus
         class ServiceBusMessageChild(func.ServiceBusMessage):
@@ -230,6 +231,8 @@ class TestServiceBus(unittest.TestCase):
         self.assertFalse(check_input_type(func.EventHubEvent))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(type(None)))
+        self.assertFalse(check_input_type(List[str]))
+        self.assertFalse(check_input_type(list[str]))
 
     def test_servicebus_output_type(self):
         check_output_type = (
@@ -245,6 +248,8 @@ class TestServiceBus(unittest.TestCase):
         # Should be false if a message type does not match expectation
         self.assertFalse(check_output_type(func.EventGridEvent))
         self.assertFalse(check_output_type(type(None)))
+        self.assertFalse(check_output_type(List[str]))
+        self.assertFalse(check_output_type(list[str]))
 
     def test_servicebus_data(self):
         servicebus_msg = azf_sb.ServiceBusMessageInConverter.decode(

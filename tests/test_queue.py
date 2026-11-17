@@ -4,6 +4,7 @@
 import json
 import unittest
 from datetime import date
+from typing import List
 import azure.functions as func
 import azure.functions.queue as azf_q
 from azure.functions.meta import Datum, _BaseConverter
@@ -65,6 +66,8 @@ class TestQueue(unittest.TestCase):
         self.assertTrue(check_input_type(func.QueueMessage))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
+        self.assertFalse(check_input_type(List[func.QueueMessage]))
+        self.assertFalse(check_input_type(list[func.QueueMessage]))
 
     def test_QueueMessage_output_type(self):
         # when
@@ -76,6 +79,13 @@ class TestQueue(unittest.TestCase):
         self.assertTrue(check_output_type(func.QueueMessage))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(bytes))
+        for annotation in (List[func._abc.QueueMessage], list[func._abc.QueueMessage],
+                           List[str], list[str]):
+            with self.subTest(annotation=annotation):
+                self.assertTrue(check_output_type(annotation))
+        for annotation in (List[int], list[int]):
+            with self.subTest(annotation=annotation):
+                self.assertFalse(check_output_type(annotation))
 
     def test_queue_message_initialize_all_args(self):
         # given

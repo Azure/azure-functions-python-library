@@ -15,6 +15,7 @@ class MyTestCase(unittest.TestCase):
             check_input_type_annotation
         self.assertTrue(check_input_type(func.EventGridEvent))
         self.assertFalse(check_input_type(List[func.EventGridEvent]))
+        self.assertFalse(check_input_type(list[func.EventGridEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
 
@@ -23,6 +24,7 @@ class MyTestCase(unittest.TestCase):
             check_input_type_annotation
         self.assertTrue(check_input_type(func.CloudEvent))
         self.assertFalse(check_input_type(List[func.CloudEvent]))
+        self.assertFalse(check_input_type(list[func.CloudEvent]))
         self.assertFalse(check_input_type(str))
         self.assertFalse(check_input_type(bytes))
 
@@ -31,9 +33,14 @@ class MyTestCase(unittest.TestCase):
             check_output_type_annotation
         self.assertTrue(check_output_type(func.EventGridOutputEvent))
         self.assertTrue(check_output_type(List[func.EventGridOutputEvent]))
+        self.assertTrue(check_output_type(list[func.EventGridOutputEvent]))
         self.assertTrue(check_output_type(str))
         self.assertTrue(check_output_type(bytes))
         self.assertTrue(check_output_type(List[str]))
+        self.assertTrue(check_output_type(list[str]))
+        for annotation in (List[int], list[int], List[bytes], list[bytes], int):
+            with self.subTest(annotation=annotation):
+                self.assertFalse(check_output_type(annotation))
 
     def test_eventgrid_decode(self):
         eventGridEvent = azf_event_grid.EventGridEventInConverter.decode(

@@ -4,8 +4,110 @@
 from typing import Mapping, List
 import unittest
 import datetime
+import collections.abc
+import typing
 
+import azure.functions as func
 from azure.functions import meta
+
+
+class TestTypeAnnotations(unittest.TestCase):
+    def test_iterable_annotation_rejects_special_forms(self):
+        for annotation in (tuple[str, ...], typing.Tuple[str, ...], tuple[str],
+                           typing.Tuple[str, bytes], collections.abc.Callable[[str], str],
+                           typing.Callable[[str], str], typing.Optional[List[str]],
+                           list[str] | None, typing.Union[List[str], str],
+                           typing.ClassVar[List[str]]):
+            for valid_types in (str, (str, bytes)):
+                with self.subTest(annotation=annotation, valid_types=valid_types):
+                    self.assertFalse(meta.is_iterable_type_annotation(annotation, valid_types))
+
+    def test_iterable_annotation_element_types(self):
+        for iterable in (List, list, typing.Iterable, collections.abc.Iterable,
+                         typing.Sequence, collections.abc.Sequence, set):
+            with self.subTest(iterable=iterable):
+                self.assertTrue(meta.is_iterable_type_annotation(
+                    iterable[func.EventHubEvent], func.EventHubEvent))
+                self.assertFalse(meta.is_iterable_type_annotation(
+                    iterable[str], func.EventHubEvent))
+                self.assertTrue(meta.is_iterable_type_annotation(iterable[str], (str, bytes)))
+                self.assertFalse(meta.is_iterable_type_annotation(iterable[int], (str, bytes)))
+
+    def test_iterable_annotation_union_elements(self):
+        for iterable in (List, list, typing.Iterable, collections.abc.Iterable,
+                         typing.Sequence, collections.abc.Sequence):
+            for element in (typing.Union[str, dict], str | dict,
+                            typing.Optional[str], str | None):
+                for valid_types in (str, (str, bytes)):
+                    with self.subTest(iterable=iterable, element=element,
+                                      valid_types=valid_types):
+                        self.assertTrue(meta.is_iterable_type_annotation(
+                            iterable[element], valid_types))
+                        self.assertFalse(meta.is_iterable_type_annotation(
+                            iterable[typing.Union[int, float]], valid_types))
+
+    def test_iterable_annotation_invalid_union_elements(self):
+        unresolved = typing.ForwardRef('UnresolvedType')
+        for iterable in (List, list):
+            for element in (typing.Union[int, List[str]],
+                            typing.Union[int, list[str]],
+                            typing.Union[int, unresolved],
+                            typing.Union[int, typing.Literal['value']]):
+                for valid_types in (str, (str, bytes)):
+                    with self.subTest(iterable=iterable, element=element,
+                                      valid_types=valid_types):
+                        self.assertFalse(meta.is_iterable_type_annotation(
+                            iterable[element], valid_types))
+
+    def test_iterable_annotation_rejects_non_class_elements(self):
+        for annotation in (list[list[str]], List[List[str]], dict[int, list[str]],
+                           typing.Dict[int, List[str]], list["str"], List["str"],
+                           list, List, typing.Generic):
+            for valid_types in (str, (str, bytes)):
+                with self.subTest(annotation=annotation, valid_types=valid_types):
+                    self.assertFalse(meta.is_iterable_type_annotation(annotation, valid_types))
+
+    def test_converters_reject_unsupported_generic_aliases(self):
+        bindings_by_direction = {
+            'input': ('eventHub', 'kafka', 'serviceBusTrigger', 'queueTrigger',
+                      'connectorTrigger', 'eventGridTrigger', 'blob', 'cosmosDB',
+                      'sql', 'mysql', 'httpTrigger', 'timerTrigger', 'warmupTrigger',
+                      'orchestrationTrigger', 'entityTrigger', 'durableClient',
+                      'mcpToolTrigger', 'mcpResourceTrigger', 'mcpPromptTrigger'),
+            'output': ('eventHub', 'kafka', 'queue', 'eventGrid', 'serviceBus', 'blob',
+                       'cosmosDB', 'sql', 'mysql', 'http', 'durableClient'),
+        }
+        for direction, bindings in bindings_by_direction.items():
+            for binding in bindings:
+                converter = meta.get_binding_registry().get(binding)
+                check = getattr(converter, f'check_{direction}_type_annotation')
+                for annotation in (list[int], dict[int, list[str]], list[list[str]]):
+                    with self.subTest(binding=binding, direction=direction, annotation=annotation):
+                        self.assertFalse(check(annotation))
+
+    def test_out_list_annotations(self):
+        for binding in ('eventHub', 'kafka', 'queue', 'eventGrid'):
+            converter = meta.get_binding_registry().get(binding)
+            for annotation in (func.Out[List[str]], func.Out[list[str]],
+                               func.Out[List[typing.Union[str, dict]]],
+                               func.Out[list[str | dict]],
+                               func.Out[List[typing.Optional[str]]]):
+                with self.subTest(binding=binding, annotation=annotation):
+                    # The worker unwraps Out[T] before calling the converter.
+                    element_type, = typing.get_args(annotation)
+                    self.assertTrue(converter.check_output_type_annotation(element_type))
+
+    def test_list_output_encoding(self):
+        for binding in ('eventHub', 'queue', 'eventGrid'):
+            converter = meta.get_binding_registry().get(binding)
+            for annotation in (List[str], list[str], List[typing.Union[str, dict]],
+                               list[str | dict], List[typing.Optional[str]]):
+                with self.subTest(binding=binding, annotation=annotation):
+                    self.assertTrue(converter.check_output_type_annotation(annotation))
+                    for values in ([], ['first', 'second']):
+                        encoded = converter.encode(values, expected_type=annotation)
+                        self.assertEqual(encoded.type, 'json')
+                        self.assertEqual(encoded.python_value, values)
 
 
 class TestMeta(unittest.TestCase):

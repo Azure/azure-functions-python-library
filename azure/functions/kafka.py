@@ -113,7 +113,7 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
 
         return (
             meta.is_iterable_type_annotation(pytype, valid_types)
-            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            or (meta.is_class_type(pytype) and issubclass(pytype, valid_types))
         )
 
     @classmethod
@@ -121,7 +121,7 @@ class KafkaConverter(meta.InConverter, meta.OutConverter, binding='kafka'):
         valid_types = (str, bytes)
         return (
             meta.is_iterable_type_annotation(pytype, str)
-            or (isinstance(pytype, type) and issubclass(pytype, valid_types))
+            or (meta.is_class_type(pytype) and issubclass(pytype, valid_types))
         )
 
     @classmethod

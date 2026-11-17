@@ -15,7 +15,10 @@ class OrchestrationTriggerConverter(meta.InConverter,
                                     trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
-        return issubclass(pytype, _durable_functions.OrchestrationContext)
+        return (
+            meta.is_class_type(pytype)
+            and issubclass(pytype, _durable_functions.OrchestrationContext)
+        )
 
     @classmethod
     def check_output_type_annotation(cls, pytype):
@@ -45,7 +48,7 @@ class EnitityTriggerConverter(meta.InConverter,
                               trigger=True):
     @classmethod
     def check_input_type_annotation(cls, pytype):
-        return issubclass(pytype, _durable_functions.EntityContext)
+        return meta.is_class_type(pytype) and issubclass(pytype, _durable_functions.EntityContext)
 
     @classmethod
     def check_output_type_annotation(cls, pytype):
@@ -149,11 +152,11 @@ class DurableClientConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, bytes))
+        return meta.is_class_type(pytype) and issubclass(pytype, (str, bytes))
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, bytes, bytearray))
+        return meta.is_class_type(pytype) and issubclass(pytype, (str, bytes, bytearray))
 
     @classmethod
     def encode(cls, obj: typing.Any, *,

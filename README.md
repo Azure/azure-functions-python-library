@@ -45,6 +45,21 @@ Issues and feature requests are tracked in a variety of places. To report this f
 | Portal        | User Interface or Experience Issue           | [File an Issue](https://github.com/azure/azure-functions-ux/issues)            |
 | Templates     | Code Issues with Creation Template           | [File an Issue](https://github.com/Azure/azure-functions-templates/issues)     |
 
+## Binding type annotations
+
+Binding annotation checks accept PEP 585 builtin generics wherever the equivalent
+`typing` annotation is supported. For example, Event Hub batch inputs accept
+`list[func.EventHubEvent]` as well as `typing.List[func.EventHubEvent]`, and list
+outputs for Event Hub, Queue, and Event Grid accept `func.Out[list[str]]`.
+Parameterized `collections.abc.Iterable` and `Sequence` annotations are also
+supported where their `typing` equivalents are accepted.
+
+This does not change binding cardinality or allowed element types:
+`list[str]` is not a valid Event Hub trigger annotation, and bindings that require
+a single event or a specialized collection such as `func.DocumentList` still
+require that type. Worker-side annotation handling must also support PEP 585;
+see [Azure/azure-functions-python-worker#1034](https://github.com/Azure/azure-functions-python-worker/issues/1034).
+
 ## Durable Functions JSON serialization
 
 `azure.functions._durable_functions.df_dumps(value, *, ensure_ascii=True)`

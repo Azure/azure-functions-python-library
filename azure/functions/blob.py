@@ -78,11 +78,11 @@ class BlobConverter(meta.InConverter,
                     trigger='blobTrigger'):
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (azf_abc.InputStream, bytes, str))
+        return meta.is_class_type(pytype) and issubclass(pytype, (azf_abc.InputStream, bytes, str))
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return (
+        return meta.is_class_type(pytype) and (
             issubclass(pytype, (str, bytes, bytearray, azf_abc.InputStream))
             or callable(getattr(pytype, 'read', None))
         )

@@ -34,7 +34,6 @@ omit =
     */setup.py
     setup.py
     */site-packages/*
-    azure/functions/_thirdparty/*
     */venv/*
     */.venv/*
     */.env*/*

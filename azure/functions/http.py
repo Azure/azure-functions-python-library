@@ -72,7 +72,7 @@ class HttpResponseConverter(meta.OutConverter, binding='http'):
 
     @classmethod
     def check_output_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (azf_abc.HttpResponse, str))
+        return meta.is_class_type(pytype) and issubclass(pytype, (azf_abc.HttpResponse, str))
 
     @classmethod
     def encode(cls, obj: typing.Any, *,
@@ -136,7 +136,7 @@ class HttpRequestConverter(meta.InConverter,
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, azf_abc.HttpRequest)
+        return meta.is_class_type(pytype) and issubclass(pytype, azf_abc.HttpRequest)
 
     @classmethod
     def decode(cls, data: meta.Datum, *,

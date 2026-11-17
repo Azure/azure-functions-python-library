@@ -5,10 +5,10 @@ import abc
 import collections.abc
 import datetime
 import re
-from typing import Dict, Optional, Union, Tuple, Mapping, Any
+from types import GenericAlias
+from typing import Dict, Optional, Union, Tuple, Mapping, Any, get_args, get_origin
 
 from ._jsonutils import json
-from ._thirdparty import typing_inspect
 from ._utils import (
     try_parse_datetime_with_formats,
     try_parse_timedelta_with_formats
@@ -25,25 +25,44 @@ _OVERRIDABLE_BINDINGS: frozenset = frozenset({
 })
 
 
+def is_class_type(annotation: object) -> bool:
+    """Check for a class, excluding PEP 585 aliases even on Python 3.9/3.10."""
+    return not isinstance(annotation, GenericAlias) and isinstance(annotation, type)
+
+
+def _is_safe_subclass(pytype: object, target: object) -> bool:
+    """Allow valid union targets while rejecting unsupported annotations safely."""
+    if not is_class_type(pytype):
+        return False
+    try:
+        return issubclass(pytype, target)
+    except TypeError:
+        # Parameterized generics and unresolved forward references are not
+        # valid subclass targets, even when nested inside a union.
+        return False
+
+
 def is_iterable_type_annotation(annotation: object, pytype: object) -> bool:
+    origin = get_origin(annotation)
+    # Tuples are fixed-shape records rather than batches.
     is_iterable_anno = (
-        typing_inspect.is_generic_type(annotation)
-        and issubclass(typing_inspect.get_origin(annotation),
-                       collections.abc.Iterable)
+        origin is not tuple
+        and is_class_type(origin)
+        and issubclass(origin, collections.abc.Iterable)
     )
 
     if not is_iterable_anno:
         return False
 
-    args = typing_inspect.get_args(annotation)
+    args = get_args(annotation)
     if not args:
         return False
 
     if isinstance(pytype, tuple):
-        return any(isinstance(t, type) and issubclass(t, arg)
+        return any(_is_safe_subclass(t, arg)
                    for t in pytype for arg in args)
     else:
-        return any(isinstance(pytype, type) and issubclass(pytype, arg)
+        return any(_is_safe_subclass(pytype, arg)
                    for arg in args)
 
 

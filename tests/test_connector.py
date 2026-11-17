@@ -2,7 +2,8 @@
 # Licensed under the MIT License.
 import unittest
 import json
-from typing import Iterable, List, Sequence
+import collections.abc
+from typing import Iterable, List, Optional, Sequence, Union
 import azure.functions as func
 from azure.functions.meta import Datum
 from azure.functions.connectors import ConnectorTriggerConverter
@@ -26,13 +27,27 @@ class TestConnectorTriggerConverter(unittest.TestCase):
 
     def test_check_input_type_annotation_batch_types(self):
         for annotation in (List[str], List[bytes], List[dict],
-                           Iterable[str], Sequence[bytes]):
+                           list[str], list[bytes], list[dict],
+                           Iterable[str], Sequence[bytes],
+                           collections.abc.Iterable[str], collections.abc.Sequence[bytes]):
             with self.subTest(annotation=annotation):
                 self.assertTrue(
                     ConnectorTriggerConverter.check_input_type_annotation(annotation))
 
+    def test_check_input_type_annotation_union_batch_types(self):
+        for iterable in (List, list, Iterable, collections.abc.Iterable):
+            for element in (Union[str, dict], str | dict, Optional[str],
+                            Union[str, bytes, dict]):
+                with self.subTest(iterable=iterable, element=element):
+                    self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(
+                        iterable[element]))
+            with self.subTest(iterable=iterable, element='unsupported union'):
+                self.assertFalse(ConnectorTriggerConverter.check_input_type_annotation(
+                    iterable[Union[int, float]]))
+
     def test_check_input_type_annotation_unsupported_batch_types(self):
-        for annotation in (List[int], List[float], Iterable[int], List, list):
+        for annotation in (List[int], List[float], Iterable[int], List, list,
+                           list[int], list[float], collections.abc.Iterable[int]):
             with self.subTest(annotation=annotation):
                 self.assertFalse(
                     ConnectorTriggerConverter.check_input_type_annotation(annotation))
@@ -41,7 +56,11 @@ class TestConnectorTriggerConverter(unittest.TestCase):
         for annotation, data_type, collection, values in (
                 (List[str], 'collection_string', CollectionString,
                  ['{"id": "first"}', '{"id": "second"}']),
+                (list[str], 'collection_string', CollectionString,
+                 ['{"id": "first"}', '{"id": "second"}']),
                 (List[bytes], 'collection_bytes', CollectionBytes,
+                 [b'first', b'second']),
+                (list[bytes], 'collection_bytes', CollectionBytes,
                  [b'first', b'second'])):
             for batch in (values, []):
                 with self.subTest(annotation=annotation, batch=batch):

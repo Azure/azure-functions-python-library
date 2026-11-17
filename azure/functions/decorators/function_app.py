@@ -1597,9 +1597,9 @@ class TriggerApi(DecoratorApi, ABC):
         :param trigger_config_name: Connector trigger configuration name.
             Required for Poll. Supports app setting expressions.
         :param cardinality: Set to many to enable batching, equivalent to the
-            extension's IsBatched option. Batch parameters may use typing.List[str]
-            or typing.List[bytes] annotations. If omitted, a single event is passed
-            to the function.
+            extension's IsBatched option. Batch parameters may use list[str] or
+            list[bytes] annotations, or their typing.List equivalents. If omitted,
+            a single event is passed to the function.
         :param max_batch_size: Optional per-function override for the maximum
             number of events per batch. If omitted, Poll delivery uses the
             extension's app-wide host.json default.

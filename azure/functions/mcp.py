@@ -182,7 +182,7 @@ class _MCPToolTriggerConverter(meta.InConverter, binding='mcpToolTrigger',
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes, MCPToolContext))
+        return meta.is_class_type(pytype) and issubclass(pytype, (str, dict, bytes, MCPToolContext))
 
     @classmethod
     def has_implicit_output(cls) -> bool:
@@ -271,7 +271,7 @@ class MCPResourceTriggerConverter(meta.InConverter, binding='mcpResourceTrigger'
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes))
+        return meta.is_class_type(pytype) and issubclass(pytype, (str, dict, bytes))
 
     @classmethod
     def has_implicit_output(cls) -> bool:
@@ -318,7 +318,10 @@ class _MCPPromptTriggerConverter(meta.InConverter, binding='mcpPromptTrigger',
 
     @classmethod
     def check_input_type_annotation(cls, pytype: type) -> bool:
-        return issubclass(pytype, (str, dict, bytes, PromptInvocationContext))
+        return (
+            meta.is_class_type(pytype)
+            and issubclass(pytype, (str, dict, bytes, PromptInvocationContext))
+        )
 
     @classmethod
     def has_implicit_output(cls) -> bool:
