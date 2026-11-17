@@ -3,7 +3,7 @@
 import unittest
 import json
 import collections.abc
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Optional, Sequence, Union
 import azure.functions as func
 from azure.functions.meta import Datum
 from azure.functions.connectors import ConnectorTriggerConverter
@@ -33,6 +33,17 @@ class TestConnectorTriggerConverter(unittest.TestCase):
             with self.subTest(annotation=annotation):
                 self.assertTrue(
                     ConnectorTriggerConverter.check_input_type_annotation(annotation))
+
+    def test_check_input_type_annotation_union_batch_types(self):
+        for iterable in (List, list, Iterable, collections.abc.Iterable):
+            for element in (Union[str, dict], str | dict, Optional[str],
+                            Union[str, bytes, dict]):
+                with self.subTest(iterable=iterable, element=element):
+                    self.assertTrue(ConnectorTriggerConverter.check_input_type_annotation(
+                        iterable[element]))
+            with self.subTest(iterable=iterable, element='unsupported union'):
+                self.assertFalse(ConnectorTriggerConverter.check_input_type_annotation(
+                    iterable[Union[int, float]]))
 
     def test_check_input_type_annotation_unsupported_batch_types(self):
         for annotation in (List[int], List[float], Iterable[int], List, list,
