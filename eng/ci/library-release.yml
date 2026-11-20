@@ -24,6 +24,13 @@ resources:
       type: git
       name: 1ESPipelineTemplates/1ESPipelineTemplates
       ref: refs/tags/release
+    - repository: eng
+      type: git
+      name: engineering
+      ref: refs/tags/release
+
+variables:
+  - group: azure-functions-python-release
 
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1es
@@ -87,7 +94,6 @@ extends:
               releaseBranchPrefix: 'release'
               pythonVersionRequirement: '>=3.10,<3.13'
               tagPrefix: ''
-              blobPath: 'azure-functions/python/azure-functions'
               artifactName: 'azure-functions'
 
       - stage: ReleaseV2_BumpVersion
@@ -138,5 +144,4 @@ extends:
               releaseBranchPrefix: 'release'
               pythonVersionRequirement: '>=3.13'
               tagPrefix: ''
-              blobPath: 'azure-functions/python/azure-functions'
               artifactName: 'azure-functions'
