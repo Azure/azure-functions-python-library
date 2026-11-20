@@ -4635,6 +4635,7 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
         self.middleware = AsgiMiddleware(app)
         self._add_http_app(self.middleware, function_name)
         self.startup_task_done = False
+        self._startup_lock = asyncio.Lock()
 
     def __del__(self):
         if self.startup_task_done:
@@ -4667,10 +4668,18 @@ class AsgiFunctionApp(ExternalHttpFunctionApp):
                     route="/{*route}")
         async def http_app_func(req: HttpRequest, context: Context):
             if not self.startup_task_done:
-                success = await asgi_middleware.notify_startup()
-                if not success:
-                    raise RuntimeError("ASGI middleware startup failed.")
-                self.startup_task_done = True
+                # Requests that arrive together on a cold worker would all see
+                # startup_task_done as False and each notify the app of startup.
+                # The extra startup messages land in the same lifespan queue, so
+                # the app reads one of them where it expects the shutdown message
+                # and tears itself down while the worker keeps serving traffic.
+                async with self._startup_lock:
+                    if not self.startup_task_done:
+                        success = await asgi_middleware.notify_startup()
+                        if not success:
+                            raise RuntimeError(
+                                "ASGI middleware startup failed.")
+                        self.startup_task_done = True
 
             return await asgi_middleware.handle_async(req, context)
 

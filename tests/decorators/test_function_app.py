@@ -1,6 +1,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License.
 from abc import ABC
+import asyncio
 import inspect
 import json
 import unittest
@@ -1080,3 +1081,75 @@ class TestFunctionRegister(unittest.TestCase):
                              " a unique function name."
                              " Please change @app.function_name()"
                              " or the function method name to be unique.")
+
+
+class LifespanTrackingAsgiApplication:
+    """Records how the worker drives the lifespan protocol.
+
+    A conforming server sends exactly one ``lifespan.startup`` and then nothing
+    until ``lifespan.shutdown``, so a second startup arriving where the shutdown
+    is expected is recorded rather than asserted on, to keep the failure legible.
+    """
+
+    def __init__(self):
+        self.lifespan_calls = 0
+        self.startup_complete = 0
+        self.shutdown_called = False
+        self.unexpected_message = None
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'lifespan':
+            return
+
+        self.lifespan_calls += 1
+        message = await receive()
+        assert message['type'] == 'lifespan.startup'
+
+        # A real app does its setup here. Yielding gives any concurrent request
+        # the chance to notify startup a second time.
+        await asyncio.sleep(0)
+        await send({"type": "lifespan.startup.complete"})
+        self.startup_complete += 1
+
+        message = await receive()
+        if message['type'] != 'lifespan.shutdown':
+            self.unexpected_message = message['type']
+            return
+
+        self.shutdown_called = True
+        await send({"type": "lifespan.shutdown.complete"})
+
+
+class TestAsgiFunctionAppStartup(unittest.TestCase):
+
+    def test_concurrent_first_requests_notify_startup_once(self):
+        mock_app = LifespanTrackingAsgiApplication()
+        func_app = AsgiFunctionApp(app=mock_app,
+                                   function_name='test_concurrent_startup')
+        user_function = func_app.get_functions()[0].get_user_function()
+
+        async def run_test():
+            with mock.patch.object(func_app.middleware, 'handle_async',
+                                   new=mock.AsyncMock(return_value='ok')):
+                results = await asyncio.gather(user_function(None, None),
+                                               user_function(None, None))
+
+            observed = {
+                'lifespan_calls': mock_app.lifespan_calls,
+                'startup_complete': mock_app.startup_complete,
+                'shutdown_called': mock_app.shutdown_called,
+                'unexpected_message': mock_app.unexpected_message,
+            }
+
+            # Leave the app shut down so the lifespan task does not outlive the loop.
+            await func_app.middleware.notify_shutdown()
+            return results, observed
+
+        results, observed = asyncio.run(run_test())
+
+        self.assertEqual(results, ['ok', 'ok'])
+        self.assertEqual(observed['lifespan_calls'], 1)
+        self.assertEqual(observed['startup_complete'], 1)
+        self.assertIsNone(observed['unexpected_message'])
+        self.assertFalse(observed['shutdown_called'])
+        self.assertTrue(func_app.startup_task_done)
